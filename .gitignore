@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Pycharm
+.idea/
+mlcomp/server/front/node_modules

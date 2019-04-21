@@ -1,0 +1,11 @@
+services:
+ postgres:
+    container_name: postgres
+    environment: [POSTGRES_USER=mlcomp, POSTGRES_PASSWORD=12345,
+      PGDATA=/var/lib/postgresql/data/pgdata, POSTGRES_DB=mlcomp]
+    image: postgres:11.1
+    network_mode: "host"
+    restart: always
+    volumes: ['/opt/postgresql/mlcomp/data:/var/lib/postgresql/data/pgdata', '/opt/postgresql/mlcomp/backups:/backups']
+    shm_size: 4G
+version: '3'
