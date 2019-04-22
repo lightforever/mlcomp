@@ -1,5 +1,5 @@
-from db.core import *
-from db.models import *
+from mlcomp.db.core import *
+from mlcomp.db.models import *
 from sqlalchemy.orm.query import Query
 from sqlalchemy import desc
 
@@ -23,7 +23,7 @@ class BaseDataProvider:
             query = query.offset(options.page_size*options.page_number)
 
         if options.sort_descending:
-            criterion = options.sort_column if not options.sort_descending else desc(options.sort_descending)
+            criterion = options.sort_column if not options.sort_column else desc(options.sort_column)
             query = query.order_by(criterion)
 
         return query

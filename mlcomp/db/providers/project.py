@@ -1,4 +1,4 @@
-from db.providers.base import *
+from mlcomp.db.providers.base import *
 
 class ProjectProvider(BaseDataProvider):
     def add(self, name: str):
@@ -6,5 +6,8 @@ class ProjectProvider(BaseDataProvider):
         self.handler.insert(project)
 
     def get(self, options: PaginatorOptions):
-        query = self.session.query(Project)
-        return self.paginator(query, options).all()
+        try:
+            query = self.session.query(Project)
+            return self.paginator(query, options).all()
+        except Exception:
+            self.session.rollback()

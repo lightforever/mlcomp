@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-from db.conf import *
+from mlcomp.db.conf import *
 
 __all__ = ['Session']
 

@@ -22,8 +22,8 @@ export class ProjectService {
   }
 
   /** GET projects from the server */
-  getProjects(sortColumn: string, sortDirection: string, pageIndex: number, filter: string): Observable<Project[]> {
-    return this.http.get<Project[]>(`${this.url}?sortColumn=${sortColumn}&sortDirection=${sortDirection}&pageIndex=${pageIndex}&filter=${filter}`)
+  getProjects(sortColumn: string, sortDescending: boolean, pageIndex: number, pageSize: number, filter: string): Observable<Project[]> {
+    return this.http.get<Project[]>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_index=${pageIndex}&page_size=${pageIndex}&filter=${filter}`)
       .pipe(
         tap(_ => this.log('fetched projects')),
         catchError(this.handleError<Project[]>('getProjects', []))

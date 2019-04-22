@@ -2,7 +2,7 @@ export class Project {
   id: number;
   name: string;
   tasks: Task[];
-  lastActivity: Date;
+  last_activity: Date;
 }
 
 export class Task {
