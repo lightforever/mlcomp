@@ -17,7 +17,7 @@ class Storage:
         hashs = self.file_provider.hashs(task.project)
         for o in glob(os.path.join(folder, '**'), recursive=True):
             path = os.path.relpath(o, folder)
-            if path=='.':
+            if path=='.' or path.startswith('data') or path.startswith('./data'):
                 continue
 
             if isdir(o):

@@ -8,3 +8,6 @@ class ProjectProvider(BaseDataProvider):
     def get(self, options: PaginatorOptions):
         query = self.query(Project)
         return self.paginator(query, options).all()
+
+    def by_name(self, name: str):
+        return self.query(Project).filter(Project.name==name).first()

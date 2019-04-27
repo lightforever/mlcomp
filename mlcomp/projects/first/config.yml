@@ -1,0 +1,14 @@
+info:
+  name: first
+  project: first
+  folder: projects/first
+executors:
+  download:
+    type: Download
+    competition: digit-recognizer
+  upload:
+    type: Submit
+    competition: digit-recognizer
+    file: sample_submission.csv
+    depends:
+      - download
