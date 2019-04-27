@@ -31,7 +31,8 @@ def project(name):
 @click.option('--cpu', type=int, default=0)
 @click.option('--type', type=int, default=0)
 @click.option('--folder', type=str, default='./')
-def task(name: str, project: int, parent_task: int, computer: int, gpu: int, cpu: int, type: int):
+def task(name: str, project: int, parent_task: int,
+         computer: int, gpu: int, cpu: int, type: int, folder: str):
     provider = TaskProvider()
     task = Task(name=name, project=project, parent_task=parent_task, computer=computer,
                 gpu=gpu, cpu=cpu, type=type, status=TaskStatus.NotRan.value
@@ -39,9 +40,8 @@ def task(name: str, project: int, parent_task: int, computer: int, gpu: int, cpu
     provider.add(task)
 
     folder = os.path.join(os.getcwd(), folder)
-    Storage.upload(folder)
-
-
+    storage = Storage()
+    storage.upload(folder, task)
 
 if __name__ == '__main__':
     main()

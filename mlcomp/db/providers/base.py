@@ -6,9 +6,15 @@ from sqlalchemy import desc
 class BaseDataProvider:
     def __init__(self, session=None):
         if session is None:
-            session = Session()
+            session = Session.create_session()
         self._session = session
-        self.handler = Handler(session)
+
+    @property
+    def query(self):
+        return self.session.query
+
+    def add(self, obj: Base):
+        self._session.add(obj)
 
     @property
     def session(self):
