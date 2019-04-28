@@ -10,15 +10,17 @@ class Task(Base):
     status = sa.Column(sa.Integer)
     started = sa.Column(sa.DateTime)
     finished = sa.Column(sa.DateTime)
-    computer = sa.Column(sa.Integer)
+    computer = sa.Column(sa.Integer, ForeignKey('computer.id'))
     gpu = sa.Column(sa.Integer, default=0)
-    cpu = sa.Column(sa.Integer, default=0)
+    cpu = sa.Column(sa.Integer, default=1)
     executor = sa.Column(sa.String)
     status = sa.Column(sa.Integer, default=TaskStatus.NotRan.value)
     config = sa.Column(sa.String)
+    computer_assigned = sa.Column(sa.Integer, ForeignKey('computer.id'))
+    memory = sa.Column(sa.Float, default=0.1)
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependencies'
 
-    task_id = sa.Column(sa.Integer, ForeignKey('task.id'), primary_key=True)
-    depend_id = sa.Column(sa.Integer, ForeignKey('task.id'), primary_key=True)
+    task_id = sa.Column(sa.Integer, primary_key=True)
+    depend_id = sa.Column(sa.Integer, primary_key=True)

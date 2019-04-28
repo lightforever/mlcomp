@@ -6,7 +6,10 @@ from mlcomp.task.storage import Storage
 from utils.config import load_ordered_yaml
 from mlcomp.task.executors import Executor
 import json
-
+from task.app import app
+import socket
+from multiprocessing import cpu_count
+import torch
 
 @click.group()
 def main():
@@ -14,9 +17,20 @@ def main():
 
 
 @main.command()
-@click.argument('action', type=click.Choice(['start', 'stop']))
-def server(action):
-    print(action)
+def worker():
+    provider = ComputerProvider()
+    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+
+    computer = Computer(name=socket.gethostname(), gpu=torch.cuda.device_count(), cpu=cpu_count(), memory=tot_m)
+    provider.create_or_update(computer, 'name')
+
+    argv = [
+        'worker',
+        '--loglevel=INFO',
+        '-Q',
+        computer.name
+    ]
+    app.worker_main(argv)
 
 
 @main.command()
@@ -24,7 +38,6 @@ def server(action):
 def project(name):
     provider = ProjectProvider()
     provider.add(name)
-
 
 @main.command()
 @click.argument('config')
@@ -54,8 +67,8 @@ def task(config: str):
                 task = Task(
                     project=project,
                     name=f'{info["name"]}_{k}',
-                    executor=v['type'],
-                    config=json.dumps(v)
+                    executor=k,
+                    config=json.dumps(config)
                 )
                 provider.add(task)
                 storage.upload(folder, task)
@@ -88,6 +101,7 @@ def execute(config: str):
                 executor = Executor.from_config(v, config)
                 executor()
                 created.add(k)
+
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 services:
- postgres:
+  postgres:
     container_name: postgres
     environment: [POSTGRES_USER=mlcomp, POSTGRES_PASSWORD=12345,
       PGDATA=/var/lib/postgresql/data/pgdata, POSTGRES_DB=mlcomp]
@@ -8,4 +8,18 @@ services:
     restart: always
     volumes: ['/opt/postgresql/mlcomp/data:/var/lib/postgresql/data/pgdata', '/opt/postgresql/mlcomp/backups:/backups']
     shm_size: 4G
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.8-rc
+    restart: always
+    network_mode: "host"
+  redis:
+    container_name: redis
+    image: redis:5.0.4
+    restart: always
+    network_mode: "host"
+  flower:
+    image: mher/flower
+    network_mode: "host"
+    container_name: flower
 version: '3'

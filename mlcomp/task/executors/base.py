@@ -1,21 +1,28 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from kaggle import api
-from mlcomp.utils.config import Config
+from utils.config import Config
+from utils.logging import logger
 import os
+import traceback
+
 
 class Executor(ABC):
     _child = dict()
 
-    @abstractmethod
     def __call__(self):
+        self.work()
+
+    @abstractmethod
+    def work(self):
         pass
 
     @classmethod
     @abstractmethod
-    def from_config(cls, config: dict, base: Config):
-        child_class = Executor._child[config['type']]
-        return child_class.from_config(config, base)
+    def from_config(cls, executor: str, config: Config):
+        executor = config['executors'][executor]
+        child_class = Executor._child[executor['type']]
+        return child_class.from_config(executor, config)
 
     @staticmethod
     def register(cls):
@@ -24,6 +31,7 @@ class Executor(ABC):
     @staticmethod
     def is_registered(cls: str):
         return cls in Executor._child
+
 
 class DownloadType(Enum):
     Kaggle = 0
@@ -40,13 +48,14 @@ class Download(Executor):
         self.link = link
         self.output = output
 
-    def __call__(self):
+    def work(self):
         api.competition_download_files(self.competition, self.output)
 
     @classmethod
-    def from_config(cls, config: dict, base: Config):
-        output = os.path.join(base.data_folder, config.get('output', '.'))
-        return cls(output=output, competition=config['competition'])
+    def from_config(cls, executor: dict, config: Config):
+        output = os.path.join(config.data_folder, config.get('output', '.'))
+        return cls(output=output, competition=executor['competition'])
+
 
 @Executor.register
 class Submit(Executor):
@@ -55,13 +64,14 @@ class Submit(Executor):
         self.file = file
         self.message = message
 
-    def __call__(self):
+    def work(self):
         api.competition_submit(self.file, message=self.message, competition=self.competition)
 
     @classmethod
-    def from_config(cls, config: dict, base: Config):
-        file = os.path.join(base.data_folder, config['file'])
-        return cls(file=file, competition=config['competition'], message=config.get('message', 'no message'))
+    def from_config(cls, executor: dict, config: Config):
+        file = os.path.join(config.data_folder, executor['file'])
+        return cls(file=file, competition=executor['competition'], message=executor.get('message', 'no message'))
+
 
 if __name__ == '__main__':
     # executor = Download('mlcomp/projects/test/data', competition='digit-recognizer')

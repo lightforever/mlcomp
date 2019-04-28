@@ -9,7 +9,7 @@ class Config(OrderedDict):
         return os.path.join(self['info']['folder'], 'data')
 
 
-def load_ordered_yaml(file, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+def load_ordered_yaml(file, Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:
     """
     Loads `yaml` config into OrderedDict
     Args:

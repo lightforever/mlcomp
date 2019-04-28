@@ -1,5 +1,9 @@
 import collections
 import copy
+from datetime import datetime
+
+def now():
+    return datetime.utcnow()
 
 def merge_dicts(*dicts: dict) -> dict:
     """

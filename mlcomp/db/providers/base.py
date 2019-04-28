@@ -1,7 +1,8 @@
-from mlcomp.db.core import *
-from mlcomp.db.models import *
+from db.core import *
+from db.models import *
 from sqlalchemy.orm.query import Query
 from sqlalchemy import desc
+from utils.misc import now
 
 class BaseDataProvider:
     def __init__(self, session=None):
@@ -15,6 +16,16 @@ class BaseDataProvider:
 
     def add(self, obj: Base):
         self._session.add(obj)
+
+    def create_or_update(self, obj: Base, field: str):
+        db = self.session.query(obj.__class__).filter(getattr(obj.__class__, field)==getattr(obj, field)).first()
+        if db is not None:
+            for field, value in obj.__dict__.items():
+                if not field.startswith('_'):
+                    setattr(db, field, value)
+            self.session.update()
+        else:
+            self.add(obj)
 
     @property
     def session(self):
