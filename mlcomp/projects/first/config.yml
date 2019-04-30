@@ -4,11 +4,11 @@ info:
   folder: projects/first
 executors:
   download:
-    type: Download
+    type: StepExample
     competition: digit-recognizer
-  upload:
-    type: Submit
-    competition: digit-recognizer
-    file: sample_submission.csv
-    depends:
-      - download
+#  upload:
+#    type: Submit
+#    competition: digit-recognizer
+#    file: sample_submission.csv
+#    depends:
+#      - download

@@ -4,5 +4,5 @@ from celery import Celery
 app = Celery('task',
              broker='amqp://',
              backend='amqp://',
-             include=['task.tasks']
+             include=['mlcomp.task.tasks']
              )

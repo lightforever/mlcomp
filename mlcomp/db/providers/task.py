@@ -14,12 +14,12 @@ class TaskProvider(BaseDataProvider):
         return self.query(Task).filter(Task.id == id).first()
 
     def change_status(self, task, status: TaskStatus):
-        task.status = status.value
         if status == TaskStatus.InProgress:
             task.started = now()
         elif status in [TaskStatus.Failed, TaskStatus.Stopped, TaskStatus.Success]:
             task.finished = now()
 
+        task.status = status.value
         self.session.update()
 
     def by_status(self, status: TaskStatus):

@@ -1,8 +1,8 @@
-from db.core import *
-from db.models import *
+from mlcomp.db.core import *
+from mlcomp.db.models import *
 from sqlalchemy.orm.query import Query
 from sqlalchemy import desc
-from utils.misc import now
+from mlcomp.utils.misc import now
 
 class BaseDataProvider:
     def __init__(self, session=None):

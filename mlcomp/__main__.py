@@ -1,12 +1,11 @@
 import click
 from mlcomp.db.providers import *
-from mlcomp.db.enums import *
 import os
 from mlcomp.task.storage import Storage
-from utils.config import load_ordered_yaml
+from mlcomp.utils.config import load_ordered_yaml
 from mlcomp.task.executors import Executor
 import json
-from task.app import app
+from mlcomp.task.app import app
 import socket
 from multiprocessing import cpu_count
 import torch
@@ -68,7 +67,11 @@ def task(config: str):
                     project=project,
                     name=f'{info["name"]}_{k}',
                     executor=k,
-                    config=json.dumps(config)
+                    config=json.dumps(config),
+                    computer=info.get('computer'),
+                    gpu=v.get('gpu', 0),
+                    cpu=v.get('cpu', 1),
+                    memory=v.get('memory', 0.1),
                 )
                 provider.add(task)
                 storage.upload(folder, task)
@@ -98,7 +101,7 @@ def execute(config: str):
 
                     valid = valid and d in created
             if valid:
-                executor = Executor.from_config(v, config)
+                executor = Executor.from_config(k, config)
                 executor()
                 created.add(k)
 
