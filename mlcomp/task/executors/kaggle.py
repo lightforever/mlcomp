@@ -1,4 +1,5 @@
-from mlcomp.task.executors import *
+from mlcomp.task.executors.base import *
+from kaggle import api
 
 class DownloadType(Enum):
     Kaggle = 0
@@ -38,14 +39,8 @@ class Submit(Executor):
         return cls(file=file, competition=executor['competition'], message=executor.get('message', 'no message'))
 
 
-@Executor.register
-class StepExample(Executor):
-    def work(self):
-        pass
-
-
 if __name__ == '__main__':
     # executor = Download('mlcomp/projects/test/data', competition='digit-recognizer')
     executor = Submit(competition='digit-recognizer', file='mlcomp/projects/test/data/sample_submission.csv',
                       message='test')
-    executor()
+    executor.work()

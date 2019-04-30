@@ -30,6 +30,9 @@ class BaseDataProvider:
         else:
             self.add(obj)
 
+    def update(self):
+        self.session.update()
+
     @property
     def session(self):
         return self._session

@@ -33,6 +33,6 @@ def execute(id:int):
         logger.error(traceback.format_exc())
 
 if __name__=='__main__':
-    execute(74)
+    execute(75)
     from task.tasks import execute
     execute.delay(42)
