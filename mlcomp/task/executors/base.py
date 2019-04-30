@@ -47,6 +47,7 @@ class StepWrap:
         ))
 
 
+
 class Executor(ABC):
     _child = dict()
 
@@ -82,5 +83,11 @@ class Executor(ABC):
         return cls in Executor._child
 
 
+@Executor.register
+class Dummy(Executor):
+    def work(self):
+        pass
 
-
+    @classmethod
+    def from_config(cls, executor: dict, config: Config):
+        return cls()

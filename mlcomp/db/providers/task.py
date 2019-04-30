@@ -1,6 +1,6 @@
 from mlcomp.db.providers.base import *
 from typing import List
-from collections import defaultdict
+from sqlalchemy.orm.attributes import flag_modified
 
 class TaskProvider(BaseDataProvider):
     def get(self, options: PaginatorOptions):
@@ -34,3 +34,4 @@ class TaskProvider(BaseDataProvider):
             res[item.task_id].append(task.status)
 
         return res
+

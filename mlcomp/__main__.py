@@ -40,15 +40,18 @@ def project(name):
 
 @main.command()
 @click.argument('config')
-def task(config: str):
+def dag(config: str):
     config = load_ordered_yaml(config)
+    config_json = json.dumps(config)
     info = config['info']
     executors = config['executors']
 
     provider = TaskProvider()
-    storage = Storage()
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
+    dag = DagProvider().add(Dag(config=config_json, project=project, name=info['name']))
+
+    Storage().upload(folder, dag)
 
     created = dict()
     while len(created) < len(executors):
@@ -64,17 +67,15 @@ def task(config: str):
                     valid = valid and d in created
             if valid:
                 task = Task(
-                    project=project,
                     name=f'{info["name"]}_{k}',
                     executor=k,
-                    config=json.dumps(config),
                     computer=info.get('computer'),
                     gpu=v.get('gpu', 0),
                     cpu=v.get('cpu', 1),
                     memory=v.get('memory', 0.1),
+                    dag = dag.id
                 )
                 provider.add(task)
-                storage.upload(folder, task)
                 created[k] = task.id
 
                 if 'depends' in v:

@@ -4,7 +4,7 @@ import json
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import logger
 from mlcomp.task.app import app
-from mlcomp.db.enums import *
+from mlcomp.db.models import *
 from mlcomp.task.storage import Storage
 import sys
 import traceback
@@ -18,16 +18,14 @@ def execute(id:int):
 
     try:
         provider.change_status(task, TaskStatus.InProgress)
+        folder = storage.download(task=id, dag=task.dag)
+        config = Config(json.loads(task.dag_rel.config))
 
-        folder = storage.download(id)
-        config = Config(json.loads(task.config))
-
-        imported = storage.import_folder(thismodule, folder, config['executors'][task.executor]['type'])
-        if not imported:
-            logger.warn(f'Task {task.id}, the executor {task.executor} has not been imported')
+        executor_type = config['executors'][task.executor]['type']
+        storage.import_folder(thismodule, folder, executor_type)
 
         executor = Executor.from_config(task.executor, config)
-        executor()
+        executor(task)
 
         provider.change_status(task, TaskStatus.Success)
     except Exception:
@@ -35,5 +33,6 @@ def execute(id:int):
         logger.error(traceback.format_exc())
 
 if __name__=='__main__':
+    execute(74)
     from task.tasks import execute
     execute.delay(42)

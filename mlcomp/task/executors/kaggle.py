@@ -22,7 +22,6 @@ class Download(Executor):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
 
-
 @Executor.register
 class Submit(Executor):
     def __init__(self, competition: str, file: str, message: str):

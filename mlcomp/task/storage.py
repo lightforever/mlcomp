@@ -4,7 +4,7 @@ import logging
 from os.path import isdir
 import hashlib
 from mlcomp.db.models import *
-from mlcomp.db.providers import FileProvider, TaskStorageProvider
+from mlcomp.db.providers import FileProvider, DagStorageProvider
 import pkgutil
 import inspect
 
@@ -14,33 +14,33 @@ logger = logging.getLogger(__name__)
 class Storage:
     def __init__(self):
         self.file_provider = FileProvider()
-        self.ts_provider = TaskStorageProvider()
+        self.provider = DagStorageProvider()
 
-    def upload(self, folder: str, task: Task):
-        hashs = self.file_provider.hashs(task.project)
+    def upload(self, folder: str, dag: Dag):
+        hashs = self.file_provider.hashs(dag.project)
         for o in glob(os.path.join(folder, '**'), recursive=True):
             path = os.path.relpath(o, folder)
             if path == '.' or path.startswith('data') or path.startswith('./data'):
                 continue
 
             if isdir(o):
-                self.ts_provider.add(TaskStorage(task=task.id, path=path, is_dir=True))
+                self.provider.add(DagStorage(dag=dag.id, path=path, is_dir=True))
                 continue
             content = open(o, 'rb').read()
             md5 = hashlib.md5(content).hexdigest()
             if md5 in hashs:
                 file_id = hashs[md5]
             else:
-                file = File(md5=md5, content=content, project=task.project)
+                file = File(md5=md5, content=content, project=dag.project)
                 self.file_provider.add(file)
                 file_id = file.id
 
-            self.ts_provider.add(TaskStorage(task=task.id, path=path, file=file_id, is_dir=False))
+            self.provider.add(DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False))
 
-    def download(self, task: int):
+    def download(self, task: int, dag:int):
         folder = f'/tmp/mlcomp/{task}'
         os.makedirs(folder, exist_ok=True)
-        items = self.ts_provider.by_task(task)
+        items = self.provider.by_dag(dag)
         items = sorted(items, key=lambda x: x[1] is not None)
         for item, file in items:
             path = os.path.join(folder, item.path)

@@ -5,7 +5,6 @@ class Task(Base):
     __tablename__ = 'task'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    project = sa.Column(sa.Integer, ForeignKey('project.id'))
     name = sa.Column(sa.String)
     status = sa.Column(sa.Integer)
     started = sa.Column(sa.DateTime)
@@ -15,11 +14,14 @@ class Task(Base):
     cpu = sa.Column(sa.Integer, default=1)
     executor = sa.Column(sa.String)
     status = sa.Column(sa.Integer, default=TaskStatus.NotRan.value)
-    config = sa.Column(sa.String)
     computer_assigned = sa.Column(sa.String, ForeignKey('computer.name'))
     memory = sa.Column(sa.Float, default=0.1)
-    steps = sa.Column(sa.Integer)
+    steps = sa.Column(sa.Integer, default=1)
     current_step = sa.Column(sa.Integer)
+    dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
+    celery_id = sa.Column(sa.String)
+    dag_rel = relationship('Dag', lazy='select')
+
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependencies'

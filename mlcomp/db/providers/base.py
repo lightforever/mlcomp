@@ -3,6 +3,7 @@ from mlcomp.db.models import *
 from sqlalchemy.orm.query import Query
 from sqlalchemy import desc
 from mlcomp.utils.misc import now
+from sqlalchemy.orm.attributes import flag_modified, set_attribute
 
 class BaseDataProvider:
     def __init__(self, session=None):
@@ -16,6 +17,8 @@ class BaseDataProvider:
 
     def add(self, obj: Base):
         self._session.add(obj)
+        getattr(obj, 'id')
+        return obj
 
     def create_or_update(self, obj: Base, field: str):
         db = self.session.query(obj.__class__).filter(getattr(obj.__class__, field)==getattr(obj, field)).first()
@@ -44,3 +47,7 @@ class BaseDataProvider:
             query = query.order_by(criterion)
 
         return query
+
+def set_attribute_modified(instance, key, value):
+    set_attribute(instance, key, value)
+    flag_modified(instance, key)

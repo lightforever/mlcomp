@@ -7,4 +7,4 @@ class Project(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String)
     last_activity = sa.Column(sa.DateTime, default='Now()')
-    tasks = relationship("Task")
+    dags = relationship("Dag")

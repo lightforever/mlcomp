@@ -4,7 +4,7 @@ info:
   folder: projects/first
 executors:
   download:
-    type: StepExample
+    type: Dummy
     competition: digit-recognizer
 #  upload:
 #    type: Submit
