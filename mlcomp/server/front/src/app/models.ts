@@ -16,7 +16,6 @@ export class Dag {
   last_activity: Date;
   finished: Date;
   project: Project;
-  status: string;
   task_count: number;
   task_statuses: NameCount;
 }
@@ -25,4 +24,9 @@ export class Task {
   id: number;
   name: string;
   dag: Dag;
+}
+
+export class PaginatorRes<T> {
+  data: Array<T>;
+  total: number;
 }

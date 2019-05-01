@@ -7,6 +7,8 @@ import {catchError} from 'rxjs/operators';
 import {map} from 'rxjs/operators';
 import {startWith} from 'rxjs/operators';
 import {switchMap} from 'rxjs/operators';
+import {Location} from '@angular/common';
+import {Router} from '@angular/router';
 
 @Component({
     selector: 'app-project',
@@ -22,8 +24,9 @@ export class ProjectComponent implements OnInit {
 
     displayed_columns: string[] = ['name', 'dag_count', 'last_activity'];
     isLoading_results = false;
+    total: number;
 
-    constructor(private project_service: ProjectService) {
+    constructor(private project_service: ProjectService, private location: Location, private router: Router) {
     }
 
     ngOnInit() {
@@ -37,23 +40,23 @@ export class ProjectComponent implements OnInit {
                     this.isLoading_results = true;
                     return this.project_service.getProjects(
                         this.sort.active ? this.sort.active : '',
-                        this.sort.direction?this.sort.direction == 'desc':true,
+                        this.sort.direction ? this.sort.direction == 'desc' : true,
                         this.paginator.pageIndex,
-                        this.paginator.pageSize?this.paginator.pageSize:10,
+                        this.paginator.pageSize ? this.paginator.pageSize : 10,
                         this.dataSource.filter
                     );
                 }),
-                map(data => {
+                map(res => {
                     // Flip flag to show that loading has finished.
                     this.isLoading_results = false;
 
-                    return data;
+                    return res;
                 }),
                 catchError(() => {
                     this.isLoading_results = false;
                     return observableOf([]);
                 })
-            ).subscribe(data => this.dataSource.data = data);
+            ).subscribe(res => {this.dataSource.data = res.data; this.total = res.total });
     }
 
     applyFilter(filterValue: string) {
@@ -64,5 +67,13 @@ export class ProjectComponent implements OnInit {
         }
 
         this.change.emit();
+    }
+
+    go_back(): void {
+        this.location.back();
+    }
+
+    go_forward(): void {
+        this.location.forward();
     }
 }

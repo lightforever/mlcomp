@@ -4,7 +4,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 
-import {Dag} from './models';
+import {Dag, PaginatorRes} from './models';
 import {MessageService} from './message.service';
 import {AppSettings} from './app-settings'
 
@@ -22,11 +22,11 @@ export class DagService {
   }
 
   /** GET dags from the server */
-  getDags(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string, project: number): Observable<Dag[]> {
-    return this.http.get<Dag[]>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}&project=${project}`)
+  getDags(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string, project: number): Observable<PaginatorRes<Dag>> {
+    return this.http.get<PaginatorRes<Dag>>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}&project=${project}`)
       .pipe(
         tap(_ => this.log('fetched dags')),
-        catchError(this.handleError<Dag[]>('getDags', []))
+        catchError(this.handleError<PaginatorRes<Dag>>('getDags', new PaginatorRes<Dag>()))
       );
   }
   

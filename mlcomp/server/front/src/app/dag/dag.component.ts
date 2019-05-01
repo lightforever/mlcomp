@@ -8,6 +8,8 @@ import {catchError} from 'rxjs/operators';
 import {map} from 'rxjs/operators';
 import {startWith} from 'rxjs/operators';
 import {switchMap} from 'rxjs/operators';
+import {Location} from '@angular/common';
+import {Router, ActivatedRoute} from '@angular/router';
 
 @Component({
     selector: 'app-dag',
@@ -21,17 +23,28 @@ export class DagComponent implements OnInit {
     @ViewChild(MatSort) sort: MatSort;
     change: EventEmitter<any> = new EventEmitter();
 
-    displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'last_activity', 'task_status'];
+    displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started', 'last_activity', 'task_status', 'links'];
     isLoading_results = false;
-    status_colors = {'not_ran':'gray', 'queued': 'lightblue', 'in_progress': 'lime',
+    status_colors = {
+        'not_ran': 'gray', 'queued': 'lightblue', 'in_progress': 'lime',
         'failed': 'red', 'stopped': 'purple', 'skipped': 'orange', 'success': 'green'
     };
-    constructor(private dag_service: DagService) {
+    project: number;
+    total: number;
+
+    constructor(private dag_service: DagService, private location: Location,
+                private router: Router, private  route:ActivatedRoute) {
     }
 
     ngOnInit() {
         // If the user changes the sort order, reset back to the first page.
         this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+
+        this.route.queryParams
+            .subscribe(params => {
+                this.project = params['project'];
+            });
+
 
         merge(this.sort.sortChange, this.paginator.page, this.change)
             .pipe(
@@ -40,24 +53,24 @@ export class DagComponent implements OnInit {
                     this.isLoading_results = true;
                     return this.dag_service.getDags(
                         this.sort.active ? this.sort.active : '',
-                        this.sort.direction?this.sort.direction == 'desc':true,
+                        this.sort.direction ? this.sort.direction == 'desc' : true,
                         this.paginator.pageIndex,
-                        this.paginator.pageSize?this.paginator.pageSize: 10,
+                        this.paginator.pageSize,
                         this.dataSource.filter,
-                        null
+                        this.project
                     );
                 }),
-                map(data => {
+                map(res => {
                     // Flip flag to show that loading has finished.
                     this.isLoading_results = false;
 
-                    return data;
+                    return res;
                 }),
                 catchError(() => {
                     this.isLoading_results = false;
                     return observableOf([]);
                 })
-            ).subscribe(data => this.dataSource.data = data);
+            ).subscribe(res => {this.dataSource.data = res.data; this.total = res.total});
     }
 
     applyFilter(filterValue: string) {
@@ -70,11 +83,19 @@ export class DagComponent implements OnInit {
         this.change.emit();
     }
 
-    colorForTaskStatus(name: string, count: number) {
-        return count>0?this.status_colors[name]:'gainsboro'
+    color_for_task_status(name: string, count: number) {
+        return count > 0 ? this.status_colors[name] : 'gainsboro'
     }
 
-    status_click(status: NameCount) {
-        alert(status.name);
+    status_click(dag: Dag, status: NameCount) {
+        this.router.navigate(['/tasks'], {queryParams: {dag: dag.id, status: status.name}});
+    }
+
+    go_back(): void {
+        this.location.back();
+    }
+
+    go_forward(): void {
+        this.location.forward();
     }
 }

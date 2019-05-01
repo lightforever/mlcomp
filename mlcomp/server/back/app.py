@@ -13,12 +13,17 @@ app = Flask(__name__)
 CORS(app)
 
 
-def construct_paginator_options(args: dict, default_sort_column:str):
+def parse_int(args: dict, key: str):
+    return int(args[key]) if args.get(key) and args[key].isnumeric() else None
+
+
+def construct_paginator_options(args: dict, default_sort_column: str):
     return PaginatorOptions(sort_column=args.get('sort_column') or default_sort_column,
-                               sort_descending=args['sort_descending'] == 'true' if 'sort_descending' in args else True,
-                               page_number=int(args['page_number']) if args.get('page_number') else None,
-                               page_size=int(args['page_size']) if args.get('page_size') else None,
-                               )
+                            sort_descending=args['sort_descending'] == 'true' if 'sort_descending' in args else True,
+                            page_number=parse_int(args, 'page_number'),
+                            page_size=parse_int(args, 'page_size'),
+                            )
+
 
 @app.route('/projects')
 def projects():
@@ -28,13 +33,15 @@ def projects():
     res = provider.get(options)
     return json.dumps(res)
 
+
 @app.route('/dags')
 def dags():
     options = construct_paginator_options(request.args, 'id')
-
+    project = parse_int(request.args, 'project')
     provider = DagProvider()
-    res = provider.get(options)
+    res = provider.get(project, options)
     return json.dumps(res)
+
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

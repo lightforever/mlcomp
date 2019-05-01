@@ -4,7 +4,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 
-import {Project} from './models';
+import {PaginatorRes, Project} from './models';
 import {MessageService} from './message.service';
 import {AppSettings} from './app-settings'
 
@@ -22,11 +22,11 @@ export class ProjectService {
   }
 
   /** GET projects from the server */
-  getProjects(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string): Observable<Project[]> {
-    return this.http.get<Project[]>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}`)
+  getProjects(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string): Observable<PaginatorRes<Project>> {
+    return this.http.get<PaginatorRes<Project>>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}`)
       .pipe(
         tap(_ => this.log('fetched projects')),
-        catchError(this.handleError<Project[]>('getProjects', []))
+        catchError(this.handleError<PaginatorRes<Project>>('getProjects', new PaginatorRes<Project>()))
       );
   }
 
