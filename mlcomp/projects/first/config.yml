@@ -2,9 +2,10 @@ info:
   name: first
   project: first
   folder: projects/first
+  data_folder: /f/data/first
 executors:
-  step-example:
-    type: StepExample
+  download:
+    type: Dummy
     competition: digit-recognizer
 #  upload:
 #    type: Submit

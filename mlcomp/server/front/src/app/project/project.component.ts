@@ -20,7 +20,7 @@ export class ProjectComponent implements OnInit {
     @ViewChild(MatSort) sort: MatSort;
     change: EventEmitter<any> = new EventEmitter();
 
-    displayed_columns: string[] = ['name', 'task_count', 'last_activity'];
+    displayed_columns: string[] = ['name', 'dag_count', 'last_activity'];
     isLoading_results = false;
 
     constructor(private project_service: ProjectService) {
@@ -37,9 +37,9 @@ export class ProjectComponent implements OnInit {
                     this.isLoading_results = true;
                     return this.project_service.getProjects(
                         this.sort.active ? this.sort.active : '',
-                        this.sort.direction == 'desc',
+                        this.sort.direction?this.sort.direction == 'desc':true,
                         this.paginator.pageIndex,
-                        this.paginator.pageSize,
+                        this.paginator.pageSize?this.paginator.pageSize:10,
                         this.dataSource.filter
                     );
                 }),

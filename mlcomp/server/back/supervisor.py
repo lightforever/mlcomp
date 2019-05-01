@@ -1,17 +1,17 @@
 import time
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import logger, logging
 import traceback
 from mlcomp.task.tasks import execute
 from mlcomp.db.providers import *
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
+
 def supervisor():
     provider = TaskProvider()
     computer_provider = ComputerProvider()
 
     try:
-        print('alive')
         time.sleep(1)
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
         logger.info(f'Found {len(not_ran_tasks)} not ran tasks')
@@ -25,12 +25,8 @@ def supervisor():
             computers[assigned]['memory'] -= task.memory
 
         for task in not_ran_tasks:
-            if TaskStatus.Stopped.value in dep_status[task.id]:
-                provider.change_status(task, TaskStatus.Stopped)
-                continue
-
-            if TaskStatus.Failed.value in dep_status[task.id]:
-                provider.change_status(task, TaskStatus.Failed)
+            if TaskStatus.Stopped.value in dep_status[task.id] or TaskStatus.Failed.value in dep_status[task.id]:
+                provider.change_status(task, TaskStatus.Skipped)
                 continue
 
             status_set = set(dep_status[task.id])
@@ -58,15 +54,21 @@ def supervisor():
     except Exception:
         logger.error(traceback.format_exc())
 
-def register_supervisor():
-    while True:
-        supervisor()
-        time.sleep(1)
-        continue
 
+def register_supervisor():
     scheduler = BackgroundScheduler()
     scheduler.add_job(func=supervisor, trigger="interval", seconds=1)
     scheduler.start()
 
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
+
+    class NoRunningFilter(logging.Filter):
+        def filter(self, record):
+            return isinstance(record.msg, str) and not 'ran tasks' in record.msg
+
+    for k in logging.root.manager.loggerDict:
+        if 'apscheduler' in k:
+            logging.getLogger(k).setLevel(logging.ERROR)
+        if 'mlcomp' in k:
+            logging.getLogger(k).addFilter(NoRunningFilter())

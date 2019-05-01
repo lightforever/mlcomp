@@ -1,12 +1,16 @@
 import yaml
 from collections import OrderedDict
 import os
-
+import json
 
 class Config(OrderedDict):
     @property
     def data_folder(self):
         return os.path.join(self['info']['folder'], 'data')
+
+    @staticmethod
+    def from_json(config:str):
+        return Config(json.loads(config))
 
 
 def load_ordered_yaml(file, Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:

@@ -19,7 +19,7 @@ class Download(Executor):
         api.competition_download_files(self.competition, self.output)
 
     @classmethod
-    def from_config(cls, executor: dict, config: Config):
+    def _from_config(cls, executor: dict, config: Config):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
 

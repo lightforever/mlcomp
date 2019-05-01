@@ -18,8 +18,9 @@ def execute(id:int):
 
     try:
         provider.change_status(task, TaskStatus.InProgress)
-        folder = storage.download(task=id, dag=task.dag)
-        config = Config(json.loads(task.dag_rel.config))
+        folder = storage.download(task=id)
+
+        config = Config.from_json(task.dag_rel.config)
 
         executor_type = config['executors'][task.executor]['type']
         storage.import_folder(thismodule, folder, executor_type)
@@ -33,6 +34,6 @@ def execute(id:int):
         logger.error(traceback.format_exc())
 
 if __name__=='__main__':
-    execute(75)
-    from task.tasks import execute
-    execute.delay(42)
+    execute(81)
+    # from task.tasks import execute
+    # execute.delay(42)

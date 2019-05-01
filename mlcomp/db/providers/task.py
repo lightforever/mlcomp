@@ -3,6 +3,8 @@ from typing import List
 from sqlalchemy.orm.attributes import flag_modified
 
 class TaskProvider(BaseDataProvider):
+    model = Task
+
     def get(self, options: PaginatorOptions):
         query = self.session.query(Task)
         return self.paginator(query, options).all()
@@ -35,3 +37,5 @@ class TaskProvider(BaseDataProvider):
 
         return res
 
+    def update_last_activity(self, task:int):
+        self.query(Task).filter(Task.id==task).update({'last_activity': now()})

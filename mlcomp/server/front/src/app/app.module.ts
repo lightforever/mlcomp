@@ -15,7 +15,9 @@ import { TaskComponent }      from './task/task.component';
 import { MessagesComponent }    from './messages/messages.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {DemoMaterialModule} from './material-module';
-import { ProjectDetailComponent } from './project-detail/project-detail.component';
+import { DagComponent } from './dag/dag.component';
+import { DagDetailComponent } from './dag-detail/dag-detail.component';
+import { ComputerComponent } from './computer/computer.component';
 
 @NgModule({
   imports: [
@@ -39,7 +41,9 @@ import { ProjectDetailComponent } from './project-detail/project-detail.componen
     TaskDetailComponent,
     TaskComponent,
     MessagesComponent,
-    ProjectDetailComponent
+    DagComponent,
+    DagDetailComponent,
+    ComputerComponent
   ],
   bootstrap: [ AppComponent ]
 })

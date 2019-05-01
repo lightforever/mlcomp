@@ -9,6 +9,7 @@ class Task(Base):
     status = sa.Column(sa.Integer)
     started = sa.Column(sa.DateTime)
     finished = sa.Column(sa.DateTime)
+    last_activity = sa.Column(sa.DateTime)
     computer = sa.Column(sa.String, ForeignKey('computer.name'))
     gpu = sa.Column(sa.Integer, default=0)
     cpu = sa.Column(sa.Integer, default=1)

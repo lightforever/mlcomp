@@ -6,26 +6,35 @@ from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
 from mlcomp.server.back.supervisor import register_supervisor
-import atexit
 
 PORT = 4201
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/projects')
-def projects():
-    args = request.args
-    options = PaginatorOptions(sort_column=args.get('sort_column'),
-                               sort_descending=args.get('sort_descending') == 'true',
+
+def construct_paginator_options(args: dict, default_sort_column:str):
+    return PaginatorOptions(sort_column=args.get('sort_column') or default_sort_column,
+                               sort_descending=args['sort_descending'] == 'true' if 'sort_descending' in args else True,
                                page_number=int(args['page_number']) if args.get('page_number') else None,
                                page_size=int(args['page_size']) if args.get('page_size') else None,
                                )
 
+@app.route('/projects')
+def projects():
+    options = construct_paginator_options(request.args, 'id')
+
     provider = ProjectProvider()
     res = provider.get(options)
-    return json.dumps([r.to_dict() for r in res])
+    return json.dumps(res)
 
+@app.route('/dags')
+def dags():
+    options = construct_paginator_options(request.args, 'id')
+
+    provider = DagProvider()
+    res = provider.get(options)
+    return json.dumps(res)
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -44,13 +53,11 @@ def shutdown():
 def base():
     pass
 
+
 @base.command()
 def start():
     register_supervisor()
-    while True:
-        pass
-    # Thread(target=supervisor, daemon=True).start()
-    # app.run(debug=True, port=PORT)
+    app.run(debug=True, port=PORT)
 
 
 @base.command()

@@ -22,25 +22,11 @@ export class ProjectService {
   }
 
   /** GET projects from the server */
-  getProjects(sortColumn: string, sortDescending: boolean, pageIndex: number, pageSize: number, filter: string): Observable<Project[]> {
-    return this.http.get<Project[]>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_index=${pageIndex}&page_size=${pageIndex}&filter=${filter}`)
+  getProjects(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string): Observable<Project[]> {
+    return this.http.get<Project[]>(`${this.url}?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}`)
       .pipe(
         tap(_ => this.log('fetched projects')),
         catchError(this.handleError<Project[]>('getProjects', []))
-      );
-  }
-
-  /** GET project by id. Return `undefined` when id not found */
-  getProjectNo404<Data>(id: number): Observable<Project> {
-    const url = `${this.url}/?id=${id}`;
-    return this.http.get<Project[]>(url)
-      .pipe(
-        map(projects => projects[0]), // returns a {0|1} element array
-        tap(h => {
-          const outcome = h ? `fetched` : `did not find`;
-          this.log(`${outcome} project id=${id}`);
-        }),
-        catchError(this.handleError<Project>(`getProject id=${id}`))
       );
   }
 

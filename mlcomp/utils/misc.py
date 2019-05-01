@@ -1,6 +1,10 @@
 import collections
 import copy
 from datetime import datetime
+import re
+
+first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+all_cap_re = re.compile('([a-z0-9])([A-Z])')
 
 def now():
     return datetime.utcnow()
@@ -31,3 +35,7 @@ def merge_dicts(*dicts: dict) -> dict:
                 dict_[k] = merge_dict[k]
 
     return dict_
+
+def to_snake(name):
+    s1 = first_cap_re.sub(r'\1_\2', name)
+    return all_cap_re.sub(r'\1_\2', s1).lower()

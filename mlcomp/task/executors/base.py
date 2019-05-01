@@ -113,14 +113,3 @@ class Executor(ABC):
     def is_registered(cls: str):
         return cls in Executor._child
 
-
-@Executor.register
-class StepExample(Executor):
-    def work(self):
-        self.step.start(1, 'step 1')
-        self.step.start(1, 'step 1.1')
-        self.step.start(2, 'step 1.1.1')
-        self.step.start(3, 'step 1.1.1')
-
-        self.step.end(3)
-        self.step.end(0)

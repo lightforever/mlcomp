@@ -4,9 +4,11 @@ import logging
 from os.path import isdir
 import hashlib
 from mlcomp.db.models import *
-from mlcomp.db.providers import FileProvider, DagStorageProvider
+from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider
 import pkgutil
 import inspect
+from mlcomp.utils.config import Config
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,7 @@ class Storage:
     def __init__(self):
         self.file_provider = FileProvider()
         self.provider = DagStorageProvider()
+        self.task_provider = TaskProvider()
 
     def upload(self, folder: str, dag: Dag):
         hashs = self.file_provider.hashs(dag.project)
@@ -37,10 +40,11 @@ class Storage:
 
             self.provider.add(DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False))
 
-    def download(self, task: int, dag:int):
-        folder = f'/tmp/mlcomp/{task}'
+    def download(self, task: int):
+        task = self.task_provider.by_id(task)
+        folder = f'/tmp/mlcomp/{task.id}'
         os.makedirs(folder, exist_ok=True)
-        items = self.provider.by_dag(dag)
+        items = self.provider.by_dag(task.dag)
         items = sorted(items, key=lambda x: x[1] is not None)
         for item, file in items:
             path = os.path.join(folder, item.path)
@@ -50,6 +54,15 @@ class Storage:
                 with open(path, 'wb') as f:
                     f.write(file.content)
 
+        config = Config.from_json(task.dag_rel.config)
+        info = config['info']
+        if 'data_folder' in info:
+            try:
+                os.symlink(info['data_folder'], os.path.join(folder, 'data'))
+            except FileExistsError:
+                pass
+
+        sys.path.insert(0, folder)
         return folder
 
     def import_folder(self, target: dict, folder: str, executor: str):
@@ -65,4 +78,4 @@ class Storage:
 
 if __name__ == '__main__':
     storage = Storage()
-    storage.download(31)
+    storage.download(77)

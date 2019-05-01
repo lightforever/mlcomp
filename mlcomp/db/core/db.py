@@ -1,44 +1,47 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from mlcomp.db.conf import *
 import logging
 import sqlalchemy.orm.session as session
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 __all__ = ['Session']
 
 logger = logging.getLogger(__name__)
 
 class Session(session.Session):
-    __session = None
-    __engine = None
+    __session = dict()
 
     def __init__(self, *args, **kwargs):
-        if self.__session is not None:
+        key = kwargs.pop('key')
+        if key in self.__session:
             raise Exception('Use static create_session for session creating')
         super(Session, self).__init__(*args, **kwargs)
 
-    @staticmethod
-    def create_session(connection_string:str=None):
-        if Session.__session is not None:
-            return Session.__session
 
-        session_factory = sessionmaker(class_= Session)
+    @staticmethod
+    def create_session(connection_string:str=None, key='default'):
+        if key in Session.__session:
+            return Session.__session[key][0]
+
+        session_factory = scoped_session(sessionmaker(class_= Session, key=key))
         engine = sa.create_engine(connection_string or SA_CONNECTION_STRING, echo=False)
         session_factory.configure(bind=engine)
         session = session_factory()
 
-        Session.__engine = engine
-        Session.__session = session
+        Session.__session[key] = [session, engine]
         return session
 
     @classmethod
     def cleanup(cls):
-        if cls.__session is not None:
-            cls.__session.close()
-            cls.__session = None
-            cls.__engine.dispose()
-            cls.__engine = None
+        for k, (session, engine) in cls.__session.items():
+            session.close()
+            engine.dispose()
+
+        del cls.__session
 
     def query(self, *entities, **kwargs):
         try:
