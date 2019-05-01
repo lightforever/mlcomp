@@ -1,0 +1,70 @@
+<mat-form-field>
+  <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+</mat-form-field>
+
+<div class="mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource" matSort>
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Id </th>
+      <td mat-cell *matCellDef="let element">
+          {{element.id}}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+      <td mat-cell *matCellDef="let element">
+        <a class="col-1-4" routerLink="/dags/{{element.id}}">
+          {{element.name}}
+        </a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="task_count">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Tasks </th>
+      <td mat-cell *matCellDef="let element">
+          {{element.task_count}}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="created">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Created </th>
+      <td mat-cell *matCellDef="let element">
+          {{element.created| date:"MM.dd hh:mm"}}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="last_activity">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Last activity </th>
+      <td mat-cell *matCellDef="let element">
+          {{element.last_activity| date:"MM.dd hh:mm"}}
+      </td>
+    </ng-container>
+
+
+    <ng-container matColumnDef="task_status">
+      <th mat-header-cell *matHeaderCellDef> Task status </th>
+      <td mat-cell *matCellDef="let element">
+        <svg height="40" width="270px" style="display: block;">
+          <g [attr.transform]="'translate('+(16+i*30).toString()+','+'20)'" *ngFor="let status of element.task_statuses; let i = index">
+
+            <text fill="black" text-anchor="middle" vertical-align="middle"
+                  font-size="10" y="3">{{status.count>0?status.count:''}}</text>
+
+            <circle [attr.stroke-width]="status.count>0?2:1"  (click)="status_click(status)"
+                    [attr.stroke]="colorForTaskStatus(status.name, status.count)"
+                    fill-opacity="0" r="12.5" style="cursor: pointer; opacity: 1;"></circle>
+          </g>
+
+        </svg>
+
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[10, 25, 100]"></mat-paginator>
+</div>
