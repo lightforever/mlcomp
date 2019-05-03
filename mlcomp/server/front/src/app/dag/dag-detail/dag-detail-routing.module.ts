@@ -3,7 +3,7 @@ import {RouterModule, Routes} from '@angular/router';
 
 import {CodeComponent} from './code/code.component';
 import {ConfigComponent} from './config/config.component';
-import {TasksComponent} from './tasks/tasks.component';
+import {TaskComponent} from '../../task/task.component';
 import {GraphComponent} from './graph/graph.component';
 import {DagDetailComponent} from './dag-detail/dag-detail.component';
 
@@ -16,7 +16,7 @@ const routes: Routes = [
             {path: 'code', component: CodeComponent},
             {path: 'config', component: ConfigComponent},
             {path: 'graph', component: GraphComponent},
-            {path: '', component: TasksComponent}
+            {path: '', component: TaskComponent}
         ]
 
 

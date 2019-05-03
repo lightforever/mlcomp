@@ -6,6 +6,7 @@ from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
 from mlcomp.server.back.supervisor import register_supervisor
+import os
 
 PORT = 4201
 
@@ -33,12 +34,16 @@ def projects():
     res = provider.get(options)
     return json.dumps(res)
 
-@app.route('/config')
-def config():
+
+def get_dag_id():
     assert 'dag_id' in request.args, 'dag_id is needed'
     assert request.args['dag_id'].isnumeric(), 'dag_id must be integer'
+    return int(request.args['dag_id'])
 
-    id = int(request.args['dag_id'])
+
+@app.route('/config')
+def config():
+    id = get_dag_id()
     res = DagProvider().config(id)
     return json.dumps({'data': res})
 
@@ -51,6 +56,39 @@ def dags():
     res = provider.get(project, options)
     return json.dumps(res)
 
+
+@app.route('/code')
+def code():
+    id = get_dag_id()
+    res = OrderedDict()
+    parents = dict()
+    for s, f in DagStorageProvider().by_dag(id):
+        s.path = s.path.strip()
+        parent = os.path.dirname(s.path)
+        name = os.path.basename(s.path)
+        if name=='':
+            continue
+
+        if s.is_dir:
+            node = {'name': name, 'children': []}
+            if not parent:
+                res[name] = node
+                parents[s.path] = res[name]
+            else:
+                parents[parent]['children'].append(node)
+        else:
+            node = {'name': name, 'content': f.content.decode('utf-8')}
+            if not parent:
+                res[name] = node
+            else:
+                parents[parent]['children'].append(node)
+
+    return json.dumps(list(res.values()))
+
+
+@app.route('/tasks')
+def tasks():
+    pass
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -82,4 +120,5 @@ def stop():
 
 
 if __name__ == '__main__':
+    # files(30)
     base()

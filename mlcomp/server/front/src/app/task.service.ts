@@ -4,51 +4,34 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
-import { Task } from './models';
+import {PaginatorRes, Task} from './models';
 import { MessageService } from './message.service';
-
-const httpOptions = {
-  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-};
+import {AppSettings} from './app-settings'
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
 
-  private url = 'api/tasks';  // URL to web api
+  private url = `${AppSettings.API_ENDPOINT}`;
 
   constructor(
     private http: HttpClient,
     private messageService: MessageService) { }
 
   /** GET tasks from the server */
-  getTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(this.url)
+  get_tasks(dag_id?:number): Observable<PaginatorRes<Task>> {
+    return this.http.get<PaginatorRes<Task>>(`${this.url}/tasks?dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched tasks')),
-        catchError(this.handleError<Task[]>('getTasks', []))
-      );
-  }
-
-  /** GET task by id. Return `undefined` when id not found */
-  getTaskNo404<Data>(id: number): Observable<Task> {
-    const url = `${this.url}/?id=${id}`;
-    return this.http.get<Task[]>(url)
-      .pipe(
-        map(tasks => tasks[0]), // returns a {0|1} element array
-        tap(h => {
-          const outcome = h ? `fetched` : `did not find`;
-          this.log(`${outcome} task id=${id}`);
-        }),
-        catchError(this.handleError<Task>(`getTask id=${id}`))
+        catchError(this.handleError<PaginatorRes<Task>>('get_tasks', new PaginatorRes<Task>()))
       );
   }
 
   /** GET task by id. Will 404 if id not found */
-  getTask(id: number): Observable<Task> {
-    const url = `${this.url}/${id}`;
+  get_task(id: number): Observable<Task> {
+    const url = `${this.url}/task/${id}`;
     return this.http.get<Task>(url).pipe(
       tap(_ => this.log(`fetched task id=${id}`)),
-      catchError(this.handleError<Task>(`getTask id=${id}`))
+      catchError(this.handleError<Task>(`get_task id=${id}`))
     );
   }
 

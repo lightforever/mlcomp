@@ -34,3 +34,16 @@ export class PaginatorRes<T> {
 export class Data<T> {
   data: T
 }
+
+export interface FlatNode {
+  expandable: boolean;
+  name: string;
+  level: number;
+  content: string;
+}
+
+export class CodeNode {
+    name: string;
+    content: string;
+    children?: CodeNode[];
+}

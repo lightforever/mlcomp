@@ -15,12 +15,12 @@ export class TaskComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.getTasks();
+        this.get_tasks();
     }
 
-    getTasks(): void {
-        this.taskService.getTasks()
-            .subscribe(tasks => this.tasks = tasks);
+    get_tasks(): void {
+        this.taskService.get_tasks()
+            .subscribe(res => this.tasks = res.data);
     }
 
 }

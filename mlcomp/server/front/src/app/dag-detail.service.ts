@@ -6,23 +6,30 @@ import {catchError, map, tap} from 'rxjs/operators';
 
 import {MessageService} from './message.service';
 import {AppSettings} from './app-settings'
-import {Data} from "./models";
+import {CodeNode, Data} from "./models";
 
 @Injectable({providedIn: 'root'})
 export class DagDetailService {
 
-  private url = `${AppSettings.API_ENDPOINT}`;  // URL to web api
+  private url = `${AppSettings.API_ENDPOINT}`;
 
   constructor(private http: HttpClient,
               private messageService: MessageService) {
   }
 
-  /** GET projects from the server */
   get_config(dag_id: string): Observable<Data<string>> {
     return this.http.get<Data<string>>(`${this.url}/config?dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched config')),
         catchError(this.handleError<Data<string>>('config', new Data<string>()))
+      );
+  }
+
+  get_code(dag_id: string): Observable<CodeNode[]> {
+     return this.http.get<CodeNode[]>(`${this.url}/code?dag_id=${dag_id}`)
+      .pipe(
+        tap(_ => this.log('fetched code')),
+        catchError(this.handleError<CodeNode[]>('config', []))
       );
   }
 
