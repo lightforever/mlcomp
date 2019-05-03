@@ -41,15 +41,15 @@ def project(name):
 @main.command()
 @click.argument('config')
 def dag(config: str):
-    config = load_ordered_yaml(config)
-    config_json = json.dumps(config)
-    info = config['info']
-    executors = config['executors']
+    config_text = open(config, "r").read()
+    config_parsed = load_ordered_yaml(config)
+    info = config_parsed['info']
+    executors = config_parsed['executors']
 
     provider = TaskProvider()
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
-    dag = DagProvider().add(Dag(config=config_json, project=project, name=info['name']))
+    dag = DagProvider().add(Dag(config=config_text, project=project, name=info['name']))
 
     Storage().upload(folder, dag)
 

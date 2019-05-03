@@ -1,5 +1,5 @@
 import {Component, OnInit, ViewChild, EventEmitter} from '@angular/core';
-import {Project} from '../models';
+import {Dag, PaginatorRes, Project} from '../models';
 import {ProjectService} from '../project.service';
 import {MatSort, MatTableDataSource, MatPaginator} from '@angular/material';
 import {Observable, of as observableOf, merge} from 'rxjs';
@@ -7,8 +7,6 @@ import {catchError} from 'rxjs/operators';
 import {map} from 'rxjs/operators';
 import {startWith} from 'rxjs/operators';
 import {switchMap} from 'rxjs/operators';
-import {Location} from '@angular/common';
-import {Router} from '@angular/router';
 
 @Component({
     selector: 'app-project',
@@ -26,7 +24,7 @@ export class ProjectComponent implements OnInit {
     isLoading_results = false;
     total: number;
 
-    constructor(private project_service: ProjectService, private location: Location, private router: Router) {
+    constructor(private project_service: ProjectService) {
     }
 
     ngOnInit() {
@@ -42,7 +40,7 @@ export class ProjectComponent implements OnInit {
                         this.sort.active ? this.sort.active : '',
                         this.sort.direction ? this.sort.direction == 'desc' : true,
                         this.paginator.pageIndex,
-                        this.paginator.pageSize ? this.paginator.pageSize : 10,
+                        this.paginator.pageSize||10,
                         this.dataSource.filter
                     );
                 }),
@@ -54,7 +52,7 @@ export class ProjectComponent implements OnInit {
                 }),
                 catchError(() => {
                     this.isLoading_results = false;
-                    return observableOf([]);
+                    return observableOf(new PaginatorRes<Project>());
                 })
             ).subscribe(res => {this.dataSource.data = res.data; this.total = res.total });
     }
@@ -67,13 +65,5 @@ export class ProjectComponent implements OnInit {
         }
 
         this.change.emit();
-    }
-
-    go_back(): void {
-        this.location.back();
-    }
-
-    go_forward(): void {
-        this.location.forward();
     }
 }

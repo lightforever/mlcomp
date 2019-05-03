@@ -33,6 +33,15 @@ def projects():
     res = provider.get(options)
     return json.dumps(res)
 
+@app.route('/config')
+def config():
+    assert 'dag_id' in request.args, 'dag_id is needed'
+    assert request.args['dag_id'].isnumeric(), 'dag_id must be integer'
+
+    id = int(request.args['dag_id'])
+    res = DagProvider().config(id)
+    return json.dumps({'data': res})
+
 
 @app.route('/dags')
 def dags():

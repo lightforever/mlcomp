@@ -48,6 +48,9 @@ class DagProvider(BaseDataProvider):
             res.append(r)
         return {'total': total, 'data': res}
 
+    def config(self, id:int):
+        return self.by_id(id).config
+
 
 if __name__ == '__main__':
     DagProvider().get()

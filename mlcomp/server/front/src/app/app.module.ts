@@ -3,9 +3,8 @@ import { BrowserModule }  from '@angular/platform-browser';
 import { FormsModule }    from '@angular/forms';
 import { HttpClientModule }    from '@angular/common/http';
 import { MatPaginatorModule } from '@angular/material/paginator';
-
-// import { HttpClientInMemoryWebApiModule } from 'angular-in-memory-web-api';
-// import { InMemoryDataService }  from './in-memory-data.service';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {DemoMaterialModule} from './material-module';
 
 import { AppRoutingModule }     from './app-routing.module';
 
@@ -13,12 +12,9 @@ import { AppComponent }         from './app.component';
 import { ProjectComponent }   from   './project/project.component';
 import { TaskDetailComponent }  from './task-detail/task-detail.component';
 import { TaskComponent }      from './task/task.component';
+import { ComputerComponent }      from './computer/computer.component';
 import { MessagesComponent }    from './messages/messages.component';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {DemoMaterialModule} from './material-module';
-import { DagComponent } from './dag/dag.component';
-import { DagDetailComponent } from './dag-detail/dag-detail.component';
-import { ComputerComponent } from './computer/computer.component';
+import {DagModule} from "./dag/dag.module";
 
 @NgModule({
   imports: [
@@ -29,6 +25,7 @@ import { ComputerComponent } from './computer/computer.component';
     BrowserAnimationsModule,
     DemoMaterialModule,
     MatPaginatorModule,
+    DagModule,
     // The HttpClientInMemoryWebApiModule module intercepts HTTP requests
     // and returns simulated server responses.
     // Remove it when a real server is ready to receive requests.
@@ -42,8 +39,6 @@ import { ComputerComponent } from './computer/computer.component';
     TaskDetailComponent,
     TaskComponent,
     MessagesComponent,
-    DagComponent,
-    DagDetailComponent,
     ComputerComponent
   ],
   bootstrap: [ AppComponent ]

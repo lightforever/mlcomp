@@ -13,11 +13,13 @@ class Config(OrderedDict):
         return Config(json.loads(config))
 
 
-def load_ordered_yaml(file, Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:
+def load_ordered_yaml(file:str=None, text:str=None,
+                      Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:
     """
     Loads `yaml` config into OrderedDict
     Args:
         file: file with yaml
+        text: file's yaml content
         Loader: base class for yaml Loader
         object_pairs_hook: type of mapping
     Returns:
@@ -34,4 +36,5 @@ def load_ordered_yaml(file, Loader=yaml.Loader, object_pairs_hook=OrderedDict)->
     OrderedLoader.add_constructor(
         yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
     )
-    return Config(yaml.load(open(file, "r"), OrderedLoader))
+    stream = open(file, "r") if file else text
+    return Config(yaml.load(stream, OrderedLoader))

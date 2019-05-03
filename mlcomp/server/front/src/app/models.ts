@@ -30,3 +30,7 @@ export class PaginatorRes<T> {
   data: Array<T>;
   total: number;
 }
+
+export class Data<T> {
+  data: T
+}

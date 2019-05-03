@@ -1,8 +1,16 @@
 <nav>
-  <a routerLink="/projects">Projects</a>
-  <a routerLink="/dags">Dags</a>
-  <a routerLink="/tasks">Tasks</a>
-  <a routerLink="/computers">Computers</a>
+  <a routerLink="/projects" routerLinkActive="active">Projects</a>
+  <a routerLink="/dag" routerLinkActive="active">Dags</a>
+  <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
+  <a routerLink="/computers" routerLinkActive="active">Computers</a>
 </nav>
-<router-outlet></router-outlet>
+
+<p></p>
+
+<mat-icon svgIcon="back" matTooltip="Back" (click)="go_back()" style="cursor: pointer; margin-right: 20px; margin-left: 5px"></mat-icon>
+<mat-icon svgIcon="forward" matTooltip="Forward" (click)="go_forward()"  style="cursor: pointer;"></mat-icon>
+
+<div [@routeAnimation]="getAnimationData(routerOutlet)">
+  <router-outlet #routerOutlet="outlet"></router-outlet>
+</div>
 <app-messages></app-messages>
