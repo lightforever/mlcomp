@@ -2,12 +2,22 @@ from mlcomp.db.providers.base import *
 from typing import List
 from sqlalchemy.orm.attributes import flag_modified
 
+from utils.misc import to_snake
+
+
 class TaskProvider(BaseDataProvider):
     model = Task
 
     def get(self, options: PaginatorOptions):
-        query = self.session.query(Task)
-        return self.paginator(query, options).all()
+        query = self.query(Task).options(joinedload(Task.dag_rel))
+        total = query.count()
+        paginator = self.paginator(query, options)
+        res = []
+        for p in paginator.all():
+            item = {**p.to_dict()}
+            item['status'] = to_snake(TaskStatus(item['status']).name)
+            res.append(item)
+        return {'total': total, 'data': res}
 
     def add_dependency(self, task_id: int, depend_id: int) -> None:
         self.add(TaskDependence(task_id=task_id, depend_id=depend_id))

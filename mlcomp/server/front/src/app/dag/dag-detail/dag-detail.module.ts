@@ -1,22 +1,16 @@
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
-
 import {CodeComponent} from './code/code.component';
 import {ConfigComponent} from './config/config.component';
 import {GraphComponent} from './graph/graph.component';
 
 import {DagDetailRoutingModule} from './dag-detail-routing.module';
 import { DagDetailComponent } from './dag-detail/dag-detail.component';
-import {CdkTreeModule} from '@angular/cdk/tree';
-import {MatTreeModule, MatIconModule} from '@angular/material'
+import {SharedModule} from "../../shared.module";
 
 @NgModule({
     imports: [
-        CommonModule,
         DagDetailRoutingModule,
-        CdkTreeModule,
-        MatTreeModule,
-        MatIconModule
+        SharedModule
     ],
     declarations: [
         CodeComponent,

@@ -66,7 +66,7 @@ def code():
         s.path = s.path.strip()
         parent = os.path.dirname(s.path)
         name = os.path.basename(s.path)
-        if name=='':
+        if name == '':
             continue
 
         if s.is_dir:
@@ -88,7 +88,11 @@ def code():
 
 @app.route('/tasks')
 def tasks():
-    pass
+    provider = TaskProvider()
+    options = construct_paginator_options(request.args, 'id')
+    res = provider.get(options)
+    return json.dumps(res)
+
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

@@ -15,3 +15,17 @@ td, th {
 mat-icon{
   cursor: pointer;
 }
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
+
+td{
+  text-align: center;
+}

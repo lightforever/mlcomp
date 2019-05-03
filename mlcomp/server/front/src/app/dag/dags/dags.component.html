@@ -15,17 +15,16 @@
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
       <td mat-cell *matCellDef="let element">
-        <a class="col-1-4" routerLink="./dag-detail/{{element.id}}">
           {{element.name}}
-        </a>
-
       </td>
     </ng-container>
 
     <ng-container matColumnDef="task_count">
       <th mat-header-cell *matHeaderCellDef mat-sort-header> Tasks </th>
       <td mat-cell *matCellDef="let element">
+         <a class="col-1-4" routerLink="./dag-detail/{{element.id}}">
           {{element.task_count}}
+         </a>
       </td>
     </ng-container>
 

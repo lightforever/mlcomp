@@ -7,6 +7,7 @@ import {TaskComponent} from '../../task/task.component';
 import {GraphComponent} from './graph/graph.component';
 import {DagDetailComponent} from './dag-detail/dag-detail.component';
 
+
 const routes: Routes = [
     {
 

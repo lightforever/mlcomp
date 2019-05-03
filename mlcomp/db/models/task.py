@@ -21,7 +21,7 @@ class Task(Base):
     current_step = sa.Column(sa.Integer)
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     celery_id = sa.Column(sa.String)
-    dag_rel = relationship('Dag', lazy='select')
+    dag_rel = relationship('Dag', lazy='noload')
 
 
 class TaskDependence(Base):
