@@ -1,0 +1,17 @@
+table {
+  width: 50%;
+}
+
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+td, th {
+  width: 10%;
+
+}
+
+mat-icon{
+  cursor: pointer;
+}
