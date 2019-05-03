@@ -23,6 +23,7 @@ export class ProjectComponent implements OnInit {
     displayed_columns: string[] = ['name', 'dag_count', 'last_activity'];
     isLoading_results = false;
     total: number;
+    private interval: number;
 
     constructor(private project_service: ProjectService) {
     }
@@ -55,6 +56,12 @@ export class ProjectComponent implements OnInit {
                     return observableOf(new PaginatorRes<Project>());
                 })
             ).subscribe(res => {this.dataSource.data = res.data; this.total = res.total });
+
+        this.interval = setInterval(() => this.change.emit('event'), 5000);
+    }
+
+    ngOnDestroy(){
+        clearInterval(this.interval);
     }
 
     applyFilter(filterValue: string) {

@@ -89,10 +89,14 @@ def code():
 @app.route('/tasks')
 def tasks():
     provider = TaskProvider()
+    dag_id = parse_int(request.args, 'dag_id')
     options = construct_paginator_options(request.args, 'id')
-    res = provider.get(options)
+    res = provider.get(dag_id, options)
     return json.dumps(res)
 
+@app.route('/stop')
+def stop():
+    pass
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

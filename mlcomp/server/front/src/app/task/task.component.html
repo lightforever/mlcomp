@@ -62,7 +62,7 @@
       <th mat-header-cell *matHeaderCellDef> Dag </th>
       <td mat-cell *matCellDef="let element">
           <a class="col-1-4" routerLink="/dag/dag-detail/{{element.dag_rel.id}}">
-          {{element.dag_rel.name}}
+          {{element.dag_rel.name}}({{element.dag_rel.id}})
         </a>
       </td>
     </ng-container>

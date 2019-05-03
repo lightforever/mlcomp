@@ -33,6 +33,7 @@ export class DagsComponent implements OnInit {
     };
     project: number;
     total: number;
+    private interval: number;
 
     constructor(private dag_service: DagService, private location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -52,6 +53,10 @@ export class DagsComponent implements OnInit {
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/delete.svg'));
         iconRegistry.addSvgIcon('graph',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/network.svg'));
+    }
+
+    ngOnDestroy(){
+        clearInterval(this.interval);
     }
 
     ngOnInit() {
@@ -92,6 +97,8 @@ export class DagsComponent implements OnInit {
             this.dataSource.data = res.data;
             this.total = res.total
         });
+
+        this.interval = setInterval(() => this.change.emit('event'), 5000);
     }
 
     applyFilter(filterValue: string) {

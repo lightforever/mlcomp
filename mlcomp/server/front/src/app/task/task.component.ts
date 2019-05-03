@@ -34,7 +34,8 @@ export class TaskComponent implements OnInit {
         'failed': 'red', 'stopped': 'purple', 'skipped': 'orange', 'success': 'green'
     };
     total: number;
-    dag: number;
+    dag_id: string;
+    private interval: number;
 
     constructor(private service: TaskService, private location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -49,11 +50,7 @@ export class TaskComponent implements OnInit {
         // If the user changes the sort order, reset back to the first page.
         this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
-        this.route.queryParams
-            .subscribe(params => {
-                this.dag = params['dag'];
-            });
-
+        this.dag_id = this.route.parent?this.route.parent.snapshot.paramMap.get('id'):null;
 
         merge(this.sort.sortChange, this.paginator.page, this.change)
             .pipe(
@@ -66,7 +63,7 @@ export class TaskComponent implements OnInit {
                         this.paginator.pageIndex,
                         this.paginator.pageSize || 15,
                         this.dataSource.filter,
-                        this.dag
+                        this.dag_id
                     );
                 }),
                 map(res => {
@@ -83,6 +80,12 @@ export class TaskComponent implements OnInit {
             this.dataSource.data = res.data;
             this.total = res.total
         });
+
+        this.interval = setInterval(() => this.change.emit('event'), 5000);
+    }
+
+    ngOnDestroy(){
+        clearInterval(this.interval);
     }
 
     applyFilter(filterValue: string) {
