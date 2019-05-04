@@ -1,20 +1,20 @@
 import {Component} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatIconRegistry} from '@angular/material';
-import {MessageService} from '../message.service';
-import {TaskService} from '../task.service';
+import {MessageService} from '../../message.service';
+import {TaskService} from '../../task.service';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
-import {AppSettings} from "../app-settings";
-import {Paginator} from "../paginator";
-import {TaskFilter} from "../models";
+import {AppSettings} from "../../app-settings";
+import {Paginator} from "../../paginator";
+import {TaskFilter} from "../../models";
 
 @Component({
     selector: 'app-task',
-    templateUrl: './task.component.html',
-    styleUrls: ['./task.component.css']
+    templateUrl: './tasks.component.html',
+    styleUrls: ['./tasks.component.css']
 })
-export class TaskComponent extends Paginator<TaskComponent>{
+export class TasksComponent extends Paginator<TasksComponent>{
     displayed_columns: string[] = ['id', 'name', 'created', 'started', 'last_activity',
         'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
 

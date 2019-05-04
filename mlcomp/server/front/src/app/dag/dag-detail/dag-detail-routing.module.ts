@@ -3,7 +3,7 @@ import {RouterModule, Routes} from '@angular/router';
 
 import {CodeComponent} from './code/code.component';
 import {ConfigComponent} from './config/config.component';
-import {TaskComponent} from '../../task/task.component';
+import {TaskComponent} from '../../task/task/task.component';
 import {GraphComponent} from './graph/graph.component';
 import {DagDetailComponent} from './dag-detail/dag-detail.component';
 

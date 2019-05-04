@@ -6,3 +6,7 @@ class PaginatorOptions:
         self.page_size = page_size
 
         assert (page_number is not None and page_size) or (not page_number is None and not page_size), 'Specify both page_number and page_size'
+
+        if not sort_column:
+            self.sort_column = 'id'
+            self.sort_descending = True
