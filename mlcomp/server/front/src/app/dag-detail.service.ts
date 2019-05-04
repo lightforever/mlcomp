@@ -18,7 +18,7 @@ export class DagDetailService {
   }
 
   get_config(dag_id: string): Observable<Data<string>> {
-    return this.http.get<Data<string>>(`${this.url}/config?dag_id=${dag_id}`)
+    return this.http.get<Data<string>>(`${this.url}config?dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched config')),
         catchError(this.handleError<Data<string>>('config', new Data<string>()))
@@ -26,14 +26,14 @@ export class DagDetailService {
   }
 
   get_code(dag_id: string): Observable<CodeNode[]> {
-     return this.http.get<CodeNode[]>(`${this.url}/code?dag_id=${dag_id}`)
+     return this.http.get<CodeNode[]>(`${this.url}code?dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched code')),
         catchError(this.handleError<CodeNode[]>('config', []))
       );
   }
   get_graph(dag_id: string): Observable<Graph> {
-     return this.http.get<Graph>(`${this.url}/graph?dag_id=${dag_id}`)
+     return this.http.get<Graph>(`${this.url}graph?dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched graph')),
         catchError(this.handleError<Graph>('graph', new Graph()))

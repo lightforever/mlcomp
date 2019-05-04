@@ -48,7 +48,63 @@ export class CodeNode {
     children?: CodeNode[];
 }
 
+export class Computer {
+    name: string;
+    gpu: number;
+    cpu: number;
+    memory: number;
+}
+
+export class Step {
+  id: number;
+  task: Task;
+  level: number;
+  started: Date;
+  finished: Date;
+  status: string;
+  name: string;
+}
+
+export class Log {
+    id: number;
+    message: string;
+    time: Date;
+    level: string;
+    component: string;
+    computer: Computer;
+    step: Step;
+    task: Task;
+}
+
 export class Graph {
     nodes: any;
     edges: any;
+}
+
+export class PaginatorFilter{
+    sort_column: string;
+    sort_descending: boolean;
+    page_number: number;
+    page_size: number;
+
+}
+
+export class LogFilter{
+    dag: string;
+    task: string;
+    components: number[];
+    levels: number[];
+    step: string;
+
+    task_name: string;
+    step_name: string;
+    computer: string;
+
+    paginator: PaginatorFilter;
+
+}
+
+export class ProjectFilter {
+    paginator: PaginatorFilter;
+    name: string;
 }

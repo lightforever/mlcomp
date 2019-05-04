@@ -15,7 +15,7 @@ const httpOptions = {
 @Injectable({providedIn: 'root'})
 export class DagService {
 
-  private url = `${AppSettings.API_ENDPOINT}/dags`;  // URL to web api
+  private url = `${AppSettings.API_ENDPOINT}dags`;  // URL to web api
 
   constructor(private http: HttpClient,
               private messageService: MessageService) {

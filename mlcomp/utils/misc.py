@@ -6,8 +6,10 @@ import re
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
 
+
 def now():
     return datetime.utcnow()
+
 
 def merge_dicts(*dicts: dict) -> dict:
     """
@@ -27,8 +29,8 @@ def merge_dicts(*dicts: dict) -> dict:
     for merge_dict in dicts[1:]:
         for k, v in merge_dict.items():
             if (
-                k in dict_ and isinstance(dict_[k], dict)
-                and isinstance(merge_dict[k], collections.Mapping)
+                    k in dict_ and isinstance(dict_[k], dict)
+                    and isinstance(merge_dict[k], collections.Mapping)
             ):
                 dict_[k] = merge_dicts(dict_[k], merge_dict[k])
             else:
@@ -36,6 +38,20 @@ def merge_dicts(*dicts: dict) -> dict:
 
     return dict_
 
+
 def to_snake(name):
     s1 = first_cap_re.sub(r'\1_\2', name)
     return all_cap_re.sub(r'\1_\2', s1).lower()
+
+
+def log_name(level: int):
+    if level == 10:
+        return 'DEBUG'
+    if level == 20:
+        return 'INFO'
+    if level == 30:
+        return 'WARNING'
+    if level == 40:
+        return 'ERROR'
+
+    raise Exception('Unknown log level')

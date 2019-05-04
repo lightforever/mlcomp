@@ -52,3 +52,8 @@ class StepStatus(OrderedEnum):
     Failed = 1
     Stopped = 2
     Successed = 3
+
+class ComponentType(OrderedEnum):
+    API = 0
+    Supervisor = 1
+    Worker = 2

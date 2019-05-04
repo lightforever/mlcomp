@@ -19,7 +19,7 @@ export class TaskService {
 
   /** GET tasks from the server */
   get_tasks(sortColumn: string, sortDescending: boolean, pageNumber: number, pageSize: number, filter: string, dag_id: string): Observable<PaginatorRes<Task>> {
-    return this.http.get<PaginatorRes<Task>>(`${this.url}/tasks?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}&dag_id=${dag_id}`)
+    return this.http.get<PaginatorRes<Task>>(`${this.url}tasks?sort_column=${sortColumn}&sort_descending=${sortDescending}&page_number=${pageNumber}&page_size=${pageSize}&filter=${filter}&dag_id=${dag_id}`)
       .pipe(
         tap(_ => this.log('fetched tasks')),
         catchError(this.handleError<PaginatorRes<Task>>('get_tasks', new PaginatorRes<Task>()))

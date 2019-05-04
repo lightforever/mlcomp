@@ -8,3 +8,4 @@ class Log(Base):
     message = sa.Column(sa.String)
     time = sa.Column(sa.DateTime)
     level = sa.Column(sa.Integer)
+    component = sa.Column(sa.Integer)

@@ -14,6 +14,10 @@ app = Flask(__name__)
 CORS(app)
 
 
+def request_data():
+    return json.loads(request.data.decode('utf-8'))
+
+
 def parse_int(args: dict, key: str):
     return int(args[key]) if args.get(key) and args[key].isnumeric() else None
 
@@ -26,12 +30,13 @@ def construct_paginator_options(args: dict, default_sort_column: str):
                             )
 
 
-@app.route('/projects')
+@app.route('/projects', methods=['POST'])
 def projects():
-    options = construct_paginator_options(request.args, 'id')
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
 
     provider = ProjectProvider()
-    res = provider.get(options)
+    res = provider.get(data, options)
     return json.dumps(res)
 
 
@@ -41,19 +46,21 @@ def get_dag_id():
     return int(request.args['dag_id'])
 
 
-@app.route('/config')
+@app.route('/config', methods=['POST'])
 def config():
     id = get_dag_id()
     res = DagProvider().config(id)
     return json.dumps({'data': res})
 
-@app.route('/graph')
+
+@app.route('/graph', methods=['POST'])
 def graph():
     id = get_dag_id()
     res = DagProvider().graph(id)
     return json.dumps(res)
 
-@app.route('/dags')
+
+@app.route('/dags', methods=['POST'])
 def dags():
     options = construct_paginator_options(request.args, 'id')
     project = parse_int(request.args, 'project')
@@ -62,7 +69,7 @@ def dags():
     return json.dumps(res)
 
 
-@app.route('/code')
+@app.route('/code', methods=['POST'])
 def code():
     id = get_dag_id()
     res = OrderedDict()
@@ -96,12 +103,21 @@ def code():
     return json.dumps(list(res.values()))
 
 
-@app.route('/tasks')
+@app.route('/tasks', methods=['POST'])
 def tasks():
     provider = TaskProvider()
     dag_id = parse_int(request.args, 'dag_id')
     options = construct_paginator_options(request.args, 'id')
     res = provider.get(dag_id, options)
+    return json.dumps(res)
+
+
+@app.route('/logs', methods=['POST'])
+def logs():
+    provider = LogProvider()
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    res = provider.get(data, options)
     return json.dumps(res)
 
 
