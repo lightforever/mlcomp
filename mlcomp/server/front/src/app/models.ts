@@ -108,3 +108,15 @@ export class ProjectFilter {
     paginator: PaginatorFilter;
     name: string;
 }
+
+export class DagFilter {
+    paginator: PaginatorFilter;
+    name: string;
+    project: number;
+}
+
+export class TaskFilter {
+    paginator: PaginatorFilter;
+    name: string;
+    dag: number;
+}

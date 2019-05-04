@@ -41,19 +41,19 @@ def projects():
 
 
 def get_dag_id():
-    assert 'dag_id' in request.args, 'dag_id is needed'
-    assert request.args['dag_id'].isnumeric(), 'dag_id must be integer'
-    return int(request.args['dag_id'])
+    assert 'dag' in request.args, 'dag is needed'
+    assert request.args['dag'].isnumeric(), 'dag must be integer'
+    return int(request.args['dag'])
 
 
-@app.route('/config', methods=['POST'])
+@app.route('/config', methods=['GET'])
 def config():
     id = get_dag_id()
     res = DagProvider().config(id)
     return json.dumps({'data': res})
 
 
-@app.route('/graph', methods=['POST'])
+@app.route('/graph', methods=['GET'])
 def graph():
     id = get_dag_id()
     res = DagProvider().graph(id)
@@ -62,14 +62,14 @@ def graph():
 
 @app.route('/dags', methods=['POST'])
 def dags():
-    options = construct_paginator_options(request.args, 'id')
-    project = parse_int(request.args, 'project')
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
     provider = DagProvider()
-    res = provider.get(project, options)
+    res = provider.get(data, options)
     return json.dumps(res)
 
 
-@app.route('/code', methods=['POST'])
+@app.route('/code', methods=['GET'])
 def code():
     id = get_dag_id()
     res = OrderedDict()
@@ -105,10 +105,10 @@ def code():
 
 @app.route('/tasks', methods=['POST'])
 def tasks():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
     provider = TaskProvider()
-    dag_id = parse_int(request.args, 'dag_id')
-    options = construct_paginator_options(request.args, 'id')
-    res = provider.get(dag_id, options)
+    res = provider.get(data, options)
     return json.dumps(res)
 
 

@@ -7,7 +7,7 @@ from mlcomp.utils.misc import to_snake
 class DagProvider(BaseDataProvider):
     model = Dag
 
-    def get(self, project: int, options: PaginatorOptions = None):
+    def get(self, filter: dict, options: PaginatorOptions = None):
         task_status = []
         for e in TaskStatus:
             task_status.append(func.count(Task.status).filter(Task.status == e.value).label(e.name))
@@ -20,8 +20,10 @@ class DagProvider(BaseDataProvider):
         ]
 
         query = self.query(Dag, *funcs, *task_status)
-        if project:
-            query = query.filter(Dag.project == project)
+        if filter.get('project'):
+            query = query.filter(Dag.project == filter['project'])
+        if filter.get('name'):
+            query = query.filter(Task.name.like(f'%{filter["name"]}%'))
 
         query = query.join(Task).group_by(Dag.id)
         total = query.count()

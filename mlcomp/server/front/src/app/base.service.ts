@@ -13,8 +13,8 @@ export abstract class BaseService {
     protected abstract collection_part: string;
     protected abstract single_part: string;
 
-    constructor(private http: HttpClient,
-                private messageService: MessageService) {
+    constructor(protected http: HttpClient,
+                protected messageService: MessageService) {
     }
 
     get_paginator<T>(filter: any): Observable<PaginatorRes<T>> {
@@ -39,7 +39,7 @@ export abstract class BaseService {
      * @param operation - name of the operation that failed
      * @param result - optional value to return as the observable result
      */
-    private handleError<T>(operation = 'operation', result?: T) {
+    protected handleError<T>(operation = 'operation', result?: T) {
         return (error: any): Observable<T> => {
             console.error(error); // log to console instead
 
@@ -51,7 +51,7 @@ export abstract class BaseService {
     }
 
     /** Log a DagService message with the MessageService */
-    private log(message: string) {
+    protected log(message: string) {
         this.messageService.add(`${message}`);
     }
 }

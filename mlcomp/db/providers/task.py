@@ -8,10 +8,13 @@ from utils.misc import to_snake
 class TaskProvider(BaseDataProvider):
     model = Task
 
-    def get(self, dag_id: int, options: PaginatorOptions):
+    def get(self, filter: dict, options: PaginatorOptions):
         query = self.query(Task).options(joinedload(Task.dag_rel))
-        if dag_id:
-            query = query.filter(Task.dag==dag_id)
+        if filter.get('dag'):
+            query = query.filter(Task.dag==filter['dag'])
+
+        if filter.get('name'):
+            query = query.filter(Project.name.like(f'%{filter["name"]}%'))
 
         total = query.count()
         paginator = self.paginator(query, options)
