@@ -1,0 +1,7 @@
+#mynetwork {
+    border: 1px solid black;
+    background: white;
+    display: inline-block;
+    width: 100%;
+    height: 800px;
+}

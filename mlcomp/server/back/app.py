@@ -47,6 +47,11 @@ def config():
     res = DagProvider().config(id)
     return json.dumps({'data': res})
 
+@app.route('/graph')
+def graph():
+    id = get_dag_id()
+    res = DagProvider().graph(id)
+    return json.dumps(res)
 
 @app.route('/dags')
 def dags():
@@ -77,7 +82,12 @@ def code():
             else:
                 parents[parent]['children'].append(node)
         else:
-            node = {'name': name, 'content': f.content.decode('utf-8')}
+            node = {'name': name}
+            try:
+                node['content'] = f.content.decode('utf-8')
+            except UnicodeDecodeError:
+                node['content'] = ''
+
             if not parent:
                 res[name] = node
             else:
@@ -94,9 +104,11 @@ def tasks():
     res = provider.get(dag_id, options)
     return json.dumps(res)
 
+
 @app.route('/stop')
 def stop():
     pass
+
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

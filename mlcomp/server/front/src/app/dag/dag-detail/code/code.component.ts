@@ -5,6 +5,7 @@ import {FlatNode, CodeNode} from '../../../models'
 import {DagDetailService} from "../../../dag-detail.service";
 import {ActivatedRoute} from "@angular/router";
 import {MessageService} from "../../../message.service";
+import {DynamicresourceService} from "../../../dynamicresource.service";
 
 @Component({
     selector: 'app-code',
@@ -34,7 +35,8 @@ export class CodeComponent implements OnInit {
     dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
 
     constructor(private service: DagDetailService, private route: ActivatedRoute,
-                private message_service: MessageService
+                private message_service: MessageService,
+                private resource_service: DynamicresourceService
     ) {
 
     }
@@ -45,8 +47,7 @@ export class CodeComponent implements OnInit {
         this.service.get_code(this.dag_id).subscribe(res => {
             self.dataSource.data = res;
         });
-
-        this.load_prettify();
+        this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css')
     }
 
     prettify_lang(ext: string) {
@@ -74,27 +75,6 @@ export class CodeComponent implements OnInit {
 
         window['PR'].prettyPrint();
     }
-
-    load_prettify() {
-        let self = this;
-        this.message_service.add('loading prettify');
-        let scripts_to_load = ['assets/prettify/prettify.js', 'assets/prettify/lang-yaml.js'];
-        for (let s of scripts_to_load) {
-            let node = document.createElement('script');
-            node.src = s;
-            node.type = 'text/javascript';
-            node.async = true;
-            document.getElementsByTagName('head')[0].appendChild(node);
-        }
-
-
-        let node2 = document.createElement('link');
-        node2.href = "assets/prettify/prettify.css";
-        node2.type = 'text/css';
-        node2.rel = 'stylesheet';
-        document.getElementsByTagName('head')[0].appendChild(node2);
-    }
-
 
     hasChild = (_: number, node: FlatNode) => node.expandable;
 

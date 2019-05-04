@@ -51,6 +51,27 @@ class DagProvider(BaseDataProvider):
     def config(self, id:int):
         return self.by_id(id).config
 
+    def graph(self, id: int):
+        tasks = self.query(Task).filter(Task.dag == id).all()
+        task_ids = [t.id for t in tasks]
+        dep = self.query(TaskDependence).filter(TaskDependence.task_id.in_(task_ids)).all()
+        task_by_id = {t.id: t for t in tasks}
+        def label(t: Task):
+            res = [t.executor]
+            if t.status >= TaskStatus.InProgress.value:
+                delta = t.last_activity - t.started
+                res.append(str(delta).split('.')[0])
+                res.append(f'{t.current_step or 0}/{t.steps}')
+            return '\n'.join(res)
+
+        nodes = [
+            {
+                'id': t.id,
+                'label': label(t),
+                'status': to_snake(TaskStatus(t.status).name)
+            } for t in tasks]
+        edges = [{'from': d.depend_id, 'to': d.task_id, 'status': to_snake(TaskStatus(task_by_id[d.depend_id].status).name)} for d in dep]
+        return {'nodes': nodes, 'edges': edges}
 
 if __name__ == '__main__':
-    DagProvider().get()
+    DagProvider().graph(39)

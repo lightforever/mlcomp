@@ -12,6 +12,7 @@ import {Dag, PaginatorRes, Task} from '../models';
 import {TaskService} from '../task.service';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
+import {AppSettings} from "../app-settings";
 
 @Component({
     selector: 'app-task',
@@ -29,10 +30,6 @@ export class TaskComponent implements OnInit {
         'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
 
     isLoading_results = false;
-    status_colors = {
-        'not_ran': 'gray', 'queued': 'lightblue', 'in_progress': 'lime',
-        'failed': 'red', 'stopped': 'purple', 'skipped': 'orange', 'success': 'green'
-    };
     total: number;
     dag_id: string;
     private interval: number;
@@ -99,4 +96,7 @@ export class TaskComponent implements OnInit {
     }
 
 
+    status_color(status: string) {
+        return AppSettings.status_colors[status];
+    }
 }

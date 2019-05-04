@@ -12,6 +12,7 @@ import {Router, ActivatedRoute} from '@angular/router';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatIconRegistry} from '@angular/material';
 import {MessageService} from '../../message.service';
+import {AppSettings} from "../../app-settings";
 
 @Component({
     selector: 'app-dag',
@@ -27,10 +28,6 @@ export class DagsComponent implements OnInit {
 
     displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started', 'last_activity', 'task_status', 'links'];
     isLoading_results = false;
-    status_colors = {
-        'not_ran': 'gray', 'queued': 'lightblue', 'in_progress': 'lime',
-        'failed': 'red', 'stopped': 'purple', 'skipped': 'orange', 'success': 'green'
-    };
     project: number;
     total: number;
     private interval: number;
@@ -112,7 +109,7 @@ export class DagsComponent implements OnInit {
     }
 
     color_for_task_status(name: string, count: number) {
-        return count > 0 ? this.status_colors[name] : 'gainsboro'
+        return count > 0 ? AppSettings.status_colors[name] : 'gainsboro'
     }
 
     status_click(dag

@@ -4,12 +4,37 @@ info:
   folder: projects/first
   data_folder: /f/data/first
 executors:
-  download:
+  dummy1:
     type: Dummy
-    competition: digit-recognizer
-#  upload:
-#    type: Submit
-#    competition: digit-recognizer
-#    file: sample_submission.csv
-#    depends:
-#      - download
+  dummy2:
+    type: Dummy
+    depends:
+      - dummy1
+  dummy3:
+    type: Dummy
+    depends:
+      - dummy2
+  dummy4:
+    type: Dummy
+    depends:
+      - dummy2
+  dummy5:
+    type: Dummy
+    depends:
+      - dummy3
+  dummy6:
+    type: Dummy
+    depends:
+      - dummy4
+  dummy7:
+    type: Dummy
+    depends:
+      - dummy4
+  dummy8:
+    type: Dummy
+    depends:
+      - dummy1
+  dummy9:
+    type: Dummy
+    depends:
+      - dummy8

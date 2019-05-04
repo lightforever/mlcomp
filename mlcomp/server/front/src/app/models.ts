@@ -47,3 +47,8 @@ export class CodeNode {
     content: string;
     children?: CodeNode[];
 }
+
+export class Graph {
+    nodes: any;
+    edges: any;
+}

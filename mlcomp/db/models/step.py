@@ -11,4 +11,4 @@ class Step(Base):
     status = sa.Column(sa.Integer)
     metrics = sa.Column(sa.String)
     name = sa.Column(sa.String)
-    task_rel = relationship('Task', lazy='select')
+    task_rel = relationship('Task', lazy='noload')

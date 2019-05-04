@@ -47,11 +47,13 @@ def dag(config: str):
     executors = config_parsed['executors']
 
     provider = TaskProvider()
+    storage = Storage()
+    dag_provider = DagProvider()
+
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
-    dag = DagProvider().add(Dag(config=config_text, project=project, name=info['name']))
-
-    Storage().upload(folder, dag)
+    dag = dag_provider.add(Dag(config=config_text, project=project, name=info['name']))
+    storage.upload(folder, dag)
 
     created = dict()
     while len(created) < len(executors):

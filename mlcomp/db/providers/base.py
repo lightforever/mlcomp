@@ -24,7 +24,6 @@ class BaseDataProvider:
 
     def add(self, obj: Base):
         self._session.add(obj)
-        getattr(obj, 'id')
         return obj
 
     def by_id(self, id:int):
@@ -46,10 +45,6 @@ class BaseDataProvider:
     @property
     def session(self):
         return self._session
-
-    def __del__(self):
-        self._session.close()
-        self._session = None
 
     def paginator(self, query: Query, options: PaginatorOptions):
         if options.sort_column:

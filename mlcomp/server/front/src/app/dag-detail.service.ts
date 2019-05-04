@@ -6,7 +6,7 @@ import {catchError, map, tap} from 'rxjs/operators';
 
 import {MessageService} from './message.service';
 import {AppSettings} from './app-settings'
-import {CodeNode, Data} from "./models";
+import {CodeNode, Data, Graph} from "./models";
 
 @Injectable({providedIn: 'root'})
 export class DagDetailService {
@@ -30,6 +30,13 @@ export class DagDetailService {
       .pipe(
         tap(_ => this.log('fetched code')),
         catchError(this.handleError<CodeNode[]>('config', []))
+      );
+  }
+  get_graph(dag_id: string): Observable<Graph> {
+     return this.http.get<Graph>(`${this.url}/graph?dag_id=${dag_id}`)
+      .pipe(
+        tap(_ => this.log('fetched graph')),
+        catchError(this.handleError<Graph>('graph', new Graph()))
       );
   }
 
@@ -57,4 +64,6 @@ export class DagDetailService {
   private log(message: string) {
     this.messageService.add(`DagDetailService: ${message}`);
   }
+
+
 }

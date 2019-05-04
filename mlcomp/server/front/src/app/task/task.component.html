@@ -45,7 +45,7 @@
 
     <ng-container matColumnDef="status">
       <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
-      <td mat-cell *matCellDef="let element"  [style.color]="status_colors[element.status]">
+      <td mat-cell *matCellDef="let element"  [style.color]="status_color(element.status)">
           {{element.status}}
       </td>
     </ng-container>
