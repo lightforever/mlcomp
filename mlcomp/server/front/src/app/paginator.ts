@@ -15,6 +15,7 @@ export abstract class Paginator<T> implements OnInit {
     @ViewChild(MatPaginator) paginator: MatPaginator;
     @ViewChild(MatSort) sort: MatSort;
     change: EventEmitter<any> = new EventEmitter();
+    data_updated: EventEmitter<any> = new EventEmitter();
 
     protected abstract displayed_columns: string[];
     protected default_page_size: number = 15;
@@ -68,7 +69,8 @@ export abstract class Paginator<T> implements OnInit {
                 })
             ).subscribe(res => {
             this.dataSource.data = res.data;
-            this.total = res.total
+            this.total = res.total;
+            this.data_updated.emit(res.data);
         });
 
         // this.interval = setInterval(() => this.change.emit('event'), 5000);

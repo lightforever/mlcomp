@@ -48,11 +48,28 @@ export class CodeNode {
     children?: CodeNode[];
 }
 
+export class Gpu {
+    memory: number;
+    load: number;
+}
+
+export class Usage {
+    cpu: number;
+    gpu: Gpu[];
+    memory: number;
+}
+
+export class ComputerUsage {
+    mean: Usage[];
+    peak: Usage[];
+}
+
 export class Computer {
     name: string;
     gpu: number;
     cpu: number;
     memory: number;
+    usage: Usage;
 }
 
 export class Step {

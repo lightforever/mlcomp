@@ -29,6 +29,15 @@ def construct_paginator_options(args: dict, default_sort_column: str):
                             page_size=parse_int(args, 'page_size'),
                             )
 
+@app.route('/computers', methods=['POST'])
+def computers():
+    data = request_data()
+    options = PaginatorOptions(**data)
+    options.sort_column = 'name'
+
+    provider = ComputerProvider()
+    return json.dumps(provider.get(data, options))
+
 
 @app.route('/projects', methods=['POST'])
 def projects():

@@ -11,7 +11,8 @@ export const ResourceStore: Resource[] = [
     {name: 'vis.min.css', src: 'assets/visjs/vis.min.css', type: 'css'},
     {name: 'prettify', src: 'assets/prettify/prettify.js', type: 'js'},
     {name: 'prettify-yaml', src: 'assets/prettify/lang-yaml.js', type: 'js'},
-    {name: 'prettify-css', src: 'assets/prettify/prettify.css', type: 'css'}
+    {name: 'prettify-css', src: 'assets/prettify/prettify.css', type: 'css'},
+    {name: 'plotly', src: 'assets/plotly.min.js', type: 'js'}
 ];
 
 

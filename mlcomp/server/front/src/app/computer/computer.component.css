@@ -1,0 +1,40 @@
+table.mat-table {
+  width: 100%;
+}
+
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+td, th {
+  width: 15%;
+  text-align: center;
+}
+
+.mat-column-userId {
+  flex: 0 0 100px;
+}
+
+td.name, th.name {
+  width: 5%;
+}
+
+td.cpu, th.cpu {
+  width: 10%;
+}
+
+
+td.usage_history, th.usage_history {
+  width: 40%;
+}
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
