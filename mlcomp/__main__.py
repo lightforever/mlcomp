@@ -4,15 +4,42 @@ import os
 from mlcomp.task.storage import Storage
 from mlcomp.utils.config import load_ordered_yaml
 from mlcomp.task.executors import Executor
-import json
 from mlcomp.task.app import app
 import socket
 from multiprocessing import cpu_count
 import torch
 
+from utils.misc import dict_func
+from utils.schedule import start_schedule
+import psutil
+import GPUtil
+import numpy as np
+
 @click.group()
 def main():
     pass
+
+def worker_usage():
+    provider = ComputerProvider()
+    name = socket.gethostname()
+
+    usages = []
+
+    for _ in range(60):
+        memory = dict(psutil.virtual_memory()._asdict())
+
+        usage = {
+            'cpu': psutil.cpu_percent(),
+            'memory': memory['percent'],
+            'gpu': [{'memory': g.memoryUtil, 'load': g.load} for g in GPUtil.getGPUs()]
+        }
+
+        provider.current_usage(name, usage)
+        usage.update(usage)
+        usages.append(usage)
+
+    usage = json.dumps({'mean': dict_func(usages, np.mean), 'peak': dict_func(usages, np.max)})
+    provider.add(ComputerUsage(computer=name, usage=usage))
 
 
 @main.command()
@@ -22,6 +49,8 @@ def worker():
 
     computer = Computer(name=socket.gethostname(), gpu=torch.cuda.device_count(), cpu=cpu_count(), memory=tot_m)
     provider.create_or_update(computer, 'name')
+
+    start_schedule([(worker_usage, 60)])
 
     argv = [
         'worker',

@@ -3,6 +3,9 @@ import os
 import logging
 from os.path import isdir
 import hashlib
+
+from sqlalchemy.orm import joinedload
+
 from mlcomp.db.models import *
 from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider
 import pkgutil
@@ -41,7 +44,7 @@ class Storage:
             self.provider.add(DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False))
 
     def download(self, task: int):
-        task = self.task_provider.by_id(task)
+        task = self.task_provider.by_id(task, joinedload(Task.dag_rel))
         folder = f'/tmp/mlcomp/{task.id}'
         os.makedirs(folder, exist_ok=True)
         items = self.provider.by_dag(task.dag)

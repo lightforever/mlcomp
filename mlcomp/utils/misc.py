@@ -2,10 +2,28 @@ import collections
 import copy
 from datetime import datetime
 import re
+from typing import List
+import numpy as np
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
 
+
+def dict_func(objcts: List, func=np.mean):
+    if len(objcts)==0:
+        return {}
+    first = objcts[0]
+
+    res = dict()
+    for k in first:
+        k_objcts = [o[k] for o in objcts]
+        if isinstance(first[k], dict):
+            res[k] = dict_func(k_objcts, func)
+        elif isinstance(first[k], list):
+            res[k] = [dict_func([o[k][i] for o in objcts], func) for i in range(len(first[k]))]
+        else:
+            res[k] = func(k_objcts)
+    return res
 
 def now():
     return datetime.utcnow()
@@ -55,3 +73,9 @@ def log_name(level: int):
         return 'ERROR'
 
     raise Exception('Unknown log level')
+
+if __name__=='__main__':
+    print(dict_func([
+        {'cpu': 10, 'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},
+        {'cpu': 50, 'gpu': [{'memory': 100, 'load': 100}, {'memory': 0, 'load': 0}]},
+    ]))

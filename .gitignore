@@ -106,3 +106,4 @@ venv.bak/
 # Pycharm
 .idea/
 mlcomp/server/front/node_modules
+mlcomp/projects/**/data

@@ -1,10 +1,10 @@
 import time
-from mlcomp.utils.logging import logger, logging
+from mlcomp.utils.logging import logger
 import traceback
 from mlcomp.task.tasks import execute
 from mlcomp.db.providers import *
-from apscheduler.schedulers.background import BackgroundScheduler
-import atexit
+
+from utils.schedule import start_schedule
 
 
 def supervisor():
@@ -56,19 +56,4 @@ def supervisor():
 
 
 def register_supervisor():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=supervisor, trigger="interval", seconds=1)
-    scheduler.start()
-
-    # Shut down the scheduler when exiting the app
-    atexit.register(lambda: scheduler.shutdown())
-
-    class NoRunningFilter(logging.Filter):
-        def filter(self, record):
-            return isinstance(record.msg, str) and not 'ran tasks' in record.msg
-
-    for k in logging.root.manager.loggerDict:
-        if 'apscheduler' in k:
-            logging.getLogger(k).setLevel(logging.ERROR)
-        if 'mlcomp' in k:
-            logging.getLogger(k).addFilter(NoRunningFilter())
+    start_schedule([(supervisor, 1)])

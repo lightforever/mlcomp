@@ -28,8 +28,11 @@ class TaskProvider(BaseDataProvider):
     def add_dependency(self, task_id: int, depend_id: int) -> None:
         self.add(TaskDependence(task_id=task_id, depend_id=depend_id))
 
-    def by_id(self, id) -> Task:
-        return self.query(Task).filter(Task.id == id).first()
+    def by_id(self, id, options=None) -> Task:
+        query = self.query(Task).filter(Task.id == id)
+        if options:
+            query = query.options(options)
+        return query.first()
 
     def change_status(self, task, status: TaskStatus):
         if status == TaskStatus.InProgress:
