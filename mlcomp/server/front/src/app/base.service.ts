@@ -54,4 +54,5 @@ export abstract class BaseService {
     protected log(message: string) {
         this.messageService.add(`${message}`);
     }
+
 }

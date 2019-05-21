@@ -26,8 +26,12 @@ class BaseDataProvider:
         self._session.add(obj)
         return obj
 
-    def by_id(self, id:int):
-        return self.query(self.model).filter(getattr(self.model, 'id')==id).first()
+    def by_id(self, id:int, joined_load=None):
+        res = self.query(self.model).filter(getattr(self.model, 'id') == id)
+        if joined_load is not None:
+            for n in joined_load:
+                res=res.options(joinedload(n))
+        return res.first()
 
     def create_or_update(self, obj: Base, field: str):
         db = self.session.query(obj.__class__).filter(getattr(obj.__class__, field)==getattr(obj, field)).first()

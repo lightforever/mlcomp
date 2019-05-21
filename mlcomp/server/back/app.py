@@ -7,6 +7,7 @@ from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
 from mlcomp.server.back.supervisor import register_supervisor
 import os
+import mlcomp.task.tasks as celery_tasks
 
 PORT = 4201
 
@@ -120,6 +121,21 @@ def tasks():
     res = provider.get(data, options)
     return json.dumps(res)
 
+@app.route('/task/stop', methods=['POST'])
+def task_stop():
+    data = request_data()
+    status = celery_tasks.stop(data['id'])
+    return json.dumps({'success': True, 'status': to_snake(TaskStatus(status).name)})
+
+@app.route('/dag/stop', methods=['POST'])
+def dag_stop():
+    data = request_data()
+    provider = DagProvider()
+    id = int(data['id'])
+    dag = provider.by_id(id, joined_load=['tasks'])
+    for t in dag.tasks:
+        celery_tasks.stop(t.id)
+    return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
 
 @app.route('/logs', methods=['POST'])
 def logs():

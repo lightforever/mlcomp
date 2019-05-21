@@ -136,4 +136,16 @@ export class TaskFilter {
     paginator: PaginatorFilter;
     name: string;
     dag: number;
+    status: string;
+}
+
+export class BaseResult {
+    success: boolean;
+}
+export class Status extends BaseResult{
+    status: string;
+}
+
+export class DagStopResult extends BaseResult{
+    dag: Dag;
 }

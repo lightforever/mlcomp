@@ -116,7 +116,7 @@
     <ng-container matColumnDef="links">
       <th mat-header-cell *matHeaderCellDef style="width: 60px"> Links </th>
       <td mat-cell *matCellDef="let element" style="min-width: 100px">
-        <mat-icon svgIcon="stop"  matTooltip="Stop"></mat-icon>
+        <mat-icon svgIcon="stop"  matTooltip="Stop" (click)="stop(element)"></mat-icon>
       </td>
     </ng-container>
 

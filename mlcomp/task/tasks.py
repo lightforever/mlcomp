@@ -33,6 +33,22 @@ def execute(id:int):
         provider.change_status(task, TaskStatus.Failed)
         logger.error(traceback.format_exc())
 
+def stop(id: int):
+    provider = TaskProvider()
+    task = provider.by_id(id)
+    if task.status > TaskStatus.InProgress.value:
+        return task.status
+
+    try:
+        app.control.revoke(task.celery_id, terminate=True)
+    except Exception:
+        logger.error(traceback.format_exc())
+    finally:
+        provider.change_status(task, TaskStatus.Stopped)
+
+    return task.status
+
+
 if __name__=='__main__':
     execute(81)
     # from task.tasks import execute

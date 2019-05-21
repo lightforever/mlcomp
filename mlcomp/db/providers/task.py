@@ -16,6 +16,9 @@ class TaskProvider(BaseDataProvider):
         if filter.get('name'):
             query = query.filter(Project.name.like(f'%{filter["name"]}%'))
 
+        if filter.get('status'):
+            query = query.filter(Task.status==TaskStatus.from_name(filter['status']))
+
         total = query.count()
         paginator = self.paginator(query, options)
         res = []
@@ -58,3 +61,7 @@ class TaskProvider(BaseDataProvider):
 
     def update_last_activity(self, task:int):
         self.query(Task).filter(Task.id==task).update({'last_activity': now()})
+
+    def stop(self, id:int):
+        task = self.by_id(id)
+        self.change_status(task, TaskStatus.Stopped)

@@ -30,6 +30,12 @@ class OrderedEnum(Enum):
     def names_snake(cls):
         return [to_snake(n) for n in cls.names()]
 
+    @classmethod
+    def from_name(cls, name:str):
+        if '_' in name or not name[0].isupper():
+            return cls.names_snake().index(name)
+        return cls.names().index(name)
+
 
 class TaskStatus(OrderedEnum):
     NotRan = 0

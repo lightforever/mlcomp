@@ -20,12 +20,12 @@ export class DagsComponent extends Paginator<Dag> {
     project: number;
     name: string;
 
-    constructor(protected dag_service: DagService, protected location: Location,
+    constructor(protected service: DagService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
                 private message_service: MessageService
     ) {
-        super(dag_service, location);
+        super(service, location);
 
         iconRegistry.addSvgIcon('config',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/config.svg'));
@@ -61,12 +61,7 @@ export class DagsComponent extends Paginator<Dag> {
         return count > 0 ? AppSettings.status_colors[name] : 'gainsboro'
     }
 
-    status_click(dag
-                     :
-                     Dag, status
-                     :
-                     NameCount
-    ) {
+    status_click(dag: Dag, status: NameCount) {
         this.router.navigate(['/tasks'], {queryParams: {dag: dag.id, status: status.name}});
     }
 
@@ -75,4 +70,7 @@ export class DagsComponent extends Paginator<Dag> {
         this.change.emit();
     }
 
+    stop(element: any) {
+        this.service.stop(element.id).subscribe(data=>element.task_statuses=data.dag.task_statuses);
+    }
 }

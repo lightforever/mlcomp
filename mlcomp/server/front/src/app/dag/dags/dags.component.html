@@ -77,7 +77,7 @@
         <mat-icon svgIcon="config" matTooltip="Config" routerLink="./dag-detail/{{element.id}}/config"></mat-icon>
         <mat-icon svgIcon="code"  matTooltip="Code" routerLink="./dag-detail/{{element.id}}/code"></mat-icon>
         <mat-icon svgIcon="graph"  matTooltip="Graph" routerLink="./dag-detail/{{element.id}}/graph"></mat-icon>
-        <mat-icon svgIcon="stop"  matTooltip="Stop"></mat-icon>
+        <mat-icon svgIcon="stop"  matTooltip="Stop" (click)="stop(element)"></mat-icon>
       </td>
     </ng-container>
 

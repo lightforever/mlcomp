@@ -24,6 +24,8 @@ class DagProvider(BaseDataProvider):
             query = query.filter(Dag.project == filter['project'])
         if filter.get('name'):
             query = query.filter(Task.name.like(f'%{filter["name"]}%'))
+        if filter.get('id'):
+            query = query.filter(Dag.id == int(filter['id']))
 
         query = query.join(Task).group_by(Dag.id)
         total = query.count()
@@ -31,17 +33,14 @@ class DagProvider(BaseDataProvider):
         res = []
         rules = ('-tasks.dag_rel',)
         for dag, task_count, last_activity, started, finished, *(task_status) in paginator.all():
-            dag_dict = {k: v for k, v in dag.to_dict(rules=rules).items() if k not in ['tasks', 'config']}
-            tasks = dag.tasks
+            # noinspection PyDictCreation
             r = {
                 'task_count': task_count,
                 'last_activity': last_activity,
                 'started': started,
                 'finished': finished,
-                **dag_dict
+                **{k: v for k, v in dag.to_dict(rules=rules).items() if k not in ['tasks', 'config']}
             }
-            for t in tasks:
-                r[to_snake(TaskStatus(t.status).name)] += 1
 
             r['task_statuses'] = [{'name': to_snake(e.name), 'count': s} for e, s in zip(TaskStatus, task_status)]
             r['last_activity'] = self.serializer.serialize_date(r['last_activity']) if r['last_activity'] else None
@@ -50,7 +49,7 @@ class DagProvider(BaseDataProvider):
             res.append(r)
         return {'total': total, 'data': res}
 
-    def config(self, id:int):
+    def config(self, id: int):
         return self.by_id(id).config
 
     def graph(self, id: int):
@@ -58,6 +57,7 @@ class DagProvider(BaseDataProvider):
         task_ids = [t.id for t in tasks]
         dep = self.query(TaskDependence).filter(TaskDependence.task_id.in_(task_ids)).all()
         task_by_id = {t.id: t for t in tasks}
+
         def label(t: Task):
             res = [t.executor]
             if t.status >= TaskStatus.InProgress.value:
@@ -72,8 +72,11 @@ class DagProvider(BaseDataProvider):
                 'label': label(t),
                 'status': to_snake(TaskStatus(t.status).name)
             } for t in tasks]
-        edges = [{'from': d.depend_id, 'to': d.task_id, 'status': to_snake(TaskStatus(task_by_id[d.depend_id].status).name)} for d in dep]
+        edges = [
+            {'from': d.depend_id, 'to': d.task_id, 'status': to_snake(TaskStatus(task_by_id[d.depend_id].status).name)}
+            for d in dep]
         return {'nodes': nodes, 'edges': edges}
+
 
 if __name__ == '__main__':
     DagProvider().graph(39)
