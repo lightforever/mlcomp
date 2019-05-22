@@ -1,0 +1,19 @@
+info:
+  name: catalyst
+  project: first
+  folder: projects/catalyst
+  data_folder: /f/data/first
+executors:
+  dummy1:
+    type: Catalyst
+    args:
+      config: catalyst-config.yml
+    series:
+      - loss
+      - precision01
+    report:
+      row:
+        precision:
+          series: precision01
+        loss:
+          series: loss

@@ -28,6 +28,8 @@ class Storage:
             path = os.path.relpath(o, folder)
             if path == '.' or path.startswith('data') or path.startswith('./data'):
                 continue
+            if path.startswith('log') or path.startswith('./log'):
+                continue
 
             if isdir(o):
                 self.provider.add(DagStorage(dag=dag.id, path=path, is_dir=True))
@@ -40,6 +42,7 @@ class Storage:
                 file = File(md5=md5, content=content, project=dag.project)
                 self.file_provider.add(file)
                 file_id = file.id
+                hashs[md5] = file.id
 
             self.provider.add(DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False))
 
@@ -57,7 +60,7 @@ class Storage:
                 with open(path, 'wb') as f:
                     f.write(file.content)
 
-        config = Config.from_json(task.dag_rel.config)
+        config = Config.from_yaml(task.dag_rel.config)
         info = config['info']
         if 'data_folder' in info:
             try:

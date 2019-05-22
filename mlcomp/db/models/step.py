@@ -9,6 +9,5 @@ class Step(Base):
     started = sa.Column(sa.DateTime)
     finished = sa.Column(sa.DateTime)
     status = sa.Column(sa.Integer)
-    metrics = sa.Column(sa.String)
     name = sa.Column(sa.String)
     task_rel = relationship('Task', lazy='noload')

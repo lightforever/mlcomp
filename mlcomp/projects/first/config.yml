@@ -6,35 +6,4 @@ info:
 executors:
   dummy1:
     type: Dummy
-  dummy2:
-    type: Dummy
-    depends:
-      - dummy1
-  dummy3:
-    type: Dummy
-    depends:
-      - dummy2
-  dummy4:
-    type: Dummy
-    depends:
-      - dummy2
-  dummy5:
-    type: Dummy
-    depends:
-      - dummy3
-  dummy6:
-    type: Dummy
-    depends:
-      - dummy4
-  dummy7:
-    type: Dummy
-    depends:
-      - dummy4
-  dummy8:
-    type: Dummy
-    depends:
-      - dummy1
-  dummy9:
-    type: Dummy
-    depends:
-      - dummy8
+

@@ -22,7 +22,7 @@ class Task(Base):
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     celery_id = sa.Column(sa.String)
     dag_rel = relationship('Dag', lazy='noload')
-
+    debug = sa.Column(sa.Boolean, default=False)
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependencies'

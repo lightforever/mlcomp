@@ -61,6 +61,7 @@ class TaskProvider(BaseDataProvider):
 
     def update_last_activity(self, task:int):
         self.query(Task).filter(Task.id==task).update({'last_activity': now()})
+        self.session.commit()
 
     def stop(self, id:int):
         task = self.by_id(id)

@@ -72,7 +72,8 @@ class StepWrap:
             step=self.step.id,
             message=message,
             level=level,
-            time=now()
+            time=now(),
+            component=ComponentType.Worker.value
         ))
 
 
@@ -97,7 +98,7 @@ class Executor(ABC):
         return cls()
 
     @classmethod
-    def from_config(cls, executor: str, config: Config):
+    def from_config(cls, executor: str, config: Config)->'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(f'Executor {executor} has not been found')
         executor = config['executors'][executor]

@@ -2,6 +2,7 @@ import yaml
 from collections import OrderedDict
 import os
 import json
+from io import StringIO
 
 class Config(OrderedDict):
     @property
@@ -12,6 +13,9 @@ class Config(OrderedDict):
     def from_json(config:str):
         return Config(json.loads(config))
 
+    @staticmethod
+    def from_yaml(config:str):
+        return load_ordered_yaml(text=config)
 
 def load_ordered_yaml(file:str=None, text:str=None,
                       Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:

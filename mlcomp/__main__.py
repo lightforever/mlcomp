@@ -14,10 +14,13 @@ from utils.schedule import start_schedule
 import psutil
 import GPUtil
 import numpy as np
+from mlcomp.task.tasks import execute_by_id
+
 
 @click.group()
 def main():
     pass
+
 
 def worker_usage():
     provider = ComputerProvider()
@@ -67,9 +70,8 @@ def project(name):
     provider = ProjectProvider()
     provider.add(name)
 
-@main.command()
-@click.argument('config')
-def dag(config: str):
+
+def _dag(config: str, debug: bool=False):
     config_text = open(config, "r").read()
     config_parsed = load_ordered_yaml(config)
     info = config_parsed['info']
@@ -84,7 +86,7 @@ def dag(config: str):
     dag = dag_provider.add(Dag(config=config_text, project=project, name=info['name']))
     storage.upload(folder, dag)
 
-    created = dict()
+    created = OrderedDict()
     while len(created) < len(executors):
         for k, v in executors.items():
             valid = True
@@ -104,7 +106,8 @@ def dag(config: str):
                     gpu=v.get('gpu', 0),
                     cpu=v.get('cpu', 1),
                     memory=v.get('memory', 0.1),
-                    dag = dag.id
+                    dag=dag.id,
+                    debug=debug
                 )
                 provider.add(task)
                 created[k] = task.id
@@ -112,11 +115,20 @@ def dag(config: str):
                 if 'depends' in v:
                     for d in v['depends']:
                         provider.add_dependency(created[k], created[d])
+    return created
+
+
+@main.command()
+@click.argument('config')
+def dag(config: str):
+    _dag(config)
 
 
 @main.command()
 @click.argument('config')
 def execute(config: str):
+    created_dag = _dag(config, True)
+
     config = load_ordered_yaml(config)
     executors = config['executors']
 
@@ -133,8 +145,7 @@ def execute(config: str):
 
                     valid = valid and d in created
             if valid:
-                executor = Executor.from_config(k, config)
-                executor()
+                execute_by_id(created_dag[k])
                 created.add(k)
 
 

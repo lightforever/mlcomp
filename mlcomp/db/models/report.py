@@ -1,0 +1,38 @@
+from utils.misc import now
+from .base import *
+
+class ReportSeries(Base):
+    __tablename__ = 'report_series'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String)
+    value = sa.Column(sa.Float)
+    epoch = sa.Column(sa.Integer)
+    time = sa.Column(sa.DateTime, default=now())
+    task = sa.Column(sa.Integer, ForeignKey('task.id'))
+    group = sa.Column(sa.String)
+
+class ReportImg(Base):
+    __tablename__ = 'report_img'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String)
+    epoch = sa.Column(sa.Integer)
+    task = sa.Column(sa.Integer, ForeignKey('task.id'))
+    info = sa.Column(sa.String)
+    img = sa.Column(sa.LargeBinary)
+
+class Report(Base):
+    __tablename__ = 'report'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    config = sa.Column(sa.String)
+    time = sa.Column(sa.DateTime, default=now())
+
+class ReportTasks(Base):
+    __tablename__ = 'report_tasks'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    report = sa.Column(sa.Integer, ForeignKey('report.id'))
+    task = sa.Column(sa.Integer, ForeignKey('task.id'))
+

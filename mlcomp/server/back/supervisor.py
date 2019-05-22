@@ -14,6 +14,7 @@ def supervisor():
     try:
         time.sleep(1)
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
+        not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
         logger.info(f'Found {len(not_ran_tasks)} not ran tasks')
 
         dep_status = provider.dependency_status(not_ran_tasks)

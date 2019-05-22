@@ -149,3 +149,17 @@ export class Status extends BaseResult{
 export class DagStopResult extends BaseResult{
     dag: Dag;
 }
+
+export class ReportItem {
+    width: number;
+    type: string;
+    data: any;
+}
+
+export class ReportRow {
+    items: ReportItem[];
+}
+
+export class Report {
+    rows: ReportRow[];
+}

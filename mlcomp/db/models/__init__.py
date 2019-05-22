@@ -7,3 +7,4 @@ from .computer import *
 from .log import *
 from .step import *
 from .dag import *
+from .report import *
