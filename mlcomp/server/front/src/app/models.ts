@@ -151,9 +151,10 @@ export class DagStopResult extends BaseResult{
 }
 
 export class ReportItem {
-    width: number;
+    width?: number;
     type: string;
     data: any;
+    name: string;
 }
 
 export class ReportRow {

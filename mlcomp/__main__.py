@@ -80,6 +80,8 @@ def _dag(config: str, debug: bool=False):
     provider = TaskProvider()
     storage = Storage()
     dag_provider = DagProvider()
+    report_provider = ReportProvider()
+    report_tasks_provider = ReportTasksProvider()
 
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
@@ -110,6 +112,11 @@ def _dag(config: str, debug: bool=False):
                     debug=debug
                 )
                 provider.add(task)
+                if 'report' in v:
+                    report = Report(config=json.dumps(v['report']))
+                    report_provider.add(report)
+                    report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))
+
                 created[k] = task.id
 
                 if 'depends' in v:
