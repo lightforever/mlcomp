@@ -10,15 +10,13 @@ import {Paginator} from "../../paginator";
 import {TaskFilter} from "../../models";
 
 @Component({
-    selector: 'app-task',
+    selector: 'app-tasks',
     templateUrl: './tasks.component.html',
     styleUrls: ['./tasks.component.css']
 })
 export class TasksComponent extends Paginator<TasksComponent>{
     displayed_columns: string[] = ['id', 'name', 'created', 'started', 'last_activity',
         'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
-
-    total: number;
     dag: number;
     name: string;
     status: string;

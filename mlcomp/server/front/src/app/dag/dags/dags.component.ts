@@ -10,7 +10,7 @@ import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 
 @Component({
-    selector: 'app-dag',
+    selector: 'app-dags',
     templateUrl: './dags.component.html',
     styleUrls: ['./dags.component.css']
 })
@@ -19,6 +19,7 @@ export class DagsComponent extends Paginator<Dag> {
     displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started', 'last_activity', 'task_status', 'links'];
     project: number;
     name: string;
+    report: string;
 
     constructor(protected service: DagService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -46,6 +47,7 @@ export class DagsComponent extends Paginator<Dag> {
         res.paginator = super.get_filter();
         res.name = this.name;
         res.project = this.project;
+        res.report = this.report;
         return res;
     }
 
@@ -54,6 +56,10 @@ export class DagsComponent extends Paginator<Dag> {
             .subscribe(params => {
                 this.project = params['project'];
             });
+        let url = this.router.url;
+        if(url.indexOf('report-detail')!=-1) {
+            this.report = this.route.snapshot.paramMap.get('id');
+        }
 
     }
 

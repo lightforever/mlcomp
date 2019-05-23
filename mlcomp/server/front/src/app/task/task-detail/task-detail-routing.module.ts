@@ -3,7 +3,7 @@ import {RouterModule, Routes} from '@angular/router';
 
 import {TaskDetailComponent} from "./task-detail/task-detail.component";
 import {LogComponent} from "../../log/log.component";
-import {ReportComponent} from "../../report/report.component";
+import {ReportDetailComponent} from "../../report/report-detail/report-detail/report-detail.component";
 import {StepComponent} from "./step/step.component";
 
 const routes: Routes = [
@@ -14,7 +14,7 @@ const routes: Routes = [
         children: [
             {path: 'log', component: LogComponent},
             {path: 'step', component: StepComponent},
-            {path: '', component: ReportComponent}
+            {path: '', component: ReportDetailComponent}
         ]
 
 

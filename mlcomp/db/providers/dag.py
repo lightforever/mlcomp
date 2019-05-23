@@ -47,6 +47,13 @@ class DagProvider(BaseDataProvider):
             r['started'] = self.serializer.serialize_date(r['started']) if r['started'] else None
             r['finished'] = self.serializer.serialize_date(r['finished']) if r['finished'] else None
             res.append(r)
+
+        if filter.get('report'):
+            dag_ids = [r['id'] for r in res]
+            tasks_dags = self.query(Task.id, Task.dag).filter(Task.dag.in_(dag_ids)).all()
+            tasks = [t[0] for t in tasks_dags]
+            tasks_within_report = self.query(ReportTasks).filter()
+
         return {'total': total, 'data': res}
 
     def config(self, id: int):

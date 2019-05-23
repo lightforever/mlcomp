@@ -26,8 +26,8 @@ export abstract class BaseService {
     }
 
     get_obj<T>(filter: any): Observable<T>{
-        let message = `${this.constructor.name}.get_paginator`;
-        return this.http.post<T>(AppSettings.API_ENDPOINT + this.collection_part, filter).pipe(
+        let message = `${this.constructor.name}.get_obj`;
+        return this.http.post<T>(AppSettings.API_ENDPOINT + this.single_part, filter).pipe(
             tap(_ => this.log(message)),
             catchError(this.handleError<T>(message, null))
         );

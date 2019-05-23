@@ -130,6 +130,7 @@ export class DagFilter {
     paginator: PaginatorFilter;
     name: string;
     project: number;
+    report: string;
 }
 
 export class TaskFilter {
@@ -150,17 +151,10 @@ export class DagStopResult extends BaseResult{
     dag: Dag;
 }
 
-export class ReportItem {
-    width?: number;
+export class ReportTile {
     type: string;
     data: any;
     name: string;
-}
-
-export class ReportRow {
-    items: ReportItem[];
-}
-
-export class Report {
-    rows: ReportRow[];
+    cols: number;
+    rows: number;
 }

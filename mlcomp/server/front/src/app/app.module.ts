@@ -8,7 +8,6 @@ import {ProjectComponent} from './project/project.component';
 import {ComputerComponent} from './computer/computer.component';
 import {MessagesComponent} from './messages/messages.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {ReportsComponent} from "./reports/reports.component";
 
 @NgModule({
     imports: [
@@ -20,8 +19,7 @@ import {ReportsComponent} from "./reports/reports.component";
         AppComponent,
         ProjectComponent,
         MessagesComponent,
-        ComputerComponent,
-        ReportsComponent
+        ComputerComponent
     ],
     bootstrap: [AppComponent]
 })

@@ -44,7 +44,9 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {PortalModule} from "@angular/cdk/portal";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {LogComponent} from './log/log.component'
-import {ReportComponent} from './report/report.component'
+import {ReportDetailComponent} from "./report/report-detail/report-detail/report-detail.component";
+import {DagsComponent} from './dag/dags/dags.component'
+import {TasksComponent} from './task/tasks/tasks.component'
 
 @NgModule({
     imports: [
@@ -98,12 +100,14 @@ import {ReportComponent} from './report/report.component'
         MatTooltipModule,
         MatTreeModule,
         PortalModule,
-        ScrollingModule,
+        ScrollingModule
     ],
     declarations: [
         TaskComponent,
         LogComponent,
-        ReportComponent
+        ReportDetailComponent,
+        DagsComponent,
+        TasksComponent
     ],
     exports: [
         MatIconModule,

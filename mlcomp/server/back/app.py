@@ -148,14 +148,14 @@ def logs():
 @app.route('/reports', methods=['POST'])
 def reports():
     data = request_data()
-    options = PaginatorOptions(**data['paginator'])
+    options = PaginatorOptions(**data)
     provider = ReportProvider()
     res = provider.get(data, options)
     return json.dumps(res)
 
-@app.route('/report', methods=['GET'])
+@app.route('/report', methods=['POST'])
 def report():
-    id = int(request.args['id'])
+    id = request_data()
     provider = ReportProvider()
     res = provider.detail(id)
     return json.dumps(res)

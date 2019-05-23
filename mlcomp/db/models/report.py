@@ -28,6 +28,7 @@ class Report(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     config = sa.Column(sa.String)
     time = sa.Column(sa.DateTime, default=now())
+    name = sa.Column(sa.String)
 
 class ReportTasks(Base):
     __tablename__ = 'report_tasks'

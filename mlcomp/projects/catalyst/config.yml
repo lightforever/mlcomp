@@ -12,10 +12,9 @@ executors:
       - loss
       - precision01
     report:
-      row1:
-        precision:
-          type: series
-          key: precision01
-        loss:
-          type: series
-          key: loss
+      precision:
+        type: series
+        key: precision01
+      loss:
+        type: series
+        key: loss

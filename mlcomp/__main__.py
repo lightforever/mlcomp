@@ -113,7 +113,7 @@ def _dag(config: str, debug: bool=False):
                 )
                 provider.add(task)
                 if 'report' in v:
-                    report = Report(config=json.dumps(v['report']))
+                    report = Report(config=json.dumps(v['report']), name=task.name)
                     report_provider.add(report)
                     report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))
 

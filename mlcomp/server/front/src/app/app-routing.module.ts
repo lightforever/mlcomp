@@ -12,7 +12,7 @@ const routes: Routes = [
     {path: 'tasks', loadChildren: './task/task.module#TaskModule'},
     {path: 'dags', loadChildren: './dag/dag.module#DagModule'},
     {path: 'logs', component: LogComponent},
-    {path: 'reports', loadChildren: './reports/task.module#TaskModule'},
+    {path: 'reports', loadChildren: './report/report.module#ReportModule'},
 ];
 
 @NgModule({

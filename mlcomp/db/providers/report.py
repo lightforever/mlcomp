@@ -28,9 +28,10 @@ class ReportProvider(BaseDataProvider):
         for report, task_count, tasks_not_finished in self.paginator(query, options):
             item = {
                 'id': report.id,
-                'time': report.time,
+                'time': self.serializer.serialize_date(report.time),
                 'tasks': task_count,
-                'tasks_not_finished': tasks_not_finished
+                'tasks_not_finished': tasks_not_finished,
+                'name': report.name
             }
             data.append(item)
 
@@ -39,33 +40,35 @@ class ReportProvider(BaseDataProvider):
     def detail(self, id: int):
         report = self.by_id(id)
         tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id).all()
+        tasks = [t[0] for t in tasks]
         config = json.loads(report.config)
-        res = {
-            'rows': []
-        }
+        res = []
 
-        for row in config.values():
-            r = {'items': []}
-            for k, v in row.items():
-                item = {'name': k, 'type': v['type']}
-                if item['type']=='series':
-                    series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)).\
-                        order_by(ReportSeries.epoch).all()
-                    data = []
-                    series_task_group = groupby(series, key=lambda x: (x.task, x.group))
-                    for group_key, group in series_task_group:
-                        data.append(
-                            {
-                                'x': [item.epoch for item in group],
-                                'y': [item.value for item in group],
-                                'color': 'orange' if group_key[1]=='valid' else 'blue'
-                            })
+        col_count = 3
+        col = 0
+        for k, v in config.items():
+            item = {'name': k, 'type': v['type'], 'rows': 1, 'cols': 1}
+            if item['type']=='series':
+                series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)).\
+                    filter(ReportSeries.name==v['key']).\
+                    order_by(ReportSeries.group).all()
+                data = []
+                series_task_group = groupby(series, key=lambda x: x.group)
+                for group_key, group in series_task_group:
+                    group = list(group)
+                    group = sorted(group, key=lambda x: x.epoch)
+                    data.append(
+                        {
+                            'x': [item.epoch for item in group],
+                            'y': [item.value for item in group],
+                            'color': 'orange' if group_key=='valid' else 'blue',
+                            'name': group_key
+                        })
 
-                    item['data'] = data
+                item['data'] = data
 
-                r['items'].append(item)
-
-            res['rows'].append(r)
+                res.append(item)
+                col += 1
 
         return res
 
