@@ -30,6 +30,7 @@ def construct_paginator_options(args: dict, default_sort_column: str):
                             page_size=parse_int(args, 'page_size'),
                             )
 
+
 @app.route('/computers', methods=['POST'])
 def computers():
     data = request_data()
@@ -121,11 +122,13 @@ def tasks():
     res = provider.get(data, options)
     return json.dumps(res)
 
+
 @app.route('/task/stop', methods=['POST'])
 def task_stop():
     data = request_data()
     status = celery_tasks.stop(data['id'])
     return json.dumps({'success': True, 'status': to_snake(TaskStatus(status).name)})
+
 
 @app.route('/dag/stop', methods=['POST'])
 def dag_stop():
@@ -137,6 +140,7 @@ def dag_stop():
         celery_tasks.stop(t.id)
     return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
 
+
 @app.route('/dag/toogle_report', methods=['POST'])
 def dag_toogle_report():
     data = request_data()
@@ -146,6 +150,7 @@ def dag_toogle_report():
     else:
         provider.add_dag(int(data['id']), int(data['report']))
     return json.dumps({'success': True, 'report_full': not data.get('remove')})
+
 
 @app.route('/task/toogle_report', methods=['POST'])
 def task_toogle_report():
@@ -157,6 +162,7 @@ def task_toogle_report():
         provider.add_task(int(data['id']), int(data['report']))
     return json.dumps({'success': True, 'report_full': not data.get('remove')})
 
+
 @app.route('/logs', methods=['POST'])
 def logs():
     provider = LogProvider()
@@ -165,13 +171,15 @@ def logs():
     res = provider.get(data, options)
     return json.dumps(res)
 
+
 @app.route('/reports', methods=['POST'])
 def reports():
     data = request_data()
-    options = PaginatorOptions(**data)
+    options = PaginatorOptions(**data['paginator'])
     provider = ReportProvider()
     res = provider.get(data, options)
     return json.dumps(res)
+
 
 @app.route('/report', methods=['POST'])
 def report():
@@ -179,6 +187,7 @@ def report():
     provider = ReportProvider()
     res = provider.detail(id)
     return json.dumps(res)
+
 
 @app.route('/stop')
 def stop():

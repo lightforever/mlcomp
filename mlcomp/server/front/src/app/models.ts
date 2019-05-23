@@ -141,6 +141,12 @@ export class TaskFilter {
     report: string;
 }
 
+export class ReportsFilter {
+    paginator: PaginatorFilter;
+    task: number;
+    dag: number;
+}
+
 export class BaseResult {
     success: boolean;
 }

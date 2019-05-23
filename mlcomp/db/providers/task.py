@@ -31,7 +31,7 @@ class TaskProvider(BaseDataProvider):
             tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report == int(filter['report']))
             tasks_within_report = {t[0] for t in tasks_within_report}
             for r in res:
-                r['report_full'] = r['id'] not in tasks_within_report
+                r['report_full'] = r['id'] in tasks_within_report
 
         return {'total': total, 'data': res}
 
