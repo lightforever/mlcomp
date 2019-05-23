@@ -136,52 +136,7 @@ nav a.active {
   text-anchor: middle;
 }
 
-/*Angular material*/
-.flex {
-      -webkit-flex: 1 1 0%;
-          -ms-flex: 1 1 0%;
-              flex: 1 1 0%;
-      box-sizing: border-box;
-    }
-    .flex-20 {
-      -webkit-flex: 1 1 20%;
-          -ms-flex: 1 1 20%;
-              flex: 1 1 20%;
-      max-width: 20%;
-      max-height: 100%;
-      box-sizing: border-box;
-    }
-
-    .layout-row .flex-33 {
-      -webkit-flex: 1 1 calc(100% / 3);
-          -ms-flex: 1 1 calc(100% / 3);
-              flex: 1 1 calc(100% / 3);
-      box-sizing: border-box;
-    }
-
-    .layout-row  .flex-66 {
-      -webkit-flex: 1 1 calc(200% / 3);
-          -ms-flex: 1 1 calc(200% / 3);
-              flex: 1 1 calc(200% / 3);
-      box-sizing: border-box;
-    }
-
-    .layout-row .flex-33 {
-      max-width: calc(100% / 3);
-      max-height: 100%;
-    }
-
-    .layout-row  .flex-66 {
-      max-width: calc(200% / 3);
-      max-height: 100%;
-    }
-
-    .layout-column .flex-33 {
-      max-width: 100%;
-      max-height: calc(100% / 3);
-    }
-
-    .layout-column  .flex-66 {
-      max-width: 100%;
-      max-height: calc(200% / 3);
-    }
+.transparent{
+  opacity: 0.3;
+  filter: alpha(opacity=30); /* For IE8 and earlier */
+}

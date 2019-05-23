@@ -137,6 +137,26 @@ def dag_stop():
         celery_tasks.stop(t.id)
     return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
 
+@app.route('/dag/toogle_report', methods=['POST'])
+def dag_toogle_report():
+    data = request_data()
+    provider = ReportProvider()
+    if data.get('remove'):
+        provider.remove_dag(int(data['id']), int(data['report']))
+    else:
+        provider.add_dag(int(data['id']), int(data['report']))
+    return json.dumps({'success': True, 'report_full': not data.get('remove')})
+
+@app.route('/task/toogle_report', methods=['POST'])
+def task_toogle_report():
+    data = request_data()
+    provider = ReportProvider()
+    if data.get('remove'):
+        provider.remove_task(int(data['id']), int(data['report']))
+    else:
+        provider.add_task(int(data['id']), int(data['report']))
+    return json.dumps({'success': True, 'report_full': not data.get('remove')})
+
 @app.route('/logs', methods=['POST'])
 def logs():
     provider = LogProvider()

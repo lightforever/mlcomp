@@ -40,6 +40,8 @@ export class DagsComponent extends Paginator<Dag> {
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/delete.svg'));
         iconRegistry.addSvgIcon('graph',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/network.svg'));
+        iconRegistry.addSvgIcon('report',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/report.svg'));
     }
 
     get_filter(): any {
@@ -57,7 +59,7 @@ export class DagsComponent extends Paginator<Dag> {
                 this.project = params['project'];
             });
         let url = this.router.url;
-        if(url.indexOf('report-detail')!=-1) {
+        if (url.indexOf('report-detail') != -1) {
             this.report = this.route.snapshot.paramMap.get('id');
         }
 
@@ -77,6 +79,12 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     stop(element: any) {
-        this.service.stop(element.id).subscribe(data=>element.task_statuses=data.dag.task_statuses);
+        this.service.stop(element.id).subscribe(data => element.task_statuses = data.dag.task_statuses);
+    }
+
+    toogle_report(element: any) {
+        this.service.toogle_report(element.id, this.report, element.report_full).subscribe(data => {
+            element.report_full = data.report_full;
+        });
     }
 }

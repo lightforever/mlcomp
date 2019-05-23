@@ -138,11 +138,17 @@ export class TaskFilter {
     name: string;
     dag: number;
     status: string;
+    report: string;
 }
 
 export class BaseResult {
     success: boolean;
 }
+
+export class ToogleReportResult extends BaseResult{
+    report_full: boolean;
+}
+
 export class Status extends BaseResult{
     status: string;
 }

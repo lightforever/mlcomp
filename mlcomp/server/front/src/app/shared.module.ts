@@ -47,6 +47,7 @@ import {LogComponent} from './log/log.component'
 import {ReportDetailComponent} from "./report/report-detail/report-detail/report-detail.component";
 import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
+import {ReportsComponent} from "./report/reports/reports.component";
 
 @NgModule({
     imports: [
@@ -107,7 +108,8 @@ import {TasksComponent} from './task/tasks/tasks.component'
         LogComponent,
         ReportDetailComponent,
         DagsComponent,
-        TasksComponent
+        TasksComponent,
+        ReportsComponent
     ],
     exports: [
         MatIconModule,

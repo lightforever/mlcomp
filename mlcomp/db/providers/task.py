@@ -26,6 +26,13 @@ class TaskProvider(BaseDataProvider):
             item = {**p.to_dict()}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             res.append(item)
+
+        if filter.get('report'):
+            tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report == int(filter['report']))
+            tasks_within_report = {t[0] for t in tasks_within_report}
+            for r in res:
+                r['report_full'] = r['id'] not in tasks_within_report
+
         return {'total': total, 'data': res}
 
     def add_dependency(self, task_id: int, depend_id: int) -> None:

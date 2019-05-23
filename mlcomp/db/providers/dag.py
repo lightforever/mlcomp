@@ -51,8 +51,11 @@ class DagProvider(BaseDataProvider):
         if filter.get('report'):
             dag_ids = [r['id'] for r in res]
             tasks_dags = self.query(Task.id, Task.dag).filter(Task.dag.in_(dag_ids)).all()
-            tasks = [t[0] for t in tasks_dags]
-            tasks_within_report = self.query(ReportTasks).filter()
+            tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report==int(filter['report']))
+            tasks_within_report = {t[0] for t in tasks_within_report}
+            dags_not_full_included = {d for t, d in tasks_dags if t not in tasks_within_report}
+            for r in res:
+                r['report_full'] = r['id'] not in dags_not_full_included
 
         return {'total': total, 'data': res}
 

@@ -72,6 +72,27 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
+    def add_dag(self, dag: int, report: int):
+        tasks = self.query(Task.id).filter(Task.dag==dag).all()
+        report_tasks = self.query(ReportTasks.task).filter(ReportTasks.report==report).all()
+        for t in set(t[0] for t in tasks) - set(t[0] for t in report_tasks):
+            self.add(ReportTasks(report=report, task=t))
+
+    def remove_dag(self,  dag: int, report: int):
+        tasks = self.query(Task.id).filter(Task.dag==dag).all()
+        tasks = [t[0] for t in tasks]
+        self.query(ReportTasks).filter(ReportTasks.report==report).\
+            filter(ReportTasks.task.in_(tasks)).delete(synchronize_session=False)
+        self.session.commit()
+
+    def remove_task(self, task:int, report:int):
+        self.query(ReportTasks).filter(ReportTasks.report == report). \
+            filter(ReportTasks.task==task).delete(synchronize_session=False)
+        self.session.commit()
+
+    def add_task(self, task:int, report:int):
+        self.add(ReportTasks(task=task, report=report))
+        self.session.commit()
 
 class ReportTasksProvider(BaseDataProvider):
     model = ReportTasks
