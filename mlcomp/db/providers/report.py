@@ -2,6 +2,9 @@ from mlcomp.db.providers.base import *
 import json
 from itertools import groupby
 from typing import List
+import pickle
+from mlcomp.task.executors.report_info import ReportInfo, ReportInfoSeries, ReportInfoPrecisionRecall, ReportInfoItem
+import base64
 
 
 class ReportSeriesProvider(BaseDataProvider):
@@ -41,17 +44,12 @@ class ReportProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def _detail_series(self, tasks: List[int], k: str, v: dict):
-        series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
-            filter(ReportSeries.name == v['key']).order_by(ReportSeries.epoch). \
-            options(joinedload(ReportSeries.task_rel)).all()
+    def _detail_series(self, series: List[ReportSeries], r: ReportInfoSeries):
+        item = {'name': r.name, 'type': 'series', 'rows': 1, 'cols': 1}
 
-        multi = v.get('multi', 'many')
-        single_group = v.get('single_group')
-        item = {'name': k, 'type': v['type'], 'rows': 1, 'cols': 1}
-
+        series = [s for s in series if s.name == r.name]
         res = []
-        if len(tasks) == 1:
+        if len(set(s.task for s in series)) == 1:
             series = sorted(series, key=lambda x: x.group)
             series_group = groupby(series, key=lambda x: x.group)
             data = []
@@ -69,14 +67,14 @@ class ReportProvider(BaseDataProvider):
             res.append(item)
 
         else:
-            if multi == 'none':
+            if r.multi == 'none':
                 return res
 
-            if multi == 'single':
+            if r.multi == 'single':
                 series = sorted(series, key=lambda x: x.group)
                 series_group = groupby(series, key=lambda x: x.group)
                 for key, group in series_group:
-                    if single_group and key != single_group:
+                    if r.single_group and key != r.single_group:
                         continue
                     data = []
                     group = list(group)
@@ -93,7 +91,7 @@ class ReportProvider(BaseDataProvider):
                             })
 
                     item_copy['data'] = data
-                    item_copy['name'] = f'{k},{key}'
+                    item_copy['name'] = f'{r.name},{key}'
                     res.append(item_copy)
             else:
                 series = sorted(series, key=lambda x: x.task)
@@ -115,26 +113,55 @@ class ReportProvider(BaseDataProvider):
                             })
 
                     item_copy['data'] = data
-                    item_copy['name'] = f'{k},{group_task[0].task_rel.name}'
+                    item_copy['name'] = f'{r.name},{group_task[0].task_rel.name}'
                     res.append(item_copy)
         return res
 
-    def _detail_single_img(self, task: int, k: str, v: dict):
+    def _detail_single_img(self, task: int, epoch: int, item: ReportInfoItem):
+        res = []
+        img_objs = self.query(ReportImg).filter(ReportImg.task == task).filter(ReportImg.epoch == epoch).\
+            filter(ReportImg.group==item.name).all()
+        for img_obj in img_objs:
+            img_decoded = pickle.loads(img_obj.img)
+            item = {'name': img_obj.group, 'type': 'img', 'rows': 1, 'cols': 1,
+                    'data': base64.b64encode(img_decoded['img']).decode('utf-8')}
+            res.append(item)
+
+        return res
+
+    def _detail_img_confusion(self, task: int, epoch: int, item: ReportInfoItem):
         res = []
 
         return res
 
     def detail(self, id: int):
-        report = self.by_id(id)
+        report_obj = self.by_id(id)
         tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id).all()
         tasks = [t[0] for t in tasks]
-        config = json.loads(report.config)
+        config = json.loads(report_obj.config)
+        report = ReportInfo(config)
+
+        series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
+            order_by(ReportSeries.epoch). \
+            options(joinedload(ReportSeries.task_rel)).all()
+
+        best_task_epoch = None
+        for s in series:
+            if s.name == report.metric.name:
+                if best_task_epoch is None or \
+                        (best_task_epoch[1] > s.value if report.metric.minimize else best_task_epoch[1] < s.value):
+                    best_task_epoch = [(s.task, s.epoch), s.value]
+
         res = []
-        for k, v in config.items():
-            if v['type'] == 'series':
-                res.extend(self._detail_series(tasks, k, v))
-            elif v['type'] == 'precision_recall':
-                res.extend(self._detail_single_img(tasks[0], k, v))
+        for s in report.series:
+            res.extend(self._detail_series(series, s))
+
+        if best_task_epoch:
+            for element in report.precision_recall+report.f1:
+                res.extend(self._detail_single_img(best_task_epoch[0][0], best_task_epoch[0][1], element))
+
+            for element in report.img_confusion:
+                res.extend(self._detail_img_confusion(best_task_epoch[0][0], best_task_epoch[0][1], element))
 
         return res
 

@@ -33,7 +33,9 @@ export class ReportDetailComponent implements OnInit {
                             if (document.getElementById(id)) {
                                 let layout = {
                                     'title': tile.name,
-                                    'width': 600
+                                    'height': 300,
+                                    'width': 600,
+                                    'margin': {'b': 40, 't':40}
                                 };
                                 window['Plotly'].newPlot(id, tile.data, layout, {showSendToCloud: true});
 

@@ -112,8 +112,9 @@ def _dag(config: str, debug: bool=False):
                     debug=debug
                 )
                 provider.add(task)
-                if 'report' in v:
-                    report = Report(config=json.dumps(v['report']), name=task.name)
+                if True: # TODO Does this executor have metrics?
+                    report_config = config_parsed['reports'][v['report'] if 'report' in v else 'base']
+                    report = Report(config=json.dumps(report_config), name=task.name)
                     report_provider.add(report)
                     report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))
 

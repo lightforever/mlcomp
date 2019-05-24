@@ -1,6 +1,7 @@
 from typing import List
 
 from catalyst.dl.callbacks.core import Callback
+from catalyst.dl.experiments import Experiment
 from catalyst.dl.state import RunnerState
 
 from db.providers import ReportSeriesProvider, ReportImgProvider
@@ -14,11 +15,10 @@ from catalyst.utils.misc import set_global_seeds
 from catalyst.dl.scripts.utils import import_experiment_and_runner, dump_code
 from catalyst.dl.experiments.runner import Runner
 from .report_info import *
-from sklearn.metrics import precision_recall_curve
 import numpy as np
 from scipy.special import softmax
 import pickle
-
+import cv2
 
 class Args:
     baselogdir = None
@@ -37,6 +37,7 @@ class Args:
         return [(k, v) for k, v in self.__dict__.items() if not k.startswith('_')]
 
 
+# noinspection PyTypeChecker
 @Executor.register
 class Catalyst(Executor, Callback):
     def __init__(self, args: Args, report: ReportInfo):
@@ -45,6 +46,8 @@ class Catalyst(Executor, Callback):
         self.img_provider = ReportImgProvider()
         self.report = report
         self.valid_data = {'input': [], 'output': [], 'target': []}
+        self.experiment = None
+        self.runner = None
 
     def on_batch_end(self, state: RunnerState):
         if state.loader_name == 'train':
@@ -67,11 +70,26 @@ class Catalyst(Executor, Callback):
         for pr in self.report.precision_recall:
             output = np.array(self.valid_data['output'])
             output = softmax(output)[:, 1]
-            p, r, t = precision_recall_curve(self.valid_data['target'], output)
-            img = pr.plot(p, r, t)
+            img = pr.plot(self.valid_data['target'], output)
             content = {'img': img}
             obj = ReportImg(group=pr.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
             self.img_provider.add(obj)
+
+        for f1 in self.report.f1:
+            output = np.array(self.valid_data['output'])
+            img = f1.plot(self.valid_data['target'], output.argmax(1))
+            content = {'img': img}
+            obj = ReportImg(group=f1.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
+            self.img_provider.add(obj)
+
+        for c in self.report.img_confusion:
+            for i in range(c.count):
+                content = self.valid_data['input'][i]
+                content = self.experiment.denormilize(content)
+                content = cv2.imencode('.jpg', content)[1].tostring()
+                content = {'img': content}
+                obj = ReportImg(group=c.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
+                self.img_provider.add(obj)
 
         self.valid_data = {'input': [], 'output': [], 'target': []}
 
@@ -90,7 +108,7 @@ class Catalyst(Executor, Callback):
             setattr(args, k, v)
 
         report_name = executor.get('report') or 'base'
-        report = ReportInfo(report_name, config['reports'][report_name])
+        report = ReportInfo(config['reports'][report_name])
         return cls(args=args, report=report)
 
     def work(self):
@@ -109,7 +127,11 @@ class Catalyst(Executor, Callback):
 
         experiment.get_callbacks = get_callbacks
 
+        self.experiment = experiment
+        self.runner = runner
+
         runner.run_experiment(
             experiment,
             check=args.check
         )
+

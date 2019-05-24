@@ -29,7 +29,7 @@
 
 </mat-accordion>
 
-<mat-grid-list cols="3" rowHeight="500px">
+<mat-grid-list cols="3" rowHeight="350px">
   <mat-grid-tile
       *ngFor="let tile of report; index as i"
       [colspan]="tile.cols"
@@ -38,5 +38,13 @@
     <div *ngIf="tile.type=='series';">
       <div [attr.id]="'series_'+i.toString()"></div>
     </div>
+
+    <div *ngIf="tile.type=='img';" >
+      <div style="text-align:center">{{tile.name}}</div>
+      <img [attr.src]="'data:image/JPEG;base64,'+tile.data">
+    </div>
   </mat-grid-tile>
 </mat-grid-list>
+
+
+

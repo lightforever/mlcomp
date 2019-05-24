@@ -10,14 +10,23 @@ executors:
       config: catalyst-config.yml
 reports:
   base:
-    precision:
-      type: series
-      key: precision01
-      multi: single
-      single_group: valid
-    loss:
-      type: series
-      key: loss
-      multi: many
-    precision_recall:
-      type: precision_recall
+    metric:
+      name: precision
+      minimize: False
+    items:
+      precision:
+        type: series
+        key: precision01
+        multi: single
+        single_group: valid
+      loss:
+        type: series
+        key: loss
+        multi: many
+      precision_recall:
+        type: precision_recall
+      f1:
+        type: f1
+      img_confusion:
+        type: img_confusion
+        count: 10

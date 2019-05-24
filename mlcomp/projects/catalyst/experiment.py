@@ -15,6 +15,13 @@ class Experiment(ConfigExperiment):
             ]
         )
 
+    def denormilize(self, img: np.array):
+        #``input[channel] = (input[channel] - mean[channel]) / std[channel]``
+        res = np.zeros((img.shape[1], img.shape[2], 3), dtype=np.uint8)
+        for i in range(res.shape[2]):
+            res[:,:,i] = (img[i]*0.5+0.5)*255
+        return res
+
     def get_datasets(self, stage: str, **kwargs):
         datasets = OrderedDict()
 
