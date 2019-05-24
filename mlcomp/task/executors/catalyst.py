@@ -13,6 +13,11 @@ from catalyst.utils.config import parse_args_uargs, dump_config
 from catalyst.utils.misc import set_global_seeds
 from catalyst.dl.scripts.utils import import_experiment_and_runner, dump_code
 from catalyst.dl.experiments.runner import Runner
+from .report_info import *
+from sklearn.metrics import precision_recall_curve
+import numpy as np
+from scipy.special import softmax
+import pickle
 
 
 class Args:
@@ -34,22 +39,41 @@ class Args:
 
 @Executor.register
 class Catalyst(Executor, Callback):
-    def __init__(self, args: Args, series: List[str]):
+    def __init__(self, args: Args, report: ReportInfo):
         self.args = args
         self.series_provider = ReportSeriesProvider()
         self.img_provider = ReportImgProvider()
-        self.series = series
+        self.report = report
+        self.valid_data = {'input': [], 'output': [], 'target': []}
+
+    def on_batch_end(self, state: RunnerState):
+        if state.loader_name == 'train':
+            return
+        self.valid_data['input'].extend(state.input['features'].detach().cpu().numpy())
+        self.valid_data['output'].extend(state.output['logits'].detach().cpu().numpy())
+        self.valid_data['target'].extend(state.input['targets'].detach().cpu().numpy())
 
     def on_epoch_end(self, state: RunnerState):
-        for s in self.series:
-            train = state.metrics.epoch_values['train'][s]
-            val = state.metrics.epoch_values['valid'][s]
+        for s in self.report.series:
+            train = state.metrics.epoch_values['train'][s.key]
+            val = state.metrics.epoch_values['valid'][s.key]
 
-            train = ReportSeries(group='train', name=s, epoch=state.epoch, task=self.task.id, value=train)
-            val = ReportSeries(group='valid', name=s, epoch=state.epoch, task=self.task.id, value=val)
+            train = ReportSeries(group='train', name=s.name, epoch=state.epoch, task=self.task.id, value=train)
+            val = ReportSeries(group='valid', name=s.name, epoch=state.epoch, task=self.task.id, value=val)
 
             self.series_provider.add(train)
             self.series_provider.add(val)
+
+        for pr in self.report.precision_recall:
+            output = np.array(self.valid_data['output'])
+            output = softmax(output)[:, 1]
+            p, r, t = precision_recall_curve(self.valid_data['target'], output)
+            img = pr.plot(p, r, t)
+            content = {'img': img}
+            obj = ReportImg(group=pr.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
+            self.img_provider.add(obj)
+
+        self.valid_data = {'input': [], 'output': [], 'target': []}
 
     def on_stage_start(self, state: RunnerState):
         state.loggers = []
@@ -64,7 +88,10 @@ class Catalyst(Executor, Callback):
                 v = int(v)
 
             setattr(args, k, v)
-        return cls(args=args, series=executor['series'])
+
+        report_name = executor.get('report') or 'base'
+        report = ReportInfo(report_name, config['reports'][report_name])
+        return cls(args=args, report=report)
 
     def work(self):
         args, config = parse_args_uargs(self.args, [])

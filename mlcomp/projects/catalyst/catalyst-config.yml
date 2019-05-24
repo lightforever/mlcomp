@@ -35,7 +35,7 @@ stages:
       callback: OptimizerCallback
     precision:
       callback: PrecisionCallback
-      precision_args: [1, 3, 5]
+      precision_args: [1]
     scheduler:
       callback: SchedulerCallback
       reduce_metric: *reduce_metric

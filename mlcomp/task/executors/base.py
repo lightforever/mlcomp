@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 from mlcomp.db.models import Step, Task
 from mlcomp.utils.config import Config
@@ -98,7 +99,7 @@ class Executor(ABC):
         return cls()
 
     @classmethod
-    def from_config(cls, executor: str, config: Config)->'Executor':
+    def from_config(cls, executor: str, config: Config) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(f'Executor {executor} has not been found')
         executor = config['executors'][executor]
@@ -113,4 +114,3 @@ class Executor(ABC):
     @staticmethod
     def is_registered(cls: str):
         return cls in Executor._child
-

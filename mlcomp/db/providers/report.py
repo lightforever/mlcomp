@@ -1,6 +1,7 @@
 from mlcomp.db.providers.base import *
 import json
 from itertools import groupby
+from typing import List
 
 
 class ReportSeriesProvider(BaseDataProvider):
@@ -40,28 +41,70 @@ class ReportProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def detail(self, id: int):
-        report = self.by_id(id)
-        tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id).all()
-        tasks = [t[0] for t in tasks]
-        config = json.loads(report.config)
+    def _detail_series(self, tasks: List[int], k: str, v: dict):
+        series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
+            filter(ReportSeries.name == v['key']).order_by(ReportSeries.epoch). \
+            options(joinedload(ReportSeries.task_rel)).all()
+
+        multi = v.get('multi', 'many')
+        single_group = v.get('single_group')
+        item = {'name': k, 'type': v['type'], 'rows': 1, 'cols': 1}
+
         res = []
+        if len(tasks) == 1:
+            series = sorted(series, key=lambda x: x.group)
+            series_group = groupby(series, key=lambda x: x.group)
+            data = []
+            for key, group in series_group:
+                group = list(group)
+                data.append(
+                    {
+                        'x': [item.epoch for item in group],
+                        'y': [item.value for item in group],
+                        'color': 'orange' if key == 'valid' else 'blue',
+                        'name': key
+                    })
 
-        col_count = 3
-        col = 0
-        for k, v in config.items():
-            if v['type'] == 'series':
-                series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
-                    filter(ReportSeries.name == v['key']).order_by(ReportSeries.epoch).all()
+            item['data'] = data
+            res.append(item)
 
-                multi = v.get('multi', 'multi')
-                item = {'name': k, 'type': v['type'], 'rows': 1, 'cols': 1}
+        else:
+            if multi == 'none':
+                return res
 
-                if len(tasks)==1:
-                    series = sorted(series, key=lambda x: x.group)
-                    series_group = groupby(series, key=lambda x: x.group)
+            if multi == 'single':
+                series = sorted(series, key=lambda x: x.group)
+                series_group = groupby(series, key=lambda x: x.group)
+                for key, group in series_group:
+                    if single_group and key != single_group:
+                        continue
                     data = []
-                    for key, group in series_group:
+                    group = list(group)
+                    item_copy = item.copy()
+                    group = sorted(group, key=lambda x: x.task)
+                    for task_key, group_task in groupby(group, key=lambda x: x.task):
+                        group_task = list(group_task)
+                        data.append(
+                            {
+                                'x': [item.epoch for item in group_task],
+                                'y': [item.value for item in group_task],
+                                'color': 'orange' if key == 'valid' else 'blue',
+                                'name': f'{group_task[0].task_rel.name}'
+                            })
+
+                    item_copy['data'] = data
+                    item_copy['name'] = f'{k},{key}'
+                    res.append(item_copy)
+            else:
+                series = sorted(series, key=lambda x: x.task)
+                series_task_group = groupby(series, key=lambda x: x.task)
+                for task_key, group_task in series_task_group:
+                    data = []
+                    item_copy = item.copy()
+                    group_task = list(group_task)
+                    group_task = sorted(group_task, key=lambda x: x.group)
+
+                    for key, group in groupby(group_task, key=lambda x: x.group):
                         group = list(group)
                         data.append(
                             {
@@ -71,58 +114,27 @@ class ReportProvider(BaseDataProvider):
                                 'name': key
                             })
 
-                    item['data'] = data
-                    res.append(item)
-                    col += 1
+                    item_copy['data'] = data
+                    item_copy['name'] = f'{k},{group_task[0].task_rel.name}'
+                    res.append(item_copy)
+        return res
 
-                else:
-                    if multi == 'none':
-                        continue
+    def _detail_single_img(self, task: int, k: str, v: dict):
+        res = []
 
-                    if multi == 'single':
-                        series = sorted(series, key=lambda x: x.group)
-                        series_group = groupby(series, key=lambda x: x.group)
-                        for key, group in series_group:
-                            data = []
-                            group = list(group)
-                            item_copy = item.copy()
-                            group = sorted(group, key=lambda x: x.task)
-                            for task_key, group_task in groupby(group, key=lambda x: x.task):
-                                group_task = list(group_task)
-                                data.append(
-                                    {
-                                        'x': [item.epoch for item in group_task],
-                                        'y': [item.value for item in group_task],
-                                        'color': 'orange' if key == 'valid' else 'blue',
-                                        'name': task_key
-                                    })
+        return res
 
-                            item_copy['data'] = data
-                            res.append(item_copy)
-                            col += 1
-                    else:
-                        series = sorted(series, key=lambda x: x.task)
-                        series_task_group = groupby(series, key=lambda x: x.task)
-                        for task_key, group_task in series_task_group:
-                            data = []
-                            item_copy = item.copy()
-                            group_task = list(group_task)
-                            group_task = sorted(group_task, key=lambda x: x.group)
-
-                            for key, group in groupby(group_task, key=lambda x: x.group):
-                                group = list(group)
-                                data.append(
-                                    {
-                                        'x': [item.epoch for item in group],
-                                        'y': [item.value for item in group],
-                                        'color': 'orange' if key == 'valid' else 'blue',
-                                        'name': task_key
-                                    })
-
-                            item_copy['data'] = data
-                            res.append(item_copy)
-                            col += 1
-
+    def detail(self, id: int):
+        report = self.by_id(id)
+        tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id).all()
+        tasks = [t[0] for t in tasks]
+        config = json.loads(report.config)
+        res = []
+        for k, v in config.items():
+            if v['type'] == 'series':
+                res.extend(self._detail_series(tasks, k, v))
+            elif v['type'] == 'precision_recall':
+                res.extend(self._detail_single_img(tasks[0], k, v))
 
         return res
 

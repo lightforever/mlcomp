@@ -12,14 +12,15 @@ class ReportSeries(Base):
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
     group = sa.Column(sa.String)
 
+    task_rel = relationship('Task', lazy='noload')
+
 class ReportImg(Base):
     __tablename__ = 'report_img'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String)
+    group = sa.Column(sa.String)
     epoch = sa.Column(sa.Integer)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
-    info = sa.Column(sa.String)
     img = sa.Column(sa.LargeBinary)
 
 class Report(Base):

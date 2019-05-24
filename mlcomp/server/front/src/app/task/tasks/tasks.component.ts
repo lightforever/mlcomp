@@ -8,6 +8,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {TaskFilter} from "../../models";
+import {ReportService} from "../../report.service";
 
 @Component({
     selector: 'app-tasks',
@@ -25,7 +26,8 @@ export class TasksComponent extends Paginator<TasksComponent> {
     constructor(protected service: TaskService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-                private message_service: MessageService
+                private message_service: MessageService,
+                private report_service: ReportService
     ) {
         super(service, location);
         iconRegistry.addSvgIcon('stop',
@@ -74,8 +76,10 @@ export class TasksComponent extends Paginator<TasksComponent> {
     }
 
     toogle_report(element: any) {
+        let self = this;
         this.service.toogle_report(element.id, this.report, element.report_full).subscribe(data => {
             element.report_full = data.report_full;
+            self.report_service.data_updated.emit();
         });
     }
 }

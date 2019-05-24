@@ -22,25 +22,21 @@ export class ReportDetailComponent implements OnInit {
     ) {
     }
 
-    ngOnInit() {
-        this.id = this.route.snapshot.paramMap.get('id');
-        this.resource_service.load('plotly').then(() => {
-            this.service.get_obj<ReportTile[]>(this.id).subscribe(data => {
+    load(){
+        this.service.get_obj<ReportTile[]>(this.id).subscribe(data => {
                 this.report = data;
                 setTimeout(() => {
                     for (let i in data) {
                         let tile = data[i];
                         if (tile.type == 'series') {
                             let id = 'series_' + i.toString();
-                            // while (true) {
-                                if (document.getElementById(id)) {
-                                    let layout = {
-                                        'title': tile.name,
-                                        'width': 600
-                                    };
-                                    window['Plotly'].newPlot(id, tile.data, layout, {showSendToCloud: true});
-                                    // break
-                                // }
+                            if (document.getElementById(id)) {
+                                let layout = {
+                                    'title': tile.name,
+                                    'width': 600
+                                };
+                                window['Plotly'].newPlot(id, tile.data, layout, {showSendToCloud: true});
+
                             }
                         }
 
@@ -50,6 +46,16 @@ export class ReportDetailComponent implements OnInit {
                 }, 100);
 
             });
+    }
+
+    ngOnInit() {
+        let self = this;
+        this.id = this.route.snapshot.paramMap.get('id');
+        this.service.data_updated.subscribe(data=>{
+            self.load();
+        });
+        this.resource_service.load('plotly').then(() => {
+            self.load();
         });
     }
 

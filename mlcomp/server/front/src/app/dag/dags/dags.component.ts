@@ -8,6 +8,7 @@ import {MatIconRegistry} from '@angular/material';
 import {MessageService} from '../../message.service';
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
+import {ReportService} from "../../report.service";
 
 @Component({
     selector: 'app-dags',
@@ -24,7 +25,8 @@ export class DagsComponent extends Paginator<Dag> {
     constructor(protected service: DagService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-                private message_service: MessageService
+                private message_service: MessageService,
+                private report_service: ReportService
     ) {
         super(service, location);
 
@@ -83,8 +85,10 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     toogle_report(element: any) {
+        let self = this;
         this.service.toogle_report(element.id, this.report, element.report_full).subscribe(data => {
             element.report_full = data.report_full;
+            self.report_service.data_updated.emit();
         });
     }
 }

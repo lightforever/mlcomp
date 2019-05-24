@@ -8,15 +8,16 @@ executors:
     type: Catalyst
     args:
       config: catalyst-config.yml
-    series:
-      - loss
-      - precision01
-    report:
-      precision:
-        type: series
-        key: precision01
-        multi: single
-      loss:
-        type: series
-        key: loss
-        multi: multi
+reports:
+  base:
+    precision:
+      type: series
+      key: precision01
+      multi: single
+      single_group: valid
+    loss:
+      type: series
+      key: loss
+      multi: many
+    precision_recall:
+      type: precision_recall
