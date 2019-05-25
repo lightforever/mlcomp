@@ -164,6 +164,7 @@ import {ReportsComponent} from "./report/reports/reports.component";
         PortalModule,
         ScrollingModule,
         LogComponent,
+        TasksComponent,
     ]
 })
 export class SharedModule {

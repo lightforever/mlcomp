@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatIconRegistry} from '@angular/material';
 import {MessageService} from '../../message.service';
@@ -18,7 +18,7 @@ import {ReportService} from "../../report.service";
 export class TasksComponent extends Paginator<TasksComponent> {
     displayed_columns: string[] = ['id', 'name', 'created', 'started', 'last_activity',
         'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
-    dag: number;
+    @Input() dag: number;
     name: string;
     status: string;
     report: string;
@@ -38,8 +38,8 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
     protected _ngOnInit() {
         this.route.queryParams.subscribe(params => {
-            this.dag = params['dag'];
-            this.status = params['status']
+            if(params['dag']) this.dag = params['dag'];
+            if(params['status']) this.status = params['status']
         });
 
         let url = this.router.url;
@@ -81,5 +81,9 @@ export class TasksComponent extends Paginator<TasksComponent> {
             element.report_full = data.report_full;
             self.report_service.data_updated.emit();
         });
+    }
+
+    unfinished(element){
+        return ['not_ran', 'in_progress', 'queued'].indexOf(element.status)!=-1;
     }
 }

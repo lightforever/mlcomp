@@ -91,4 +91,8 @@ export class DagsComponent extends Paginator<Dag> {
             self.report_service.data_updated.emit();
         });
     }
+
+    has_unfinished(element: Dag) {
+        return element.task_statuses[0].count+element.task_statuses[1].count+element.task_statuses[2].count>0;
+    }
 }

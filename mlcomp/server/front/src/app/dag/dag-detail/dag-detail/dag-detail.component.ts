@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
 
 @Component({
   selector: 'app-dag-detail',
@@ -7,9 +7,8 @@ import { Component, OnInit } from '@angular/core';
 })
 export class DagDetailComponent implements OnInit {
 
-  constructor() { }
-
   ngOnInit() {
   }
+
 
 }
