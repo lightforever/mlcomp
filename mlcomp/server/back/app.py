@@ -1,4 +1,6 @@
-from flask import Flask, request
+from functools import wraps
+
+from flask import Flask, request, Response
 import json
 import click
 import requests
@@ -8,6 +10,8 @@ from flask_cors import CORS
 from mlcomp.server.back.supervisor import register_supervisor
 import os
 import mlcomp.task.tasks as celery_tasks
+from mlcomp.server.back import conf
+from mlcomp.utils.logging import logger
 
 PORT = 4201
 
@@ -31,7 +35,30 @@ def construct_paginator_options(args: dict, default_sort_column: str):
                             )
 
 
+def check_auth(token):
+    return token == conf.TOKEN
+
+
+def authenticate():
+    return Response(
+        'Could not verify your access level for that URL.\n'
+        'You have to login with proper credentials', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token or not check_auth(token):
+            return authenticate()
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 @app.route('/computers', methods=['POST'])
+@requires_auth
 def computers():
     data = request_data()
     options = PaginatorOptions(**data)
@@ -42,6 +69,7 @@ def computers():
 
 
 @app.route('/projects', methods=['POST'])
+@requires_auth
 def projects():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
@@ -58,6 +86,7 @@ def get_dag_id():
 
 
 @app.route('/config', methods=['GET'])
+@requires_auth
 def config():
     id = get_dag_id()
     res = DagProvider().config(id)
@@ -65,6 +94,7 @@ def config():
 
 
 @app.route('/graph', methods=['GET'])
+@requires_auth
 def graph():
     id = get_dag_id()
     res = DagProvider().graph(id)
@@ -72,6 +102,7 @@ def graph():
 
 
 @app.route('/dags', methods=['POST'])
+@requires_auth
 def dags():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
@@ -81,6 +112,7 @@ def dags():
 
 
 @app.route('/code', methods=['GET'])
+@requires_auth
 def code():
     id = get_dag_id()
     res = OrderedDict()
@@ -115,6 +147,7 @@ def code():
 
 
 @app.route('/tasks', methods=['POST'])
+@requires_auth
 def tasks():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
@@ -124,6 +157,7 @@ def tasks():
 
 
 @app.route('/task/stop', methods=['POST'])
+@requires_auth
 def task_stop():
     data = request_data()
     status = celery_tasks.stop(data['id'])
@@ -131,6 +165,7 @@ def task_stop():
 
 
 @app.route('/dag/stop', methods=['POST'])
+@requires_auth
 def dag_stop():
     data = request_data()
     provider = DagProvider()
@@ -142,6 +177,7 @@ def dag_stop():
 
 
 @app.route('/dag/toogle_report', methods=['POST'])
+@requires_auth
 def dag_toogle_report():
     data = request_data()
     provider = ReportProvider()
@@ -153,6 +189,7 @@ def dag_toogle_report():
 
 
 @app.route('/task/toogle_report', methods=['POST'])
+@requires_auth
 def task_toogle_report():
     data = request_data()
     provider = ReportProvider()
@@ -164,6 +201,7 @@ def task_toogle_report():
 
 
 @app.route('/logs', methods=['POST'])
+@requires_auth
 def logs():
     provider = LogProvider()
     data = request_data()
@@ -173,6 +211,7 @@ def logs():
 
 
 @app.route('/reports', methods=['POST'])
+@requires_auth
 def reports():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
@@ -182,6 +221,7 @@ def reports():
 
 
 @app.route('/report', methods=['POST'])
+@requires_auth
 def report():
     id = request_data()
     provider = ReportProvider()
@@ -190,13 +230,24 @@ def report():
 
 
 @app.route('/task/steps', methods=['POST'])
+@requires_auth
 def steps():
     id = request_data()
     provider = StepProvider()
     res = provider.get(id)
     return json.dumps(res)
 
+
+@app.route('/token', methods=['POST'])
+def token():
+    data = request_data()
+    if str(data['token']) != conf.TOKEN:
+        return Response(json.dumps({'success': False, 'reason': 'invalid token'}), status=401)
+    return json.dumps({'success': True})
+
+
 @app.route('/stop')
+@requires_auth
 def stop():
     pass
 
@@ -209,6 +260,7 @@ def shutdown_server():
 
 
 @app.route('/shutdown', methods=['POST'])
+@requires_auth
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'
@@ -231,5 +283,5 @@ def stop():
 
 
 if __name__ == '__main__':
-    # files(30)
+    logger.info(f'TOKEN = {conf.TOKEN}')
     base()

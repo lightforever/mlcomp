@@ -2,6 +2,9 @@
 <link href="../assets/visjs/vis.min.css" rel="stylesheet" type="text/css" />
 
 
+
+<p></p>
+
 <nav>
   <a routerLink="/projects" routerLinkActive="active">Projects</a>
   <a routerLink="/dags" routerLinkActive="active">Dags</a>
@@ -11,12 +14,7 @@
   <a routerLink="/computers" routerLinkActive="active">Computers</a>
 </nav>
 
-<p></p>
+<router-outlet #routerOutlet="outlet"></router-outlet>
 
-<mat-icon svgIcon="back" matTooltip="Back" (click)="go_back()" style="cursor: pointer; margin-right: 20px; margin-left: 5px"></mat-icon>
-<mat-icon svgIcon="forward" matTooltip="Forward" (click)="go_forward()"  style="cursor: pointer;"></mat-icon>
 
-<div [@routeAnimation]="getAnimationData(routerOutlet)">
-  <router-outlet #routerOutlet="outlet"></router-outlet>
-</div>
 <app-messages></app-messages>

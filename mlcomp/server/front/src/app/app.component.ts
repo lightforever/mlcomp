@@ -13,26 +13,4 @@ import {DomSanitizer} from "@angular/platform-browser";
 })
 export class AppComponent {
     title = 'ML comp dashboard';
-
-    constructor(private location: Location, private router: Router,
-                iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-    ) {
-        iconRegistry.addSvgIcon('back',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/back.svg'));
-
-        iconRegistry.addSvgIcon('forward',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/forward.svg'));
-    }
-
-    getAnimationData(outlet: RouterOutlet) {
-        return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];
-    }
-
-    go_back(): void {
-        this.location.back();
-    }
-
-    go_forward(): void {
-        this.location.forward();
-    }
 }
