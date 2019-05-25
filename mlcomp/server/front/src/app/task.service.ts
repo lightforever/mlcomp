@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {BaseService} from "./base.service";
 import {AppSettings} from "./app-settings";
 import {catchError, tap} from "rxjs/operators";
-import {PaginatorRes, Status, ToogleReportResult} from "./models";
+import {PaginatorRes, Status, StepNode, ToogleReportResult} from "./models";
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +27,13 @@ export class TaskService extends BaseService{
             'remove': report_full
         }).pipe(
             catchError(this.handleError<ToogleReportResult>(message, new ToogleReportResult()))
+        );
+    }
+
+    steps(step_id: number) {
+        let message = `${this.constructor.name}.steps`;
+        return this.http.post<StepNode[]>(AppSettings.API_ENDPOINT + this.single_part+'/steps', step_id).pipe(
+            catchError(this.handleError<StepNode[]>(message, []))
         );
     }
 }

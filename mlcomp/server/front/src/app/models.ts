@@ -39,7 +39,7 @@ export interface FlatNode {
   expandable: boolean;
   name: string;
   level: number;
-  content: string;
+  content: any;
 }
 
 export class CodeNode {
@@ -111,7 +111,7 @@ export class LogFilter{
     task: string;
     components: number[];
     levels: number[];
-    step: string;
+    step: number;
 
     task_name: string;
     step_name: string;
@@ -166,7 +166,13 @@ export class DagStopResult extends BaseResult{
 export class ReportTile {
     type: string;
     data: any;
+    items: any[];
     name: string;
     cols: number;
     rows: number;
+}
+
+export class StepNode {
+    name: string;
+    children?: StepNode[];
 }

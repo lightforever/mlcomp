@@ -27,6 +27,9 @@ class LogProvider(BaseDataProvider):
         if filter.get('step_name'):
             query = query.filter(Step.name.like(f'%{filter["step_name"]}%'))
 
+        if filter.get('step'):
+            query = query.filter(Step.id==filter['step'])
+
         total = query.count()
         data = []
         for log, step, task, computer in self.paginator(query, options):

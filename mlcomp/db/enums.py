@@ -63,3 +63,9 @@ class ComponentType(OrderedEnum):
     API = 0
     Supervisor = 1
     Worker = 2
+
+class LogStatus(OrderedEnum):
+    Debug = 10
+    Info = 20
+    Warning = 30
+    Error = 40

@@ -22,6 +22,7 @@ class ReportImg(Base):
     epoch = sa.Column(sa.Integer)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
     img = sa.Column(sa.LargeBinary)
+    number = sa.Column(sa.Integer, default=0)
 
 class Report(Base):
     __tablename__ = 'report'

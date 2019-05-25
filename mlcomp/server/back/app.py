@@ -189,6 +189,13 @@ def report():
     return json.dumps(res)
 
 
+@app.route('/task/steps', methods=['POST'])
+def steps():
+    id = request_data()
+    provider = StepProvider()
+    res = provider.get(id)
+    return json.dumps(res)
+
 @app.route('/stop')
 def stop():
     pass

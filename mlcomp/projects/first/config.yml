@@ -5,5 +5,5 @@ info:
   data_folder: /f/data/first
 executors:
   dummy1:
-    type: Dummy
+    type: StepExample
 

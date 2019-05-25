@@ -112,7 +112,7 @@ def _dag(config: str, debug: bool=False):
                     debug=debug
                 )
                 provider.add(task)
-                if True: # TODO Does this executor have metrics?
+                if False: # TODO Does this executor have metrics?
                     report_config = config_parsed['reports'][v['report'] if 'report' in v else 'base']
                     report = Report(config=json.dumps(report_config), name=task.name)
                     report_provider.add(report)

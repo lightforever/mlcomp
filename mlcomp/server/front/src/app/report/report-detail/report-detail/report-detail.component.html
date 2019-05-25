@@ -43,6 +43,16 @@
       <div style="text-align:center">{{tile.name}}</div>
       <img [attr.src]="'data:image/JPEG;base64,'+tile.data">
     </div>
+
+     <div *ngIf="tile.type=='img_list';" >
+       <div  style="text-align:center">{{tile.name}}</div>
+       <br>
+       <div *ngFor="let img of tile.items">
+         <img [attr.src]="'data:image/JPEG;base64,'+img.img" height="224">
+         <div  style="text-align:center">{{img.text}}</div>
+       </div>
+
+     </div>
   </mat-grid-tile>
 </mat-grid-list>
 

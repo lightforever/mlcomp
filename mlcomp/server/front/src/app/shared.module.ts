@@ -163,6 +163,7 @@ import {ReportsComponent} from "./report/reports/reports.component";
         MatTreeModule,
         PortalModule,
         ScrollingModule,
+        LogComponent,
     ]
 })
 export class SharedModule {

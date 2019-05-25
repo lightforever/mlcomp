@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {Paginator} from "../paginator";
 import {Log, LogFilter} from "../models";
 import {Location} from "@angular/common";
@@ -18,7 +18,9 @@ export class LogComponent extends Paginator<Log>{
     displayed_columns: string[] = ['time', 'component', 'level', 'task', 'step', 'computer', 'message'];
     dag: string;
     total: number;
-    private task: string;
+    @Input() task: string;
+    @Input() step: number;
+    @Input() init_level: string;
     private computer: string;
 
     private debug: boolean = true;
@@ -51,6 +53,12 @@ export class LogComponent extends Paginator<Log>{
             this.computer = params['computer'];
         });
 
+        if(this.init_level){
+            this.debug = this.init_level=='debug';
+            this.info = this.init_level=='info';
+            this.warning = this.init_level=='warning';
+            this.error = this.init_level=='error';
+        }
     }
 
     apply_task_name(value: string) {
@@ -106,6 +114,7 @@ export class LogComponent extends Paginator<Log>{
         res.levels = this.get_levels();
         res.step_name = this.step_name;
         res.paginator = super.get_filter();
+        res.step = this.step;
 
         return res;
     }

@@ -57,6 +57,7 @@ class Catalyst(Executor, Callback):
         self.valid_data['target'].extend(state.input['targets'].detach().cpu().numpy())
 
     def on_epoch_end(self, state: RunnerState):
+        output = np.array(self.valid_data['output'])
         for s in self.report.series:
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
@@ -67,29 +68,31 @@ class Catalyst(Executor, Callback):
             self.series_provider.add(train)
             self.series_provider.add(val)
 
-        for pr in self.report.precision_recall:
-            output = np.array(self.valid_data['output'])
-            output = softmax(output)[:, 1]
-            img = pr.plot(self.valid_data['target'], output)
-            content = {'img': img}
-            obj = ReportImg(group=pr.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
-            self.img_provider.add(obj)
+        if state.metrics.is_best:
+            for pr in self.report.precision_recall:
+                output_soft = softmax(output, axis=1)[:, 1]
+                img = pr.plot(self.valid_data['target'], output_soft)
+                content = {'img': img}
+                obj = ReportImg(group=pr.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=0)
+                self.img_provider.add_or_replace(obj)
 
-        for f1 in self.report.f1:
-            output = np.array(self.valid_data['output'])
-            img = f1.plot(self.valid_data['target'], output.argmax(1))
-            content = {'img': img}
-            obj = ReportImg(group=f1.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
-            self.img_provider.add(obj)
+            for f1 in self.report.f1:
+                img = f1.plot(self.valid_data['target'], output.argmax(1))
+                content = {'img': img}
+                obj = ReportImg(group=f1.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=0)
+                self.img_provider.add_or_replace(obj)
 
-        for c in self.report.img_confusion:
-            for i in range(c.count):
-                content = self.valid_data['input'][i]
-                content = self.experiment.denormilize(content)
-                content = cv2.imencode('.jpg', content)[1].tostring()
-                content = {'img': content}
-                obj = ReportImg(group=c.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content))
-                self.img_provider.add(obj)
+            for c in self.report.img_confusion:
+                output_soft = softmax(output, axis=1)
+
+                for i in range(c.count):
+                    content = self.valid_data['input'][i]
+                    content = self.experiment.denormilize(content)
+                    content = cv2.imencode('.jpg', content)[1].tostring()
+                    content = {'img': content, 'y': self.valid_data['target'][i],
+                               'y_pred': output_soft[i].argmax(), 'pred': output_soft[i][output_soft[i].argmax()]}
+                    obj = ReportImg(group=c.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=i)
+                    self.img_provider.add_or_replace(obj)
 
         self.valid_data = {'input': [], 'output': [], 'target': []}
 
