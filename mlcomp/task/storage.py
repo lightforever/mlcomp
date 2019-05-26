@@ -12,6 +12,7 @@ import pkgutil
 import inspect
 from mlcomp.utils.config import Config
 import sys
+import pathspec
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,14 @@ class Storage:
 
     def upload(self, folder: str, dag: Dag):
         hashs = self.file_provider.hashs(dag.project)
+        ignore_file = os.path.join(folder, '.ignore')
+        ignore_patterns = [] if not os.path.exists(ignore_file) else [l.strip() for l in open(ignore_file)]
+        ignore_patterns.extend(['log', 'data', '__pycache__'])
+        spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, ignore_patterns)
+
         for o in glob(os.path.join(folder, '**'), recursive=True):
             path = os.path.relpath(o, folder)
-            if path == '.' or path.startswith('data') or path.startswith('./data'):
-                continue
-            if path.startswith('log') or path.startswith('./log'):
+            if spec.match_file(path) or path == '.':
                 continue
 
             if isdir(o):

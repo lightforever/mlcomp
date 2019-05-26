@@ -16,9 +16,9 @@ import {LogService} from "../log.service";
 })
 export class LogComponent extends Paginator<Log>{
     displayed_columns: string[] = ['time', 'component', 'level', 'task', 'step', 'computer', 'message'];
-    dag: string;
+    dag: number;
     total: number;
-    @Input() task: string;
+    @Input() task: number;
     @Input() step: number;
     @Input() init_level: string;
     private computer: string;
@@ -48,9 +48,9 @@ export class LogComponent extends Paginator<Log>{
     protected _ngOnInit() {
         this.route.queryParams
         .subscribe(params => {
-            this.dag = params['dag'];
-            this.task = params['task'];
-            this.computer = params['computer'];
+            if(params['dag'])this.dag = parseInt(params['dag']);
+            if(params['task'])this.task = parseInt(params['task']);
+            if(params['computer'])this.computer = params['computer'];
         });
 
         if(this.init_level){

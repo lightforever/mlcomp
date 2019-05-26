@@ -15,7 +15,7 @@ import {AppSettings} from "../../../app-settings";
   styleUrls: ['./step.component.css']
 })
 export class StepComponent implements OnInit {
-  private step_id: number;
+  public task: number;
 
  constructor(protected service: TaskService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -42,8 +42,7 @@ export class StepComponent implements OnInit {
 
     ngOnInit() {
         let self = this;
-        this.step_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
-        this.service.steps(this.step_id).subscribe(res => {
+        this.service.steps(this.task).subscribe(res => {
             self.dataSource.data = res;
             self.treeControl.expandAll();
         });

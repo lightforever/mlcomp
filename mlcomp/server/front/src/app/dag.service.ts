@@ -18,7 +18,7 @@ export class DagService extends BaseService {
         );
     }
 
-    toogle_report(id: any, report: string, report_full: boolean) {
+    toogle_report(id: any, report: number, report_full: boolean) {
         let message = `${this.constructor.name}.toogle_report`;
         return this.http.post<ToogleReportResult>(AppSettings.API_ENDPOINT + this.single_part + '/toogle_report', {
             'id': id,

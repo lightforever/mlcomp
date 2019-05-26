@@ -44,7 +44,7 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {PortalModule} from "@angular/cdk/portal";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {LogComponent} from './log/log.component'
-import {ReportDetailComponent} from "./report/report-detail/report-detail/report-detail.component";
+import {ReportDetailComponent} from "./report/report-detail/report-detail.component";
 import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";

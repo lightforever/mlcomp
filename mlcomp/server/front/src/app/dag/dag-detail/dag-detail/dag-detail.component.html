@@ -5,4 +5,4 @@
   <a routerLink="./graph" routerLinkActive="active">Graph</a>
 </nav>
 
-<router-outlet></router-outlet>
+<router-outlet (activate)="onActivate($event)"></router-outlet>

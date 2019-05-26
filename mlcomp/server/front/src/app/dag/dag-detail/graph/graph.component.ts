@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {MessageService} from "../../../message.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {DagDetailService} from "../../../dag-detail.service";
@@ -10,9 +10,9 @@ import {AppSettings} from "../../../app-settings";
     templateUrl: './graph.component.html',
     styleUrls: ['./graph.component.css']
 })
-export class GraphComponent implements OnInit {
+export class GraphComponent implements AfterViewInit {
 
-    private dag_id: number;
+    public dag: number;
 
     constructor(private message_service: MessageService, private route: ActivatedRoute,
                 private service: DagDetailService,
@@ -21,15 +21,14 @@ export class GraphComponent implements OnInit {
     ) {
     }
 
-    ngOnInit() {
-        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
+    ngAfterViewInit() {
         this.load_network();
     }
 
     private load_network() {
         let self = this;
         this.resource_service.load('vis.min.js', 'vis.min.css').then(res => {
-            this.service.get_graph(this.dag_id).subscribe(res => {
+            this.service.get_graph(this.dag).subscribe(res => {
                 res.nodes.forEach(obj => obj.color = AppSettings.status_colors[obj.status]);
                 res.edges.forEach(obj => obj.color = AppSettings.status_colors[obj.status]);
 
@@ -62,7 +61,7 @@ export class GraphComponent implements OnInit {
                 network.on('doubleClick', function (properties) {
                     var ids = properties.nodes;
                     var clickedNodes = nodes.get(ids);
-                    self.router.navigate(['/task/'+clickedNodes[0].id]);
+                    self.router.navigate(['/tasks/task-detail/'+clickedNodes[0].id+'/log']);
                 });
 
             });

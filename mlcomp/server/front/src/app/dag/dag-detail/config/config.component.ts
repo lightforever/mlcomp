@@ -1,6 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {MessageService} from '../../../message.service'
-import {ActivatedRoute} from "@angular/router";
 import {DagDetailService} from "../../../dag-detail.service";
 import {DynamicresourceService} from "../../../dynamicresource.service";
 
@@ -9,21 +8,20 @@ import {DynamicresourceService} from "../../../dynamicresource.service";
     templateUrl: './config.component.html',
     styleUrls: ['./config.component.css']
 })
-export class ConfigComponent implements OnInit {
-    private dag_id: number;
+export class ConfigComponent implements AfterViewInit {
+    public dag: number;
     config: string;
 
-    constructor(private message_service: MessageService, private route: ActivatedRoute,
+    constructor(private message_service: MessageService,
                 private service: DagDetailService,
                 private resource_service: DynamicresourceService,
     ) {
     }
 
-    ngOnInit() {
+    ngAfterViewInit() {
         let self = this;
-        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
         this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css').then(() => {
-            self.service.get_config(self.dag_id).subscribe(res => {
+            self.service.get_config(self.dag).subscribe(res => {
                 let node = document.createElement('pre');
                 node.textContent = res.data;
                 node.className = "prettyprint linenums lang-yaml";

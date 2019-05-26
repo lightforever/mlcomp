@@ -107,8 +107,8 @@ export class PaginatorFilter{
 }
 
 export class LogFilter{
-    dag: string;
-    task: string;
+    dag: number;
+    task: number;
     components: number[];
     levels: number[];
     step: number;
@@ -130,7 +130,7 @@ export class DagFilter {
     paginator: PaginatorFilter;
     name: string;
     project: number;
-    report: string;
+    report: number;
 }
 
 export class TaskFilter {
@@ -138,7 +138,7 @@ export class TaskFilter {
     name: string;
     dag: number;
     status: string;
-    report: string;
+    report: number;
 }
 
 export class ReportsFilter {

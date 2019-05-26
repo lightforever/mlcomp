@@ -21,7 +21,7 @@ export class TasksComponent extends Paginator<TasksComponent> {
     @Input() dag: number;
     name: string;
     status: string;
-    report: string;
+    @Input() report: number;
 
     constructor(protected service: TaskService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -38,14 +38,9 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
     protected _ngOnInit() {
         this.route.queryParams.subscribe(params => {
-            if(params['dag']) this.dag = params['dag'];
-            if(params['status']) this.status = params['status']
+            if(params['dag']) parseInt(this.dag = params['dag']);
+            if(params['status']) parseInt(this.status = params['status']);
         });
-
-        let url = this.router.url;
-        if (url.indexOf('report-detail') != -1) {
-            this.report = this.route.snapshot.paramMap.get('id');
-        }
     }
 
     filter_name(name: string) {

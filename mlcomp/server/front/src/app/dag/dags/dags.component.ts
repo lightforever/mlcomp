@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {Dag, NameCount, DagFilter} from '../../models';
 import {DagService} from '../../dag.service';
 import {Location} from '@angular/common';
@@ -20,7 +20,7 @@ export class DagsComponent extends Paginator<Dag> {
     displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started', 'last_activity', 'task_status', 'links'];
     project: number;
     name: string;
-    report: string;
+    @Input() report: number;
 
     constructor(protected service: DagService, protected location: Location,
                 private router: Router, private  route: ActivatedRoute,
@@ -58,12 +58,8 @@ export class DagsComponent extends Paginator<Dag> {
     protected _ngOnInit() {
         this.route.queryParams
             .subscribe(params => {
-                this.project = params['project'];
+                if(params['project'])this.project = parseInt(params['project']);
             });
-        let url = this.router.url;
-        if (url.indexOf('report-detail') != -1) {
-            this.report = this.route.snapshot.paramMap.get('id');
-        }
 
     }
 
@@ -72,7 +68,7 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     status_click(dag: Dag, status: NameCount) {
-        this.router.navigate(['/tasks'], {queryParams: {dag: dag.id, status: status.name}});
+        this.router.navigate([`/dags/dag-detail/${dag.id}`], {queryParams: {status: status.name}});
     }
 
     filter_name(name: string) {

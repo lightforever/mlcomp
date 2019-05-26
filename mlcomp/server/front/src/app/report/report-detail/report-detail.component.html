@@ -10,7 +10,7 @@
       </mat-panel-description>
     </mat-expansion-panel-header>
 
-    <app-dags *ngIf="dag_panel_open"></app-dags>
+    <app-dags *ngIf="dag_panel_open" [report]="id"></app-dags>
   </mat-expansion-panel>
 
   <mat-expansion-panel (opened)="task_panel_open = true"
@@ -24,7 +24,7 @@
       </mat-panel-description>
     </mat-expansion-panel-header>
 
-    <app-tasks *ngIf="task_panel_open"></app-tasks>
+    <app-tasks *ngIf="task_panel_open"  [report]="id"></app-tasks>
   </mat-expansion-panel>
 
 </mat-accordion>

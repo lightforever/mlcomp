@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {FlatNode, CodeNode} from '../../../models'
@@ -13,9 +13,9 @@ import {DynamicresourceService} from "../../../dynamicresource.service";
     styleUrls: ['./code.component.css']
 })
 
-export class CodeComponent implements OnInit {
+export class CodeComponent implements AfterViewInit {
 
-    private dag_id: number;
+    public dag: number;
 
     private transformer = (node: CodeNode, level: number) => {
         return {
@@ -41,10 +41,9 @@ export class CodeComponent implements OnInit {
 
     }
 
-    ngOnInit() {
+    ngAfterViewInit() {
         let self = this;
-        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
-        this.service.get_code(this.dag_id).subscribe(res => {
+        this.service.get_code(this.dag).subscribe(res => {
             self.dataSource.data = res;
         });
         this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css')

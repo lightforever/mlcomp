@@ -113,7 +113,9 @@ def _dag(config: str, debug: bool=False):
                 )
                 provider.add(task)
                 if v.get('report'):
-                    report_config = config_parsed['reports'][v['report'] if 'report' in v else 'base']
+                    if v['report'] not in config_parsed['reports']:
+                        raise Exception(f'Unknown report = {v["report"]}')
+                    report_config = config_parsed['reports'][v['report']]
                     report = Report(config=json.dumps(report_config), name=task.name, project=project)
                     report_provider.add(report)
                     report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))

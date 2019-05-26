@@ -62,7 +62,7 @@
         <ng-container matColumnDef="task">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Task</th>
             <td mat-cell *matCellDef="let element">
-                {{element.task.name}}
+                <a [routerLink]="'/tasks/task-detail/'+element.task.id.toString()">{{element.task.name}} ({{element.task.id}})</a>
             </td>
         </ng-container>
 
