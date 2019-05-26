@@ -10,7 +10,7 @@ import {DynamicresourceService} from "../../../dynamicresource.service";
     styleUrls: ['./config.component.css']
 })
 export class ConfigComponent implements OnInit {
-    private dag_id: string;
+    private dag_id: number;
     config: string;
 
     constructor(private message_service: MessageService, private route: ActivatedRoute,
@@ -21,7 +21,7 @@ export class ConfigComponent implements OnInit {
 
     ngOnInit() {
         let self = this;
-        this.dag_id = this.route.parent.snapshot.paramMap.get('id');
+        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
         this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css').then(() => {
             self.service.get_config(self.dag_id).subscribe(res => {
                 let node = document.createElement('pre');

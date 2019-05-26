@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Flask, request, Response
+from flask import Flask, request, Response, send_from_directory
 import json
 import click
 import requests
@@ -17,6 +17,15 @@ PORT = 4201
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.route('/', defaults={'path': ''}, methods=['GET'])
+@app.route('/<path:path>', methods=['GET'])
+def send_static(path):
+    file = 'index.html'
+    if '.' in path:
+        file = path
+    return send_from_directory('../front/dist/mlcomp/', file)
 
 
 def request_data():
@@ -57,7 +66,7 @@ def requires_auth(f):
     return decorated
 
 
-@app.route('/computers', methods=['POST'])
+@app.route('/api/computers', methods=['POST'])
 @requires_auth
 def computers():
     data = request_data()
@@ -68,7 +77,7 @@ def computers():
     return json.dumps(provider.get(data, options))
 
 
-@app.route('/projects', methods=['POST'])
+@app.route('/api/projects', methods=['POST'])
 @requires_auth
 def projects():
     data = request_data()
@@ -79,29 +88,23 @@ def projects():
     return json.dumps(res)
 
 
-def get_dag_id():
-    assert 'dag' in request.args, 'dag is needed'
-    assert request.args['dag'].isnumeric(), 'dag must be integer'
-    return int(request.args['dag'])
-
-
-@app.route('/config', methods=['GET'])
+@app.route('/api/config', methods=['POST'])
 @requires_auth
 def config():
-    id = get_dag_id()
+    id = request_data()
     res = DagProvider().config(id)
     return json.dumps({'data': res})
 
 
-@app.route('/graph', methods=['GET'])
+@app.route('/api/graph', methods=['POST'])
 @requires_auth
 def graph():
-    id = get_dag_id()
+    id = request_data()
     res = DagProvider().graph(id)
     return json.dumps(res)
 
 
-@app.route('/dags', methods=['POST'])
+@app.route('/api/dags', methods=['POST'])
 @requires_auth
 def dags():
     data = request_data()
@@ -111,10 +114,10 @@ def dags():
     return json.dumps(res)
 
 
-@app.route('/code', methods=['GET'])
+@app.route('/api/code', methods=['POST'])
 @requires_auth
 def code():
-    id = get_dag_id()
+    id = request_data()
     res = OrderedDict()
     parents = dict()
     for s, f in DagStorageProvider().by_dag(id):
@@ -146,7 +149,7 @@ def code():
     return json.dumps(list(res.values()))
 
 
-@app.route('/tasks', methods=['POST'])
+@app.route('/api/tasks', methods=['POST'])
 @requires_auth
 def tasks():
     data = request_data()
@@ -156,7 +159,7 @@ def tasks():
     return json.dumps(res)
 
 
-@app.route('/task/stop', methods=['POST'])
+@app.route('/api/task/stop', methods=['POST'])
 @requires_auth
 def task_stop():
     data = request_data()
@@ -164,7 +167,7 @@ def task_stop():
     return json.dumps({'success': True, 'status': to_snake(TaskStatus(status).name)})
 
 
-@app.route('/dag/stop', methods=['POST'])
+@app.route('/api/dag/stop', methods=['POST'])
 @requires_auth
 def dag_stop():
     data = request_data()
@@ -176,7 +179,7 @@ def dag_stop():
     return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
 
 
-@app.route('/dag/toogle_report', methods=['POST'])
+@app.route('/api/dag/toogle_report', methods=['POST'])
 @requires_auth
 def dag_toogle_report():
     data = request_data()
@@ -188,7 +191,7 @@ def dag_toogle_report():
     return json.dumps({'success': True, 'report_full': not data.get('remove')})
 
 
-@app.route('/task/toogle_report', methods=['POST'])
+@app.route('/api/task/toogle_report', methods=['POST'])
 @requires_auth
 def task_toogle_report():
     data = request_data()
@@ -200,7 +203,7 @@ def task_toogle_report():
     return json.dumps({'success': True, 'report_full': not data.get('remove')})
 
 
-@app.route('/logs', methods=['POST'])
+@app.route('/api/logs', methods=['POST'])
 @requires_auth
 def logs():
     provider = LogProvider()
@@ -210,7 +213,7 @@ def logs():
     return json.dumps(res)
 
 
-@app.route('/reports', methods=['POST'])
+@app.route('/api/reports', methods=['POST'])
 @requires_auth
 def reports():
     data = request_data()
@@ -220,7 +223,7 @@ def reports():
     return json.dumps(res)
 
 
-@app.route('/report', methods=['POST'])
+@app.route('/api/report', methods=['POST'])
 @requires_auth
 def report():
     id = request_data()
@@ -229,7 +232,7 @@ def report():
     return json.dumps(res)
 
 
-@app.route('/task/steps', methods=['POST'])
+@app.route('/api/task/steps', methods=['POST'])
 @requires_auth
 def steps():
     id = request_data()
@@ -238,7 +241,7 @@ def steps():
     return json.dumps(res)
 
 
-@app.route('/token', methods=['POST'])
+@app.route('/api/token', methods=['POST'])
 def token():
     data = request_data()
     if str(data['token']) != conf.TOKEN:
@@ -246,7 +249,7 @@ def token():
     return json.dumps({'success': True})
 
 
-@app.route('/stop')
+@app.route('/api/stop')
 @requires_auth
 def stop():
     pass
@@ -259,7 +262,7 @@ def shutdown_server():
     func()
 
 
-@app.route('/shutdown', methods=['POST'])
+@app.route('/api/shutdown', methods=['POST'])
 @requires_auth
 def shutdown():
     shutdown_server()

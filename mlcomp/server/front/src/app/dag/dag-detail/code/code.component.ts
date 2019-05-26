@@ -15,7 +15,7 @@ import {DynamicresourceService} from "../../../dynamicresource.service";
 
 export class CodeComponent implements OnInit {
 
-    private dag_id: string;
+    private dag_id: number;
 
     private transformer = (node: CodeNode, level: number) => {
         return {
@@ -43,7 +43,7 @@ export class CodeComponent implements OnInit {
 
     ngOnInit() {
         let self = this;
-        this.dag_id = this.route.parent.snapshot.paramMap.get('id');
+        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
         this.service.get_code(this.dag_id).subscribe(res => {
             self.dataSource.data = res;
         });

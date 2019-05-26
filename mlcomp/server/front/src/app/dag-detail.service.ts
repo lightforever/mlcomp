@@ -11,23 +11,23 @@ export class DagDetailService extends BaseService{
   protected single_part: string;
   private url = `${AppSettings.API_ENDPOINT}`;
 
-  get_config(dag_id: string): Observable<Data<string>> {
-    return this.http.get<Data<string>>(`${this.url}config?dag=${dag_id}`)
+  get_config(dag_id: number): Observable<Data<string>> {
+    return this.http.post<Data<string>>(`${this.url}config`, dag_id)
       .pipe(
         tap(_ => this.log('fetched config')),
         catchError(this.handleError<Data<string>>('config', new Data<string>()))
       );
   }
 
-  get_code(dag_id: string): Observable<CodeNode[]> {
-     return this.http.get<CodeNode[]>(`${this.url}code?dag=${dag_id}`)
+  get_code(dag_id: number): Observable<CodeNode[]> {
+     return this.http.post<CodeNode[]>(`${this.url}code`, dag_id)
       .pipe(
         tap(_ => this.log('fetched code')),
         catchError(this.handleError<CodeNode[]>('config', []))
       );
   }
-  get_graph(dag_id: string): Observable<Graph> {
-     return this.http.get<Graph>(`${this.url}graph?dag=${dag_id}`)
+  get_graph(dag_id: number): Observable<Graph> {
+     return this.http.post<Graph>(`${this.url}graph`, dag_id)
       .pipe(
         tap(_ => this.log('fetched graph')),
         catchError(this.handleError<Graph>('graph', new Graph()))

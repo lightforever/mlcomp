@@ -12,7 +12,7 @@ import {AppSettings} from "../../../app-settings";
 })
 export class GraphComponent implements OnInit {
 
-    private dag_id: string;
+    private dag_id: number;
 
     constructor(private message_service: MessageService, private route: ActivatedRoute,
                 private service: DagDetailService,
@@ -22,7 +22,7 @@ export class GraphComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.dag_id = this.route.parent.snapshot.paramMap.get('id');
+        this.dag_id = parseInt(this.route.parent.snapshot.paramMap.get('id'));
         this.load_network();
     }
 
