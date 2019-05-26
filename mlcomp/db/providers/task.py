@@ -54,7 +54,7 @@ class TaskProvider(BaseDataProvider):
         self.session.update()
 
     def by_status(self, status: TaskStatus):
-        return self.query(Task).filter(Task.status == status.value).all()
+        return self.query(Task).filter(Task.status == status.value).options(joinedload(Task.dag_rel)).all()
 
     def dependency_status(self, tasks: List[Task]):
         res = {t.id: [] for t in tasks}

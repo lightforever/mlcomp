@@ -2,6 +2,8 @@ export class Project {
   id: number;
   name: string;
   last_activity: Date;
+  img_size: number;
+  file_size: number;
 }
 
 export class NameCount {
@@ -18,6 +20,8 @@ export class Dag {
   project: Project;
   task_count: number;
   task_statuses: NameCount;
+  img_size: number;
+  file_size: number;
 }
 
 export class Task {

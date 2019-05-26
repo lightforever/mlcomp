@@ -28,4 +28,25 @@ export class DagService extends BaseService {
             catchError(this.handleError<ToogleReportResult>(message, new ToogleReportResult()))
         );
     }
+
+    remove(id: number) {
+        let message = `${this.constructor.name}.remove`;
+        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + this.single_part + '/remove', {'id': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    remove_imgs(id: number) {
+        let message = `${this.constructor.name}.remove_imgs`;
+        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_imgs', {'dag': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    remove_files(id: number) {
+        let message = `${this.constructor.name}.remove_files`;
+        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_files', {'dag': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
 }

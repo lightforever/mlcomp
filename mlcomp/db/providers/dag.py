@@ -7,6 +7,16 @@ from mlcomp.utils.misc import to_snake
 class DagProvider(BaseDataProvider):
     model = Dag
 
+    def img_size(self, id: int):
+        res = self.session.execute('SELECT sum(octet_length(t.*::text)) FROM report_img as t where dag=:p',
+                                   {'p': id}).fetchone()[0]
+        return 0 if not res else int(res / 2)
+
+    def file_size(self, id: int):
+        res = self.session.execute('SELECT sum(octet_length(t.*::text)) FROM file as t where dag=:p',
+                                   {'p': id}).fetchone()[0]
+        return 0 if not res else int(res / 2)
+
     def get(self, filter: dict, options: PaginatorOptions = None):
         task_status = []
         for e in TaskStatus:
@@ -46,6 +56,8 @@ class DagProvider(BaseDataProvider):
             r['last_activity'] = self.serializer.serialize_date(r['last_activity']) if r['last_activity'] else None
             r['started'] = self.serializer.serialize_date(r['started']) if r['started'] else None
             r['finished'] = self.serializer.serialize_date(r['finished']) if r['finished'] else None
+            r['img_size'] = self.img_size(r['id'])
+            r['file_size'] = self.file_size(r['id'])
             res.append(r)
 
         if filter.get('report'):

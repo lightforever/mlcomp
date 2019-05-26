@@ -43,7 +43,7 @@ class Storage:
             if md5 in hashs:
                 file_id = hashs[md5]
             else:
-                file = File(md5=md5, content=content, project=dag.project)
+                file = File(md5=md5, content=content, project=dag.project, dag=dag.id)
                 self.file_provider.add(file)
                 file_id = file.id
                 hashs[md5] = file.id

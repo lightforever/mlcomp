@@ -20,6 +20,7 @@ from scipy.special import softmax
 import pickle
 import cv2
 
+
 class Args:
     baselogdir = None
     batch_size = None
@@ -73,13 +74,20 @@ class Catalyst(Executor, Callback):
                 output_soft = softmax(output, axis=1)[:, 1]
                 img = pr.plot(self.valid_data['target'], output_soft)
                 content = {'img': img}
-                obj = ReportImg(group=pr.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=0)
+                obj = ReportImg(group=pr.name, epoch=state.epoch,
+                                task=self.task.id, img=pickle.dumps(content), number=0,
+                                project=self.dag.project,
+                                dag=self.task.dag)
                 self.img_provider.add_or_replace(obj)
 
             for f1 in self.report.f1:
                 img = f1.plot(self.valid_data['target'], output.argmax(1))
                 content = {'img': img}
-                obj = ReportImg(group=f1.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=0)
+                obj = ReportImg(group=f1.name, epoch=state.epoch, task=self.task.id,
+                                img=pickle.dumps(content), number=0,
+                                project=self.dag.project,
+                                dag=self.task.dag
+                                )
                 self.img_provider.add_or_replace(obj)
 
             for c in self.report.img_confusion:
@@ -91,7 +99,10 @@ class Catalyst(Executor, Callback):
                     content = cv2.imencode('.jpg', content)[1].tostring()
                     content = {'img': content, 'y': self.valid_data['target'][i],
                                'y_pred': output_soft[i].argmax(), 'pred': output_soft[i][output_soft[i].argmax()]}
-                    obj = ReportImg(group=c.name, epoch=state.epoch, task=self.task.id, img=pickle.dumps(content), number=i)
+                    obj = ReportImg(group=c.name, epoch=state.epoch, task=self.task.id,
+                                    img=pickle.dumps(content), number=i,
+                                    project=self.dag.project,
+                                    dag=self.task.dag)
                     self.img_provider.add_or_replace(obj)
 
         self.valid_data = {'input': [], 'output': [], 'target': []}
@@ -137,4 +148,3 @@ class Catalyst(Executor, Callback):
             experiment,
             check=args.check
         )
-

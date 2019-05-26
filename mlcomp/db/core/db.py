@@ -38,10 +38,16 @@ class Session(session.Session):
     @classmethod
     def cleanup(cls):
         for k, (session, engine) in cls.__session.items():
-            session.close()
-            engine.dispose()
+            try:
+                session.close()
+            except Exception:
+                pass
+            try:
+                engine.dispose()
+            except Exception:
+                pass
 
-        del cls.__session
+        cls.__session = dict()
 
     def query(self, *entities, **kwargs):
         try:

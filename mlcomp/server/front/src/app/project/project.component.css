@@ -1,5 +1,6 @@
 table {
-  width: 50%;
+  width: 60%;
+  min-width: 1120px;
 }
 
 .mat-form-field {
@@ -7,6 +8,21 @@ table {
   width: 100%;
 }
 
-td, th {
-  width: 25%;
+td{
+  text-align: center;
 }
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
+
+mat-icon{
+  cursor: pointer;
+}
+

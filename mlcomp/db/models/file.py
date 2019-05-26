@@ -8,3 +8,4 @@ class File(Base):
     created = sa.Column(sa.DateTime, default='Now()')
     content = sa.Column(sa.LargeBinary)
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
+    dag = sa.Column(sa.Integer, ForeignKey('dag.id'))

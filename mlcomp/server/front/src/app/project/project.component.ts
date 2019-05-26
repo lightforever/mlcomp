@@ -6,6 +6,7 @@ import {Location} from '@angular/common';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatIconRegistry} from "@angular/material";
 import {DomSanitizer} from "@angular/platform-browser";
 import {DialogComponent} from "../dialog/dialog.component";
+import {AppSettings} from "../app-settings";
 
 @Component({
     selector: 'app-project',
@@ -14,14 +15,14 @@ import {DialogComponent} from "../dialog/dialog.component";
 })
 export class ProjectComponent extends Paginator<Project> {
 
-    displayed_columns: string[] = ['name', 'dag_count', 'last_activity', 'links'];
+    displayed_columns: string[] = ['name', 'dag_count', 'last_activity', 'img_size', 'file_size', 'links'];
     name: string;
 
-    constructor(protected project_service: ProjectService, protected location: Location,
+    constructor(protected service: ProjectService, protected location: Location,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
                 public dialog: MatDialog
     ) {
-        super(project_service, location);
+        super(service, location);
         iconRegistry.addSvgIcon('remove',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
     }
@@ -46,12 +47,24 @@ export class ProjectComponent extends Paginator<Project> {
         });
 
         dialogRef.afterClosed().subscribe(result => {
-            if(result){
-                this.project_service.remove(element.id).subscribe(data=>{
+            if (result) {
+                this.service.remove(element.id).subscribe(data => {
                     this.change.emit();
                 });
             }
         });
 
+    }
+
+    size(s: number) {
+        return AppSettings.size(s);
+    }
+
+    remove_imgs(element: Project) {
+        this.service.remove_imgs(element.id).subscribe(data=>{element.img_size=0});
+    }
+
+    remove_files(element) {
+        this.service.remove_files(element.id).subscribe(data=>{element.file_size=0});
     }
 }

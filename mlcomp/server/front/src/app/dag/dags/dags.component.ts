@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {Dag, NameCount, DagFilter} from '../../models';
+import {Dag, NameCount, DagFilter, Project} from '../../models';
 import {DagService} from '../../dag.service';
 import {Location} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
@@ -17,7 +17,8 @@ import {ReportService} from "../../report.service";
 })
 export class DagsComponent extends Paginator<Dag> {
 
-    displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started', 'last_activity', 'task_status', 'links'];
+    displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started',
+        'last_activity','task_status', 'links',  'img_size', 'file_size'];
     project: number;
     name: string;
     @Input() report: number;
@@ -44,6 +45,8 @@ export class DagsComponent extends Paginator<Dag> {
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/network.svg'));
         iconRegistry.addSvgIcon('report',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/report.svg'));
+        iconRegistry.addSvgIcon('remove',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
     }
 
     get_filter(): any {
@@ -58,7 +61,7 @@ export class DagsComponent extends Paginator<Dag> {
     protected _ngOnInit() {
         this.route.queryParams
             .subscribe(params => {
-                if(params['project'])this.project = parseInt(params['project']);
+                if (params['project']) this.project = parseInt(params['project']);
             });
 
     }
@@ -77,6 +80,9 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     stop(element: any) {
+        if (element.finished) {
+            return;
+        }
         this.service.stop(element.id).subscribe(data => element.task_statuses = data.dag.task_statuses);
     }
 
@@ -89,6 +95,38 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     has_unfinished(element: Dag) {
-        return element.task_statuses[0].count+element.task_statuses[1].count+element.task_statuses[2].count>0;
+        return element.task_statuses[0].count + element.task_statuses[1].count + element.task_statuses[2].count > 0;
+    }
+
+    remove(element: Dag) {
+        let self = this;
+        if (!element.finished) {
+            this.service.stop(element.id).subscribe(data => {
+                this.service.remove(element.id).subscribe(data => self.change.emit());
+            });
+            return;
+        }
+
+        this.service.remove(element.id).subscribe(data => self.change.emit());
+
+    }
+
+    remove_imgs(element: Dag) {
+        this.service.remove_imgs(element.id).subscribe(data => {
+            element.img_size = 0
+        });
+    }
+
+    remove_files(element: Dag) {
+        if(this.has_unfinished(element)){
+            return;
+        }
+        this.service.remove_files(element.id).subscribe(data => {
+            element.file_size = 0
+        });
+    }
+
+    size(s: number) {
+        return AppSettings.size(s);
     }
 }

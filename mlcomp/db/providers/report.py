@@ -23,6 +23,15 @@ class ReportImgProvider(BaseDataProvider):
             query.update({'img': obj.img, 'epoch': obj.epoch})
             self.session.commit()
 
+    def remove(self, filter:dict):
+        query = self.query(ReportImg)
+        if filter.get('dag'):
+            query = query.filter(ReportImg.dag==filter['dag'])
+        if filter.get('project'):
+            query = query.filter(ReportImg.project == filter['project'])
+        query.delete(synchronize_session=False)
+        self.session.commit()
+
 
 class ReportProvider(BaseDataProvider):
     model = Report

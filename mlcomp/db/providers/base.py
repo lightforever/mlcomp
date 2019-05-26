@@ -18,6 +18,13 @@ class BaseDataProvider:
         self._session = session
         self.serializer = Serializer()
 
+    def remove(self, id: int):
+        self.query(self.model).filter(getattr(self.model, 'id') == id).delete(synchronize_session=False)
+        self.session.commit()
+
+    def detach(self, obj):
+        self.session.expunge(obj)
+
     @property
     def query(self):
         return self.session.query
@@ -61,6 +68,10 @@ class BaseDataProvider:
             query = query.offset(options.page_size*options.page_number).limit(options.page_size)
 
         return query
+
+
+
+
 
 def set_attribute_modified(instance, key, value):
     set_attribute(instance, key, value)

@@ -1,5 +1,7 @@
 import socket
 
+from sqlalchemy.orm import joinedload
+
 from mlcomp.db.providers import TaskProvider
 from mlcomp.task.executors import Executor
 import json
@@ -16,9 +18,10 @@ def execute_by_id(id:int):
     provider = TaskProvider()
     storage = Storage()
     thismodule = sys.modules[__name__]
-    task = provider.by_id(id)
-
+    task = provider.by_id(id, joinedload(Task.dag_rel))
+    assert task.dag_rel is not None, 'You must fetch task with dag_rel'
     wdir = os.path.dirname(__file__)
+
     try:
         task.computer_assigned = socket.gethostname()
         provider.change_status(task, TaskStatus.InProgress)

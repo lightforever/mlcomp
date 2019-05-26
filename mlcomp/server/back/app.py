@@ -1,9 +1,9 @@
 from functools import wraps
-
 from flask import Flask, request, Response, send_from_directory
 import json
 import click
 import requests
+
 from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
@@ -12,6 +12,7 @@ import os
 import mlcomp.task.tasks as celery_tasks
 from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
+from sqlalchemy.exc import ProgrammingError
 
 PORT = 4201
 
@@ -248,6 +249,7 @@ def token():
         return Response(json.dumps({'success': False, 'reason': 'invalid token'}), status=401)
     return json.dumps({'success': True})
 
+
 @app.route('/api/project/remove', methods=['POST'])
 @requires_auth
 def project_remove():
@@ -255,11 +257,45 @@ def project_remove():
     ProjectProvider().remove(id)
     return json.dumps({'success': True})
 
+
+@app.route('/api/remove_imgs', methods=['POST'])
+@requires_auth
+def remove_imgs():
+    data = request_data()
+    provider = ReportImgProvider()
+    res = provider.remove(data)
+    return json.dumps(res)
+
+
+@app.route('/api/remove_files', methods=['POST'])
+@requires_auth
+def remove_files():
+    data = request_data()
+    provider = FileProvider()
+    res = provider.remove(data)
+    return json.dumps(res)
+
+
+@app.route('/api/dag/remove', methods=['POST'])
+@requires_auth
+def dag_remove():
+    id = request_data()['id']
+    DagProvider().remove(id)
+    return json.dumps({'success': True})
+
+
 @app.route('/api/stop')
 @requires_auth
 def stop():
     pass
 
+
+@app.errorhandler(Exception)
+def all_exception_handler(error):
+    if type(error)==ProgrammingError:
+        Session.cleanup()
+
+    return str(error), 500
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')

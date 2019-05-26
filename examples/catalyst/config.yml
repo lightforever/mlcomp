@@ -1,7 +1,7 @@
 info:
   name: catalyst
   project: first
-  folder: projects/catalyst
+  folder: examples/catalyst
   data_folder: /f/data/first
 executors:
   dummy1:

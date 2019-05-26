@@ -57,6 +57,8 @@ class StepWrap:
         self.step_provider.add(step)
         self.children.append(step)
         self.step = step
+        self.log('Begin of the step')
+
         return step
 
     def end(self, level: int, metrics: dict = None, failed=False):
@@ -85,7 +87,9 @@ class Executor(ABC):
         self.step.log(message=message, level=level)
 
     def __call__(self, task: Task):
+        assert task.dag_rel is not None, 'You must fetch task with dag_rel'
         self.task = task
+        self.dag = task.dag_rel
         self.step = StepWrap(task)
         with self.step:
             self.work()
