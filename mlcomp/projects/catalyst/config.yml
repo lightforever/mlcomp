@@ -6,6 +6,7 @@ info:
 executors:
   dummy1:
     type: Catalyst
+    report: True
     args:
       config: catalyst-config.yml
 reports:

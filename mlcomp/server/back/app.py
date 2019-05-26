@@ -248,6 +248,12 @@ def token():
         return Response(json.dumps({'success': False, 'reason': 'invalid token'}), status=401)
     return json.dumps({'success': True})
 
+@app.route('/api/project/remove', methods=['POST'])
+@requires_auth
+def project_remove():
+    id = request_data()['id']
+    ProjectProvider().remove(id)
+    return json.dumps({'success': True})
 
 @app.route('/api/stop')
 @requires_auth

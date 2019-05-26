@@ -48,6 +48,7 @@ import {ReportDetailComponent} from "./report/report-detail/report-detail/report
 import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";
+import {DialogComponent} from "./dialog/dialog.component";
 
 @NgModule({
     imports: [
@@ -109,7 +110,8 @@ import {ReportsComponent} from "./report/reports/reports.component";
         ReportDetailComponent,
         DagsComponent,
         TasksComponent,
-        ReportsComponent
+        ReportsComponent,
+        DialogComponent
     ],
     exports: [
         MatIconModule,
@@ -165,7 +167,8 @@ import {ReportsComponent} from "./report/reports/reports.component";
         ScrollingModule,
         LogComponent,
         TasksComponent,
-    ]
+    ],
+    entryComponents: [DialogComponent],
 })
 export class SharedModule {
 }

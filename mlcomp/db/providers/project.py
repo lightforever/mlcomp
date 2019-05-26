@@ -24,3 +24,7 @@ class ProjectProvider(BaseDataProvider):
 
     def by_name(self, name: str):
         return self.query(Project).filter(Project.name == name).first()
+
+    def remove(self, id: int):
+        self.query(Project).filter(Project.id==id).delete(synchronize_session=False)
+        self.session.commit()

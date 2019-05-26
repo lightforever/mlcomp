@@ -31,6 +31,7 @@ class Report(Base):
     config = sa.Column(sa.String)
     time = sa.Column(sa.DateTime, default=now())
     name = sa.Column(sa.String)
+    project = sa.Column(sa.Integer, ForeignKey('project.id'))
 
 class ReportTasks(Base):
     __tablename__ = 'report_tasks'
