@@ -7,12 +7,13 @@ import hashlib
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.models import *
-from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider
+from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider, DagLibraryProvider
 import pkgutil
 import inspect
 from mlcomp.utils.config import Config
 import sys
 import pathspec
+from mlcomp.utils.req import control_requirements, read_lines
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +23,19 @@ class Storage:
         self.file_provider = FileProvider()
         self.provider = DagStorageProvider()
         self.task_provider = TaskProvider()
+        self.library_provider = DagLibraryProvider()
 
     def upload(self, folder: str, dag: Dag):
         hashs = self.file_provider.hashs(dag.project)
-        ignore_file = os.path.join(folder, '.ignore')
-        ignore_patterns = [] if not os.path.exists(ignore_file) else [l.strip() for l in open(ignore_file)]
+        ignore_file = os.path.join(folder, 'file.ignore.txt')
+        if not os.path.exists(ignore_file):
+            with open(ignore_file, 'w') as f:
+                f.write('')
+
+        ignore_patterns = read_lines(ignore_file)
         ignore_patterns.extend(['log', 'data', '__pycache__'])
+
+        files = []
         spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, ignore_patterns)
 
         for o in glob(os.path.join(folder, '**'), recursive=True):
@@ -47,8 +55,13 @@ class Storage:
                 self.file_provider.add(file)
                 file_id = file.id
                 hashs[md5] = file.id
+                files.append(o)
 
             self.provider.add(DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False))
+
+        reqs = control_requirements(folder, files=files)
+        for name, rel, version in reqs:
+            self.library_provider.add(DagLibrary(dag=dag.id, library=name, version=version))
 
     def download(self, task: int):
         task = self.task_provider.by_id(task, joinedload(Task.dag_rel))

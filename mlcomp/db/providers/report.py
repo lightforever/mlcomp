@@ -3,7 +3,7 @@ import json
 from itertools import groupby
 from typing import List
 import pickle
-from mlcomp.task.executors.report_info import ReportInfo, ReportInfoSeries, ReportInfoPrecisionRecall, ReportInfoItem
+from mlcomp.db.misc.report_info import ReportInfo, ReportInfoSeries, ReportInfoItem
 import base64
 
 

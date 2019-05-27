@@ -1,4 +1,4 @@
-from .base import Executor
+from mlcomp.task.executors.base import Executor
 
 @Executor.register
 class Dummy(Executor):

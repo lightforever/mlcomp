@@ -1,6 +1,7 @@
 from mlcomp.task.executors.base import *
 from kaggle import api
 
+
 class DownloadType(Enum):
     Kaggle = 0
     Link = 1
