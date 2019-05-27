@@ -1,9 +1,8 @@
 from functools import wraps
-from flask import Flask, request, Response, send_from_directory
+from flask import Flask, request, Response, send_from_directory, send_file
 import json
 import click
 import requests
-
 from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
@@ -13,6 +12,7 @@ import mlcomp.task.tasks as celery_tasks
 from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
 from sqlalchemy.exc import ProgrammingError
+from mlcomp.utils.io import from_module_path
 
 PORT = 4201
 
@@ -26,7 +26,9 @@ def send_static(path):
     file = 'index.html'
     if '.' in path:
         file = path
-    return send_from_directory('../front/dist/mlcomp/', file)
+
+    module_path = from_module_path(__file__, f'../front/dist/mlcomp/')
+    return send_from_directory(module_path, file)
 
 
 def request_data():
@@ -292,10 +294,11 @@ def stop():
 
 @app.errorhandler(Exception)
 def all_exception_handler(error):
-    if type(error)==ProgrammingError:
+    if type(error) == ProgrammingError:
         Session.cleanup()
 
     return str(error), 500
+
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -316,17 +319,26 @@ def base():
     pass
 
 
-@base.command()
-def start():
+def start_server():
     register_supervisor()
     app.run(debug=True, port=PORT)
 
 
-@base.command()
-def stop():
+def stop_server():
     requests.post(f'http://localhost:{PORT}/shutdown')
 
 
+@base.command()
+def start():
+    start_server()
+
+
+@base.command()
+def stop():
+    stop_server()
+
+
+logger.info(f'Server TOKEN = {conf.TOKEN}')
+
 if __name__ == '__main__':
-    logger.info(f'TOKEN = {conf.TOKEN}')
     base()

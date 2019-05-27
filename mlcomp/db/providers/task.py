@@ -1,8 +1,6 @@
 from mlcomp.db.providers.base import *
 from typing import List
-from sqlalchemy.orm.attributes import flag_modified
-
-from utils.misc import to_snake
+from mlcomp.utils.misc import to_snake
 
 
 class TaskProvider(BaseDataProvider):

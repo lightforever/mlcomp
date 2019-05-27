@@ -9,12 +9,13 @@ import socket
 from multiprocessing import cpu_count
 import torch
 
-from utils.misc import dict_func
-from utils.schedule import start_schedule
+from mlcomp.utils.misc import dict_func
+from mlcomp.utils.schedule import start_schedule
 import psutil
 import GPUtil
 import numpy as np
 from mlcomp.task.tasks import execute_by_id
+from mlcomp.server.back.app import start_server, stop_server
 
 
 @click.group()
@@ -65,13 +66,23 @@ def worker():
 
 
 @main.command()
+def start():
+    start_server()
+
+
+@main.command()
+def stop():
+    stop_server()
+
+
+@main.command()
 @click.argument('name')
 def project(name):
     provider = ProjectProvider()
     provider.add(name)
 
 
-def _dag(config: str, debug: bool=False):
+def _dag(config: str, debug: bool = False):
     config_text = open(config, "r").read()
     config_parsed = load_ordered_yaml(config)
     info = config_parsed['info']

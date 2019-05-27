@@ -94,7 +94,10 @@ def control_requirements(path: str, files: List[str]=None, exclude_patterns: Lis
             f.write('')
 
     libs = find_imports(path, files=files, exclude_patterns=exclude_patterns)
-    ignore_libs = set(read_lines(req_ignore_file))
+    module_folder = os.path.dirname(__file__)
+    stdlib_file = os.path.join(module_folder, 'req_stdlib')
+    ignore_libs = set(read_lines(req_ignore_file)+read_lines(stdlib_file))
+
     reqs = _read_requirements(req_file)
     for lib, version in libs:
         if lib in ignore_libs:

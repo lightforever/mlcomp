@@ -23,6 +23,7 @@ REQUIRES_PYTHON = ">=3.6.0"
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
+
 def load_requirements():
     with open(os.path.join(PROJECT_ROOT, "requirements.txt"), "r") as f:
         return f.read()
@@ -39,6 +40,20 @@ def load_version():
     with open(os.path.join(PROJECT_ROOT, "mlcomp", "__version__.py")) as f:
         exec(f.read(), context)
     return context["__version__"]
+
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+
+def get_package_data():
+    res = ['utils/req_stdlib']
+    res.extend(package_files('mlcomp/server/front/dist'))
+    return res
 
 
 class UploadCommand(Command):
@@ -93,6 +108,8 @@ setup(
     packages=find_packages(exclude=("tests",)),
     install_requires=load_requirements(),
     include_package_data=True,
+    package_data={'': get_package_data()},
+    zip_safe=False,
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
@@ -114,4 +131,3 @@ setup(
         ],
     }
 )
-

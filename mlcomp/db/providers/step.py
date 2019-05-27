@@ -1,6 +1,6 @@
-from db.enums import StepStatus, LogStatus
+from mlcomp.db.enums import StepStatus, LogStatus
 from mlcomp.db.providers.base import *
-from utils.misc import to_snake
+from mlcomp.utils.misc import to_snake
 
 
 class StepProvider(BaseDataProvider):

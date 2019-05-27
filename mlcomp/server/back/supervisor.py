@@ -3,8 +3,7 @@ from mlcomp.utils.logging import logger
 import traceback
 from mlcomp.task.tasks import execute
 from mlcomp.db.providers import *
-
-from utils.schedule import start_schedule
+from mlcomp.utils.schedule import start_schedule
 
 
 def supervisor():

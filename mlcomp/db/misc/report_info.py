@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from mlcomp.utils.plot import figure_to_binary, plot_classification_report
 from sklearn.metrics import precision_recall_curve, classification_report
 
+
 class ReportInfoItem:
     def __init__(self, name: str):
         self.name = name
@@ -68,7 +69,7 @@ class ReportInfoMetric:
         self.minimize = minimize
 
     @staticmethod
-    def from_dict(data:dict):
+    def from_dict(data: dict):
         name = data.pop('name')
         minimize = data.pop('minimize')
         assert len(data) == 0, f'Unknown parameter in report.metric={data.popitem()}'
@@ -115,5 +116,9 @@ class ReportInfo:
         return [ReportInfoPrecisionRecall.from_dict(k, v) for k, v in self.data['items'].items() if
                 v.get('type') == 'precision_recall']
 
-    def _get_metric(self)->ReportInfoMetric:
+    def _get_metric(self) -> ReportInfoMetric:
         return ReportInfoMetric.from_dict(self.data['metric'])
+
+
+__all__ = ['ReportInfoItem', 'ReportInfoSeries', 'ReportInfoPrecisionRecall',
+           'ReportInfoF1', 'ReportInfoMetric', 'ReportInfoImgConfusion', 'ReportInfo']

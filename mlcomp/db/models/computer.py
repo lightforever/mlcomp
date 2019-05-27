@@ -1,4 +1,4 @@
-from utils.misc import now
+from mlcomp.utils.misc import now
 from .base import *
 
 class Computer(Base):

@@ -1,6 +1,6 @@
-from db.enums import ComponentType
+from mlcomp.db.enums import ComponentType
 from mlcomp.db.providers.base import *
-from utils.misc import log_name, to_snake
+from mlcomp.utils.misc import log_name, to_snake
 
 class LogProvider(BaseDataProvider):
     model = Log
