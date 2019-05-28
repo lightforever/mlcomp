@@ -14,7 +14,8 @@ import sys
 import traceback
 import os
 
-def execute_by_id(id:int):
+
+def execute_by_id(id: int):
     provider = TaskProvider()
     storage = Storage()
     thismodule = sys.modules[__name__]
@@ -33,7 +34,7 @@ def execute_by_id(id:int):
         storage.import_folder(thismodule, folder, executor_type)
 
         executor = Executor.from_config(task.executor, config)
-        os.chdir(config['info']['folder'])
+        os.chdir(folder)
 
         executor(task)
 
@@ -44,9 +45,11 @@ def execute_by_id(id:int):
     finally:
         os.chdir(wdir)
 
+
 @app.task
-def execute(id:int):
+def execute(id: int):
     execute_by_id(id)
+
 
 def stop(id: int):
     provider = TaskProvider()
@@ -64,7 +67,7 @@ def stop(id: int):
     return task.status
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     execute(81)
     # from task.tasks import execute
     # execute.delay(42)

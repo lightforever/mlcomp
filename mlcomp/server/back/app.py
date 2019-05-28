@@ -320,12 +320,13 @@ def base():
 
 
 def start_server():
+    logger.info(f'Server TOKEN = {conf.TOKEN}')
     register_supervisor()
     app.run(debug=True, port=PORT)
 
 
 def stop_server():
-    requests.post(f'http://localhost:{PORT}/shutdown')
+    requests.post(f'http://localhost:{PORT}/api/shutdown', headers={'Authorization': conf.TOKEN})
 
 
 @base.command()
@@ -337,8 +338,6 @@ def start():
 def stop():
     stop_server()
 
-
-logger.info(f'Server TOKEN = {conf.TOKEN}')
 
 if __name__ == '__main__':
     base()

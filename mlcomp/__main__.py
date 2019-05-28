@@ -6,17 +6,15 @@ from mlcomp.utils.config import load_ordered_yaml
 from mlcomp.task.executors import Executor
 from mlcomp.task.app import app
 import socket
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count, Process
 import torch
 
 from mlcomp.utils.misc import dict_func
-from mlcomp.utils.schedule import start_schedule
 import psutil
 import GPUtil
 import numpy as np
 from mlcomp.task.tasks import execute_by_id
 from mlcomp.server.back.app import start_server, stop_server
-
 
 @click.group()
 def main():
@@ -47,22 +45,29 @@ def worker_usage():
 
 
 @main.command()
-def worker():
+@click.argument('number', type=int)
+def worker(number):
     provider = ComputerProvider()
     tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
 
     computer = Computer(name=socket.gethostname(), gpu=torch.cuda.device_count(), cpu=cpu_count(), memory=tot_m)
     provider.create_or_update(computer, 'name')
 
-    start_schedule([(worker_usage, 60)])
+    #start_schedule([(worker_usage, 60)])
 
     argv = [
         'worker',
         '--loglevel=INFO',
+        '-P=solo',
+        f'-n={number}',
+        '-O fair',
+        '-c=1',
+        '--prefetch-multiplier=1',
         '-Q',
-        computer.name
+        socket.gethostname()
     ]
     app.worker_main(argv)
+
 
 
 @main.command()

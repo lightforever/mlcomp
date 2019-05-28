@@ -123,7 +123,7 @@ class Catalyst(Executor, Callback):
 
     def work(self):
         args, config = parse_args_uargs(self.args, [])
-        set_global_seeds(config.get("seed", 42))
+        #set_global_seeds(config.get("seed", 42))
 
         Experiment, R = import_experiment_and_runner(Path(args.expdir))
 
