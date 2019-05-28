@@ -1,6 +1,9 @@
 from mlcomp.task.executors.base import *
-from kaggle import api
-
+from mlcomp.utils.logging import logger
+try:
+    from kaggle import api
+except OSError:
+    logger.warning('Could not find kaggle.json. Kaggle executors can not be used')
 
 class DownloadType(Enum):
     Kaggle = 0

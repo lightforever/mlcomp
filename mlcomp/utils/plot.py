@@ -93,11 +93,11 @@ def heatmap(AUC, xlabel, ylabel, xticklabels, yticklabels, figure_width=40, figu
     # Turn off all the ticks
     ax = plt.gca()
     for t in ax.xaxis.get_major_ticks():
-        t.tick1On = False
-        t.tick2On = False
+        t.tick1line.set_visible(False)
+        t.tick1line.set_visible(False)
     for t in ax.yaxis.get_major_ticks():
-        t.tick1On = False
-        t.tick2On = False
+        t.tick1line.set_visible(False)
+        t.tick1line.set_visible(False)
 
     # Add color bar
     fig.colorbar(c)
@@ -127,7 +127,7 @@ def plot_classification_report(classification_report, cmap='RdBu'):
     support = []
     class_names = []
     for line in lines[2: len(lines)]:
-        if 'avg' in line or line.strip()=='':
+        if 'avg' in line or line.strip()=='' or 'accuracy' in line:
             continue
         t = line.strip().split()
         if len(t) < 2: continue

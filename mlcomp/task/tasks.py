@@ -12,7 +12,7 @@ from mlcomp.db.models import *
 from mlcomp.task.storage import Storage
 import traceback
 import os
-
+import sys
 
 def execute_by_id(id: int):
     provider = TaskProvider()
@@ -47,6 +47,7 @@ def execute_by_id(id: int):
     except Exception:
         logger.error(traceback.format_exc())
         provider.change_status(task, TaskStatus.Failed)
+        sys.exit()
     finally:
         os.chdir(wdir)
 

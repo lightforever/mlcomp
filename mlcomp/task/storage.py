@@ -4,13 +4,10 @@ import logging
 from os.path import isdir
 import hashlib
 from typing import List, Tuple
-
 from sqlalchemy.orm import joinedload
-
 from mlcomp.db.models import *
 from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider, DagLibraryProvider
 import pkgutil
-import inspect
 from mlcomp.utils.config import Config
 import sys
 import pathspec
@@ -20,7 +17,7 @@ import site
 from types import ModuleType
 import pkg_resources
 
-from task.executors import Executor
+from mlcomp.task.executors import Executor
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +102,7 @@ class Storage:
         for n in library_names:
             try:
                 version = pkg_resources.get_distribution(n).version
-                need_install = library_versions[n]!=version
+                need_install = library_versions[n] != version
             except Exception:
                 need_install = True
 
@@ -126,6 +123,7 @@ class Storage:
             reload(module)
 
         assert Executor.is_registered(executor), f'Executor {executor} was not found'
+
 
 if __name__ == '__main__':
     storage = Storage()
