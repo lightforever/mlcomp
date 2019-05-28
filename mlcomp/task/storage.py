@@ -3,6 +3,7 @@ import os
 import logging
 from os.path import isdir
 import hashlib
+from typing import List, Tuple
 
 from sqlalchemy.orm import joinedload
 
@@ -14,6 +15,12 @@ from mlcomp.utils.config import Config
 import sys
 import pathspec
 from mlcomp.utils.req import control_requirements, read_lines
+from importlib import reload
+import site
+from types import ModuleType
+import pkg_resources
+
+from task.executors import Executor
 
 logger = logging.getLogger(__name__)
 
@@ -88,16 +95,37 @@ class Storage:
         sys.path.insert(0, folder)
         return folder
 
-    def import_folder(self, target: dict, folder: str, executor: str):
+    def import_folder(self, folder: str, executor: str, libraries: List[Tuple]):
         folders = [p for p in glob(f'{folder}/*', recursive=True) if os.path.isdir(p) and not '__pycache__' in p]
+        folders += [folder]
+        packages_folder = site.getsitepackages()[0]
+        library_names = set(n for n, v in libraries)
+        library_versions = {n: v for n, v in libraries}
+
+        for n in library_names:
+            try:
+                version = pkg_resources.get_distribution(n).version
+                need_install = library_versions[n]!=version
+            except Exception:
+                need_install = True
+
+            if need_install:
+                os.system(f'pip install {n}=={library_versions[n]}')
+
         for (module_loader, module_name, ispkg) in pkgutil.iter_modules(folders):
             module = module_loader.find_module(module_name).load_module(module_name)
-            members = inspect.getmembers(module, inspect.isclass)
-            if any(cl.__name__ == executor for name, cl in members):
-                setattr(target, module_name, module)
-                return True
-        return False
+            reload(module)
 
+            for v in module.__dict__.values():
+                if isinstance(v, ModuleType):
+                    import_path = os.path.relpath(v.__file__, packages_folder)
+                    import_name = import_path.split(os.path.sep)[0]
+                    if import_name in library_names:
+                        reload(v)
+
+            reload(module)
+
+        assert Executor.is_registered(executor), f'Executor {executor} was not found'
 
 if __name__ == '__main__':
     storage = Storage()

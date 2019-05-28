@@ -110,3 +110,4 @@ Pipfile
 mlcomp/server/front/node_modules
 examples/**/data
 examples/**/log
+dist

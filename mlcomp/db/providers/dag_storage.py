@@ -11,3 +11,6 @@ class DagStorageProvider(BaseDataProvider):
 
 class DagLibraryProvider(BaseDataProvider):
     model = DagLibrary
+
+    def dag(self, dag: int):
+        return self.query(DagLibrary.library, DagLibrary.version).filter(DagLibrary.dag==dag).all()

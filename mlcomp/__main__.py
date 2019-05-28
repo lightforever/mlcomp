@@ -14,7 +14,8 @@ import psutil
 import GPUtil
 import numpy as np
 from mlcomp.task.tasks import execute_by_id
-from mlcomp.server.back.app import start_server, stop_server
+from mlcomp.server.back.app import start_server as _start_server, stop_server as _stop_server
+
 
 @click.group()
 def main():
@@ -53,7 +54,7 @@ def worker(number):
     computer = Computer(name=socket.gethostname(), gpu=torch.cuda.device_count(), cpu=cpu_count(), memory=tot_m)
     provider.create_or_update(computer, 'name')
 
-    #start_schedule([(worker_usage, 60)])
+    # start_schedule([(worker_usage, 60)])
 
     argv = [
         'worker',
@@ -69,15 +70,14 @@ def worker(number):
     app.worker_main(argv)
 
 
+@main.command()
+def start_server():
+    _start_server()
+
 
 @main.command()
-def start():
-    start_server()
-
-
-@main.command()
-def stop():
-    stop_server()
+def stop_server():
+    _stop_server()
 
 
 @main.command()

@@ -82,7 +82,7 @@ def _write_requirements(file: str, reqs: List):
         f.write(text)
 
 
-def control_requirements(path: str, files: List[str]=None, exclude_patterns: List[str] = None):
+def control_requirements(path: str, files: List[str] = None, exclude_patterns: List[str] = None):
     req_file = os.path.join(path, 'requirements.txt')
     if not os.path.exists(req_file):
         with open(req_file, 'w') as f:
@@ -96,7 +96,7 @@ def control_requirements(path: str, files: List[str]=None, exclude_patterns: Lis
     libs = find_imports(path, files=files, exclude_patterns=exclude_patterns)
     module_folder = os.path.dirname(__file__)
     stdlib_file = os.path.join(module_folder, 'req_stdlib')
-    ignore_libs = set(read_lines(req_ignore_file)+read_lines(stdlib_file))
+    ignore_libs = set(read_lines(req_ignore_file) + read_lines(stdlib_file))
 
     reqs = _read_requirements(req_file)
     for lib, version in libs:
