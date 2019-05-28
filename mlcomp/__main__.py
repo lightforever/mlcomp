@@ -3,17 +3,16 @@ from mlcomp.db.providers import *
 import os
 from mlcomp.task.storage import Storage
 from mlcomp.utils.config import load_ordered_yaml
-from mlcomp.task.executors import Executor
 from mlcomp.task.app import app
 import socket
-from multiprocessing import cpu_count, Process
-import torch
-
+from multiprocessing import cpu_count
 from mlcomp.utils.misc import dict_func
 import psutil
 import GPUtil
 import numpy as np
 from mlcomp.task.tasks import execute_by_id
+from mlcomp.utils.schedule import start_schedule
+
 
 @click.group()
 def main():
@@ -46,14 +45,7 @@ def worker_usage():
 @main.command()
 @click.argument('number', type=int)
 def worker(number):
-    provider = ComputerProvider()
-    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-
-    computer = Computer(name=socket.gethostname(), gpu=torch.cuda.device_count(), cpu=cpu_count(), memory=tot_m)
-    provider.create_or_update(computer, 'name')
-
-    # start_schedule([(worker_usage, 60)])
-
+    docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [
         'worker',
         '--loglevel=INFO',
@@ -63,10 +55,32 @@ def worker(number):
         '-c=1',
         '--prefetch-multiplier=1',
         '-Q',
-        socket.gethostname()
+        f'{socket.gethostname()}_{docker_img}'
     ]
     app.worker_main(argv)
 
+@main.command()
+def worker_supervisor():
+    provider = ComputerProvider()
+    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()), cpu=cpu_count(), memory=tot_m)
+    provider.create_or_update(computer, 'name')
+
+    start_schedule([(worker_usage, 60)])
+
+    docker_img = os.getenv('DOCKER_IMG', 'default')
+    argv = [
+        'worker',
+        '--loglevel=INFO',
+        '-P=solo',
+        f'-n=1',
+        '-O fair',
+        '-c=1',
+        '--prefetch-multiplier=1',
+        '-Q',
+        f'{socket.gethostname()}_{docker_img}_supervisor'
+    ]
+    app.worker_main(argv)
 
 @main.command()
 def start_server():
@@ -101,7 +115,8 @@ def _dag(config: str, debug: bool = False):
 
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
-    dag = dag_provider.add(Dag(config=config_text, project=project, name=info['name']))
+    dag = dag_provider.add(Dag(config=config_text, project=project,
+                               name=info['name'], docker_img=info.get('docker_img')))
     storage.upload(folder, dag)
 
     created = OrderedDict()
@@ -112,8 +127,6 @@ def _dag(config: str, debug: bool = False):
                 for d in v['depends']:
                     if d not in executors:
                         raise Exception(f'Executor {k} depend on {d} which does not exist')
-                    if not Executor.is_registered(executors[d]['type']):
-                        raise Exception(f'Executor {d} has not been registered')
 
                     valid = valid and d in created
             if valid:
@@ -166,8 +179,6 @@ def execute(config: str):
                 for d in v['depends']:
                     if d not in executors:
                         raise Exception(f'Executor {k} depend on {d} which does not exist')
-                    if not Executor.is_registered(executors[d]['type']):
-                        raise Exception(f'Executor {d} has not been registered')
 
                     valid = valid and d in created
             if valid:

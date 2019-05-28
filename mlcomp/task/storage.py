@@ -17,8 +17,6 @@ import site
 from types import ModuleType
 import pkg_resources
 
-from mlcomp.task.executors import Executor
-
 logger = logging.getLogger(__name__)
 
 
@@ -85,19 +83,20 @@ class Storage:
         info = config['info']
         if 'data_folder' in info:
             try:
-                os.symlink(info['data_folder'], os.path.join(folder, 'data'))
+                data_folder = os.path.join('/opt/mlcomp/data/', info['data_folder'])
+                os.symlink(data_folder, os.path.join(folder, 'data'))
             except FileExistsError:
                 pass
 
         sys.path.insert(0, folder)
         return folder
 
-    def import_folder(self, folder: str, executor: str, libraries: List[Tuple]):
+    def import_folder(self, folder: str, libraries: List[Tuple]=None, reload_dep: bool=True):
         folders = [p for p in glob(f'{folder}/*', recursive=True) if os.path.isdir(p) and not '__pycache__' in p]
         folders += [folder]
         packages_folder = site.getsitepackages()[0]
-        library_names = set(n for n, v in libraries)
-        library_versions = {n: v for n, v in libraries}
+        library_names = set(n for n, v in (libraries or []))
+        library_versions = {n: v for n, v in (libraries or [])}
 
         for n in library_names:
             try:
@@ -113,16 +112,18 @@ class Storage:
             module = module_loader.find_module(module_name).load_module(module_name)
             reload(module)
 
-            for v in module.__dict__.values():
-                if isinstance(v, ModuleType):
-                    import_path = os.path.relpath(v.__file__, packages_folder)
-                    import_name = import_path.split(os.path.sep)[0]
-                    if import_name in library_names:
-                        reload(v)
+            if reload_dep:
+                for v in module.__dict__.values():
+                    if isinstance(v, ModuleType):
+                        import_path = os.path.relpath(v.__file__, packages_folder)
+                        import_name = import_path.split(os.path.sep)[0]
+                        if import_name in library_names:
+                            try:
+                                reload(v)
+                            except Exception:
+                                pass
 
-            reload(module)
-
-        assert Executor.is_registered(executor), f'Executor {executor} was not found'
+                reload(module)
 
 
 if __name__ == '__main__':

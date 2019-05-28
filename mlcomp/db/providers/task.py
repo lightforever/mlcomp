@@ -49,7 +49,7 @@ class TaskProvider(BaseDataProvider):
             task.finished = now()
 
         task.status = status.value
-        self.session.update()
+        self.update()
 
     def by_status(self, status: TaskStatus):
         return self.query(Task).filter(Task.status == status.value).options(joinedload(Task.dag_rel)).all()

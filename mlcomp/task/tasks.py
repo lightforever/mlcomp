@@ -4,7 +4,6 @@ from sqlalchemy.orm import joinedload
 
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider
 from mlcomp.task.executors import Executor
-import json
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import logger
 from mlcomp.task.app import app
@@ -13,6 +12,7 @@ from mlcomp.task.storage import Storage
 import traceback
 import os
 import sys
+
 
 def execute_by_id(id: int):
     provider = TaskProvider()
@@ -36,7 +36,9 @@ def execute_by_id(id: int):
 
         executor_type = config['executors'][task.executor]['type']
         libraries = library_provider.dag(task.dag)
-        storage.import_folder(folder, executor_type, libraries)
+        storage.import_folder(os.path.join(os.path.dirname(__file__), 'executors'), reload_dep=False)
+        storage.import_folder(folder, libraries)
+        assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
 
         executor = Executor.from_config(task.executor, config)
         os.chdir(folder)
@@ -47,7 +49,10 @@ def execute_by_id(id: int):
     except Exception:
         logger.error(traceback.format_exc())
         provider.change_status(task, TaskStatus.Failed)
-        sys.exit()
+        try:
+            sys.exit()
+        except Exception:
+            pass
     finally:
         os.chdir(wdir)
 
@@ -56,10 +61,23 @@ def execute_by_id(id: int):
 def execute(id: int):
     execute_by_id(id)
 
+@app.task
+def kill(pid: int):
+    os.system(f'kill -9 {pid}')
 
-def stop(id: int):
+def queue_list():
+    inspect = app.control.inspect()
+    if inspect is None:
+        return []
+    queues = inspect.active_queues()
+    if queues is None:
+        return []
+    return [queue['name'] for node in queues.values() for queue in node]
+
+
+def stop(task: Task):
+    assert task.dag_rel, 'Dag is not in the task'
     provider = TaskProvider()
-    task = provider.by_id(id)
     if task.status > TaskStatus.InProgress.value:
         return task.status
 
@@ -69,7 +87,8 @@ def stop(id: int):
         logger.error(traceback.format_exc())
     finally:
         if task.pid:
-            os.system(f'kill -9 {task.pid}')
+            queue = f'{task.computer_assigned}_{task.dag_rel.docker_img or "default"}_supervisor'
+            kill.apply_async((task.pid,), queue=queue)
         provider.change_status(task, TaskStatus.Stopped)
 
     return task.status

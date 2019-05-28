@@ -1,7 +1,7 @@
 import time
 from mlcomp.utils.logging import logger
 import traceback
-from mlcomp.task.tasks import execute
+from mlcomp.task.tasks import execute, queue_list
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 
@@ -11,7 +11,10 @@ def supervisor():
     computer_provider = ComputerProvider()
 
     try:
-        time.sleep(1)
+        queues = queue_list()
+        if len(queues)==0:
+            return
+
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
         not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
         logger.info(f'Found {len(not_ran_tasks)} not ran tasks')
@@ -39,12 +42,16 @@ def supervisor():
                 if task.computer is not None and task.computer != computer.name:
                     continue
 
-                r = execute.apply_async((task.id,), queue=computer['name'])
+                queue = f'{computer["name"]}_{task.dag_rel.docker_img or "default"}'
+                if queue not in queues:
+                    continue
+
+                r = execute.apply_async((task.id,), queue=queue)
                 task.status = TaskStatus.Queued.value
                 task.computer_assigned = computer['name']
                 task.celery_id = r.id
 
-                provider.session.update()
+                provider.update()
 
                 computer['gpu'] -= task.gpu
                 computer['cpu'] -= task.cpu

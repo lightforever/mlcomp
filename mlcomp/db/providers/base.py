@@ -52,6 +52,7 @@ class BaseDataProvider:
 
     def update(self):
         self.session.update()
+        self.session.commit()
 
     @property
     def session(self):

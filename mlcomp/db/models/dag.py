@@ -11,4 +11,4 @@ class Dag(Base):
     name = sa.Column(sa.String)
     tasks = relationship('Task', lazy='noload')
     project_rel = relationship('Project', lazy='noload')
-
+    docker_img = sa.Column(sa.String)

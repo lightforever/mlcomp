@@ -1,4 +1,7 @@
 from .base import *
-from .kaggle import *
-from .examples import *
-from .catalyst import *
+try:
+    from .kaggle import *
+    from .examples import *
+    from .catalyst import *
+except Exception:
+    pass

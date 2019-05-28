@@ -2,7 +2,7 @@ info:
   name: catalyst
   project: first
   folder: examples/catalyst
-  data_folder: /f/data/first
+  data_folder: catalyst
 executors:
   dummy1:
     type: Catalyst

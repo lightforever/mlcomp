@@ -3,4 +3,4 @@ dist
 *.egg-ingo
 examples
 .git
-mlcomp/server
+mlcomp/server/front/node_modules

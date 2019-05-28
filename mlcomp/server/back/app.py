@@ -166,7 +166,8 @@ def tasks():
 @requires_auth
 def task_stop():
     data = request_data()
-    status = celery_tasks.stop(data['id'])
+    task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
+    status = celery_tasks.stop(task)
     return json.dumps({'success': True, 'status': to_snake(TaskStatus(status).name)})
 
 
@@ -178,7 +179,8 @@ def dag_stop():
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     for t in dag.tasks:
-        celery_tasks.stop(t.id)
+        t.dag_rel = dag
+        celery_tasks.stop(t)
     return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
 
 
@@ -297,6 +299,7 @@ def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
 
+    logger.error(error)
     return str(error), 500
 
 

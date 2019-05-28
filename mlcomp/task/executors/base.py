@@ -1,11 +1,7 @@
 from abc import ABC, abstractmethod
-from collections import OrderedDict
-
 from mlcomp.db.models import Step, Task
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import logger, logging
-import os
-import traceback
 from mlcomp.db.providers import LogProvider, StepProvider, Log
 from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
@@ -118,3 +114,6 @@ class Executor(ABC):
     @staticmethod
     def is_registered(cls: str):
         return cls in Executor._child
+
+
+__all__ = ['Executor']

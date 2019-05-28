@@ -24,6 +24,7 @@ class Task(Base):
     dag_rel = relationship('Dag', lazy='noload')
     debug = sa.Column(sa.Boolean, default=False)
     pid = sa.Column(sa.Integer)
+    replay = sa.Column(sa.Boolean)
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependencies'

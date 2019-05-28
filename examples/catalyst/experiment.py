@@ -38,15 +38,17 @@ class Experiment(ConfigExperiment):
             transform=Experiment.get_transforms(stage=stage, mode="valid")
         )
 
-        # while True:
-        #     pass
-        #raise Exception('assd')
+        while True:
+            continue
 
-        trainset.data = trainset.data[:32]
-        trainset.targets = np.clip(trainset.targets[:32], 0, 1)
+        trainset.train_data = trainset.train_data[:32]
+        trainset.train_labels = np.clip(trainset.train_labels[:32], 0, 1)
 
-        testset.data = trainset.data[:32]
-        testset.targets = np.clip(trainset.targets[:32], 0, 1)
+        testset.train_data = trainset.train_data[:32]
+        testset.train_labels = np.clip(trainset.train_labels[:32], 0, 1)
+
+        testset.test_data = testset.test_data[:32]
+        testset.test_labels = np.clip(testset.test_labels[:32], 0, 1)
 
         datasets["train"] = trainset
         datasets["valid"] = testset
