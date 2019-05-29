@@ -28,4 +28,7 @@ ENV LC_ALL C.UTF-8
 COPY mlcomp /app/mlcomp
 WORKDIR /app/mlcomp
 
+# Server environment
+ENV NOT_IMPORT_EXECUTORS True
+
 CMD ["python", "__main__.py", "start-server"]

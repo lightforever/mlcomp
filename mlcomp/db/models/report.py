@@ -36,7 +36,7 @@ class Report(Base):
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
 
 class ReportTasks(Base):
-    __tablename__ = 'report_tasks'
+    __tablename__ = 'report_task'
 
     id = sa.Column(sa.Integer, primary_key=True)
     report = sa.Column(sa.Integer, ForeignKey('report.id'))
