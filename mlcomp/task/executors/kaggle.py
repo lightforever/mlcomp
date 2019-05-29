@@ -1,5 +1,9 @@
 from mlcomp.task.executors.base import *
 from mlcomp.utils.logging import logger
+from enum import Enum
+from mlcomp.utils.config import Config
+import os
+
 try:
     from kaggle import api
 except OSError:

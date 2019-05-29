@@ -36,7 +36,6 @@ def execute_by_id(id: int):
 
         executor_type = config['executors'][task.executor]['type']
         libraries = library_provider.dag(task.dag)
-        storage.import_folder(os.path.join(os.path.dirname(__file__), 'executors'), reload_dep=False)
         storage.import_folder(folder, libraries)
         assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
 

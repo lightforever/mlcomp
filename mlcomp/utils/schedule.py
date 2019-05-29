@@ -17,7 +17,7 @@ def start_schedule(jobs):
 
     class NoRunningFilter(logging.Filter):
         def filter(self, record):
-            return isinstance(record.msg, str) and not 'ran tasks' in record.msg
+            return 'ran tasks' not in str(record.msg)
 
     for k in logging.root.manager.loggerDict:
         if 'apscheduler' in k:

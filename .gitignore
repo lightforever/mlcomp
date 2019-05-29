@@ -112,3 +112,4 @@ examples/**/data
 examples/**/log
 dist
 docker/*.conf
+*.db

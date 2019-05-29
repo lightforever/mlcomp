@@ -61,11 +61,7 @@ def worker(number):
 
 @main.command()
 def worker_supervisor():
-    provider = ComputerProvider()
-    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()), cpu=cpu_count(), memory=tot_m)
-    provider.create_or_update(computer, 'name')
-
+    _create_computer()
     start_schedule([(worker_usage, 60)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
@@ -162,10 +158,15 @@ def _dag(config: str, debug: bool = False):
 def dag(config: str):
     _dag(config)
 
+def _create_computer():
+    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()), cpu=cpu_count(), memory=tot_m)
+    ComputerProvider().create_or_update(computer, 'name')
 
 @main.command()
 @click.argument('config')
 def execute(config: str):
+    _create_computer()
     created_dag = _dag(config, True)
 
     config = load_ordered_yaml(config)

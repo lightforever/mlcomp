@@ -1,6 +1,6 @@
 info:
   name: catalyst
-  project: first
+  project: catalyst
   folder: examples/catalyst
   data_folder: catalyst
 executors:

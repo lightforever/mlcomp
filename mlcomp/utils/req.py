@@ -10,7 +10,8 @@ from glob import glob
 
 _mapping = {
     'cv2': 'opencv-python',
-    'sklearn': 'scikit-learn'
+    'sklearn': 'scikit-learn',
+    'migrate': 'sqlalchemy-migrate'
 }
 
 

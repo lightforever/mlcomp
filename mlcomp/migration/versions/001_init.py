@@ -1,5 +1,3 @@
-from mlcomp.db.models import Computer
-import sqlalchemy as sa
 from sqlalchemy import Table, Column, Integer, String, MetaData, Float, TIMESTAMP, Boolean, LargeBinary, Index
 from migrate.changeset.constraint import ForeignKeyConstraint, UniqueConstraint
 

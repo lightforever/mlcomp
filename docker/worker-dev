@@ -54,9 +54,9 @@ ENV LC_ALL C.UTF-8
 COPY mlcomp /app/mlcomp
 WORKDIR /app/mlcomp
 COPY docker/worker.py /app/mlcomp/worker.py
-COPY docker/worker.sh /app/mlcomp/worker.sh
+COPY docker/worker.sh /app/mlcomp/start.sh
 
 
-RUN chmod 777 worker.sh
-CMD [",/worker.sh"]
+RUN chmod 777 start.sh
+CMD ["./start.sh"]
 

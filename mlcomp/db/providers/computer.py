@@ -19,7 +19,8 @@ class ComputerProvider(BaseDataProvider):
         res = []
         for c in query.all():
             item = c.to_dict()
-            item['usage'] = json.loads(item['usage'])
+            item['usage'] = json.loads(item['usage']) if item['usage'] else {'cpu': 0, 'memory': 0,
+                                                        'gpu': [{'memory': 0, 'load': 0} for i in range(item['gpu'])]}
             item['memory'] = int(item['memory']/1000)
             item['usage']['cpu'] = int(item['usage']['cpu'])
             item['usage']['memory'] = int(item['usage']['memory'])
@@ -43,7 +44,7 @@ class ComputerProvider(BaseDataProvider):
             item = c.to_dict()
             usage = json.loads(item['usage'])
             res['time'].append(item['time'])
-            
+
             mean['cpu'].append(usage['mean']['cpu'])
             mean['memory'].append(usage['mean']['memory'])
             for i, gpu in enumerate(usage['mean']['gpu']):

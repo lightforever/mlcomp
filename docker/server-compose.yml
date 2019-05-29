@@ -1,4 +1,11 @@
 services:
+  mlcomp-server:
+    container_name: mlcomp-server
+    restart: always
+    network_mode: "host"
+    build:
+      context: ../
+      dockerfile: docker/server-dev
   postgres:
     container_name: postgres
     environment: [POSTGRES_USER=mlcomp, POSTGRES_PASSWORD=12345,
@@ -6,7 +13,7 @@ services:
     image: postgres:11.1
     network_mode: "host"
     restart: always
-    volumes: ['/opt/postgresql/mlcomp/data:/var/lib/postgresql/data/pgdata', '/opt/postgresql/mlcomp/backups:/backups']
+    volumes: ['/opt/mlcomp/pgdata/data:/var/lib/postgresql/data/pgdata', '/opt/mlcomp/pgdata/backups:/backups']
     shm_size: 4G
   rabbitmq:
     container_name: rabbitmq

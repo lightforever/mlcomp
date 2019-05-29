@@ -17,16 +17,16 @@ class ReportImgProvider(BaseDataProvider):
     def add_or_replace(self, obj: ReportImg):
         query = self.query(ReportImg).filter(ReportImg.task == obj.task).filter(
             ReportImg.group == obj.group).filter(ReportImg.number == obj.number)
-        if query.count()==0:
+        if query.count() == 0:
             self.add(obj)
         else:
             query.update({'img': obj.img, 'epoch': obj.epoch})
             self.session.commit()
 
-    def remove(self, filter:dict):
+    def remove(self, filter: dict):
         query = self.query(ReportImg)
         if filter.get('dag'):
-            query = query.filter(ReportImg.dag==filter['dag'])
+            query = query.filter(ReportImg.dag == filter['dag'])
         if filter.get('project'):
             query = query.filter(ReportImg.project == filter['project'])
         query.delete(synchronize_session=False)
@@ -42,7 +42,10 @@ class ReportProvider(BaseDataProvider):
     def get(self, filter: dict, options: PaginatorOptions):
         query = self.query(Report, func.count(ReportTasks.task).label('tasks_count'),
                            func.count(ReportTasks.task).filter(Task.status <= TaskStatus.InProgress.value).label(
-                               'tasks_not_finished'), ).join(ReportTasks, isouter=True).join(Task, isouter=True)
+                               'tasks_not_finished'), ). \
+            join(ReportTasks, ReportTasks.report == Report.id, isouter=True). \
+            join(Task, Task.id == ReportTasks.task, isouter=True)
+
         if filter.get('task'):
             query = query.filter(ReportTasks.task == filter['task'])
 
@@ -158,7 +161,8 @@ class ReportProvider(BaseDataProvider):
         for group, name in [(false_positive, 'false_positive'), (false_negative, 'false_negative')]:
             item = {'name': name, 'type': 'img_list', 'rows': 1, 'cols': len(false_positive),
                     'items': [
-                        {'img': base64.b64encode(img['img']).decode('utf-8'), 'text': str(img['pred'])[:4]} for img in group
+                        {'img': base64.b64encode(img['img']).decode('utf-8'), 'text': str(img['pred'])[:4]} for img in
+                        group
                     ]}
             res.append(item)
 

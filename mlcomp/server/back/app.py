@@ -1,3 +1,4 @@
+import traceback
 from functools import wraps
 from flask import Flask, request, Response, send_from_directory, send_file
 import json
@@ -299,7 +300,7 @@ def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
 
-    logger.error(error)
+    logger.error(traceback.format_exc())
     return str(error), 500
 
 

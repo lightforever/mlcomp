@@ -8,5 +8,14 @@ DATABASE = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),
     'port': int(os.getenv('POSTGRES_PORT', 5432)),
 }
-# SA_CONNECTION_STRING = 'Data Source=mlcomp.db;Version=3;'
-SA_CONNECTION_STRING = f"{DB_DRIVER}://{DATABASE['user']}:{DATABASE['password']}@{DATABASE['host']}:{DATABASE['port']}/{DATABASE['dbname']}"
+if DB_DRIVER=='sqlite':
+    f = os.path.dirname(__file__)
+    f = os.path.join(f, '../migration')
+    f = os.path.abspath(f)
+    SA_CONNECTION_STRING = f'sqlite:////{f}/mlcomp.db'
+else:
+    SA_CONNECTION_STRING = f"{DB_DRIVER}://{DATABASE['user']}:{DATABASE['password']}@{DATABASE['host']}:{DATABASE['port']}/{DATABASE['dbname']}"
+
+__all__ = [
+    'SA_CONNECTION_STRING'
+]

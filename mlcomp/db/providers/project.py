@@ -19,8 +19,8 @@ class ProjectProvider(BaseDataProvider):
         return 0 if not res else int(res / 2)
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Project, func.count(Dag.id), func.max(Task.last_activity)).join(Dag).join(Task).group_by(
-            Project.id)
+        query = self.query(Project, func.count(Dag.id), func.max(Task.last_activity)).\
+            join(Dag, Dag.project==Project.id, isouter=True).join(Task, isouter=True).group_by(Project.id)
         if filter.get('name'):
             query = query.filter(Project.name.like(f'%{filter["name"]}%'))
 
@@ -31,7 +31,7 @@ class ProjectProvider(BaseDataProvider):
             res.append(
                 {
                     'dag_count': dag_count,
-                    'last_activity': self.serializer.serialize_date(last_activity),
+                    'last_activity': self.serializer.serialize_date(last_activity) if last_activity else None,
                     'img_size': self.img_size(p.id),
                     'file_size': self.file_size(p.id),
                     **p.to_dict(),
