@@ -1,4 +1,5 @@
 import socket
+from typing import Tuple
 
 from mlcomp.db.enums import ComponentType
 from sqlalchemy.orm import joinedload
@@ -13,9 +14,10 @@ from mlcomp.task.storage import Storage
 import traceback
 import os
 import sys
+from celery.signals import celeryd_after_setup
+from mlcomp.utils.misc import now
 
-
-def execute_by_id(id: int):
+def execute_by_id(id: int, repeat_count=1):
     provider = TaskProvider()
     library_provider = DagLibraryProvider()
     storage = Storage()
@@ -23,13 +25,17 @@ def execute_by_id(id: int):
     assert task.dag_rel is not None, 'You must fetch task with dag_rel'
     wdir = os.path.dirname(__file__)
 
-    if task.status >= TaskStatus.InProgress.value:
-        logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation', ComponentType.Worker)
+    if task.status >= TaskStatus.InProgress.value and repeat_count>=1:
+        logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
+                       ComponentType.Worker)
         return
 
     executor = None
+    hostname = socket.gethostname()
+    docker_img = os.getenv('DOCKER_IMG', 'default')
+    start = now()
     try:
-        task.computer_assigned = socket.gethostname()
+        task.computer_assigned = hostname
         task.pid = os.getpid()
         provider.change_status(task, TaskStatus.InProgress)
         folder = storage.download(task=id)
@@ -49,19 +55,30 @@ def execute_by_id(id: int):
         provider.change_status(task, TaskStatus.Success)
     except Exception:
         step = executor.step.id if (executor and executor.step) else None
+        if repeat_count > 0 and (now() - start).total_seconds() < 10:
+            try:
+                queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
+                logger.warning(traceback.format_exc(), ComponentType.Worker, step)
+                execute.apply_async((id, repeat_count-1), queue=queue)
+                sys.exit()
+            except Exception:
+                pass
+
         logger.error(traceback.format_exc(), ComponentType.Worker, step)
         provider.change_status(task, TaskStatus.Failed)
-        try:
-            sys.exit()
-        except Exception:
-            pass
     finally:
         os.chdir(wdir)
 
 
+@celeryd_after_setup.connect
+def capture_worker_name(sender, instance, **kwargs):
+    os.environ["WORKER_INDEX"] = sender.split('@')[1]
+
+
 @app.task
-def execute(id: int):
-    execute_by_id(id)
+def execute(id: int, repeat_count: int=1):
+    execute_by_id(id, repeat_count)
+
 
 @app.task
 def kill(pid: int):

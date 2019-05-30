@@ -10,6 +10,9 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
 class Formatter(logging.Formatter):
     def format(self, record):
+        if not record.pathname.startswith(ROOT):
+            return super(Formatter, self).format(record)
+
         msg = str(record.msg)
         if record.args:
             try:
@@ -34,6 +37,7 @@ class Formatter(logging.Formatter):
                 s = s + "\n"
             s = s + self.formatStack(record.stack_info)
         return s
+
 
 class DbHandler(logging.Handler):
     """
@@ -69,7 +73,7 @@ class DbHandler(logging.Handler):
                 component = component.value
 
             module = os.path.relpath(record.pathname, ROOT).replace(os.sep, '.').replace('.py', '')
-            if record.funcName and record.funcName!='<module>':
+            if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
             log = Log(message=record.msg, time=now(), level=record.levelno,
                       step=step, component=component, line=record.lineno,
@@ -113,13 +117,18 @@ LOGGING = {
     }
 }
 
-dictConfig(LOGGING)
-logger = logging.getLogger()
-handler = DbHandler()
-handler.setLevel(DB_LOG_LEVEL)
-logger.handlers.append(handler)
 
-for h in logger.handlers:
-    h.formatter = Formatter()
+def create_logger():
+    dictConfig(LOGGING)
+    logger = logging.getLogger()
+    handler = DbHandler()
+    handler.setLevel(DB_LOG_LEVEL)
+    logger.handlers.append(handler)
 
-__all__ = ['logger']
+    for h in logger.handlers:
+        h.formatter = Formatter()
+    return logger
+
+
+logger = create_logger()
+__all__ = ['create_logger']

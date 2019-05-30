@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from mlcomp.db.models import Step, Task
 from mlcomp.utils.config import Config
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import LogProvider, StepProvider
 from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
@@ -14,6 +14,11 @@ class StepWrap:
         self.task = task
         self.children = []
         self.step = None
+        self.logger = create_logger()
+
+    @property
+    def id(self):
+        return self.step.id
 
     def __enter__(self):
         self.step = self.start(0, 'main')
@@ -66,16 +71,16 @@ class StepWrap:
                 self._finish(None, failed=failed)
 
     def debug(self, message: str):
-        logger.debug(message, ComponentType.Worker, self.step.id)
+        self.logger.debug(message, ComponentType.Worker, self.step.id)
 
     def info(self, message: str):
-        logger.info(message, ComponentType.Worker, self.step.id)
+        self.logger.info(message, ComponentType.Worker, self.step.id)
 
     def warning(self, message: str):
-        logger.warning(message, ComponentType.Worker, self.step.id)
+        self.logger.warning(message, ComponentType.Worker, self.step.id)
 
     def error(self, message: str):
-        logger.error(message, ComponentType.Worker, self.step.id)
+        self.logger.error(message, ComponentType.Worker, self.step.id)
 
 class Executor(ABC):
     _child = dict()

@@ -19,6 +19,7 @@ PORT = 4201
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route('/', defaults={'path': ''}, methods=['GET'])
 @app.route('/<path:path>', methods=['GET'])
 def send_static(path):
@@ -315,15 +316,13 @@ def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
+
 def start_server():
     if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
         register_supervisor()
-    app.run(debug=os.getenv('FLASK_ENV')=='development', port=PORT, host=HOST)
+    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=PORT, host=HOST)
 
 
 def stop_server():
     requests.post(f'http://localhost:{PORT}/api/shutdown', headers={'Authorization': conf.TOKEN})
-
-
-

@@ -57,7 +57,7 @@ def worker(number):
         '-c=1',
         '--prefetch-multiplier=1',
         '-Q',
-        f'{socket.gethostname()}_{docker_img}'
+        f'{socket.gethostname()}_{docker_img},{socket.gethostname()}_{docker_img}_{number}'
     ]
     app.worker_main(argv)
 

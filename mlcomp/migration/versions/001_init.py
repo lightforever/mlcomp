@@ -208,7 +208,7 @@ def upgrade(migrate_engine):
     ForeignKeyConstraint([report.c.project], [project.c.id], ondelete='CASCADE').create()
     Index('report_id_idx', report.c.id.desc()).create()
 
-    ForeignKeyConstraint([report_img.c.project], [task.c.id], ondelete='CASCADE').create()
+    ForeignKeyConstraint([report_img.c.project], [project.c.id], ondelete='CASCADE').create()
     Index('report_img_project_idx', report_img.c.project.desc()).create()
     Index('report_img_task_idx', report_img.c.task.desc()).create()
     Index('report_img_id_idx', report_img.c.id.desc()).create()

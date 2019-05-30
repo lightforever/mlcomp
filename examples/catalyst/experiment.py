@@ -38,8 +38,7 @@ class Experiment(ConfigExperiment):
             transform=Experiment.get_transforms(stage=stage, mode="valid")
         )
 
-        while True:
-            continue
+        # raise Exception()
 
         trainset.train_data = trainset.train_data[:32]
         trainset.train_labels = np.clip(trainset.train_labels[:32], 0, 1)

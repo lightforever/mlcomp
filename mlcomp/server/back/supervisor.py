@@ -4,7 +4,6 @@ from mlcomp.task.tasks import execute, queue_list
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 
-
 def supervisor():
     provider = TaskProvider()
     computer_provider = ComputerProvider()

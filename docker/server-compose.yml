@@ -1,12 +1,12 @@
 services:
-#  mlcomp-server:
-#    container_name: mlcomp-server
-#    restart: always
-#    network_mode: "host"
-#    build:
-#      context: ../
-#      dockerfile: docker/server
-#    env_file: dev.env
+  mlcomp-server:
+    container_name: mlcomp-server
+    restart: always
+    network_mode: "host"
+    build:
+      context: ../
+      dockerfile: docker/server
+    env_file: dev.env
   postgres:
     container_name: postgres
     env_file: dev.env
