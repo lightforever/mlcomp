@@ -22,3 +22,4 @@ scikit-learn>=0.21.2
 psycopg2-binary>=2.8.2
 tqdm>=4.29.1
 catalyst==19.3
+redis>=3.2.1

@@ -52,6 +52,20 @@
             </td>
         </ng-container>
 
+        <ng-container matColumnDef="module">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Module</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.module}}
+            </td>
+        </ng-container>
+
+          <ng-container matColumnDef="line">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Line</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.line}}
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="level">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Level</th>
             <td mat-cell *matCellDef="let element">
@@ -84,7 +98,10 @@
         <ng-container matColumnDef="message">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Message</th>
             <td mat-cell *matCellDef="let element">
-                {{element.message}}
+                  <div *ngFor="let l of element.message">
+                    <span>{{l}}</span>
+                    <br/>
+                </div>
             </td>
         </ng-container>
 
@@ -93,7 +110,7 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total" [pageSize]="15"></mat-paginator>
+    <mat-paginator [pageSizeOptions]="[5, 15, 30, 100]" [length]="total" [pageSize]="15"></mat-paginator>
 
 </div>
 

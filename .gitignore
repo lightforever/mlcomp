@@ -113,3 +113,5 @@ examples/**/log
 dist
 docker/*.conf
 *.db
+dev.env
+Readme.dev.md

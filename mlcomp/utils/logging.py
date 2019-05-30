@@ -1,9 +1,87 @@
 import logging
 from logging.config import dictConfig
-import sys
+from mlcomp.db.providers import LogProvider
+from mlcomp.db.models import Log
+from mlcomp.utils.misc import now
+import os
 
-logger = logging.getLogger(__name__)
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
+
+class Formatter(logging.Formatter):
+    def format(self, record):
+        msg = str(record.msg)
+        if record.args:
+            try:
+                msg = msg % record.args
+            except Exception:
+                pass
+        record.message = msg
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
+        s = self.formatMessage(record)
+        if record.exc_info:
+            # Cache the traceback text to avoid converting it multiple times
+            # (it's constant anyway)
+            if not record.exc_text:
+                record.exc_text = self.formatException(record.exc_info)
+        if record.exc_text:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + record.exc_text
+        if record.stack_info:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + self.formatStack(record.stack_info)
+        return s
+
+class DbHandler(logging.Handler):
+    """
+    A handler class which writes logging records, appropriately formatted,
+    to the database.
+    """
+
+    def __init__(self):
+        """
+        Initialize the handler.
+        """
+        logging.Handler.__init__(self)
+        self.provider = LogProvider()
+
+    def emit(self, record):
+        """
+        Emit a record.
+        """
+        try:
+            if not record.pathname.startswith(ROOT):
+                return
+
+            assert 1 <= len(record.args), 'Args weer not been provided for logging'
+            assert len(record.args) <= 2, 'Too many args for logging'
+
+            if len(record.args) == 1:
+                component = record.args[0]
+                step = None
+            else:
+                component, step = record.args
+
+            if not isinstance(component, int):
+                component = component.value
+
+            module = os.path.relpath(record.pathname, ROOT).replace(os.sep, '.').replace('.py', '')
+            if record.funcName and record.funcName!='<module>':
+                module = f'{module}:{record.funcName}'
+            log = Log(message=record.msg, time=now(), level=record.levelno,
+                      step=step, component=component, line=record.lineno,
+                      module=module
+                      )
+            self.provider.add(log)
+        except Exception:
+            self.handleError(record)
+
+
+CONSOLE_LOG_LEVEL = os.getenv('CONSOLE_LOG_LEVEL', 'DEBUG')
+DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
 
 LOGGING = {
     'version': 1,
@@ -18,10 +96,10 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'INFO',
+            'level': CONSOLE_LOG_LEVEL,
             'formatter': 'simple',
             'stream': 'ext://sys.stdout'
-        }
+        },
     },
 
     'loggers': {
@@ -36,3 +114,12 @@ LOGGING = {
 }
 
 dictConfig(LOGGING)
+logger = logging.getLogger()
+handler = DbHandler()
+handler.setLevel(DB_LOG_LEVEL)
+logger.handlers.append(handler)
+
+for h in logger.handlers:
+    h.formatter = Formatter()
+
+__all__ = ['logger']

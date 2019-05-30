@@ -1,4 +1,3 @@
-import time
 from mlcomp.utils.logging import logger
 import traceback
 from mlcomp.task.tasks import execute, queue_list
@@ -14,10 +13,9 @@ def supervisor():
         queues = queue_list()
         if len(queues)==0:
             return
-
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
         not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
-        logger.info(f'Found {len(not_ran_tasks)} not ran tasks')
+        logger.debug(f'Found {len(not_ran_tasks)} not ran tasks', ComponentType.Supervisor)
 
         dep_status = provider.dependency_status(not_ran_tasks)
         computers = computer_provider.computers()
@@ -59,7 +57,7 @@ def supervisor():
                 break
 
     except Exception:
-        logger.error(traceback.format_exc())
+        logger.error(traceback.format_exc(), ComponentType.Supervisor)
 
 
 def register_supervisor():

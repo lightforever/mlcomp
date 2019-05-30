@@ -38,7 +38,9 @@ class LogProvider(BaseDataProvider):
         for log, step, task, computer in self.paginator(query, options):
             item = {
                 'id': log.id,
-                'message': log.message,
+                'message': log.message.split('\n'),
+                'module': log.module,
+                'line': log.line,
                 'time': self.serializer.serialize_date(log.time),
                 'level': log_name(log.level),
                 'component': to_snake(ComponentType(log.component).name),

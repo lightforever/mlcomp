@@ -9,3 +9,5 @@ class Log(Base):
     time = sa.Column(sa.DateTime)
     level = sa.Column(sa.Integer)
     component = sa.Column(sa.Integer)
+    module = sa.Column(sa.String)
+    line = sa.Column(sa.Integer)

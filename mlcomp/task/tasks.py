@@ -1,5 +1,6 @@
 import socket
 
+from mlcomp.db.enums import ComponentType
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider
@@ -23,9 +24,10 @@ def execute_by_id(id: int):
     wdir = os.path.dirname(__file__)
 
     if task.status >= TaskStatus.InProgress.value:
-        logger.info(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation')
+        logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation', ComponentType.Worker)
         return
 
+    executor = None
     try:
         task.computer_assigned = socket.gethostname()
         task.pid = os.getpid()
@@ -46,7 +48,8 @@ def execute_by_id(id: int):
 
         provider.change_status(task, TaskStatus.Success)
     except Exception:
-        logger.error(traceback.format_exc())
+        step = executor.step.id if (executor and executor.step) else None
+        logger.error(traceback.format_exc(), ComponentType.Worker, step)
         provider.change_status(task, TaskStatus.Failed)
         try:
             sys.exit()
@@ -83,7 +86,7 @@ def stop(task: Task):
     try:
         app.control.revoke(task.celery_id, terminate=True)
     except Exception:
-        logger.error(traceback.format_exc())
+        logger.error(traceback.format_exc(), ComponentType.API)
     finally:
         if task.pid:
             queue = f'{task.computer_assigned}_{task.dag_rel.docker_img or "default"}_supervisor'

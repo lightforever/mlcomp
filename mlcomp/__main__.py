@@ -12,6 +12,8 @@ import GPUtil
 import numpy as np
 from mlcomp.task.tasks import execute_by_id
 from mlcomp.utils.schedule import start_schedule
+from mlcomp.server.back.app import start_server as _start_server
+from mlcomp.server.back.app import stop_server as _stop_server
 
 
 @click.group()
@@ -59,6 +61,7 @@ def worker(number):
     ]
     app.worker_main(argv)
 
+
 @main.command()
 def worker_supervisor():
     _create_computer()
@@ -78,15 +81,14 @@ def worker_supervisor():
     ]
     app.worker_main(argv)
 
+
 @main.command()
 def start_server():
-    from mlcomp.server.back.app import start_server as _start_server
     _start_server()
 
 
 @main.command()
 def stop_server():
-    from mlcomp.server.back.app import start_server as _stop_server
     _stop_server()
 
 
@@ -158,10 +160,12 @@ def _dag(config: str, debug: bool = False):
 def dag(config: str):
     _dag(config)
 
+
 def _create_computer():
     tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()), cpu=cpu_count(), memory=tot_m)
     ComputerProvider().create_or_update(computer, 'name')
+
 
 @main.command()
 @click.argument('config')

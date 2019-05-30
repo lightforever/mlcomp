@@ -15,7 +15,7 @@ import {LogService} from "../log.service";
     styleUrls: ['./log.component.css']
 })
 export class LogComponent extends Paginator<Log>{
-    displayed_columns: string[] = ['time', 'component', 'level', 'task', 'step', 'computer', 'message'];
+    displayed_columns: string[] = ['time',  'task', 'component', 'step', 'module', 'line', 'level', 'computer', 'message'];
     dag: number;
     total: number;
     @Input() task: number;

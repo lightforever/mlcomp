@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 from mlcomp.db.models import Step, Task
 from mlcomp.utils.config import Config
-from mlcomp.utils.logging import logger, logging
-from mlcomp.db.providers import LogProvider, StepProvider, Log
+from mlcomp.utils.logging import logger
+from mlcomp.db.providers import LogProvider, StepProvider
 from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
 import json
-
 
 class StepWrap:
     def __init__(self, task: Task):
@@ -32,7 +31,7 @@ class StepWrap:
         self.step_provider.update()
         self.step = step
 
-        self.log('End of the step')
+        self.info('End of the step')
 
     def start(self, level: int, name: str):
         if self.step is not None:
@@ -53,7 +52,7 @@ class StepWrap:
         self.step_provider.add(step)
         self.children.append(step)
         self.step = step
-        self.log('Begin of the step')
+        self.info('Begin of the step')
 
         return step
 
@@ -66,21 +65,32 @@ class StepWrap:
             else:
                 self._finish(None, failed=failed)
 
-    def log(self, message: str, level: int = logging.DEBUG):
-        self.log_provider.add(Log(
-            step=self.step.id,
-            message=message,
-            level=level,
-            time=now(),
-            component=ComponentType.Worker.value
-        ))
+    def debug(self, message: str):
+        logger.debug(message, ComponentType.Worker, self.step.id)
 
+    def info(self, message: str):
+        logger.info(message, ComponentType.Worker, self.step.id)
+
+    def warning(self, message: str):
+        logger.warning(message, ComponentType.Worker, self.step.id)
+
+    def error(self, message: str):
+        logger.error(message, ComponentType.Worker, self.step.id)
 
 class Executor(ABC):
     _child = dict()
 
-    def log(self, message: str, level: logging.DEBUG):
-        self.step.log(message=message, level=level)
+    def debug(self, message: str):
+        self.step.debug(message)
+
+    def info(self, message: str):
+        self.step.info(message)
+
+    def warning(self, message: str):
+        self.step.warning(message)
+
+    def error(self, message: str):
+        self.step.error(message)
 
     def __call__(self, task: Task):
         assert task.dag_rel is not None, 'You must fetch task with dag_rel'

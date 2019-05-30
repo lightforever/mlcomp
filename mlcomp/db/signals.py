@@ -20,5 +20,7 @@ def step_after_insert_update(mapper, connection, target):
 
 @event.listens_for(Log, 'after_insert')
 def log_after_insert(mapper, connection, target):
+    if target.step is None:
+        return
     step = StepProvider().by_id(target.step)
     TaskProvider(signals_session).update_last_activity(step.task)

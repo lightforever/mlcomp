@@ -1,8 +1,6 @@
 import traceback
 from functools import wraps
-from flask import Flask, request, Response, send_from_directory, send_file
-import json
-import click
+from flask import Flask, request, Response, send_from_directory
 import requests
 from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions
@@ -15,11 +13,11 @@ from mlcomp.utils.logging import logger
 from sqlalchemy.exc import ProgrammingError
 from mlcomp.utils.io import from_module_path
 
+HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = 4201
 
 app = Flask(__name__)
 CORS(app)
-
 
 @app.route('/', defaults={'path': ''}, methods=['GET'])
 @app.route('/<path:path>', methods=['GET'])
@@ -300,7 +298,7 @@ def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
 
-    logger.error(traceback.format_exc())
+    logger.error(traceback.format_exc(), ComponentType.API)
     return str(error), 500
 
 
@@ -317,31 +315,15 @@ def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
-
-@click.group()
-def base():
-    pass
-
-
 def start_server():
-    logger.info(f'Server TOKEN = {conf.TOKEN}')
-    register_supervisor()
-    app.run(debug=True, port=PORT)
+    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
+        register_supervisor()
+    app.run(debug=os.getenv('FLASK_ENV')=='development', port=PORT, host=HOST)
 
 
 def stop_server():
     requests.post(f'http://localhost:{PORT}/api/shutdown', headers={'Authorization': conf.TOKEN})
 
 
-@base.command()
-def start():
-    start_server()
 
-
-@base.command()
-def stop():
-    stop_server()
-
-
-if __name__ == '__main__':
-    base()

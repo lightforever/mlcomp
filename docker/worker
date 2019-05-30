@@ -44,6 +44,7 @@ RUN pip install --no-cache-dir  \
     scikit-learn>=0.21.2 \
     psycopg2-binary>=2.8.2 \
     tqdm>=4.29.1 \
+    redis>=3.2.1 \
     catalyst==19.3
 
 # Set the locale

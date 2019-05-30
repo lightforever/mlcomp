@@ -65,6 +65,8 @@ log = Table(
     Column('time', TIMESTAMP, nullable=False, default='now()'),
     Column('level', Integer, nullable=False),
     Column('component', Integer, nullable=False),
+    Column('module', String(200), nullable=False),
+    Column('line', Integer, nullable=False)
 )
 
 project = Table(

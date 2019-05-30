@@ -88,13 +88,15 @@ export class Step {
 
 export class Log {
     id: number;
-    message: string;
+    message: string[];
     time: Date;
     level: string;
     component: string;
     computer: Computer;
     step: Step;
     task: Task;
+    module: string;
+    line: number;
 }
 
 export class Graph {
