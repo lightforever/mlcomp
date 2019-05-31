@@ -13,7 +13,7 @@ class ComputerProvider(BaseDataProvider):
 
     def get(self, filter: dict, options:PaginatorOptions=None):
         query = self.query(Computer)
-        total =query.count()
+        total = query.count()
         if options:
             query = self.paginator(query, options)
         res = []

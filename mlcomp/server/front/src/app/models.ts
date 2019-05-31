@@ -137,6 +137,7 @@ export class DagFilter {
     name: string;
     project: number;
     report: number;
+    id: number;
 }
 
 export class TaskFilter {
@@ -145,6 +146,7 @@ export class TaskFilter {
     dag: number;
     status: string;
     report: number;
+    id: number;
 }
 
 export class ReportsFilter {

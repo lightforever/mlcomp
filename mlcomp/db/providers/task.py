@@ -9,13 +9,16 @@ class TaskProvider(BaseDataProvider):
     def get(self, filter: dict, options: PaginatorOptions):
         query = self.query(Task).options(joinedload(Task.dag_rel))
         if filter.get('dag'):
-            query = query.filter(Task.dag==filter['dag'])
+            query = query.filter(Task.dag == filter['dag'])
 
         if filter.get('name'):
             query = query.filter(Project.name.like(f'%{filter["name"]}%'))
 
         if filter.get('status'):
-            query = query.filter(Task.status==TaskStatus.from_name(filter['status']))
+            query = query.filter(Task.status == TaskStatus.from_name(filter['status']))
+
+        if filter.get('id'):
+            query = query.filter(Task.id == filter['id'])
 
         total = query.count()
         paginator = self.paginator(query, options)
@@ -57,17 +60,17 @@ class TaskProvider(BaseDataProvider):
     def dependency_status(self, tasks: List[Task]):
         res = {t.id: [] for t in tasks}
         task_ids = [task.id for task in tasks]
-        items = self.query(TaskDependence, Task).filter(TaskDependence.task_id.in_(task_ids)).\
-            join(Task, Task.id==TaskDependence.depend_id).all()
+        items = self.query(TaskDependence, Task).filter(TaskDependence.task_id.in_(task_ids)). \
+            join(Task, Task.id == TaskDependence.depend_id).all()
         for item, task in items:
             res[item.task_id].append(task.status)
 
         return res
 
-    def update_last_activity(self, task:int):
-        self.query(Task).filter(Task.id==task).update({'last_activity': now()})
+    def update_last_activity(self, task: int):
+        self.query(Task).filter(Task.id == task).update({'last_activity': now()})
         self.session.commit()
 
-    def stop(self, id:int):
+    def stop(self, id: int):
         task = self.by_id(id)
         self.change_status(task, TaskStatus.Stopped)

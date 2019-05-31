@@ -1,14 +1,17 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
+import {TasksComponent} from "../../tasks/tasks.component";
 
 @Component({
     selector: 'app-task-detail',
     templateUrl: './task-detail.component.html',
-    styleUrls: ['./task-detail.component.css']
+    styleUrls: ['../../tasks/tasks.component.css']
 })
-export class TaskDetailComponent {
-    constructor(private route: ActivatedRoute) {
-
+export class TaskDetailComponent extends TasksComponent{
+    get_filter(): any {
+        let res = super.get_filter();
+        res.id = parseInt(this.route.snapshot.paramMap.get('id'));
+        return res;
     }
 
     onActivate(component) {

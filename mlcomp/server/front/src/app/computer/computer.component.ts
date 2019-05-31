@@ -23,13 +23,12 @@ export class ComputerComponent extends Paginator<Computer> {
 
     ngAfterViewInit() {
         this.data_updated.subscribe((data) => {
-            this.resource_service.load('plotly').then(() => {
-                setTimeout(() => {
-                    while (true){
+                this.resource_service.load('plotly').then(() => {
+                    setTimeout(() => {
                         let rendered = true;
                         for (let computer of data) {
                             let id = 'usage_history_' + computer.name;
-                            if(!document.getElementById(id)){
+                            if (!document.getElementById(id)) {
                                 rendered = false;
                                 break
                             }
@@ -45,20 +44,18 @@ export class ComputerComponent extends Paginator<Computer> {
                             window['Plotly'].newPlot(id, data, {}, {showSendToCloud: true});
                         }
 
-                        if(rendered){
-                            break;
-                        }
-                    }
+                    }, 100);
 
 
-                }, 100);
-
-
-            });
-        });
+                });
+            }
+        );
     }
 
-    color(value: number) {
+    color(value
+              :
+              number
+    ) {
         if (value <= 33) {
             return 'green'
         }

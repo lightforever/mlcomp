@@ -24,7 +24,7 @@ export class DagsComponent extends Paginator<Dag> {
     @Input() report: number;
 
     constructor(protected service: DagService, protected location: Location,
-                private router: Router, private  route: ActivatedRoute,
+                protected router: Router, protected  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
                 private message_service: MessageService,
                 private report_service: ReportService

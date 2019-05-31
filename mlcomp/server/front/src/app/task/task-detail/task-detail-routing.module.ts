@@ -12,9 +12,9 @@ const routes: Routes = [
         path: '',
         component: TaskDetailComponent,
         children: [
-            {path: 'log', component: LogComponent},
+            {path: 'report', component: ReportsComponent},
             {path: 'step', component: StepComponent},
-            {path: '', component: ReportsComponent}
+            {path: '', component: LogComponent}
         ]
 
 

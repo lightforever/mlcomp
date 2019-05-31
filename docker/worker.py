@@ -5,7 +5,9 @@ pr = os.getenv('CPU', cpu_count())
 text = [
     '[supervisord]',
     'nodaemon=true',
-    ''
+    '',
+    '[supervisor]',
+    'command=python __main__.py worker-supervisor'
 ]
 for p in range(pr):
     text.append(f'[program:worker{p}]')

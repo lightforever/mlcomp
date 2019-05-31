@@ -1,17 +1,20 @@
-import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
+import {Component} from '@angular/core';
+import {DagFilter} from "../../../models";
+import {DagsComponent} from "../../dags/dags.component";
 
 @Component({
-  selector: 'app-dag-detail',
-  templateUrl: './dag-detail.component.html',
-  styleUrls: ['./dag-detail.component.css']
+    selector: 'app-dag-detail',
+    templateUrl: './dag-detail.component.html',
+    styleUrls: ['../../dags/dags.component.css']
 })
-export class DagDetailComponent{
-  constructor(private route: ActivatedRoute){
+export class DagDetailComponent extends DagsComponent {
+    get_filter(): any {
+        let res = super.get_filter();
+        res.id = parseInt(this.route.snapshot.paramMap.get('id'));
+        return res;
+    }
 
-  }
-
-  onActivate(component) {
-    component.dag = parseInt(this.route.snapshot.paramMap.get('id'));
-  }
+    onActivate(component) {
+        component.dag = parseInt(this.route.snapshot.paramMap.get('id'));
+    }
 }

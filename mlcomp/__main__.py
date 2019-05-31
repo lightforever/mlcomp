@@ -14,7 +14,7 @@ from mlcomp.task.tasks import execute_by_id
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
-
+import time
 
 @click.group()
 def main():
@@ -27,7 +27,7 @@ def worker_usage():
 
     usages = []
 
-    for _ in range(60):
+    for _ in range(10):
         memory = dict(psutil.virtual_memory()._asdict())
 
         usage = {
@@ -39,9 +39,10 @@ def worker_usage():
         provider.current_usage(name, usage)
         usage.update(usage)
         usages.append(usage)
+        time.sleep(1)
 
     usage = json.dumps({'mean': dict_func(usages, np.mean), 'peak': dict_func(usages, np.max)})
-    provider.add(ComputerUsage(computer=name, usage=usage))
+    provider.add(ComputerUsage(computer=name, usage=usage, time=now()))
 
 
 @main.command()
@@ -65,7 +66,7 @@ def worker(number):
 @main.command()
 def worker_supervisor():
     _create_computer()
-    start_schedule([(worker_usage, 60)])
+    start_schedule([(worker_usage, 10)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [

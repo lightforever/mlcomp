@@ -152,6 +152,22 @@ def code():
     return json.dumps(list(res.values()))
 
 
+@app.route('/api/task', methods=['POST'])
+@requires_auth
+def task():
+    data = request_data()
+    res = TaskProvider().by_id(data['id'])
+    return json.dumps(res.to_dict())
+
+
+@app.route('/api/dag', methods=['POST'])
+@requires_auth
+def dag():
+    data = request_data()
+    res = DagProvider().by_id(data['id'])
+    return json.dumps(res.to_dict())
+
+
 @app.route('/api/tasks', methods=['POST'])
 @requires_auth
 def tasks():
@@ -299,7 +315,8 @@ def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
 
-    logger.error(traceback.format_exc(), ComponentType.API)
+
+    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}', ComponentType.API)
     return str(error), 500
 
 

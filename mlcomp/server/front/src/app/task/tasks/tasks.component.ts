@@ -24,7 +24,7 @@ export class TasksComponent extends Paginator<TasksComponent> {
     @Input() report: number;
 
     constructor(protected service: TaskService, protected location: Location,
-                private router: Router, private  route: ActivatedRoute,
+                protected router: Router, protected  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
                 private message_service: MessageService,
                 private report_service: ReportService
