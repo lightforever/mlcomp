@@ -12,6 +12,7 @@ from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
 from sqlalchemy.exc import ProgrammingError
 from mlcomp.utils.io import from_module_path
+from collections import OrderedDict
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = 4201
@@ -73,7 +74,7 @@ def requires_auth(f):
 @requires_auth
 def computers():
     data = request_data()
-    options = PaginatorOptions(**data)
+    options = PaginatorOptions(**data['paginator'])
     options.sort_column = 'name'
 
     provider = ComputerProvider()
@@ -150,22 +151,6 @@ def code():
                 parents[parent]['children'].append(node)
 
     return json.dumps(list(res.values()))
-
-
-@app.route('/api/task', methods=['POST'])
-@requires_auth
-def task():
-    data = request_data()
-    res = TaskProvider().by_id(data['id'])
-    return json.dumps(res.to_dict())
-
-
-@app.route('/api/dag', methods=['POST'])
-@requires_auth
-def dag():
-    data = request_data()
-    res = DagProvider().by_id(data['id'])
-    return json.dumps(res.to_dict())
 
 
 @app.route('/api/tasks', methods=['POST'])

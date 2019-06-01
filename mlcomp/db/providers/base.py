@@ -12,11 +12,15 @@ from sqlalchemy_serializer import Serializer
 class BaseDataProvider:
     model = None
 
+    date_format = '%Y-%m-%d'
+    datetime_format = '%Y-%m-%d %H:%MZ'
+    time_format = '%H:%M'
+
     def __init__(self, session=None):
         if session is None:
             session = Session.create_session()
         self._session = session
-        self.serializer = Serializer()
+        self.serializer = Serializer(date_format=self.date_format, datetime_format=self.datetime_format, time_format=self.time_format)
 
     def remove(self, id: int):
         self.query(self.model).filter(getattr(self.model, 'id') == id).delete(synchronize_session=False)
@@ -39,6 +43,10 @@ class BaseDataProvider:
             for n in joined_load:
                 res=res.options(joinedload(n))
         return res.first()
+
+    def to_dict(self, item, rules=(), datetime_format=None):
+        return item.to_dict(date_format=self.date_format, datetime_format=datetime_format or self.datetime_format,
+                            time_format=self.time_format, rules=rules)
 
     def create_or_update(self, obj: Base, field: str):
         db = self.session.query(obj.__class__).filter(getattr(obj.__class__, field)==getattr(obj, field)).first()

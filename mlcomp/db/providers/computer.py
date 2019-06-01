@@ -18,7 +18,7 @@ class ComputerProvider(BaseDataProvider):
             query = self.paginator(query, options)
         res = []
         for c in query.all():
-            item = c.to_dict()
+            item = self.to_dict(c)
             item['usage'] = json.loads(item['usage']) if item['usage'] else {'cpu': 0, 'memory': 0,
                                                         'gpu': [{'memory': 0, 'load': 0} for i in range(item['gpu'])]}
             item['memory'] = int(item['memory']/1000)
@@ -28,7 +28,7 @@ class ComputerProvider(BaseDataProvider):
                 gpu['memory'] = int(gpu['memory']*100)
                 gpu['load'] = int(gpu['load']*100)
 
-            item['usage_history'] = self.usage_history(c.name)
+            item['usage_history'] = self.usage_history(c.name, filter.get('usage_min_time'))
             res.append(item)
 
         return {'data': res, 'total': total}
@@ -37,11 +37,10 @@ class ComputerProvider(BaseDataProvider):
         min_time = min_time or (now() - datetime.timedelta(days=1))
         query = self.query(ComputerUsage).filter(ComputerUsage.time >= min_time).filter(
             ComputerUsage.computer == computer).order_by(ComputerUsage.time)
-        res = {'time': [], 'mean': [], 'peak': []}
+        res = {'time': [], 'mean': []}
         mean = defaultdict(list)
-        peak = defaultdict(list)
         for c in query.all():
-            item = c.to_dict()
+            item = self.to_dict(c, datetime_format='%Y-%m-%d %H:%M:%SZ')
             usage = json.loads(item['usage'])
             res['time'].append(item['time'])
 
@@ -50,16 +49,8 @@ class ComputerProvider(BaseDataProvider):
             for i, gpu in enumerate(usage['mean']['gpu']):
                 mean[f'gpu_{i}'].append(gpu['load'])
 
-            peak['cpu'].append(usage['peak']['cpu'])
-            peak['memory'].append(usage['peak']['memory'])
-            for i, gpu in enumerate(usage['peak']['gpu']):
-                peak[f'gpu_{i}'].append(gpu['load'])
-
         for item in mean:
             res['mean'].append({'name': item, 'value': mean[item]})
-
-        for item in peak:
-            res['peak'].append({'name': item, 'value': peak[item]})
 
         return dict(res)
 

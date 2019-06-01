@@ -17,7 +17,7 @@ import {ReportService} from "../../report.service";
 })
 export class TasksComponent extends Paginator<TasksComponent> {
     displayed_columns: string[] = ['id', 'name', 'created', 'started', 'last_activity',
-        'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
+        'duration', 'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
     @Input() dag: number;
     name: string;
     status: string;

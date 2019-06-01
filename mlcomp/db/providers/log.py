@@ -41,12 +41,12 @@ class LogProvider(BaseDataProvider):
                 'message': log.message.split('\n'),
                 'module': log.module,
                 'line': log.line,
-                'time': self.serializer.serialize_date(log.time),
+                'time': self.serializer.serialize_datetime(log.time),
                 'level': log_name(log.level),
                 'component': to_snake(ComponentType(log.component).name),
-                'computer': computer.to_dict() if computer else None,
-                'step': step.to_dict() if step else None,
-                'task': task.to_dict() if task else None
+                'computer': self.to_dict(computer) if computer else None,
+                'step': self.to_dict(step) if step else None,
+                'task': self.to_dict(task) if task else None
             }
             data.append(item)
 

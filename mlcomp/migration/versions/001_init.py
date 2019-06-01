@@ -9,14 +9,14 @@ computer = Table(
     Column('gpu', Integer, default=0, nullable=False),
     Column('cpu', Integer, default=1, nullable=False),
     Column('memory', Float, default=0.1, nullable=False),
-    Column('usage', String(250))
+    Column('usage', String(2000))
 )
 
 computer_usage = Table(
     'computer_usage', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('computer', String(100), nullable=False),
-    Column('usage', String(500), nullable=False),
+    Column('usage', String(4000), nullable=False),
     Column('time', TIMESTAMP, nullable=False, default='now()')
 )
 

@@ -74,6 +74,27 @@ def log_name(level: int):
 
     raise Exception('Unknown log level')
 
+def duration_format(delta: float):
+    """
+    Duration format
+    :param delta: seconds
+    :return: string representation: 1 days 1 hour 1 min
+    """
+    if delta < 0:
+        delta = f'{int(delta * 1000)} ms'
+    elif delta < 60:
+        delta = f'{int(delta)} sec'
+    elif delta < 3600:
+        delta = f'{int(delta / 60)} min {int(delta % 60)} sec'
+    elif delta < 3600 * 24:
+        hour = int(delta / 3600)
+        delta = f'{hour} {"hours" if hour > 1 else "hour"} {int((delta % 3600) / 60)} min'
+    else:
+        day = int(delta / (3600 * 24))
+        hour = int((delta % (3600 * 24)) / 3600)
+        delta = f'{day} {"days" if day > 1 else "day"} {hour} {"hours" if hour > 1 else "hour"} {int((delta % 3600) / 60)} min'
+    return delta
+
 if __name__=='__main__':
     print(dict_func([
         {'cpu': 10, 'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},

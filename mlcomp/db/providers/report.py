@@ -56,7 +56,7 @@ class ReportProvider(BaseDataProvider):
         for report, task_count, tasks_not_finished in self.paginator(query, options):
             item = {
                 'id': report.id,
-                'time': self.serializer.serialize_date(report.time),
+                'time': self.serializer.serialize_datetime(report.time),
                 'tasks': task_count,
                 'tasks_not_finished': tasks_not_finished,
                 'name': report.name

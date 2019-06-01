@@ -31,10 +31,10 @@ class ProjectProvider(BaseDataProvider):
             res.append(
                 {
                     'dag_count': dag_count,
-                    'last_activity': self.serializer.serialize_date(last_activity) if last_activity else None,
+                    'last_activity': self.serializer.serialize_datetime(last_activity) if last_activity else None,
                     'img_size': self.img_size(p.id),
                     'file_size': self.file_size(p.id),
-                    **p.to_dict(),
+                    **self.to_dict(p),
                 })
         return {'total': total, 'data': res}
 

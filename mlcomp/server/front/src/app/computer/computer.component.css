@@ -8,7 +8,7 @@ table.mat-table {
 }
 
 td, th {
-  width: 15%;
+  min-width: 90px;
   text-align: center;
 }
 
@@ -16,17 +16,8 @@ td, th {
   flex: 0 0 100px;
 }
 
-td.name, th.name {
-  width: 5%;
-}
-
-td.cpu, th.cpu {
-  width: 10%;
-}
-
-
 td.usage_history, th.usage_history {
-  width: 40%;
+  width: 55%;
 }
 
 ::ng-deep .mat-sort-header-container{

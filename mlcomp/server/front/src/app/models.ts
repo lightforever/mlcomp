@@ -112,6 +112,11 @@ export class PaginatorFilter{
 
 }
 
+export class ComputerFilter {
+    paginator: PaginatorFilter;
+    usage_min_time: Date;
+}
+
 export class LogFilter{
     dag: number;
     task: number;
@@ -182,5 +187,6 @@ export class ReportTile {
 
 export class StepNode {
     name: string;
+    id: number;
     children?: StepNode[];
 }

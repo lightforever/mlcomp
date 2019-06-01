@@ -22,7 +22,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
     isLoading_results = false;
     total: number;
     private interval: number;
-
+    id_column: string = 'id';
 
     constructor(
         protected service: BaseService,
@@ -37,11 +37,28 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
 
     get_filter(): any {
         let res = new PaginatorFilter();
-        res.page_number = this.paginator?this.paginator.pageIndex:0;
-        res.page_size = this.paginator?this.paginator.pageSize || this.default_page_size: 10;
+        res.page_number = this.paginator ? this.paginator.pageIndex : 0;
+        res.page_size = this.paginator ? this.paginator.pageSize || this.default_page_size : 10;
         res.sort_column = this.sort.active ? this.sort.active : '';
         res.sort_descending = this.sort.direction ? this.sort.direction == 'desc' : true;
         return res;
+    }
+
+    normalizeArray<T>(array: Array<T>) {
+        const normalizedObject: any = {};
+        for (let i = 0; i < array.length; i++) {
+            const key = 'id' + array[i][this.id_column].toString();
+            normalizedObject[key] = array[i]
+        }
+        return normalizedObject as { [key: string]: T }
+    }
+
+    sync_objects(source, target) {
+        for (let name in source) {
+            if (JSON.stringify(source[name]) != JSON.stringify(target[name])) {
+                target[name] = source[name];
+            }
+        }
     }
 
     ngOnInit() {
@@ -69,18 +86,37 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
                 return observableOf(new PaginatorRes<T>());
             })
         ).subscribe(res => {
+            if (!res.data) {
+                return;
+            }
             if (this.dataSource.data && res.data.length == this.dataSource.data.length) {
-                for (let i in res.data) {
-                    let names = Object.getOwnPropertyNames(res.data[i]);
-                    for (let name of names) {
-                        let res_v = Object.getOwnPropertyDescriptor(res.data[i], name);
-                        let source_v = Object.getOwnPropertyDescriptor(this.dataSource.data[i], name);
-                        if (JSON.stringify(res_v.value) != JSON.stringify(source_v.value)) {
-                            Object.defineProperty(this.dataSource.data[i], name, res_v);
-                        }
+                let res_d = this.normalizeArray(res.data);
+                let target_d = this.normalizeArray(this.dataSource.data);
+                let names = Object.getOwnPropertyNames(res_d);
+                for (let k of names) {
+                    if (k in target_d) {
+                        this.sync_objects(res_d[k], target_d[k]);
+                        delete res_d[k];
+                        delete target_d[k];
                     }
 
                 }
+
+                let data = this.dataSource.data.slice(0);
+                for (let k in target_d) {
+                    let index = data.indexOf(target_d[k]);
+                    data.splice(index, 1);
+                }
+                let res_a = [];
+                for(let k in res_d){
+                    res_a.push(res_d[k]);
+                }
+                for(let i=0;i<res_a.length;i++){
+                    data.splice(i, 0, res_a[i]);
+                }
+
+                this.dataSource.data = data;
+
             } else {
                 this.dataSource.data = res.data;
                 this.total = res.total;

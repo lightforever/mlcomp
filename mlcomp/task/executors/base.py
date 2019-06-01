@@ -2,15 +2,17 @@ from abc import ABC, abstractmethod
 from mlcomp.db.models import Step, Task
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
-from mlcomp.db.providers import LogProvider, StepProvider
+from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
 from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
 import json
+
 
 class StepWrap:
     def __init__(self, task: Task):
         self.log_provider = LogProvider()
         self.step_provider = StepProvider()
+        self.task_provider = TaskProvider()
         self.task = task
         self.children = []
         self.step = None
@@ -57,6 +59,10 @@ class StepWrap:
         self.step_provider.add(step)
         self.children.append(step)
         self.step = step
+        if level == 1:
+            self.task.current_step = self.task.current_step + 1 if self.task.current_step is not None else 1
+            self.task_provider.session.commit()
+
         self.info('Begin of the step')
 
         return step
@@ -81,6 +87,7 @@ class StepWrap:
 
     def error(self, message: str):
         self.logger.error(message, ComponentType.Worker, self.step.id)
+
 
 class Executor(ABC):
     _child = dict()

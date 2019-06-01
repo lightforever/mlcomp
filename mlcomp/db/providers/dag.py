@@ -1,7 +1,5 @@
-from collections import OrderedDict
-
 from mlcomp.db.providers.base import *
-from mlcomp.utils.misc import to_snake
+from mlcomp.utils.misc import to_snake, duration_format
 
 
 class DagProvider(BaseDataProvider):
@@ -49,21 +47,30 @@ class DagProvider(BaseDataProvider):
                 'last_activity': last_activity,
                 'started': started,
                 'finished': finished,
-                **{k: v for k, v in dag.to_dict(rules=rules).items() if k not in ['tasks', 'config']}
+                **{k: v for k, v in self.to_dict(dag, rules=rules).items() if k not in ['tasks', 'config']}
             }
 
             r['task_statuses'] = [{'name': to_snake(e.name), 'count': s} for e, s in zip(TaskStatus, task_status)]
-            r['last_activity'] = self.serializer.serialize_date(r['last_activity']) if r['last_activity'] else None
-            r['started'] = self.serializer.serialize_date(r['started']) if r['started'] else None
-            r['finished'] = self.serializer.serialize_date(r['finished']) if r['finished'] else None
+            r['last_activity'] = self.serializer.serialize_datetime(r['last_activity']) if r['last_activity'] else None
+            r['started'] = self.serializer.serialize_datetime(r['started']) if r['started'] else None
+            r['finished'] = self.serializer.serialize_datetime(r['finished'])if r['finished'] else None
             r['img_size'] = self.img_size(r['id'])
             r['file_size'] = self.file_size(r['id'])
+
+            if task_status[TaskStatus.InProgress.value]>0:
+                delta = (now() - started).total_seconds()
+            elif sum(task_status[TaskStatus.InProgress.value:])==0 or not started:
+                delta = 0
+            else:
+                delta = (finished - started).total_seconds()
+
+            r['duration'] = duration_format(delta)
             res.append(r)
 
         if filter.get('report'):
             dag_ids = [r['id'] for r in res]
             tasks_dags = self.query(Task.id, Task.dag).filter(Task.dag.in_(dag_ids)).all()
-            tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report==int(filter['report']))
+            tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report == int(filter['report']))
             tasks_within_report = {t[0] for t in tasks_within_report}
             dags_not_full_included = {d for t, d in tasks_dags if t not in tasks_within_report}
             for r in res:
@@ -74,6 +81,12 @@ class DagProvider(BaseDataProvider):
     def config(self, id: int):
         return self.by_id(id).config
 
+    def duration(self, t: Task):
+        if not t.started:
+            return duration_format(0)
+        delta = ((t.finished if t.status > TaskStatus.InProgress.value else now()) - t.started).total_seconds()
+        return duration_format(delta)
+
     def graph(self, id: int):
         tasks = self.query(Task).filter(Task.dag == id).all()
         task_ids = [t.id for t in tasks]
@@ -83,9 +96,8 @@ class DagProvider(BaseDataProvider):
         def label(t: Task):
             res = [t.executor]
             if t.status >= TaskStatus.InProgress.value:
-                delta = t.last_activity - t.started
-                res.append(str(delta).split('.')[0])
-                res.append(f'{t.current_step or 0}/{t.steps}')
+                res.append(self.duration(t))
+                res.append(f'{(t.current_step or 1)}/{t.steps}')
             return '\n'.join(res)
 
         nodes = [

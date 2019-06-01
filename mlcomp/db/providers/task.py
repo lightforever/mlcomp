@@ -1,6 +1,6 @@
 from mlcomp.db.providers.base import *
 from typing import List
-from mlcomp.utils.misc import to_snake
+from mlcomp.utils.misc import to_snake, duration_format
 
 
 class TaskProvider(BaseDataProvider):
@@ -24,9 +24,17 @@ class TaskProvider(BaseDataProvider):
         paginator = self.paginator(query, options)
         res = []
         for p in paginator.all():
-            item = {**p.to_dict()}
+            item = {**self.to_dict(p)}
             item['status'] = to_snake(TaskStatus(item['status']).name)
-            res.append(item)
+            if p.started is None:
+                delta = 0
+            elif p.status == TaskStatus.InProgress.value:
+                delta = (now() - p.started).total_seconds()
+            else:
+                delta = ((p.finished or p.last_activity) - p.started).total_seconds()
+            item['duration'] = duration_format(delta)
+            if p.dag_rel is not None:
+                res.append(item)
 
         if filter.get('report'):
             tasks_within_report = self.query(ReportTasks.task).filter(ReportTasks.report == int(filter['report']))

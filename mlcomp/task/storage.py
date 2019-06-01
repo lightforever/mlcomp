@@ -114,7 +114,7 @@ class Storage:
 
             if reload_dep:
                 for v in module.__dict__.values():
-                    if isinstance(v, ModuleType):
+                    if isinstance(v, ModuleType) and '__file__' in v.__dict__:
                         import_path = os.path.relpath(v.__file__, packages_folder)
                         import_name = import_path.split(os.path.sep)[0]
                         if import_name in library_names:

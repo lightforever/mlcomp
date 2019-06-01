@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider
 from mlcomp.task.executors import Executor
 from mlcomp.utils.config import Config
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import create_logger
 from mlcomp.task.app import app
 from mlcomp.db.models import *
 from mlcomp.task.storage import Storage
@@ -17,13 +17,14 @@ import sys
 from celery.signals import celeryd_after_setup
 from mlcomp.utils.misc import now
 
+
 def execute_by_id(id: int, repeat_count=1):
+    logger = create_logger()
     provider = TaskProvider()
     library_provider = DagLibraryProvider()
     storage = Storage()
     task = provider.by_id(id, joinedload(Task.dag_rel))
     assert task.dag_rel is not None, 'You must fetch task with dag_rel'
-    wdir = os.path.dirname(__file__)
 
     if task.status >= TaskStatus.InProgress.value and repeat_count>=1:
         logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
@@ -60,14 +61,13 @@ def execute_by_id(id: int, repeat_count=1):
                 queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
                 logger.warning(traceback.format_exc(), ComponentType.Worker, step)
                 execute.apply_async((id, repeat_count-1), queue=queue)
-                sys.exit()
             except Exception:
                 pass
 
         logger.error(traceback.format_exc(), ComponentType.Worker, step)
         provider.change_status(task, TaskStatus.Failed)
     finally:
-        os.chdir(wdir)
+        sys.exit()
 
 
 @celeryd_after_setup.connect
@@ -96,6 +96,7 @@ def queue_list():
 
 def stop(task: Task):
     assert task.dag_rel, 'Dag is not in the task'
+    logger = create_logger()
     provider = TaskProvider()
     if task.status > TaskStatus.InProgress.value:
         return task.status

@@ -15,6 +15,7 @@ from mlcomp.utils.schedule import start_schedule
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
 import time
+from collections import OrderedDict
 
 @click.group()
 def main():
@@ -41,7 +42,7 @@ def worker_usage():
         usages.append(usage)
         time.sleep(1)
 
-    usage = json.dumps({'mean': dict_func(usages, np.mean), 'peak': dict_func(usages, np.max)})
+    usage = json.dumps({'mean': dict_func(usages, np.mean)})
     provider.add(ComputerUsage(computer=name, usage=usage, time=now()))
 
 
@@ -66,7 +67,7 @@ def worker(number):
 @main.command()
 def worker_supervisor():
     _create_computer()
-    start_schedule([(worker_usage, 10)])
+    start_schedule([(worker_usage, 0)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [
@@ -137,7 +138,8 @@ def _dag(config: str, debug: bool = False):
                     cpu=v.get('cpu', 1),
                     memory=v.get('memory', 0.1),
                     dag=dag.id,
-                    debug=debug
+                    debug=debug,
+                    steps=int(v.get('steps', '1'))
                 )
                 provider.add(task)
                 if v.get('report'):
