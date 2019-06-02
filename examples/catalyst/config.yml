@@ -24,10 +24,12 @@ reports:
         type: series
         key: loss
         multi: many
-      precision_recall:
-        type: precision_recall
-      f1:
-        type: f1
-      img_confusion:
-        type: img_confusion
-        count: 10
+#      precision_recall:
+#        type: precision_recall
+#      f1:
+#        type: f1
+      classify:
+        type: img_classify
+        epoch_every: 1
+        count_class_max: 5
+        train: True

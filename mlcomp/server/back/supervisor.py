@@ -3,6 +3,7 @@ import traceback
 from mlcomp.task.tasks import execute, queue_list
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
+from sqlalchemy.exc import ProgrammingError
 
 def supervisor():
     provider = TaskProvider()
@@ -10,7 +11,7 @@ def supervisor():
 
     try:
         queues = queue_list()
-        if len(queues)==0:
+        if len(queues) == 0:
             return
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
         not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
@@ -25,6 +26,9 @@ def supervisor():
             computers[assigned]['memory'] -= task.memory
 
         for task in not_ran_tasks:
+            if task.dag_rel is None:
+                continue
+
             if TaskStatus.Stopped.value in dep_status[task.id] or TaskStatus.Failed.value in dep_status[task.id]:
                 provider.change_status(task, TaskStatus.Skipped)
                 continue
@@ -55,8 +59,11 @@ def supervisor():
                 computer['memory'] -= task.memory
                 break
 
-    except Exception:
+    except Exception as error:
         logger.error(traceback.format_exc(), ComponentType.Supervisor)
+
+        if type(error) == ProgrammingError:
+            Session.cleanup()
 
 
 def register_supervisor():

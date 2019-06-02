@@ -4,7 +4,7 @@ from typing import Tuple
 from mlcomp.db.enums import ComponentType
 from sqlalchemy.orm import joinedload
 
-from mlcomp.db.providers import TaskProvider, DagLibraryProvider
+from mlcomp.db.providers import TaskProvider, DagLibraryProvider, StepProvider
 from mlcomp.task.executors import Executor
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
@@ -15,29 +15,38 @@ import traceback
 import os
 import sys
 from celery.signals import celeryd_after_setup
-from mlcomp.utils.misc import now
 
 
 def execute_by_id(id: int, repeat_count=1):
     logger = create_logger()
     provider = TaskProvider()
     library_provider = DagLibraryProvider()
+    step_provider = StepProvider()
     storage = Storage()
     task = provider.by_id(id, joinedload(Task.dag_rel))
-    assert task.dag_rel is not None, 'You must fetch task with dag_rel'
-
-    if task.status >= TaskStatus.InProgress.value and repeat_count>=1:
-        logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
-                       ComponentType.Worker)
-        return
-
     executor = None
-    hostname = socket.gethostname()
-    docker_img = os.getenv('DOCKER_IMG', 'default')
-    start = now()
     try:
+        assert task.dag_rel is not None, 'You must fetch task with dag_rel'
+
+        if task.status >= TaskStatus.InProgress.value and repeat_count >= 1:
+            logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
+                           ComponentType.Worker)
+            return
+
+        hostname = socket.gethostname()
+        docker_img = os.getenv('DOCKER_IMG', 'default')
+        worker_index = int(os.getenv("WORKER_INDEX", -1))
+
+        # Fail all InProgress Tasks assigned to this worker except that task
+        for t in provider.by_status(TaskStatus.InProgress, docker_img=docker_img, worker_index=worker_index):
+            if t.id != id:
+                step = step_provider.last_for_task(t.id)
+                logger.error(f'Task Id = {t.id} was in InProgress state when another tasks arrived to the same worker', ComponentType.Worker, step)
+                provider.change_status(t, TaskStatus.Failed)
+
         task.computer_assigned = hostname
         task.pid = os.getpid()
+        task.worker_index = worker_index
         provider.change_status(task, TaskStatus.InProgress)
         folder = storage.download(task=id)
 
@@ -45,7 +54,18 @@ def execute_by_id(id: int, repeat_count=1):
 
         executor_type = config['executors'][task.executor]['type']
         libraries = library_provider.dag(task.dag)
-        storage.import_folder(folder, libraries)
+        was_installation = storage.import_folder(folder, libraries)
+        if was_installation:
+            if repeat_count > 0:
+                try:
+                    queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
+                    logger.warning(traceback.format_exc(), ComponentType.Worker)
+                    execute.apply_async((id, repeat_count - 1), queue=queue)
+                except Exception:
+                    pass
+                finally:
+                    sys.exit()
+
         assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
 
         executor = Executor.from_config(task.executor, config)
@@ -56,14 +76,6 @@ def execute_by_id(id: int, repeat_count=1):
         provider.change_status(task, TaskStatus.Success)
     except Exception:
         step = executor.step.id if (executor and executor.step) else None
-        if repeat_count > 0 and (now() - start).total_seconds() < 10:
-            try:
-                queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
-                logger.warning(traceback.format_exc(), ComponentType.Worker, step)
-                execute.apply_async((id, repeat_count-1), queue=queue)
-            except Exception:
-                pass
-
         logger.error(traceback.format_exc(), ComponentType.Worker, step)
         provider.change_status(task, TaskStatus.Failed)
     finally:
@@ -76,13 +88,14 @@ def capture_worker_name(sender, instance, **kwargs):
 
 
 @app.task
-def execute(id: int, repeat_count: int=1):
+def execute(id: int, repeat_count: int = 1):
     execute_by_id(id, repeat_count)
 
 
 @app.task
 def kill(pid: int):
     os.system(f'kill -9 {pid}')
+
 
 def queue_list():
     inspect = app.control.inspect()

@@ -13,12 +13,12 @@ class StepProvider(BaseDataProvider):
             if s.level == parent['level'] + 1:
                 child = {**self.step_info(steps[current]), 'children': []}
                 parent['children'].append(child)
-                for i in range(current + 1, end+1):
+                for i in range(current + 1, end + 1):
                     if steps[i][0].level <= s.level:
-                        self._hierarchy(child, steps, current+1, i-1)
+                        self._hierarchy(child, steps, current + 1, i - 1)
                         current = i
                         break
-                    if i==len(steps)-1:
+                    if i == len(steps) - 1:
                         self._hierarchy(child, steps, current + 1, i)
                 else:
                     break
@@ -28,7 +28,7 @@ class StepProvider(BaseDataProvider):
         res = {'id': step.id, 'name': step.name,
                'status': to_snake(StepStatus(step.status).name),
                'level': step.level,
-               'duration': ((step.finished if step.finished else now())-step.started).total_seconds(),
+               'duration': ((step.finished if step.finished else now()) - step.started).total_seconds(),
                'log_statuses': [{'name': to_snake(e.name), 'count': s} for e, s in zip(LogStatus, log_status)]
                }
         return res
@@ -44,3 +44,6 @@ class StepProvider(BaseDataProvider):
         hierarchy = {**self.step_info(steps[0]), 'children': []}
         self._hierarchy(hierarchy, steps, 1, len(steps) - 1)
         return [hierarchy]
+
+    def last_for_task(self, id: int):
+        return self.query(Step).filter(Step.task == id).order_by(Step.started.desc()).first()

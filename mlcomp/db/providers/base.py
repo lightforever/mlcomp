@@ -33,8 +33,8 @@ class BaseDataProvider:
     def query(self):
         return self.session.query
 
-    def add(self, obj: Base):
-        self._session.add(obj)
+    def add(self, obj: Base, commit=True):
+        self._session.add(obj, commit=commit)
         return obj
 
     def by_id(self, id:int, joined_load=None):
@@ -60,6 +60,9 @@ class BaseDataProvider:
 
     def update(self):
         self.session.update()
+        self.session.commit()
+
+    def commit(self):
         self.session.commit()
 
     @property

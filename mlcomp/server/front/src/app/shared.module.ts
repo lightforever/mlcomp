@@ -48,6 +48,9 @@ import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";
 import {DialogComponent} from "./dialog/dialog.component";
+import {ReportModule} from "./report/report.module";
+import {ImgClassifyComponent} from "./report/internal/img-classify/img-classify.component";
+import {ReportComponent} from "./report/report/report.component";
 
 @NgModule({
     imports: [
@@ -110,7 +113,9 @@ import {DialogComponent} from "./dialog/dialog.component";
         DagsComponent,
         TasksComponent,
         ReportsComponent,
-        DialogComponent
+        DialogComponent,
+        ImgClassifyComponent,
+        ReportComponent
     ],
     exports: [
         MatIconModule,
@@ -166,6 +171,9 @@ import {DialogComponent} from "./dialog/dialog.component";
         ScrollingModule,
         LogComponent,
         TasksComponent,
+        ImgClassifyComponent,
+        ReportsComponent,
+        ReportComponent
     ],
     entryComponents: [DialogComponent],
 })

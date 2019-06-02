@@ -14,15 +14,6 @@ class ReportSeriesProvider(BaseDataProvider):
 class ReportImgProvider(BaseDataProvider):
     model = ReportImg
 
-    def add_or_replace(self, obj: ReportImg):
-        query = self.query(ReportImg).filter(ReportImg.task == obj.task).filter(
-            ReportImg.group == obj.group).filter(ReportImg.number == obj.number)
-        if query.count() == 0:
-            self.add(obj)
-        else:
-            query.update({'img': obj.img, 'epoch': obj.epoch})
-            self.session.commit()
-
     def remove(self, filter: dict):
         query = self.query(ReportImg)
         if filter.get('dag'):
@@ -31,6 +22,26 @@ class ReportImgProvider(BaseDataProvider):
             query = query.filter(ReportImg.project == filter['project'])
         query.delete(synchronize_session=False)
         self.session.commit()
+
+    def remove_lower(self, task_id: int, name: str, epoch: int):
+        self.query(ReportImg).filter(ReportImg.task == task_id). \
+            filter(ReportImg.group == name). \
+            filter(ReportImg.epoch < epoch). \
+            delete(synchronize_session=False)
+        self.session.commit()
+
+    def detail_img_classify(self, filter: dict, options: PaginatorOptions = None):
+        res = {'data': []}
+        query = self.query(ReportImg).filter(ReportImg.task == filter['task']).filter(ReportImg.epoch == filter['epoch']). \
+            filter(ReportImg.group == filter['group']).filter(ReportImg.part == filter['part'])
+        res['total'] = query.count()
+        query = self.paginator(query, options)
+        img_objs = query.all()
+        for img_obj in img_objs:
+            img = pickle.loads(img_obj.img)
+            res['data'].append({'content': base64.b64encode(img['img']).decode('utf-8'), 'id': img_obj.id})
+
+        return res
 
 
 class ReportProvider(BaseDataProvider):
@@ -150,22 +161,31 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def _detail_img_confusion(self, task: int, epoch: int, item: ReportInfoItem):
+    def detail_img_classify_descr(self, task: int, name: str):
         res = []
-        img_objs = self.query(ReportImg).filter(ReportImg.task == task).filter(ReportImg.epoch == epoch). \
-            filter(ReportImg.group == item.name).all()
-        imgs = [pickle.loads(img.img) for img in img_objs]
-        false_positive = [img for img in imgs if img['y'] == 0 and img['y_pred'] == 1]
-        false_negative = [img for img in imgs if img['y'] == 1 and img['y_pred'] == 0]
+        parts = self.query(ReportImg.part.distinct()). \
+            filter(ReportImg.task == task). \
+            filter(ReportImg.group == name). \
+            order_by(ReportImg.part).all()
+        for part in parts:
+            part = part[0]
+            res.append({
+                'name': part,
+                'type': 'img_classify',
+                'rows': 6,
+                'cols': 1,
+                'data': {
+                    'epochs': [e[0] for e in self.query(ReportImg.epoch.distinct()). \
+                        filter(ReportImg.task == task). \
+                        filter(ReportImg.group == name). \
+                        filter(ReportImg.part == part). \
+                        order_by(ReportImg.epoch).all()],
+                    'task': task,
+                    'group': name,
+                    'part': part
+                }
 
-        for group, name in [(false_positive, 'false_positive'), (false_negative, 'false_negative')]:
-            item = {'name': name, 'type': 'img_list', 'rows': 1, 'cols': len(false_positive),
-                    'items': [
-                        {'img': base64.b64encode(img['img']).decode('utf-8'), 'text': str(img['pred'])[:4]} for img in
-                        group
-                    ]}
-            res.append(item)
-
+            })
         return res
 
     def detail(self, id: int):
@@ -194,8 +214,8 @@ class ReportProvider(BaseDataProvider):
             for element in report.precision_recall + report.f1:
                 res.extend(self._detail_single_img(best_task_epoch[0][0], best_task_epoch[0][1], element))
 
-            for element in report.img_confusion:
-                res.extend(self._detail_img_confusion(best_task_epoch[0][0], best_task_epoch[0][1], element))
+            for element in report.img_classify:
+                res.extend(self.detail_img_classify_descr(best_task_epoch[0][0], element.name))
 
         return res
 

@@ -31,8 +31,8 @@ export class Task {
 }
 
 export class PaginatorRes<T> {
-  data: Array<T>;
-  total: number;
+  data: Array<T> = [];
+  total: number = 0;
 }
 
 export class Data<T> {
@@ -189,4 +189,8 @@ export class StepNode {
     name: string;
     id: number;
     children?: StepNode[];
+}
+
+export class Img {
+    content: string;
 }

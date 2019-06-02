@@ -91,6 +91,14 @@ def projects():
     res = provider.get(data, options)
     return json.dumps(res)
 
+@app.route('/api/img_classify', methods=['POST'])
+@requires_auth
+def img_classify():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    res = ReportImgProvider().detail_img_classify(data, options)
+    return json.dumps(res)
+
 
 @app.route('/api/config', methods=['POST'])
 @requires_auth
@@ -299,7 +307,6 @@ def stop():
 def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
-
 
     logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}', ComponentType.API)
     return str(error), 500

@@ -95,6 +95,13 @@ def duration_format(delta: float):
         delta = f'{day} {"days" if day > 1 else "day"} {hour} {"hours" if hour > 1 else "hour"} {int((delta % 3600) / 60)} min'
     return delta
 
+def adapt_db_types(d: dict):
+    for k in d:
+        if type(d[k]) in [np.int, np.int64]:
+            d[k] = int(d[k])
+        elif type(d[k]) in [np.float, np.float64]:
+            d[k] = float(d[k])
+
 if __name__=='__main__':
     print(dict_func([
         {'cpu': 10, 'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},

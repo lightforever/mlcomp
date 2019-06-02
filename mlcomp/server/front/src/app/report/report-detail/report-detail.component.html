@@ -1,59 +1,56 @@
 <mat-accordion>
-  <mat-expansion-panel (opened)="dag_panel_open = true"
-                       (closed)="dag_panel_open = false">
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Dags
-      </mat-panel-title>
-      <mat-panel-description>
-        Dags to add/remove
-      </mat-panel-description>
-    </mat-expansion-panel-header>
+    <mat-expansion-panel (opened)="dag_panel_open = true"
+                         (closed)="dag_panel_open = false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                Dags
+            </mat-panel-title>
+            <mat-panel-description>
+                Dags to add/remove
+            </mat-panel-description>
+        </mat-expansion-panel-header>
 
-    <app-dags *ngIf="dag_panel_open" [report]="id"></app-dags>
-  </mat-expansion-panel>
+        <app-dags *ngIf="dag_panel_open" [report]="id"></app-dags>
+    </mat-expansion-panel>
 
-  <mat-expansion-panel (opened)="task_panel_open = true"
-                       (closed)="task_panel_open = false">
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Tasks
-      </mat-panel-title>
-      <mat-panel-description>
-        Tasks to add/remove
-      </mat-panel-description>
-    </mat-expansion-panel-header>
+    <mat-expansion-panel (opened)="task_panel_open = true"
+                         (closed)="task_panel_open = false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                Tasks
+            </mat-panel-title>
+            <mat-panel-description>
+                Tasks to add/remove
+            </mat-panel-description>
+        </mat-expansion-panel-header>
 
-    <app-tasks *ngIf="task_panel_open"  [report]="id"></app-tasks>
-  </mat-expansion-panel>
+        <app-tasks *ngIf="task_panel_open" [report]="id"></app-tasks>
+    </mat-expansion-panel>
 
 </mat-accordion>
 
 <mat-grid-list cols="3" rowHeight="350px">
-  <mat-grid-tile
-      *ngFor="let tile of report; index as i"
-      [colspan]="tile.cols"
-      [rowspan]="tile.rows">
+    <mat-grid-tile
+            *ngFor="let tile of report; index as i"
+            [colspan]="tile.cols"
+            [rowspan]="tile.rows">
 
-    <div *ngIf="tile.type=='series';">
-      <div [attr.id]="'series_'+i.toString()"></div>
-    </div>
+        <div *ngIf="tile.type=='series';">
+            <div [attr.id]="'series_'+i.toString()"></div>
+        </div>
 
-    <div *ngIf="tile.type=='img';" >
-      <div style="text-align:center">{{tile.name}}</div>
-      <img [attr.src]="'data:image/JPEG;base64,'+tile.data">
-    </div>
+        <div *ngIf="tile.type=='img';">
+            <div style="text-align:center">{{tile.name}}</div>
+            <img [attr.src]="'data:image/JPEG;base64,'+tile.data">
+        </div>
 
-     <div *ngIf="tile.type=='img_list';" >
-       <div  style="text-align:center">{{tile.name}}</div>
-       <br>
-       <div *ngFor="let img of tile.items">
-         <img [attr.src]="'data:image/JPEG;base64,'+img.img" height="224">
-         <div  style="text-align:center">{{img.text}}</div>
-       </div>
+        <div *ngIf="tile.type=='img_classify';" [style.position]="'absolute'" [style.top]="'10px'">
+            <app-img-classify [part]="tile.data.part" [epochs]="tile.data.epochs"
+                              [task]="tile.data.task" [group]="tile.data.group"
 
-     </div>
-  </mat-grid-tile>
+            ></app-img-classify>
+        </div>
+    </mat-grid-tile>
 </mat-grid-list>
 
 

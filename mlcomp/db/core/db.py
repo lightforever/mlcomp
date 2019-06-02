@@ -49,13 +49,22 @@ class Session(session.Session):
             self.rollback()
             raise e
 
-    def add(self, obj):
+    def add(self, obj, commit=True):
         try:
             super(Session, self).add(obj)
         except Exception as e:
             raise e
+
+        if commit:
+            try:
+                self.commit()
+            except Exception as e:
+                self.rollback()
+                raise e
+
+    def commit(self):
         try:
-            self.commit()
+            super(Session, self).commit()
         except Exception as e:
             self.rollback()
             raise e

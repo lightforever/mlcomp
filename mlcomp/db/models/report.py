@@ -1,6 +1,7 @@
 from mlcomp.utils.misc import now
 from .base import *
 
+
 class ReportSeries(Base):
     __tablename__ = 'report_series'
 
@@ -14,6 +15,7 @@ class ReportSeries(Base):
 
     task_rel = relationship('Task', lazy='noload')
 
+
 class ReportImg(Base):
     __tablename__ = 'report_img'
 
@@ -23,8 +25,15 @@ class ReportImg(Base):
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
     img = sa.Column(sa.LargeBinary)
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
+    part = sa.Column(sa.String)
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
-    number = sa.Column(sa.Integer, default=0)
+    y_pred = sa.Column(sa.Integer)
+    y = sa.Column(sa.Integer)
+    metric_diff = sa.Column(sa.Float)
+    attr1 = sa.Column(sa.Float)
+    attr2 = sa.Column(sa.Float)
+    attr3 = sa.Column(sa.Float)
+
 
 class Report(Base):
     __tablename__ = 'report'
@@ -35,10 +44,10 @@ class Report(Base):
     name = sa.Column(sa.String)
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
 
+
 class ReportTasks(Base):
     __tablename__ = 'report_task'
 
     id = sa.Column(sa.Integer, primary_key=True)
     report = sa.Column(sa.Integer, ForeignKey('report.id'))
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
-

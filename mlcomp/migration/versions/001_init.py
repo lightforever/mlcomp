@@ -91,9 +91,15 @@ report_img = Table(
     Column('task', Integer, nullable=False),
     Column('group', String(100), nullable=False),
     Column('img', LargeBinary, nullable=False),
-    Column('number', Integer, nullable=False),
     Column('project', Integer, nullable=False),
     Column('dag', Integer, nullable=False),
+    Column('part', String(30)),
+    Column('y_pred', Integer),
+    Column('y', Integer),
+    Column('metric_diff', Float),
+    Column('attr1', Float),
+    Column('attr2', Float),
+    Column('attr3', Float),
 )
 
 report_series = Table(
@@ -144,7 +150,8 @@ task = Table(
     Column('celery_id', String(50)),
     Column('last_activity', TIMESTAMP),
     Column('debug', Boolean, nullable=False, default=False),
-    Column('pid', Integer)
+    Column('pid', Integer),
+    Column('worker_index', Integer)
 )
 
 task_dependency = Table(
@@ -239,6 +246,7 @@ def upgrade(migrate_engine):
 
     ForeignKeyConstraint([task_dependency.c.task_id], [task.c.id], ondelete='CASCADE').create()
     ForeignKeyConstraint([task_dependency.c.depend_id], [task.c.id], ondelete='CASCADE').create()
+
 
 def downgrade(migrate_engine):
     meta.bind = migrate_engine

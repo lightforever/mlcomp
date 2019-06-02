@@ -75,7 +75,7 @@ class DbHandler(logging.Handler):
             module = os.path.relpath(record.pathname, ROOT).replace(os.sep, '.').replace('.py', '')
             if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
-            log = Log(message=record.msg, time=now(), level=record.levelno,
+            log = Log(message=record.msg[:4000], time=now(), level=record.levelno,
                       step=step, component=component, line=record.lineno,
                       module=module
                       )

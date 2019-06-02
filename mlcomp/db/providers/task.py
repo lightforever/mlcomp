@@ -62,8 +62,13 @@ class TaskProvider(BaseDataProvider):
         task.status = status.value
         self.update()
 
-    def by_status(self, status: TaskStatus):
-        return self.query(Task).filter(Task.status == status.value).options(joinedload(Task.dag_rel)).all()
+    def by_status(self, status: TaskStatus, docker_img: str = None, worker_index: int = None):
+        query = self.query(Task).filter(Task.status == status.value).options(joinedload(Task.dag_rel))
+        if docker_img:
+            query = query.join(Dag).filter(Dag.docker_img == docker_img)
+        if worker_index is not None:
+            query = query.filter(Task.worker_index == worker_index)
+        return query.all()
 
     def dependency_status(self, tasks: List[Task]):
         res = {t.id: [] for t in tasks}

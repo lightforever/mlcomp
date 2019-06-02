@@ -1,5 +1,5 @@
 class PaginatorOptions:
-    def __init__(self, sort_column: str, sort_descending: bool, page_number:int, page_size:int):
+    def __init__(self, page_number: int, page_size: int, sort_column: str = None, sort_descending: bool = None):
         self.sort_column = sort_column
         self.sort_descending = sort_descending
         self.page_number = page_number

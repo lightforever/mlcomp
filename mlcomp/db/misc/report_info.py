@@ -30,8 +30,8 @@ class ReportInfoSeries(ReportInfoItem):
         assert 'key' in value, f'report.series={name}. key is required'
         value.pop('type')
         key = value.pop('key')
-        multi = value.pop('multi') if 'multi' in value else 'multi'
-        single_group = value.pop('single_group') if 'single_group' in value else None
+        multi = value.pop('multi', 'multi')
+        single_group = value.pop('single_group', 'single_group')
 
         assert len(value) == 0, f'Unknown parameter in report.series={name}: {value.popitem()}'
         return cls(name, key, multi=multi, single_group=single_group)
@@ -76,18 +76,22 @@ class ReportInfoMetric:
         return ReportInfoMetric(name, minimize)
 
 
-class ReportInfoImgConfusion(ReportInfoItem):
-    def __init__(self, name: str, count: int):
-        super(ReportInfoImgConfusion, self).__init__(name)
-        self.count = count
+class ReportInfoImgClassify(ReportInfoItem):
+    def __init__(self, name: str,  epoch_every: int, count_class_max: int, train: bool):
+        super(ReportInfoImgClassify, self).__init__(name)
+        self.epoch_every = epoch_every
+        self.count_class_max = count_class_max
+        self.train = train
 
     @classmethod
     def from_dict(cls, name: str, value: OrderedDict):
         value.pop('type')
-        assert 'count' in value, f'report.img_confusion={name}. count is required'
-        count = value.pop('count')
-        assert len(value) == 0, f'Unknown parameter in report.img_confusion={value.popitem()}'
-        return cls(name, count)
+        epoch_every = value.pop('epoch_every', None)
+        count_class_max = value.pop('count_class_max', None)
+        train = value.pop('train', False)
+
+        assert len(value) == 0, f'Unknown parameter in report.img_classify={value.popitem()}'
+        return cls(name, epoch_every=epoch_every, count_class_max=count_class_max, train=train)
 
 
 class ReportInfo:
@@ -97,14 +101,14 @@ class ReportInfo:
         self.precision_recall = self._get_precision_recall()
         self.metric = self._get_metric()
         self.f1 = self._get_f1()
-        self.img_confusion = self._get_img_confusion()
+        self.img_classify = self._get_img_classify()
 
     def has_classification(self):
         return len(self.precision_recall) > 0
 
-    def _get_img_confusion(self) -> List[ReportInfoImgConfusion]:
-        return [ReportInfoImgConfusion.from_dict(k, v) for k, v in self.data['items'].items()
-                if v.get('type') == 'img_confusion']
+    def _get_img_classify(self) -> List[ReportInfoImgClassify]:
+        return [ReportInfoImgClassify.from_dict(k, v) for k, v in self.data['items'].items()
+                if v.get('type') == 'img_classify']
 
     def _get_f1(self) -> List[ReportInfoF1]:
         return [ReportInfoF1.from_dict(k, v) for k, v in self.data['items'].items() if v.get('type') == 'f1']
@@ -121,4 +125,4 @@ class ReportInfo:
 
 
 __all__ = ['ReportInfoItem', 'ReportInfoSeries', 'ReportInfoPrecisionRecall',
-           'ReportInfoF1', 'ReportInfoMetric', 'ReportInfoImgConfusion', 'ReportInfo']
+           'ReportInfoF1', 'ReportInfoMetric', 'ReportInfoImgClassify', 'ReportInfo']

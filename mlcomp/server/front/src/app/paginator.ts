@@ -26,7 +26,8 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
 
     constructor(
         protected service: BaseService,
-        protected location: Location
+        protected location: Location,
+        protected enable_interval: boolean = true
     ) {
 
     }
@@ -39,8 +40,11 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         let res = new PaginatorFilter();
         res.page_number = this.paginator ? this.paginator.pageIndex : 0;
         res.page_size = this.paginator ? this.paginator.pageSize || this.default_page_size : 10;
-        res.sort_column = this.sort.active ? this.sort.active : '';
-        res.sort_descending = this.sort.direction ? this.sort.direction == 'desc' : true;
+        if (this.sort) {
+            res.sort_column = this.sort.active ? this.sort.active : '';
+            res.sort_descending = this.sort.direction ? this.sort.direction == 'desc' : true;
+        }
+
         return res;
     }
 
@@ -65,15 +69,24 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         this._ngOnInit();
 
         // If the user changes the sort order, reset back to the first page.
-        this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+        if(this.sort){
+            this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+        }
 
-        let m = this.paginator ? merge(this.sort.sortChange, this.paginator.page, this.change) :
-            merge(this.sort.sortChange, this.change);
+
+        let m = merge(this.paginator.page, this.change);
+        if(this.sort){
+            m = merge(m, this.sort.sortChange);
+        }
         m.pipe(
             startWith({}),
             switchMap(() => {
                 this.isLoading_results = true;
-                return this.service.get_paginator<T>(this.get_filter())
+                let filter = this.get_filter();
+                if(!filter){
+                    return observableOf(new PaginatorRes<T>());
+                }
+                return this.service.get_paginator<T>(filter);
             }),
             map(res => {
                 // Flip flag to show that loading has finished.
@@ -108,10 +121,10 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
                     data.splice(index, 1);
                 }
                 let res_a = [];
-                for(let k in res_d){
+                for (let k in res_d) {
                     res_a.push(res_d[k]);
                 }
-                for(let i=0;i<res_a.length;i++){
+                for (let i = 0; i < res_a.length; i++) {
                     data.splice(i, 0, res_a[i]);
                 }
 
@@ -125,11 +138,17 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
             this.data_updated.emit(res.data);
         });
 
-        this.interval = setInterval(() => this.change.emit('event'), 3000);
+        if (this.enable_interval) {
+            this.interval = setInterval(() => this.change.emit('event'), 3000);
+        }
+
     }
 
     ngOnDestroy() {
-        clearInterval(this.interval);
+        if (this.enable_interval) {
+            clearInterval(this.interval);
+        }
+
     }
 
 }

@@ -24,6 +24,7 @@ class Task(Base):
     dag_rel = relationship('Dag', lazy='noload')
     debug = sa.Column(sa.Boolean, default=False)
     pid = sa.Column(sa.Integer)
+    worker_index = sa.Column(sa.Integer)
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependency'

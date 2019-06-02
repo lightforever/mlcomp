@@ -91,10 +91,10 @@ class Storage:
         sys.path.insert(0, folder)
         return folder
 
-    def import_folder(self, folder: str, libraries: List[Tuple]=None, reload_dep: bool=True):
+    def import_folder(self, folder: str, libraries: List[Tuple]=None):
+        was_installation = False
         folders = [p for p in glob(f'{folder}/*', recursive=True) if os.path.isdir(p) and not '__pycache__' in p]
         folders += [folder]
-        packages_folder = site.getsitepackages()[0]
         library_names = set(n for n, v in (libraries or []))
         library_versions = {n: v for n, v in (libraries or [])}
 
@@ -107,24 +107,13 @@ class Storage:
 
             if need_install:
                 os.system(f'pip install {n}=={library_versions[n]}')
+                was_installation = True
 
         for (module_loader, module_name, ispkg) in pkgutil.iter_modules(folders):
             module = module_loader.find_module(module_name).load_module(module_name)
             reload(module)
 
-            if reload_dep:
-                for v in module.__dict__.values():
-                    if isinstance(v, ModuleType) and '__file__' in v.__dict__:
-                        import_path = os.path.relpath(v.__file__, packages_folder)
-                        import_name = import_path.split(os.path.sep)[0]
-                        if import_name in library_names:
-                            try:
-                                reload(v)
-                            except Exception:
-                                pass
-
-                reload(module)
-
+        return was_installation
 
 if __name__ == '__main__':
     storage = Storage()
