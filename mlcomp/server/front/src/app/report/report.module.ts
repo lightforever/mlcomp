@@ -7,9 +7,10 @@ import {SharedModule} from "../shared.module";
         ReportRoutingModule,
         SharedModule
     ],
-    declarations: [
+    exports: [
 
-    ]
+    ],
+    declarations: []
 })
 export class ReportModule {
 }

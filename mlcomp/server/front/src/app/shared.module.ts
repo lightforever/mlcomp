@@ -48,9 +48,9 @@ import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";
 import {DialogComponent} from "./dialog/dialog.component";
-import {ReportModule} from "./report/report.module";
 import {ImgClassifyComponent} from "./report/internal/img-classify/img-classify.component";
 import {ReportComponent} from "./report/report/report.component";
+import {LayoutComponent} from "./report/internal/layout/layout.component";
 
 @NgModule({
     imports: [
@@ -115,7 +115,8 @@ import {ReportComponent} from "./report/report/report.component";
         ReportsComponent,
         DialogComponent,
         ImgClassifyComponent,
-        ReportComponent
+        ReportComponent,
+        LayoutComponent
     ],
     exports: [
         MatIconModule,
@@ -173,7 +174,8 @@ import {ReportComponent} from "./report/report/report.component";
         TasksComponent,
         ImgClassifyComponent,
         ReportsComponent,
-        ReportComponent
+        ReportComponent,
+        LayoutComponent
     ],
     entryComponents: [DialogComponent],
 })

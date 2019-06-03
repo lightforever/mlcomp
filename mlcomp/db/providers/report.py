@@ -109,8 +109,6 @@ class ReportProvider(BaseDataProvider):
         return {'total': total, 'data': data}
 
     def _detail_series(self, series: List[ReportSeries], r: ReportInfoSeries):
-        item = {'name': r.name, 'type': 'series', 'rows': 1, 'cols': 1}
-
         series = [s for s in series if s.name == r.name]
         res = []
         if len(set(s.task for s in series)) == 1:
@@ -128,8 +126,7 @@ class ReportProvider(BaseDataProvider):
                         'time': [self.serialize_datetime(item.time) for item in group]
                     })
 
-            item['data'] = data
-            res.append(item)
+            res.append({'name': r.name, 'data': data})
 
         else:
             if r.multi == 'none':
@@ -143,7 +140,6 @@ class ReportProvider(BaseDataProvider):
                         continue
                     data = []
                     group = list(group)
-                    item_copy = item.copy()
                     group = sorted(group, key=lambda x: x.task)
                     for task_key, group_task in groupby(group, key=lambda x: x.task):
                         group_task = list(group_task)
@@ -156,15 +152,12 @@ class ReportProvider(BaseDataProvider):
                                 'time': [self.serialize_datetime(item.time) for item in group_task]
                             })
 
-                    item_copy['data'] = data
-                    item_copy['name'] = f'{r.name},{key}'
-                    res.append(item_copy)
+                    res.append({'name': f'{r.name},{key}', 'data': data})
             else:
                 series = sorted(series, key=lambda x: x.task)
                 series_task_group = groupby(series, key=lambda x: x.task)
                 for task_key, group_task in series_task_group:
                     data = []
-                    item_copy = item.copy()
                     group_task = list(group_task)
                     group_task = sorted(group_task, key=lambda x: x.group)
 
@@ -179,9 +172,7 @@ class ReportProvider(BaseDataProvider):
                                 'time': [self.serialize_datetime(item.time) for item in group_task]
                             })
 
-                    item_copy['data'] = data
-                    item_copy['name'] = f'{r.name},{group_task[0].task_rel.name}'
-                    res.append(item_copy)
+                    res.append({'name': f'{r.name},{group_task[0].task_rel.name}', 'data': data})
         return res
 
     def _detail_single_img(self, task: int, epoch: int, item: ReportInfoItem):
@@ -190,7 +181,7 @@ class ReportProvider(BaseDataProvider):
             filter(ReportImg.group == item.name).all()
         for img_obj in img_objs:
             img_decoded = pickle.loads(img_obj.img)
-            item = {'name': img_obj.group, 'type': 'img', 'rows': 1, 'cols': 1,
+            item = {'name': img_obj.group,
                     'data': base64.b64encode(img_decoded['img']).decode('utf-8')}
             res.append(item)
 
@@ -241,18 +232,18 @@ class ReportProvider(BaseDataProvider):
                         (best_task_epoch[1] > s.value if report.metric.minimize else best_task_epoch[1] < s.value):
                     best_task_epoch = [(s.task, s.epoch), s.value]
 
-        res = []
+        items = dict()
         for s in report.series:
-            res.extend(self._detail_series(series, s))
+            items[s.name] = self._detail_series(series, s)
 
         if best_task_epoch:
             for element in report.precision_recall + report.f1:
-                res.extend(self._detail_single_img(best_task_epoch[0][0], best_task_epoch[0][1], element))
+                items[element.name] = self._detail_single_img(best_task_epoch[0][0], best_task_epoch[0][1], element)
 
             for element in report.img_classify:
-                res.extend(self.detail_img_classify_descr(best_task_epoch[0][0], element.name))
+                items[element.name] = self.detail_img_classify_descr(best_task_epoch[0][0], element.name)
 
-        return res
+        return {'data': items, 'layout': report.layout}
 
     def add_dag(self, dag: int, report: int):
         tasks = self.query(Task.id).filter(Task.dag == dag).all()
@@ -275,8 +266,6 @@ class ReportProvider(BaseDataProvider):
     def add_task(self, task: int, report: int):
         self.add(ReportTasks(task=task, report=report))
         self.session.commit()
-
-
 
 class ReportTasksProvider(BaseDataProvider):
     model = ReportTasks

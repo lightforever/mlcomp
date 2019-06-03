@@ -176,13 +176,21 @@ export class DagStopResult extends BaseResult{
     dag: Dag;
 }
 
-export class ReportTile {
+export class ReportItem {
     type: string;
-    data: any;
-    items: any[];
-    name: string;
+    items: ReportItem[];
+    title: string;
+    parent_cols: number;
     cols: number;
     rows: number;
+    row_height: number;
+    source: string;
+    expanded: boolean;
+}
+
+export class Report {
+    layout;
+    data;
 }
 
 export class StepNode {

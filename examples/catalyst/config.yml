@@ -33,3 +33,22 @@ reports:
         epoch_every: 1
         count_class_max: 5
         train: True
+    layout:
+      - type: panel
+        title: Panel1
+        row_height: 400
+        parent_cols: 3
+        items:
+          - type: panel
+            title: Panel1.1
+            cols: 1
+            items:
+              - type: series
+                source: precision
+          - type: blank
+            cols: 1
+          - type: panel
+            title: Panel1.2
+            cols: 1
+      - type: panel
+        title: Panel2

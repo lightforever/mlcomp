@@ -77,7 +77,7 @@ class ReportInfoMetric:
 
 
 class ReportInfoImgClassify(ReportInfoItem):
-    def __init__(self, name: str,  epoch_every: int, count_class_max: int, train: bool):
+    def __init__(self, name: str, epoch_every: int, count_class_max: int, train: bool):
         super(ReportInfoImgClassify, self).__init__(name)
         self.epoch_every = epoch_every
         self.count_class_max = count_class_max
@@ -102,23 +102,53 @@ class ReportInfo:
         self.metric = self._get_metric()
         self.f1 = self._get_f1()
         self.img_classify = self._get_img_classify()
+        self.layout = {'type': 'root', 'items': data['layout']}
+        self._check_layout(self.layout)
+
+    def _check_layout(self, item):
+        types = ['root', 'panel', 'blank', 'img_classify',
+                 'series', 'precision_recall', 'f1']
+        assert item.get('type') in types, f'Unknown item type = {item["type"]}'
+
+        fields = {
+            'root': ['items'],
+            'panel': ['title', ('parent_cols', False), ('cols', False),
+                      ('row_height', False), ('rows', False),('items', False), ('expanded', False)],
+            'blank': [('cols', False), ('rows', False)],
+            **{k: ['source', ('cols', False), ('rows', False)] for k in types[3:]}
+        }
+        keys = set(item.keys()) - {'type'}
+        for f in fields[item['type']]:
+            req = True
+            if type(f) == tuple:
+                f, req = f
+            if req and f not in item:
+                raise Exception(f'Type {item["type"]} must contain field {f}')
+            if f in keys:
+                keys.remove(f)
+        assert len(keys) == 0, f'Unknown fields {keys} for type = {item["type"]}'
+
+        if 'items' in item:
+            for item in item['items']:
+                self._check_layout(item)
 
     def has_classification(self):
         return len(self.precision_recall) > 0
 
+    def _by_type(self, t: str, c):
+        return [c.from_dict(k, v) for k, v in self.data['items'].items() if v.get('type') == t]
+
     def _get_img_classify(self) -> List[ReportInfoImgClassify]:
-        return [ReportInfoImgClassify.from_dict(k, v) for k, v in self.data['items'].items()
-                if v.get('type') == 'img_classify']
+        return self._by_type('img_classify', ReportInfoImgClassify)
 
     def _get_f1(self) -> List[ReportInfoF1]:
-        return [ReportInfoF1.from_dict(k, v) for k, v in self.data['items'].items() if v.get('type') == 'f1']
+        return self._by_type('f1', ReportInfoF1)
 
     def _get_series(self) -> List[ReportInfoSeries]:
-        return [ReportInfoSeries.from_dict(k, v) for k, v in self.data['items'].items() if v.get('type') == 'series']
+        return self._by_type('series', ReportInfoSeries)
 
     def _get_precision_recall(self) -> List[ReportInfoPrecisionRecall]:
-        return [ReportInfoPrecisionRecall.from_dict(k, v) for k, v in self.data['items'].items() if
-                v.get('type') == 'precision_recall']
+        return self._by_type('precision_recall', ReportInfoPrecisionRecall)
 
     def _get_metric(self) -> ReportInfoMetric:
         return ReportInfoMetric.from_dict(self.data['metric'])
