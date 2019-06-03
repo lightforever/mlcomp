@@ -1,0 +1,62 @@
+<div class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource">
+
+        <ng-container matColumnDef="img">
+            <th mat-header-cell *matHeaderCellDef>
+                <div>{{part}}</div>
+                <mat-button-toggle-group [attr.fxLayout]="'row wrap'" [value]="epoch" (change)="epoch_changed($event)" appearance="legacy">
+                    <mat-button-toggle [value]="epoch" *ngFor="let epoch of epochs">
+                        <mat-icon>{{epoch}}</mat-icon>
+                    </mat-button-toggle>
+
+                </mat-button-toggle-group>
+
+                <div [id]="'img_classify_'+part"></div>
+
+                <mat-card class="result">
+                    <mat-card-content>
+                        <h2 style="text-align: center">Metric diff</h2>
+
+                        <section class="section">
+                            <div>
+                                <div>min</div>
+                                <mat-slider
+                                        [max]="1"
+                                        [min]="0"
+                                        [step]="0.01"
+                                        [thumbLabel]="true"
+                                        (change) = "change.emit()"
+                                        [(ngModel)]="metric_diff_min">
+
+                                </mat-slider>
+                            </div>
+
+                            <div>
+                                <div style="text-align: right">max</div>
+                                <mat-slider
+                                        [max]="1"
+                                        [min]="0"
+                                        [step]="0.01"
+                                        [thumbLabel]="true"
+                                        (change) = "change.emit()"
+                                        [(ngModel)]="metric_diff_max">
+
+                                </mat-slider>
+                            </div>
+                        </section>
+
+                    </mat-card-content>
+                </mat-card>
+            </th>
+            <td mat-cell *matCellDef="let element">
+                <div>True:{{element.y}} &nbsp; Pred:{{element.y_pred}} &nbsp; Diff: {{element.metric_diff}}</div>
+                <img [attr.src]="'data:image/JPEG;base64,' + element.content">
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total" [pageSize]="15"></mat-paginator>
+</div>

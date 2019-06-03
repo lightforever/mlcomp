@@ -1,0 +1,48 @@
+<div *ngIf="item.type=='root'" style="margin-top: 10px">
+    <app-layout [data]="data" [item]="child" *ngFor="let child of item.items"></app-layout>
+</div>
+
+<mat-expansion-panel [expanded]="item.expanded!=null?item.expanded:true" *ngIf="item.type=='panel'">
+    <mat-expansion-panel-header>
+        <mat-panel-title>
+            {{item.title}}
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <div *ngIf="item.items!=null&&item.items.length>0">
+        <div *ngIf="item.parent_cols">
+            <mat-grid-list cols="{{item.parent_cols}}" rowHeight="{{item.row_height}}px">
+
+                <mat-grid-tile [colspan]="child.cols!=null?child.cols:1" [rowspan]="child.rows!=null?child.rows:1"
+                               *ngFor="let child of item.items; index as i">
+                    <app-layout [item]="child" [data]="data"></app-layout>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
+
+        <div *ngIf="item.row_height==null">
+            <app-layout [item]="child" [data]="data" *ngFor="let child of item.items; index as i"></app-layout>
+        </div>
+    </div>
+
+</mat-expansion-panel>
+
+<mat-grid-tile *ngIf="item.type=='blank'" [colspan]="item.cols?item.cols:1" [rowspan]="item.rows?item.rows:1"></mat-grid-tile>
+
+<div *ngIf="item.type=='series';">
+    <div [attr.id]="id"></div>
+</div>
+
+<div *ngIf="item.type=='img';">
+    <div style="text-align:center">{{item_data.name}}</div>
+    <img [attr.src]="'data:image/JPEG;base64,'+item_data.data">
+</div>
+
+<div *ngIf="item.type=='img_classify';" [style.position]="'absolute'" [style.top]="'10px'">
+    <app-img-classify [part]="item_data.part" [epochs]="item_data.epochs"
+                      [task]="item_data.task" [group]="item_data.group"
+
+    ></app-img-classify>
+</div>
+
+
