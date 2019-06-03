@@ -72,7 +72,8 @@ log = Table(
 project = Table(
     'project', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', String(180), nullable=False)
+    Column('name', String(180), nullable=False),
+    Column('class_names', LargeBinary, nullable=False)
 )
 
 report = Table(

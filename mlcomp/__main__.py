@@ -1,3 +1,5 @@
+import ast
+
 import click
 from mlcomp.db.providers import *
 import os
@@ -96,9 +98,17 @@ def stop_server():
 
 @main.command()
 @click.argument('name')
-def project(name):
+@click.option('--class_names')
+def project(name, class_names):
+    if class_names:
+        if os.path.exists(class_names):
+            class_names = json.load(open(class_names))
+        else:
+            class_names = {'default': ast.literal_eval(class_names)}
+    else:
+        class_names = dict()
     provider = ProjectProvider()
-    provider.add(name)
+    provider.add(name, class_names)
 
 
 def _dag(config: str, debug: bool = False):

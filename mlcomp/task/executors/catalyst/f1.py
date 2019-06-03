@@ -11,15 +11,15 @@ class F1Callback(BaseCallback):
             return
 
         data = self.data[state.loader_name]
-        target = state.input['targets'].detach().cpu().numpy()
-        pred = state.output['logits'].detach().cpu().numpy()
-        data['target'].append(target)
-        data['output'].append(pred)
+        targets = state.input['targets'].detach().cpu().numpy()
+        preds = state.output['logits'].detach().cpu().numpy()
+        data['target'].append(targets)
+        data['output'].append(preds)
 
     def on_epoch_end(self, state: RunnerState):
-        target = np.vstack(self.data['valid']['target'])
-        output = np.vstack(self.data['valid']['output'])
-        img = self.info.plot(target, output.argmax(1))
+        targets = np.hstack(self.data['valid']['target'])
+        outputs = np.hstack(self.data['valid']['output'])
+        img = self.info.plot(targets, outputs.argmax(1))
         content = {'img': img}
         obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,
                         img=pickle.dumps(content),

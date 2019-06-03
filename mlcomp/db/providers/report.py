@@ -5,7 +5,7 @@ from typing import List
 import pickle
 from mlcomp.db.misc.report_info import ReportInfo, ReportInfoSeries, ReportInfoItem
 import base64
-
+from sqlalchemy import and_
 
 class ReportSeriesProvider(BaseDataProvider):
     model = ReportSeries
@@ -32,14 +32,46 @@ class ReportImgProvider(BaseDataProvider):
 
     def detail_img_classify(self, filter: dict, options: PaginatorOptions = None):
         res = {'data': []}
+        confusion = self.query(ReportImg.img).\
+            filter(ReportImg.task == filter['task']).\
+            filter(ReportImg.part == filter['part']).\
+            filter(ReportImg.group == filter['group']+'_confusion').\
+            filter(ReportImg.epoch == filter['epoch']).first()
+        if confusion:
+            confusion = pickle.loads(confusion[0])['data'].tolist()
+            res['confusion'] = {'data': confusion}
+
+        res.update(filter)
+
         query = self.query(ReportImg).filter(ReportImg.task == filter['task']).filter(ReportImg.epoch == filter['epoch']). \
             filter(ReportImg.group == filter['group']).filter(ReportImg.part == filter['part'])
+
+        if filter.get('y') is not None and filter.get('y_pred') is not None:
+            query = query.filter(
+                and_(ReportImg.y==filter['y'], ReportImg.y_pred==filter['y_pred'])
+            )
+
+        if filter.get('metric_diff_min') is not None:
+            query = query.filter(ReportImg.metric_diff>=filter['metric_diff_min'])
+        if filter.get('metric_diff_max') is not None:
+            query = query.filter(ReportImg.metric_diff <= filter['metric_diff_max'])
+
+        project = self.query(Project).join(Dag).join(Task).filter(Task.id == filter['task']).first()
+        class_names = pickle.loads(project.class_names)
+
         res['total'] = query.count()
+        res['class_names'] = class_names['default']
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
             img = pickle.loads(img_obj.img)
-            res['data'].append({'content': base64.b64encode(img['img']).decode('utf-8'), 'id': img_obj.id})
+            res['data'].append({
+                'content': base64.b64encode(img['img']).decode('utf-8'),
+                'id': img_obj.id,
+                'y_pred': img_obj.y_pred,
+                'y': img_obj.y,
+                'metric_diff': round(img_obj.metric_diff, 2)
+            })
 
         return res
 
@@ -67,7 +99,7 @@ class ReportProvider(BaseDataProvider):
         for report, task_count, tasks_not_finished in self.paginator(query, options):
             item = {
                 'id': report.id,
-                'time': self.serializer.serialize_datetime(report.time),
+                'time': self.serialize_datetime(report.time),
                 'tasks': task_count,
                 'tasks_not_finished': tasks_not_finished,
                 'name': report.name
@@ -92,7 +124,8 @@ class ReportProvider(BaseDataProvider):
                         'x': [item.epoch for item in group],
                         'y': [item.value for item in group],
                         'color': 'orange' if key == 'valid' else 'blue',
-                        'name': key
+                        'name': key,
+                        'time': [self.serialize_datetime(item.time) for item in group]
                     })
 
             item['data'] = data
@@ -119,7 +152,8 @@ class ReportProvider(BaseDataProvider):
                                 'x': [item.epoch for item in group_task],
                                 'y': [item.value for item in group_task],
                                 'color': 'orange' if key == 'valid' else 'blue',
-                                'name': f'{group_task[0].task_rel.name}'
+                                'name': f'{group_task[0].task_rel.name}',
+                                'time': [self.serialize_datetime(item.time) for item in group_task]
                             })
 
                     item_copy['data'] = data
@@ -141,7 +175,8 @@ class ReportProvider(BaseDataProvider):
                                 'x': [item.epoch for item in group],
                                 'y': [item.value for item in group],
                                 'color': 'orange' if key == 'valid' else 'blue',
-                                'name': key
+                                'name': key,
+                                'time': [self.serialize_datetime(item.time) for item in group_task]
                             })
 
                     item_copy['data'] = data
@@ -240,6 +275,7 @@ class ReportProvider(BaseDataProvider):
     def add_task(self, task: int, report: int):
         self.add(ReportTasks(task=task, report=report))
         self.session.commit()
+
 
 
 class ReportTasksProvider(BaseDataProvider):

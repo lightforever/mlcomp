@@ -6,7 +6,7 @@ import cv2
 import pickle
 from mlcomp.utils.misc import adapt_db_types
 from mlcomp.task.executors.catalyst.base import BaseCallback
-
+from sklearn.metrics import confusion_matrix
 
 class ImgClassifyCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):
@@ -21,6 +21,10 @@ class ImgClassifyCallback(BaseCallback):
         targets = state.input['targets'].detach().cpu().numpy()
         preds = state.output['logits'].detach().cpu().numpy()
         inputs = state.input['features'].detach().cpu().numpy()
+
+        data = self.data[state.loader_name]
+        data['target'].append(targets)
+        data['output'].append(preds)
 
         for i in range(len(targets)):
             input = inputs[i]
@@ -57,6 +61,20 @@ class ImgClassifyCallback(BaseCallback):
     def on_epoch_end(self, state: RunnerState):
         if self.info.epoch_every is None and self.is_best:
             self.img_provider.remove_lower(self.task.id, self.info.name, state.epoch)
+
+        for name, value in self.data.items():
+            targets = np.hstack(self.data[name]['target'])
+            outputs = np.hstack(self.data[name]['output']).argmax(1)
+
+            c = {'data': confusion_matrix(targets, outputs)}
+            obj = ReportImg(group=self.info.name+'_confusion', epoch=state.epoch, task=self.task.id,
+                            img=pickle.dumps(c),
+                            project=self.dag.project,
+                            dag=self.task.dag,
+                            part=name
+                            )
+            self.img_provider.add(obj)
+
         super(self.__class__, self).on_epoch_end(state)
 
     def classify_prepare(self, input: np.array, pred: np.array, target: int):

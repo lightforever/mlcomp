@@ -1,11 +1,11 @@
 from mlcomp.db.providers.base import *
-
+import pickle
 
 class ProjectProvider(BaseDataProvider):
     model = Project
 
-    def add(self, name: str):
-        project = Project(name=name)
+    def add(self, name: str, class_names: dict):
+        project = Project(name=name, class_names=pickle.dumps(class_names))
         self.session.add(project)
 
     def img_size(self, id: int):

@@ -135,7 +135,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
                 this.total = res.total;
             }
 
-            this.data_updated.emit(res.data);
+            this.data_updated.emit(res);
         });
 
         if (this.enable_interval) {

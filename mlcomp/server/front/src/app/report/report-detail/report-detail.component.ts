@@ -4,6 +4,7 @@ import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ReportTile} from "../../models";
 import {DynamicresourceService} from "../../dynamicresource.service";
+import {AppSettings} from "../../app-settings";
 
 @Component({
     selector: 'app-report-detail',
@@ -37,7 +38,16 @@ export class ReportDetailComponent implements OnInit {
                                     'width': 600,
                                     'margin': {'b': 40, 't':40}
                                 };
-                                window['Plotly'].newPlot(id, tile.data, layout, {showSendToCloud: true});
+                                for(let row of tile.data){
+                                    let text = [];
+                                    for(let time of row.time){
+                                        time = new Date(Date.parse(time));
+                                        text.push(AppSettings.format_date_time(time));
+                                    }
+
+                                    row.text = text;
+                                }
+                                window['Plotly'].newPlot(id, tile.data, layout);
 
                             }
                         }
@@ -53,7 +63,7 @@ export class ReportDetailComponent implements OnInit {
     ngOnInit() {
         let self = this;
         this.id = this.route.snapshot.paramMap.get('id');
-        this.service.data_updated.subscribe(data=>{
+        this.service.data_updated.subscribe(res=>{
             self.load();
         });
         this.resource_service.load('plotly').then(() => {
