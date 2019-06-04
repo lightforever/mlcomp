@@ -34,7 +34,10 @@ class ProjectProvider(BaseDataProvider):
                     'last_activity': self.serializer.serialize_datetime(last_activity) if last_activity else None,
                     'img_size': self.img_size(p.id),
                     'file_size': self.file_size(p.id),
-                    **self.to_dict(p),
+                    'project': {
+                        'id': p.id,
+                        'name': p.name
+                    }
                 })
         return {'total': total, 'data': res}
 

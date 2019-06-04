@@ -24,7 +24,8 @@ class F1Callback(BaseCallback):
         obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,
                         img=pickle.dumps(content),
                         project=self.dag.project,
-                        dag=self.task.dag
+                        dag=self.task.dag,
+                        part=state.loader_name
                         )
 
         self.img_provider.add(obj)

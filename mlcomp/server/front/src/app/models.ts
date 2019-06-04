@@ -186,6 +186,12 @@ export class ReportItem {
     row_height: number;
     source: string;
     expanded: boolean;
+    multi: boolean;
+    group: string[];
+    id: string;
+    table: boolean;
+    name: string;
+    data: any;
 }
 
 export class Report {

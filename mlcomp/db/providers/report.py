@@ -7,6 +7,7 @@ from mlcomp.db.misc.report_info import ReportInfo, ReportInfoSeries, ReportInfoI
 import base64
 from sqlalchemy import and_
 
+
 class ReportSeriesProvider(BaseDataProvider):
     model = ReportSeries
 
@@ -32,10 +33,10 @@ class ReportImgProvider(BaseDataProvider):
 
     def detail_img_classify(self, filter: dict, options: PaginatorOptions = None):
         res = {'data': []}
-        confusion = self.query(ReportImg.img).\
-            filter(ReportImg.task == filter['task']).\
-            filter(ReportImg.part == filter['part']).\
-            filter(ReportImg.group == filter['group']+'_confusion').\
+        confusion = self.query(ReportImg.img). \
+            filter(ReportImg.task == filter['task']). \
+            filter(ReportImg.part == filter['part']). \
+            filter(ReportImg.group == filter['group'] + '_confusion'). \
             filter(ReportImg.epoch == filter['epoch']).first()
         if confusion:
             confusion = pickle.loads(confusion[0])['data'].tolist()
@@ -48,11 +49,11 @@ class ReportImgProvider(BaseDataProvider):
 
         if filter.get('y') is not None and filter.get('y_pred') is not None:
             query = query.filter(
-                and_(ReportImg.y==filter['y'], ReportImg.y_pred==filter['y_pred'])
+                and_(ReportImg.y == filter['y'], ReportImg.y_pred == filter['y_pred'])
             )
 
         if filter.get('metric_diff_min') is not None:
-            query = query.filter(ReportImg.metric_diff>=filter['metric_diff_min'])
+            query = query.filter(ReportImg.metric_diff >= filter['metric_diff_min'])
         if filter.get('metric_diff_max') is not None:
             query = query.filter(ReportImg.metric_diff <= filter['metric_diff_max'])
 
@@ -111,68 +112,29 @@ class ReportProvider(BaseDataProvider):
     def _detail_series(self, series: List[ReportSeries], r: ReportInfoSeries):
         series = [s for s in series if s.name == r.name]
         res = []
-        if len(set(s.task for s in series)) == 1:
-            series = sorted(series, key=lambda x: x.group)
-            series_group = groupby(series, key=lambda x: x.group)
-            data = []
-            for key, group in series_group:
-                group = list(group)
-                data.append(
+
+        series = sorted(series, key=lambda x: x.group)
+        series_group = groupby(series, key=lambda x: x.group)
+        for key, group in series_group:
+            group = list(group)
+            group = sorted(group, key=lambda x: x.task)
+            for task_key, group_task in groupby(group, key=lambda x: x.task):
+                group_task = list(group_task)
+                res.append(
                     {
-                        'x': [item.epoch for item in group],
-                        'y': [item.value for item in group],
-                        'color': 'orange' if key == 'valid' else 'blue',
-                        'name': key,
-                        'time': [self.serialize_datetime(item.time) for item in group]
-                    })
+                        'data': {
+                            'x': [item.epoch for item in group_task],
+                            'y': [item.value for item in group_task],
+                            'color': 'orange' if key == 'valid' else 'blue',
+                            'time': [self.serialize_datetime(item.time) for item in group_task]
+                        },
+                        'group': key,
+                        'task_name': group_task[0].task_rel.name,
+                        'task_id': task_key,
+                        'source': r.name
+                    }
+                )
 
-            res.append({'name': r.name, 'data': data})
-
-        else:
-            if r.multi == 'none':
-                return res
-
-            if r.multi == 'single':
-                series = sorted(series, key=lambda x: x.group)
-                series_group = groupby(series, key=lambda x: x.group)
-                for key, group in series_group:
-                    if r.single_group and key != r.single_group:
-                        continue
-                    data = []
-                    group = list(group)
-                    group = sorted(group, key=lambda x: x.task)
-                    for task_key, group_task in groupby(group, key=lambda x: x.task):
-                        group_task = list(group_task)
-                        data.append(
-                            {
-                                'x': [item.epoch for item in group_task],
-                                'y': [item.value for item in group_task],
-                                'color': 'orange' if key == 'valid' else 'blue',
-                                'name': f'{group_task[0].task_rel.name}',
-                                'time': [self.serialize_datetime(item.time) for item in group_task]
-                            })
-
-                    res.append({'name': f'{r.name},{key}', 'data': data})
-            else:
-                series = sorted(series, key=lambda x: x.task)
-                series_task_group = groupby(series, key=lambda x: x.task)
-                for task_key, group_task in series_task_group:
-                    data = []
-                    group_task = list(group_task)
-                    group_task = sorted(group_task, key=lambda x: x.group)
-
-                    for key, group in groupby(group_task, key=lambda x: x.group):
-                        group = list(group)
-                        data.append(
-                            {
-                                'x': [item.epoch for item in group],
-                                'y': [item.value for item in group],
-                                'color': 'orange' if key == 'valid' else 'blue',
-                                'name': key,
-                                'time': [self.serialize_datetime(item.time) for item in group_task]
-                            })
-
-                    res.append({'name': f'{r.name},{group_task[0].task_rel.name}', 'data': data})
         return res
 
     def _detail_single_img(self, task: int, epoch: int, item: ReportInfoItem):
@@ -198,8 +160,7 @@ class ReportProvider(BaseDataProvider):
             res.append({
                 'name': part,
                 'type': 'img_classify',
-                'rows': 6,
-                'cols': 1,
+                'source': name,
                 'data': {
                     'epochs': [e[0] for e in self.query(ReportImg.epoch.distinct()). \
                         filter(ReportImg.task == task). \
@@ -266,6 +227,7 @@ class ReportProvider(BaseDataProvider):
     def add_task(self, task: int, report: int):
         self.add(ReportTasks(task=task, report=report))
         self.session.commit()
+
 
 class ReportTasksProvider(BaseDataProvider):
     model = ReportTasks

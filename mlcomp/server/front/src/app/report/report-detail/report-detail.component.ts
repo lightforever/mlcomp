@@ -22,20 +22,12 @@ export class ReportDetailComponent implements OnInit {
     ) {
     }
 
-    load(){
-        this.service.get_obj<Report>(this.id).subscribe(data => {
+    ngOnInit() {
+        this.id = this.route.snapshot.paramMap.get('id');
+        this.resource_service.load('plotly').then(() => {
+              this.service.get_obj<Report>(this.id).subscribe(data => {
                 this.report = data;
             });
-    }
-
-    ngOnInit() {
-        let self = this;
-        this.id = this.route.snapshot.paramMap.get('id');
-        this.service.data_updated.subscribe(res=>{
-            self.load();
-        });
-        this.resource_service.load('plotly').then(() => {
-            self.load();
         });
     }
 

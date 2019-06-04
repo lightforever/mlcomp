@@ -18,23 +18,19 @@ class ReportInfoItem:
 
 
 class ReportInfoSeries(ReportInfoItem):
-    def __init__(self, name: str, key: str, multi: str = None, single_group: str = None):
+    def __init__(self, name: str, key: str):
         super(ReportInfoSeries, self).__init__(name)
 
         self.key = key
-        self.multi = multi
-        self.single_group = single_group
 
     @classmethod
     def from_dict(cls, name: str, value: OrderedDict):
         assert 'key' in value, f'report.series={name}. key is required'
         value.pop('type')
         key = value.pop('key')
-        multi = value.pop('multi', 'multi')
-        single_group = value.pop('single_group', 'single_group')
 
         assert len(value) == 0, f'Unknown parameter in report.series={name}: {value.popitem()}'
-        return cls(name, key, multi=multi, single_group=single_group)
+        return cls(name, key)
 
 
 class ReportInfoPrecisionRecall(ReportInfoItem):
@@ -106,16 +102,17 @@ class ReportInfo:
         self._check_layout(self.layout)
 
     def _check_layout(self, item):
-        types = ['root', 'panel', 'blank', 'img_classify',
-                 'series', 'precision_recall', 'f1']
+        types = ['root', 'panel', 'blank', 'series', 'img_classify',
+                 'img']
         assert item.get('type') in types, f'Unknown item type = {item["type"]}'
 
         fields = {
             'root': ['items'],
             'panel': ['title', ('parent_cols', False), ('cols', False),
-                      ('row_height', False), ('rows', False),('items', False), ('expanded', False)],
+                      ('row_height', False), ('rows', False),('items', False), ('expanded', False), ('table', False)],
             'blank': [('cols', False), ('rows', False)],
-            **{k: ['source', ('cols', False), ('rows', False)] for k in types[3:]}
+            'series': [('multi', False), ('group', False), 'source', ('cols', False), ('rows', False)],
+            **{k: ['source', ('cols', False), ('rows', False)] for k in types[4:]}
         }
         keys = set(item.keys()) - {'type'}
         for f in fields[item['type']]:

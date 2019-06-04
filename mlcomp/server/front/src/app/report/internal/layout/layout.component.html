@@ -1,5 +1,5 @@
 <div *ngIf="item.type=='root'" style="margin-top: 10px">
-    <app-layout [data]="data" [item]="child" *ngFor="let child of item.items"></app-layout>
+    <app-layout [data]="data" [item]="child" *ngFor="let child of items_joined"></app-layout>
 </div>
 
 <mat-expansion-panel [expanded]="item.expanded!=null?item.expanded:true" *ngIf="item.type=='panel'">
@@ -9,36 +9,43 @@
         </mat-panel-title>
     </mat-expansion-panel-header>
 
-    <div *ngIf="item.items!=null&&item.items.length>0">
+    <div *ngIf="items_joined.length>0">
         <div *ngIf="item.parent_cols">
-            <mat-grid-list cols="{{item.parent_cols}}" rowHeight="{{item.row_height}}px">
+            <mat-grid-list cols="{{item.parent_cols}}" rowHeight="{{item.row_height}}px" *ngIf="!item.table">
 
-                <mat-grid-tile [colspan]="child.cols!=null?child.cols:1" [rowspan]="child.rows!=null?child.rows:1"
-                               *ngFor="let child of item.items; index as i">
-                    <app-layout [item]="child" [data]="data"></app-layout>
-                </mat-grid-tile>
+                <div *ngFor="let child of items_joined; index as i">
+                    <mat-grid-tile [colspan]="child.cols!=null?child.cols:1" [rowspan]="child.rows!=null?child.rows:1">
+                        <app-layout [item]="child" [data]="data"></app-layout>
+                    </mat-grid-tile>
+                </div>
+
             </mat-grid-list>
+
         </div>
 
-        <div *ngIf="item.row_height==null">
-            <app-layout [item]="child" [data]="data" *ngFor="let child of item.items; index as i"></app-layout>
+        <table *ngIf="item.table" style="width: 100%;height: 100%">
+            <td *ngFor="let child of items_joined; index as i" [style.width]="td_width(child)">
+                <app-layout [item]="child" [data]="data"></app-layout>
+            </td>
+        </table>
+
+        <div *ngIf="item.row_height==null&&!item.table">
+            <app-layout [item]="child" [data]="data" *ngFor="let child of items_joined; index as i"></app-layout>
         </div>
     </div>
 
 </mat-expansion-panel>
 
-<mat-grid-tile *ngIf="item.type=='blank'" [colspan]="item.cols?item.cols:1" [rowspan]="item.rows?item.rows:1"></mat-grid-tile>
-
-<div *ngIf="item.type=='series';">
-    <div [attr.id]="id"></div>
+<div *ngIf="item.type=='series'">
+    <div [attr.id]="item.id"></div>
 </div>
 
 <div *ngIf="item.type=='img';">
-    <div style="text-align:center">{{item_data.name}}</div>
-    <img [attr.src]="'data:image/JPEG;base64,'+item_data.data">
+    <div style="text-align:center">{{item.name}}</div>
+    <img [attr.src]="'data:image/JPEG;base64,'+item_data">
 </div>
 
-<div *ngIf="item.type=='img_classify';" [style.position]="'absolute'" [style.top]="'10px'">
+<div *ngIf="item.type=='img_classify' && items_joined.length==0">
     <app-img-classify [part]="item_data.part" [epochs]="item_data.epochs"
                       [task]="item_data.task" [group]="item_data.group"
 
