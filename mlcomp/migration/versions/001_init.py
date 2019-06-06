@@ -111,7 +111,7 @@ report_series = Table(
     Column('epoch', Integer, nullable=False),
     Column('value', Float, nullable=False),
     Column('name', String(100), nullable=False),
-    Column('group', String(50), nullable=False),
+    Column('part', String(50), nullable=False),
 )
 
 report_task = Table(

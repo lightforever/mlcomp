@@ -7,6 +7,7 @@ import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatIconRegistry} from "@angula
 import {DomSanitizer} from "@angular/platform-browser";
 import {DialogComponent} from "../dialog/dialog.component";
 import {AppSettings} from "../app-settings";
+import {Helpers} from "../helpers";
 
 @Component({
     selector: 'app-project',
@@ -57,7 +58,7 @@ export class ProjectComponent extends Paginator<Project> {
     }
 
     size(s: number) {
-        return AppSettings.size(s);
+        return Helpers.size(s);
     }
 
     remove_imgs(element: Project) {

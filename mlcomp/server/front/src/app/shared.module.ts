@@ -1,9 +1,8 @@
 import {NgModule} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 import {MatPaginatorModule} from '@angular/material/paginator';
-import {TaskComponent} from "./task/task/task.component";
 import {RouterModule} from '@angular/router';
 import {
     MatAutocompleteModule,
@@ -43,14 +42,10 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {PortalModule} from "@angular/cdk/portal";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {LogComponent} from './log/log.component'
-import {ReportDetailComponent} from "./report/report-detail/report-detail.component";
 import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";
 import {DialogComponent} from "./dialog/dialog.component";
-import {ImgClassifyComponent} from "./report/internal/img-classify/img-classify.component";
-import {ReportComponent} from "./report/report/report.component";
-import {LayoutComponent} from "./report/internal/layout/layout.component";
 
 @NgModule({
     imports: [
@@ -107,16 +102,11 @@ import {LayoutComponent} from "./report/internal/layout/layout.component";
         ScrollingModule
     ],
     declarations: [
-        TaskComponent,
         LogComponent,
-        ReportDetailComponent,
         DagsComponent,
         TasksComponent,
         ReportsComponent,
-        DialogComponent,
-        ImgClassifyComponent,
-        ReportComponent,
-        LayoutComponent
+        DialogComponent
     ],
     exports: [
         MatIconModule,
@@ -170,12 +160,12 @@ import {LayoutComponent} from "./report/internal/layout/layout.component";
         MatTreeModule,
         PortalModule,
         ScrollingModule,
+
         LogComponent,
+        DagsComponent,
         TasksComponent,
-        ImgClassifyComponent,
         ReportsComponent,
-        ReportComponent,
-        LayoutComponent
+        DialogComponent
     ],
     entryComponents: [DialogComponent],
 })

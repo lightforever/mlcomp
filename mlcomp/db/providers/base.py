@@ -14,6 +14,7 @@ class BaseDataProvider:
 
     date_format = '%Y-%m-%d'
     datetime_format = '%Y-%m-%d %H:%MZ'
+    datetime_format_long = '%Y-%m-%d %H:%M:%SZ'
     time_format = '%H:%M'
 
     def __init__(self, session=None):
@@ -84,10 +85,5 @@ class BaseDataProvider:
 
         return query
 
-
-
-
-
-def set_attribute_modified(instance, key, value):
-    set_attribute(instance, key, value)
-    flag_modified(instance, key)
+    def serialize_datetime_long(self, time):
+        return time.strftime(self.datetime_format_long)

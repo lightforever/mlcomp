@@ -1,4 +1,6 @@
 from catalyst.dl.state import RunnerState
+from mlcomp.utils.misc import now
+
 from mlcomp.db.providers import ReportSeriesProvider
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config
@@ -58,8 +60,8 @@ class Catalyst(Executor, Callback):
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
 
-            train = ReportSeries(group='train', name=s.name, epoch=state.epoch, task=self.task.id, value=train)
-            val = ReportSeries(group='valid', name=s.name, epoch=state.epoch, task=self.task.id, value=val)
+            train = ReportSeries(part='train', name=s.name, epoch=state.epoch, task=self.task.id, value=train, time=now())
+            val = ReportSeries(part='valid', name=s.name, epoch=state.epoch, task=self.task.id, value=val, time=now())
 
             self.series_provider.add(train)
             self.series_provider.add(val)

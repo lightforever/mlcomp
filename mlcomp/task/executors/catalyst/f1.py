@@ -18,7 +18,7 @@ class F1Callback(BaseCallback):
 
     def on_epoch_end(self, state: RunnerState):
         targets = np.hstack(self.data['valid']['target'])
-        outputs = np.hstack(self.data['valid']['output'])
+        outputs = np.vstack(self.data['valid']['output'])
         img = self.info.plot(targets, outputs.argmax(1))
         content = {'img': img}
         obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,

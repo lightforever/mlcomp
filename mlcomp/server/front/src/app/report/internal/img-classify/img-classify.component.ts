@@ -1,10 +1,11 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Paginator} from "../../../paginator";
-import {Img} from "../../../models";
+import {Img, ImgClassify, ReportItem} from "../../../models";
 import {Location} from "@angular/common";
 import {ImgClassifyService} from "./img-classify.service";
 import {MatButtonToggleChange} from "@angular/material";
 import {DynamicresourceService} from "../../../dynamicresource.service";
+import {LayoutService} from "../layout/layout.service";
 
 @Component({
     selector: 'app-img-classify',
@@ -13,10 +14,9 @@ import {DynamicresourceService} from "../../../dynamicresource.service";
 })
 export class ImgClassifyComponent extends Paginator<Img> {
     protected displayed_columns: string[] = ['img'];
-    @Input() task: number;
-    @Input() part: string;
-    @Input() epochs: number[];
-    @Input() group: string;
+    @Input() item: ReportItem;
+    @Input() data: ImgClassify;
+
     @Output() loaded = new EventEmitter<number>();
     epoch: number;
     y: number;
@@ -25,12 +25,27 @@ export class ImgClassifyComponent extends Paginator<Img> {
     metric_diff_max: number = 1;
 
     constructor(protected service: ImgClassifyService, protected location: Location,
+                protected layout_service: LayoutService,
                 protected resource_service: DynamicresourceService) {
         super(service, location, false);
     }
 
+    private subscribe_data_changed() {
+        this.layout_service.data_updated.subscribe(event => {
+            if (event.key != this.item.source) {
+                return;
+            }
+
+            let data = event.data[this.item.index];
+            for(let i=this.data.epochs.length;i<data.epochs.length;i++){
+                this.data.epochs.push(i);
+            }
+        });
+    }
+
     protected _ngOnInit() {
         let self = this;
+        this.subscribe_data_changed();
         this.data_updated.subscribe(res => {
             self.resource_service.load('plotly').then(() => {
                 self.plot_confusion(res.confusion, res.part, res.class_names);
@@ -127,15 +142,15 @@ export class ImgClassifyComponent extends Paginator<Img> {
 
 
     get_filter(): any {
-        if (this.epoch == null) {
+        if (!this.data||this.data.epoch == null) {
             return null;
         }
         let res = {};
         res['paginator'] = super.get_filter();
-        res['task'] = this.task;
-        res['part'] = this.part;
-        res['epoch'] = this.epoch;
-        res['group'] = this.group;
+        res['task'] = this.data.task;
+        res['part'] = this.data.part;
+        res['epoch'] = this.data.epoch;
+        res['group'] = this.data.group;
         res['y'] = this.y;
         res['y_pred'] = this.y_pred;
         res['metric_diff_min'] = this.metric_diff_min;
@@ -144,7 +159,7 @@ export class ImgClassifyComponent extends Paginator<Img> {
     }
 
     epoch_changed($event: MatButtonToggleChange) {
-        this.epoch = $event.value;
+        this.data.epoch = $event.value;
         this.change.emit();
     }
 }

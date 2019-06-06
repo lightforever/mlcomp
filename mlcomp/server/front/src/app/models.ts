@@ -188,10 +188,11 @@ export class ReportItem {
     expanded: boolean;
     multi: boolean;
     group: string[];
-    id: string;
     table: boolean;
     name: string;
     data: any;
+    part: string;
+    index: number;
 }
 
 export class Report {
@@ -207,4 +208,34 @@ export class StepNode {
 
 export class Img {
     content: string;
+}
+
+export class Series {
+    x: number[];
+    y: number[];
+    time: string[];
+    text: string[];
+    color: string;
+    name: string;
+    group: string;
+    task_name: string;
+    task_id: number;
+    source: string;
+    plotted: number;
+}
+
+export class SeriesItem {
+    name: string;
+    series: Series[];
+}
+
+export class ImgClassify {
+    name: string;
+    source: string;
+    epochs: number[];
+    task: number;
+    group: string;
+    part: string;
+    epoch: number;
+
 }

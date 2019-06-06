@@ -15,7 +15,7 @@
 
                 <div *ngFor="let child of items_joined; index as i">
                     <mat-grid-tile [colspan]="child.cols!=null?child.cols:1" [rowspan]="child.rows!=null?child.rows:1">
-                        <app-layout [item]="child" [data]="data"></app-layout>
+                        <app-layout [item]="child" [data]="items_joined_data[i]"></app-layout>
                     </mat-grid-tile>
                 </div>
 
@@ -25,31 +25,27 @@
 
         <table *ngIf="item.table" style="width: 100%;height: 100%">
             <td *ngFor="let child of items_joined; index as i" [style.width]="td_width(child)">
-                <app-layout [item]="child" [data]="data"></app-layout>
+                <app-layout [item]="child" [data]="items_joined_data[i]"></app-layout>
             </td>
         </table>
 
         <div *ngIf="item.row_height==null&&!item.table">
-            <app-layout [item]="child" [data]="data" *ngFor="let child of items_joined; index as i"></app-layout>
+            <app-layout [item]="child" [data]="items_joined_data[i]" *ngFor="let child of items_joined; index as i"></app-layout>
         </div>
     </div>
 
 </mat-expansion-panel>
 
 <div *ngIf="item.type=='series'">
-    <div [attr.id]="item.id"></div>
+    <app-series [item]="item" [data]="data"></app-series>
 </div>
 
-<div *ngIf="item.type=='img';">
-    <div style="text-align:center">{{item.name}}</div>
-    <img [attr.src]="'data:image/JPEG;base64,'+item_data">
+<div *ngIf="item.type=='img'">
+   <app-img [item]="item" [data]="data"></app-img>
 </div>
 
-<div *ngIf="item.type=='img_classify' && items_joined.length==0">
-    <app-img-classify [part]="item_data.part" [epochs]="item_data.epochs"
-                      [task]="item_data.task" [group]="item_data.group"
-
-    ></app-img-classify>
+<div *ngIf="item.type=='img_classify'">
+    <app-img-classify [item]="item" [data]="data"></app-img-classify>
 </div>
 
 

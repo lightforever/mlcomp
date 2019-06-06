@@ -41,6 +41,9 @@ reports:
               - type: series
                 source: precision
                 multi: True
+              - type: series
+                source: loss
+                multi: False
           - type: panel
             title: Precision-recall & F1
             items:

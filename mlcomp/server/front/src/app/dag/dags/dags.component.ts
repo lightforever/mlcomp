@@ -9,6 +9,7 @@ import {MessageService} from '../../message.service';
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {ReportService} from "../../report.service";
+import {Helpers} from "../../helpers";
 
 @Component({
     selector: 'app-dags',
@@ -127,6 +128,6 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     size(s: number) {
-        return AppSettings.size(s);
+        return Helpers.size(s);
     }
 }

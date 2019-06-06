@@ -9,9 +9,9 @@ class ReportSeries(Base):
     name = sa.Column(sa.String)
     value = sa.Column(sa.Float)
     epoch = sa.Column(sa.Integer)
-    time = sa.Column(sa.DateTime, default=now())
+    time = sa.Column(sa.DateTime)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
-    group = sa.Column(sa.String)
+    part = sa.Column(sa.String)
 
     task_rel = relationship('Task', lazy='noload')
 

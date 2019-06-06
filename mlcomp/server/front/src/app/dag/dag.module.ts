@@ -10,9 +10,6 @@ import {SharedModule} from "../shared.module";
         DagDetailModule,
         SharedModule
     ],
-    exports: [
-        DagComponent
-    ],
     declarations: [
         DagComponent
     ]

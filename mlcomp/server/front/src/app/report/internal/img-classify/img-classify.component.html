@@ -3,15 +3,15 @@
 
         <ng-container matColumnDef="img">
             <th mat-header-cell *matHeaderCellDef>
-                <div>{{part}}</div>
+                <div>{{data.part}}</div>
                 <mat-button-toggle-group [attr.fxLayout]="'row wrap'" [value]="epoch" (change)="epoch_changed($event)" appearance="legacy">
-                    <mat-button-toggle [value]="epoch" *ngFor="let epoch of epochs">
+                    <mat-button-toggle [value]="epoch" *ngFor="let epoch of data.epochs">
                         <mat-icon>{{epoch}}</mat-icon>
                     </mat-button-toggle>
 
                 </mat-button-toggle-group>
 
-                <div [id]="'img_classify_'+part"></div>
+                <div [id]="'img_classify_'+data.part"></div>
 
                 <mat-card class="result">
                     <mat-card-content>

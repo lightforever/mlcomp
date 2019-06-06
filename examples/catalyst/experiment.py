@@ -3,7 +3,7 @@ import torchvision
 import numpy as np
 from torchvision import transforms
 from catalyst.dl.experiments import ConfigExperiment
-
+import time
 
 class Experiment(ConfigExperiment):
     @staticmethod
@@ -40,14 +40,15 @@ class Experiment(ConfigExperiment):
 
         # raise Exception()
 
-        trainset.train_data = trainset.train_data[:32]
-        trainset.train_labels = np.clip(trainset.train_labels[:32], 0, 1)
+        count = 5000
+        trainset.train_data = trainset.train_data[:count]
+        trainset.train_labels = np.clip(trainset.train_labels[:count], 0, 1)
 
-        testset.train_data = trainset.train_data[:32]
-        testset.train_labels = np.clip(trainset.train_labels[:32], 0, 1)
+        testset.train_data = trainset.train_data[:count]
+        testset.train_labels = np.clip(trainset.train_labels[:count], 0, 1)
 
-        testset.test_data = testset.test_data[:32]
-        testset.test_labels = np.clip(testset.test_labels[:32], 0, 1)
+        testset.test_data = testset.test_data[:count]
+        testset.test_labels = np.clip(testset.test_labels[:count], 0, 1)
 
         datasets["train"] = trainset
         datasets["valid"] = testset

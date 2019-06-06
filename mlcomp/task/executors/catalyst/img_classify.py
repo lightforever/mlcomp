@@ -64,7 +64,7 @@ class ImgClassifyCallback(BaseCallback):
 
         for name, value in self.data.items():
             targets = np.hstack(self.data[name]['target'])
-            outputs = np.hstack(self.data[name]['output']).argmax(1)
+            outputs = np.vstack(self.data[name]['output']).argmax(1)
 
             c = {'data': confusion_matrix(targets, outputs)}
             obj = ReportImg(group=self.info.name+'_confusion', epoch=state.epoch, task=self.task.id,

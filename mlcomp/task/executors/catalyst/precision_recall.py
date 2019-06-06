@@ -19,7 +19,7 @@ class PrecisionRecallCallback(BaseCallback):
 
     def on_epoch_end(self, state: RunnerState):
         target = np.hstack(self.data['valid']['target'])
-        output = np.hstack(self.data['valid']['output'])
+        output = np.vstack(self.data['valid']['output'])
 
         output_soft = softmax(output, axis=1)
         img = self.info.plot(target, output_soft[:,1])

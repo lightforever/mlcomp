@@ -74,10 +74,14 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         }
 
 
-        let m = merge(this.paginator.page, this.change);
+        let m = merge(this.change);
         if(this.sort){
             m = merge(m, this.sort.sortChange);
         }
+        if(this.paginator){
+            m = merge(m, this.paginator.page);
+        }
+
         m.pipe(
             startWith({}),
             switchMap(() => {

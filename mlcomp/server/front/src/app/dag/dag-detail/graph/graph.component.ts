@@ -24,6 +24,7 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit() {
+        this.load_network();
         this.interval = setInterval(() => this.load_network(), 3000);
     }
 
