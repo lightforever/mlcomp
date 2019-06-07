@@ -18,7 +18,6 @@ export class ImgClassifyComponent extends Paginator<Img> {
     @Input() data: ImgClassify;
 
     @Output() loaded = new EventEmitter<number>();
-    epoch: number;
     y: number;
     y_pred: number;
     metric_diff_min: number = 0;

@@ -1,0 +1,41 @@
+metric:
+  name: loss
+  minimize: True
+
+items:
+  _fps:
+    type: series
+    key: _fps
+  base/data_time:
+    type: series
+    key: base/data_time
+  base/model_time:
+    type: series
+    key: base/model_time
+  base/batch_time:
+    type: series
+    key: base/batch_time
+  base/lr:
+    type: series
+    key: base/lr
+  base/momentum:
+    type: series
+    key: base/momentum
+
+layout:
+  - type: panel
+    title: base
+    expanded: False
+    items:
+      - type: series
+        source: _fps
+      - type: series
+        source: base/data_time
+      - type: series
+        source: base/model_time
+      - type: series
+        source: base/batch_time
+      - type: series
+        source: base/lr
+      - type: series
+        source: base/momentum

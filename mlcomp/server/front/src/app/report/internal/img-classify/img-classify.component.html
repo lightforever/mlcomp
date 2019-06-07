@@ -4,7 +4,7 @@
         <ng-container matColumnDef="img">
             <th mat-header-cell *matHeaderCellDef>
                 <div>{{data.part}}</div>
-                <mat-button-toggle-group [attr.fxLayout]="'row wrap'" [value]="epoch" (change)="epoch_changed($event)" appearance="legacy">
+                <mat-button-toggle-group [attr.fxLayout]="'row wrap'" (change)="epoch_changed($event)" appearance="legacy">
                     <mat-button-toggle [value]="epoch" *ngFor="let epoch of data.epochs">
                         <mat-icon>{{epoch}}</mat-icon>
                     </mat-button-toggle>
@@ -15,11 +15,9 @@
 
                 <mat-card class="result">
                     <mat-card-content>
-                        <h2 style="text-align: center">Metric diff</h2>
-
-                        <section class="section">
+                        <section class="section" *ngIf="data.epoch!=null">
                             <div>
-                                <div>min</div>
+                                <div>min diff</div>
                                 <mat-slider
                                         [max]="1"
                                         [min]="0"
@@ -32,7 +30,7 @@
                             </div>
 
                             <div>
-                                <div style="text-align: right">max</div>
+                                <div style="text-align: right">max diff</div>
                                 <mat-slider
                                         [max]="1"
                                         [min]="0"

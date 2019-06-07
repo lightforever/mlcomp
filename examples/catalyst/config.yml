@@ -6,57 +6,6 @@ info:
 executors:
   dummy1:
     type: Catalyst
-    report: base
+    report: classify-img
     args:
       config: catalyst-config.yml
-reports:
-  base:
-    metric:
-      name: precision
-      minimize: False
-    items:
-      precision:
-        type: series
-        key: precision01
-      loss:
-        type: series
-        key: loss
-      precision_recall:
-        type: precision_recall
-      f1:
-        type: f1
-      img_classify:
-        type: img_classify
-        epoch_every: 1
-        count_class_max: 5
-        train: True
-    layout:
-      - type: panel
-        title: Panel1
-        table: True
-        items:
-          - type: panel
-            title: Panel1.1
-            items:
-              - type: series
-                source: precision
-                multi: True
-              - type: series
-                source: loss
-                multi: False
-          - type: panel
-            title: Precision-recall & F1
-            items:
-              - type: img
-                source: precision_recall
-              - type: img
-                source: f1
-          - type: panel
-            title: Panel1.2
-            cols: 1
-            items:
-              - type: img_classify
-                source: img_classify
-
-      - type: panel
-        title: Panel2

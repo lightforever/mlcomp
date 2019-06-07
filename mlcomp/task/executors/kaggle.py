@@ -27,7 +27,7 @@ class Download(Executor):
         api.competition_download_files(self.competition, self.output)
 
     @classmethod
-    def _from_config(cls, executor: dict, config: Config):
+    def _from_config(cls, executor: dict, config: Config, additional_info: dict):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
 
@@ -42,7 +42,7 @@ class Submit(Executor):
         api.competition_submit(self.file, message=self.message, competition=self.competition)
 
     @classmethod
-    def from_config(cls, executor: dict, config: Config):
+    def from_config(cls, executor: dict, config: Config, additional_info: dict):
         file = os.path.join(config.data_folder, executor['file'])
         return cls(file=file, competition=executor['competition'], message=executor.get('message', 'no message'))
 

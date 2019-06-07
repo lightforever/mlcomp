@@ -69,6 +69,9 @@ class BaseDataProvider:
     def commit(self):
         self.session.commit()
 
+    def rollback(self):
+        self.session.rollback()
+
     @property
     def session(self):
         return self._session

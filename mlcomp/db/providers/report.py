@@ -3,13 +3,26 @@ import json
 from itertools import groupby
 from typing import List
 import pickle
-from mlcomp.db.misc.report_info import ReportInfo, ReportInfoSeries, ReportInfoItem
+from mlcomp.db.misc.report_info import ReportSchemeInfo, ReportSchemeSeries, ReportSchemeItem
 import base64
 from sqlalchemy import and_
 
 
 class ReportSeriesProvider(BaseDataProvider):
     model = ReportSeries
+
+
+class ReportSchemeProvider(BaseDataProvider):
+    model = ReportScheme
+
+    def add_item(self, k: str, v: dict):
+        self.add(ReportScheme(content=pickle.dumps(v), name=k, last_modified=now()))
+
+    def all(self):
+        return {s.name: pickle.loads(s.content) for s in self.query(ReportScheme).all()}
+
+    def change(self, k: str, v: dict):
+        self.query(ReportScheme).filter(ReportScheme.name == k).update({'last_modified': now(), 'content': pickle.dumps(v)})
 
 
 class ReportImgProvider(BaseDataProvider):
@@ -109,7 +122,7 @@ class ReportProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def _detail_series(self, series: List[ReportSeries], r: ReportInfoSeries):
+    def _detail_series(self, series: List[ReportSeries], r: ReportSchemeSeries):
         series = [s for s in series if s.name == r.name]
         res = []
 
@@ -133,7 +146,7 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def _best_task_epoch(self, report: ReportInfo, series: List[ReportSeries], item: ReportInfoItem):
+    def _best_task_epoch(self, report: ReportSchemeInfo, series: List[ReportSeries], item: ReportSchemeItem):
         tasks = [s.task for s in series]
         tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch).filter(ReportImg.task.in_(tasks)). \
             filter(ReportImg.group == item.name).group_by(ReportImg.task, ReportImg.epoch).all()
@@ -151,7 +164,7 @@ class ReportProvider(BaseDataProvider):
 
         return best_task_epoch[0] if best_task_epoch else (None, None)
 
-    def _detail_single_img(self, report: ReportInfo, series: List[ReportSeries], item: ReportInfoItem):
+    def _detail_single_img(self, report: ReportSchemeInfo, series: List[ReportSeries], item: ReportSchemeItem):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -169,7 +182,7 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def detail_img_classify_descr(self, report: ReportInfo, series: List[ReportSeries], item: ReportInfoItem):
+    def detail_img_classify_descr(self, report: ReportSchemeInfo, series: List[ReportSeries], item: ReportSchemeItem):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -201,7 +214,7 @@ class ReportProvider(BaseDataProvider):
         tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id).all()
         tasks = [t[0] for t in tasks]
         config = json.loads(report_obj.config)
-        report = ReportInfo(config)
+        report = ReportSchemeInfo(config)
 
         series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
             order_by(ReportSeries.epoch). \

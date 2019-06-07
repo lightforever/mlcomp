@@ -117,16 +117,16 @@ class Executor(ABC):
         pass
 
     @classmethod
-    def _from_config(cls, executor: dict, config: Config):
+    def _from_config(cls, executor: dict, config: Config, additional_info: dict):
         return cls()
 
     @classmethod
-    def from_config(cls, executor: str, config: Config) -> 'Executor':
+    def from_config(cls, executor: str, config: Config, additional_info: dict) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(f'Executor {executor} has not been found')
         executor = config['executors'][executor]
         child_class = Executor._child[executor['type']]
-        return child_class._from_config(executor, config)
+        return child_class._from_config(executor, config, additional_info)
 
     @staticmethod
     def register(cls):

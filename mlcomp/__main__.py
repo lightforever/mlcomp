@@ -122,6 +122,7 @@ def _dag(config: str, debug: bool = False):
     dag_provider = DagProvider()
     report_provider = ReportProvider()
     report_tasks_provider = ReportTasksProvider()
+    report_scheme_provider = ReportSchemeProvider()
 
     folder = os.path.join(os.getcwd(), info['folder'])
     project = ProjectProvider().by_name(info['project']).id
@@ -130,6 +131,15 @@ def _dag(config: str, debug: bool = False):
     storage.upload(folder, dag)
 
     created = OrderedDict()
+    schemes = report_scheme_provider.all()
+    for k, v in config_parsed.get('reports', dict()).items():
+        if k not in schemes:
+            report_scheme_provider.add_item(k, v)
+        else:
+            report_scheme_provider.change(k, v)
+
+        schemes[k] = v
+
     while len(created) < len(executors):
         for k, v in executors.items():
             valid = True
@@ -151,14 +161,19 @@ def _dag(config: str, debug: bool = False):
                     debug=debug,
                     steps=int(v.get('steps', '1'))
                 )
-                provider.add(task)
+
                 if v.get('report'):
-                    if v['report'] not in config_parsed['reports']:
+                    if v['report'] not in schemes:
                         raise Exception(f'Unknown report = {v["report"]}')
-                    report_config = config_parsed['reports'][v['report']]
+                    report_config = ReportSchemeInfo.union_schemes(v['report'], schemes)
+                    task.additional_info = pickle.dumps({'report_config': report_config})
+                    provider.add(task)
+
                     report = Report(config=json.dumps(report_config), name=task.name, project=project)
                     report_provider.add(report)
                     report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))
+                else:
+                    provider.add(task)
 
                 created[k] = task.id
 

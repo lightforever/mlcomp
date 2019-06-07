@@ -15,7 +15,7 @@ import traceback
 import os
 import sys
 from celery.signals import celeryd_after_setup
-
+import pickle
 
 def execute_by_id(id: int, repeat_count=1):
     logger = create_logger()
@@ -68,7 +68,8 @@ def execute_by_id(id: int, repeat_count=1):
 
         assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
 
-        executor = Executor.from_config(task.executor, config)
+        additional_info = pickle.loads(task.additional_info) if task.additional_info else dict()
+        executor = Executor.from_config(task.executor, config, additional_info=additional_info)
         os.chdir(folder)
 
         executor(task)

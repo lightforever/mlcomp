@@ -1,5 +1,6 @@
 from .base import *
 from mlcomp.db.enums import TaskStatus
+from sqlalchemy.orm import deferred
 
 class Task(Base):
     __tablename__ = 'task'
@@ -25,6 +26,7 @@ class Task(Base):
     debug = sa.Column(sa.Boolean, default=False)
     pid = sa.Column(sa.Integer)
     worker_index = sa.Column(sa.Integer)
+    additional_info = deferred(sa.Column(sa.LargeBinary))
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependency'

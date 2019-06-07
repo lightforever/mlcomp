@@ -1,3 +1,5 @@
+from typing import Union
+
 from catalyst.dl.state import RunnerState
 from mlcomp.db.models import ReportImg
 from scipy.special import softmax
@@ -7,13 +9,15 @@ import pickle
 from mlcomp.utils.misc import adapt_db_types
 from mlcomp.task.executors.catalyst.base import BaseCallback
 from sklearn.metrics import confusion_matrix
+from numbers import Number
+
 
 class ImgClassifyCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):
         if state.loader_name == 'train' and not self.info.train:
             return
 
-        save = (state.epoch+1) % self.info.epoch_every == 0 or self.is_best
+        save = (state.epoch + 1) % self.info.epoch_every == 0 or self.is_best
         if not save:
             return
 
@@ -67,7 +71,7 @@ class ImgClassifyCallback(BaseCallback):
             outputs = np.vstack(self.data[name]['output']).argmax(1)
 
             c = {'data': confusion_matrix(targets, outputs)}
-            obj = ReportImg(group=self.info.name+'_confusion', epoch=state.epoch, task=self.task.id,
+            obj = ReportImg(group=self.info.name + '_confusion', epoch=state.epoch, task=self.task.id,
                             img=pickle.dumps(c),
                             project=self.dag.project,
                             dag=self.task.dag,
@@ -77,12 +81,20 @@ class ImgClassifyCallback(BaseCallback):
 
         super(self.__class__, self).on_epoch_end(state)
 
-    def classify_prepare(self, input: np.array, pred: np.array, target: int):
-        res = {
-            'y_pred': pred.argmax(),
-            'img': self.experiment.denormilize(input)
-        }
+    def pred_prob(self, pred: np.array) -> np.array:
+        return softmax(pred)
 
-        pred_soft = softmax(pred)
-        res['metric_diff'] = 1 - pred_soft[target]
-        return res
+    def target(self, target: Number):
+        assert isinstance(target, Number), 'Target is not a number'
+        return target
+
+    def img(self, input: np.array, pred: np.array, target: Union[np.array, int]):
+        return self.experiment.denormilize(input)
+
+    def classify_prepare(self, input: np.array, pred: np.array, target: Union[np.array, int]):
+        pred_soft = self.pred_prob(pred)
+        target = self.target(target)
+
+        return {'y_pred': pred_soft.argmax(),
+                'img': self.img(input, pred, target),
+                'metric_diff': 1 - pred_soft[target]}

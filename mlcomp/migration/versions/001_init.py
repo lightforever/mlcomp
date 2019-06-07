@@ -103,6 +103,13 @@ report_img = Table(
     Column('attr3', Float),
 )
 
+report_scheme = Table(
+    'report_scheme', meta,
+    Column('name', String(400), primary_key=True),
+    Column('content', LargeBinary, nullable=False),
+    Column('last_modified', TIMESTAMP, nullable=False, default='now()')
+)
+
 report_series = Table(
     'report_series', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
@@ -152,7 +159,8 @@ task = Table(
     Column('last_activity', TIMESTAMP),
     Column('debug', Boolean, nullable=False, default=False),
     Column('pid', Integer),
-    Column('worker_index', Integer)
+    Column('worker_index', Integer),
+    Column('additional_info', LargeBinary)
 )
 
 task_dependency = Table(
@@ -163,107 +171,129 @@ task_dependency = Table(
 
 
 def upgrade(migrate_engine):
-    meta.bind = migrate_engine
+    conn = migrate_engine.connect()
+    trans = conn.begin()
 
-    computer.create()
-    computer_usage.create()
-    dag.create()
-    dag_library.create()
-    dag_storage.create()
-    file.create()
-    log.create()
-    project.create()
-    report.create()
-    report_img.create()
-    report_series.create()
-    report_task.create()
-    step.create()
-    task.create()
-    task_dependency.create()
+    try:
+        meta.bind = conn
 
-    ForeignKeyConstraint([computer_usage.c.computer], [computer.c.name], ondelete='CASCADE').create()
-    Index('computer_name_idx', computer.c.name).create()
+        computer.create()
+        computer_usage.create()
+        dag.create()
+        dag_library.create()
+        dag_storage.create()
+        file.create()
+        log.create()
+        project.create()
+        report.create()
+        report_img.create()
+        report_series.create()
+        report_task.create()
+        step.create()
+        task.create()
+        task_dependency.create()
+        report_scheme.create()
 
-    Index('computer_usage_time_idx', computer_usage.c.time.desc()).create()
-    Index('computer_usage_id_idx', computer_usage.c.id.desc()).create()
+        ForeignKeyConstraint([computer_usage.c.computer], [computer.c.name], ondelete='CASCADE').create()
+        Index('computer_name_idx', computer.c.name).create()
 
-    ForeignKeyConstraint([dag.c.project], [project.c.id], ondelete='CASCADE').create()
-    Index('dag_project_idx', dag.c.project.desc()).create()
-    Index('dag_created_idx', dag.c.created.desc()).create()
-    ForeignKeyConstraint([dag_library.c.dag], [dag.c.id], ondelete='CASCADE').create()
-    Index('dag_library_task_idx', dag_library.c.dag.desc()).create()
-    Index('dag_id_idx', dag.c.id.desc()).create()
+        Index('computer_usage_time_idx', computer_usage.c.time.desc()).create()
+        Index('computer_usage_id_idx', computer_usage.c.id.desc()).create()
 
-    ForeignKeyConstraint([dag_storage.c.dag], [dag.c.id], ondelete='CASCADE').create()
-    ForeignKeyConstraint([dag_storage.c.file], [file.c.id], ondelete='CASCADE').create()
-    Index('dag_storage_dag_idx', dag_storage.c.dag.desc()).create()
-    Index('dag_storage_id_idx', dag_storage.c.id.desc()).create()
+        ForeignKeyConstraint([dag.c.project], [project.c.id], ondelete='CASCADE').create()
+        Index('dag_project_idx', dag.c.project.desc()).create()
+        Index('dag_created_idx', dag.c.created.desc()).create()
+        ForeignKeyConstraint([dag_library.c.dag], [dag.c.id], ondelete='CASCADE').create()
+        Index('dag_library_task_idx', dag_library.c.dag.desc()).create()
+        Index('dag_id_idx', dag.c.id.desc()).create()
 
-    ForeignKeyConstraint([file.c.project], [project.c.id], ondelete='CASCADE').create()
-    Index('file_created_idx', file.c.created.desc()).create()
-    Index('file_project_idx', file.c.project.desc()).create()
-    UniqueConstraint(file.c.md5, name='file_md5_idx').create()
-    Index('file_id_idx', file.c.id.desc()).create()
+        ForeignKeyConstraint([dag_storage.c.dag], [dag.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([dag_storage.c.file], [file.c.id], ondelete='CASCADE').create()
+        Index('dag_storage_dag_idx', dag_storage.c.dag.desc()).create()
+        Index('dag_storage_id_idx', dag_storage.c.id.desc()).create()
 
-    ForeignKeyConstraint([log.c.step], [step.c.id], ondelete='CASCADE').create()
-    Index('log_step_idx', log.c.step.desc()).create()
-    Index('log_time_idx', log.c.time.desc()).create()
-    Index('log_id_idx', log.c.id.desc()).create()
+        ForeignKeyConstraint([file.c.project], [project.c.id], ondelete='CASCADE').create()
+        Index('file_created_idx', file.c.created.desc()).create()
+        Index('file_project_idx', file.c.project.desc()).create()
+        UniqueConstraint(file.c.md5, name='file_md5_idx').create()
+        Index('file_id_idx', file.c.id.desc()).create()
 
-    Index('project_id_idx', project.c.id.desc()).create()
-    UniqueConstraint(project.c.name, name='project_name').create()
+        ForeignKeyConstraint([log.c.step], [step.c.id], ondelete='CASCADE').create()
+        Index('log_step_idx', log.c.step.desc()).create()
+        Index('log_time_idx', log.c.time.desc()).create()
+        Index('log_id_idx', log.c.id.desc()).create()
 
-    ForeignKeyConstraint([report.c.project], [project.c.id], ondelete='CASCADE').create()
-    Index('report_id_idx', report.c.id.desc()).create()
+        Index('project_id_idx', project.c.id.desc()).create()
+        UniqueConstraint(project.c.name, name='project_name').create()
 
-    ForeignKeyConstraint([report_img.c.project], [project.c.id], ondelete='CASCADE').create()
-    Index('report_img_project_idx', report_img.c.project.desc()).create()
-    Index('report_img_task_idx', report_img.c.task.desc()).create()
-    Index('report_img_id_idx', report_img.c.id.desc()).create()
+        ForeignKeyConstraint([report.c.project], [project.c.id], ondelete='CASCADE').create()
+        Index('report_id_idx', report.c.id.desc()).create()
 
-    ForeignKeyConstraint([report_series.c.task], [task.c.id], ondelete='CASCADE').create()
-    Index('report_series_id_idx', report_series.c.id.desc()).create()
+        ForeignKeyConstraint([report_img.c.project], [project.c.id], ondelete='CASCADE').create()
+        Index('report_img_project_idx', report_img.c.project.desc()).create()
+        Index('report_img_task_idx', report_img.c.task.desc()).create()
+        Index('report_img_id_idx', report_img.c.id.desc()).create()
 
-    ForeignKeyConstraint([report_task.c.task], [task.c.id], ondelete='CASCADE').create()
-    ForeignKeyConstraint([report_task.c.report], [report.c.id], ondelete='CASCADE').create()
-    Index('report_task_id_idx', report_task.c.id.desc()).create()
+        ForeignKeyConstraint([report_series.c.task], [task.c.id], ondelete='CASCADE').create()
+        Index('report_series_id_idx', report_series.c.id.desc()).create()
 
-    ForeignKeyConstraint([step.c.task], [task.c.id], ondelete='CASCADE').create()
-    Index('step_name_idx', step.c.name).create()
-    Index('step_id_idx', step.c.id.desc()).create()
+        ForeignKeyConstraint([report_task.c.task], [task.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([report_task.c.report], [report.c.id], ondelete='CASCADE').create()
+        Index('report_task_id_idx', report_task.c.id.desc()).create()
 
-    ForeignKeyConstraint([task.c.computer], [computer.c.name], ondelete='CASCADE').create()
-    ForeignKeyConstraint([task.c.computer_assigned], [computer.c.name], ondelete='CASCADE').create()
-    ForeignKeyConstraint([task.c.dag], [dag.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([step.c.task], [task.c.id], ondelete='CASCADE').create()
+        Index('step_name_idx', step.c.name).create()
+        Index('step_id_idx', step.c.id.desc()).create()
 
-    Index('task_dag_idx', task.c.dag.desc()).create()
-    Index('task_finished_idx', task.c.finished.desc()).create()
-    Index('task_name_idx', task.c.name).create()
-    Index('task_started_idx', task.c.started.desc()).create()
+        ForeignKeyConstraint([task.c.computer], [computer.c.name], ondelete='CASCADE').create()
+        ForeignKeyConstraint([task.c.computer_assigned], [computer.c.name], ondelete='CASCADE').create()
+        ForeignKeyConstraint([task.c.dag], [dag.c.id], ondelete='CASCADE').create()
 
-    Index('task_id_idx', task.c.id.desc()).create()
-    Index('task_dependency_task_idx', task_dependency.c.task_id.desc()).create()
-    Index('task_dependency_depend_idx', task_dependency.c.depend_id.desc()).create()
+        Index('task_dag_idx', task.c.dag.desc()).create()
+        Index('task_finished_idx', task.c.finished.desc()).create()
+        Index('task_name_idx', task.c.name).create()
+        Index('task_started_idx', task.c.started.desc()).create()
 
-    ForeignKeyConstraint([task_dependency.c.task_id], [task.c.id], ondelete='CASCADE').create()
-    ForeignKeyConstraint([task_dependency.c.depend_id], [task.c.id], ondelete='CASCADE').create()
+        Index('task_id_idx', task.c.id.desc()).create()
+        Index('task_dependency_task_idx', task_dependency.c.task_id.desc()).create()
+        Index('task_dependency_depend_idx', task_dependency.c.depend_id.desc()).create()
+
+        ForeignKeyConstraint([task_dependency.c.task_id], [task.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([task_dependency.c.depend_id], [task.c.id], ondelete='CASCADE').create()
+    except:
+        trans.rollback()
+        raise
+    else:
+        trans.commit()
 
 
 def downgrade(migrate_engine):
-    meta.bind = migrate_engine
+    conn = migrate_engine.connect()
+    trans = conn.begin()
+    meta.bind = conn
+    try:
+        computer_usage.drop()
+        dag_library.drop()
+        dag_storage.drop()
+        log.drop()
+        file.drop()
+        report_task.drop()
+        report_img.drop()
+        report_series.drop()
+        report_scheme.drop()
+        report.drop()
+        task_dependency.drop()
+        step.drop()
+        task.drop()
+        dag.drop()
+        computer.drop()
+        project.drop()
+    except:
+        trans.rollback()
+        raise
+    else:
+        trans.commit()
 
-    computer.drop()
-    computer_usage.drop()
-    dag.drop()
-    dag_library.drop()
-    dag_storage.drop()
-    file.drop()
-    log.drop()
-    project.drop()
-    report.drop()
-    report_img.drop()
-    report_series.drop()
-    report_task.drop()
-    step.drop()
-    task.drop()
-    task_dependency.drop()
+
+
+

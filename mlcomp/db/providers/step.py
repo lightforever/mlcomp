@@ -41,7 +41,7 @@ class StepProvider(BaseDataProvider):
         query = self.query(Step, *log_status).filter(Step.task == task_id).order_by(Step.started)
         query = query.join(Log).group_by(Step.id)
         steps = query.all()
-        hierarchy = {**self.step_info(steps[0]), 'children': []}
+        hierarchy = {**(self.step_info(steps[0]) if len(steps)>0 else dict()), 'children': []}
         self._hierarchy(hierarchy, steps, 1, len(steps) - 1)
         return [hierarchy]
 

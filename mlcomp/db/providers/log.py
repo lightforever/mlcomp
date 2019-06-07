@@ -46,7 +46,7 @@ class LogProvider(BaseDataProvider):
                 'component': to_snake(ComponentType(log.component).name),
                 'computer': self.to_dict(computer) if computer else None,
                 'step': self.to_dict(step) if step else None,
-                'task': self.to_dict(task) if task else None
+                'task': self.to_dict(task, rules=('-additional_info',)) if task else None
             }
             data.append(item)
 

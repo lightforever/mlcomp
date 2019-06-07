@@ -51,3 +51,11 @@ class ReportTasks(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     report = sa.Column(sa.Integer, ForeignKey('report.id'))
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
+
+
+class ReportScheme(Base):
+    __tablename__ = 'report_scheme'
+
+    name = sa.Column(sa.String, primary_key=True)
+    content = sa.Column(sa.LargeBinary)
+    last_modified = sa.Column(sa.TIMESTAMP)

@@ -37,7 +37,7 @@ class Args:
 # noinspection PyTypeChecker
 @Executor.register
 class Catalyst(Executor, Callback):
-    def __init__(self, args: Args, report: ReportInfo):
+    def __init__(self, args: Args, report: ReportSchemeInfo):
         self.args = args
         self.report = report
         self.experiment = None
@@ -60,8 +60,8 @@ class Catalyst(Executor, Callback):
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
 
-            train = ReportSeries(part='train', name=s.name, epoch=state.epoch, task=self.task.id, value=train, time=now())
-            val = ReportSeries(part='valid', name=s.name, epoch=state.epoch, task=self.task.id, value=val, time=now())
+            train = ReportSeries(part='train', name=s.key, epoch=state.epoch, task=self.task.id, value=train, time=now())
+            val = ReportSeries(part='valid', name=s.key, epoch=state.epoch, task=self.task.id, value=val, time=now())
 
             self.series_provider.add(train)
             self.series_provider.add(val)
@@ -70,7 +70,7 @@ class Catalyst(Executor, Callback):
         state.loggers = []
 
     @classmethod
-    def _from_config(cls, executor: dict, config: Config):
+    def _from_config(cls, executor: dict, config: Config, additional_info: dict):
         args = Args()
         for k, v in executor['args'].items():
             if v in ['False', 'True']:
@@ -80,8 +80,7 @@ class Catalyst(Executor, Callback):
 
             setattr(args, k, v)
 
-        report_name = executor.get('report') or 'base'
-        report = ReportInfo(config['reports'][report_name])
+        report = ReportSchemeInfo(additional_info.get('report_config', dict()))
         return cls(args=args, report=report)
 
     def work(self):

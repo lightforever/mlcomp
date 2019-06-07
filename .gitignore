@@ -115,5 +115,4 @@ docker/*.conf
 *.db
 dev.env
 Readme.dev.md
-examples/**/requirements*
 *ignore.txt

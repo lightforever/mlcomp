@@ -1,3 +1,5 @@
+from sqlalchemy.orm import defer
+
 from mlcomp.db.providers.base import *
 from typing import List
 from mlcomp.utils.misc import to_snake, duration_format
@@ -24,7 +26,7 @@ class TaskProvider(BaseDataProvider):
         paginator = self.paginator(query, options)
         res = []
         for p in paginator.all():
-            item = {**self.to_dict(p)}
+            item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             if p.started is None:
                 delta = 0
