@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from mlcomp.db.models import Step, Task
+from mlcomp.db.models import Step, Task, Dag
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
@@ -104,10 +104,10 @@ class Executor(ABC):
     def error(self, message: str):
         self.step.error(message)
 
-    def __call__(self, task: Task):
-        assert task.dag_rel is not None, 'You must fetch task with dag_rel'
+    def __call__(self, task: Task, dag: Dag):
+        assert dag is not None, 'You must fetch task with dag_rel'
         self.task = task
-        self.dag = task.dag_rel
+        self.dag = dag
         self.step = StepWrap(task)
         with self.step:
             self.work()

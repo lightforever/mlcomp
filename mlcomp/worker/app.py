@@ -9,7 +9,7 @@ REDIS_PORT = os.getenv('REDIS_PORT', '6379')
 app = Celery('mlcomp',
              broker=f'redis://{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0',
              backend='redis://',
-             include=['mlcomp.task.tasks']
+             include=['mlcomp.worker.tasks']
              )
 
 __all__ = ['app']

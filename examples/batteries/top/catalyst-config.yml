@@ -1,6 +1,7 @@
 model_params:
-  model: SimpleNet
-
+  model: SimpleUnet
+  num_classes: 3
+  in_channels: 1
 
 args:
   expdir: "."
@@ -9,19 +10,21 @@ args:
 stages:
 
   data_params:
-    batch_size: 32
+    batch_size: 8
     num_workers: 1
+    image_folder: data/img
+    mask_folder: data/mask
+    fold_csv: data/fold.csv
+    fold_number: 0
 
   state_params:
-    num_epochs: 10
-    main_metric: &reduce_metric accuracy01
+    num_epochs: 100
+    main_metric: &reduce_metric loss
     minimize_metric: False
-    checkpoint_data:
-      exp: "thin is my best experiments"
-      date: "today"
+
 
   criterion_params:
-    criterion: CrossEntropyLoss
+    criterion: BCEDiceLoss
 
   scheduler_params:
     scheduler: MultiStepLR
@@ -33,9 +36,6 @@ stages:
       callback: LossCallback
     optimizer:
       callback: OptimizerCallback
-    accuracy:
-      callback: AccuracyCallback
-      precision_args: [1]
     scheduler:
       callback: SchedulerCallback
       reduce_metric: *reduce_metric

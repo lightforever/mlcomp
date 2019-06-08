@@ -220,16 +220,19 @@ class ReportProvider(BaseDataProvider):
             order_by(ReportSeries.epoch). \
             options(joinedload(ReportSeries.task_rel)).all()
 
+        # from time import time
+        # start = time()
         items = dict()
         for s in report.series:
             items[s.name] = self._detail_series(series, s)
-
+        # print('series', time()-start)
         for element in report.precision_recall + report.f1:
             items[element.name] = self._detail_single_img(report, series, element)
-
+        # print('single image', time() - start)
         for element in report.img_classify:
             items[element.name] = self.detail_img_classify_descr(report, series, element)
 
+        # print('img_classify', time() - start)
         return {'data': items, 'layout': report.layout}
 
     def add_dag(self, dag: int, report: int):

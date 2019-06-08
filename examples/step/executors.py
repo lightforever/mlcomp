@@ -1,4 +1,4 @@
-from mlcomp.task.executors import Executor
+from mlcomp.worker.executors import Executor
 import time
 
 @Executor.register

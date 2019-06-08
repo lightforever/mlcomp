@@ -1,8 +1,6 @@
 info:
   name: catalyst
   project: catalyst
-  folder: examples/catalyst
-  data_folder: catalyst
 executors:
   dummy1:
     type: Catalyst

@@ -1,8 +1,6 @@
 info:
   name: first
   project: first
-  folder: projects/first
-  data_folder: /f/data/first
 executors:
   dummy1:
     type: StepExample

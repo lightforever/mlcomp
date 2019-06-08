@@ -5,12 +5,12 @@ from mlcomp.db.enums import ComponentType
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider, StepProvider
-from mlcomp.task.executors import Executor
+from mlcomp.worker.executors import Executor
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
-from mlcomp.task.app import app
+from mlcomp.worker.app import app
 from mlcomp.db.models import *
-from mlcomp.task.storage import Storage
+from mlcomp.worker.storage import Storage
 import traceback
 import os
 import sys
@@ -24,9 +24,10 @@ def execute_by_id(id: int, repeat_count=1):
     step_provider = StepProvider()
     storage = Storage()
     task = provider.by_id(id, joinedload(Task.dag_rel))
+    dag = task.dag_rel
     executor = None
     try:
-        assert task.dag_rel is not None, 'You must fetch task with dag_rel'
+        assert dag is not None, 'You must fetch task with dag_rel'
 
         if task.status >= TaskStatus.InProgress.value and repeat_count >= 1:
             logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
@@ -48,14 +49,15 @@ def execute_by_id(id: int, repeat_count=1):
         task.pid = os.getpid()
         task.worker_index = worker_index
         provider.change_status(task, TaskStatus.InProgress)
-        folder = storage.download(task=id)
 
-        config = Config.from_yaml(task.dag_rel.config)
+        if not task.debug:
+            folder = storage.download(task=id)
+        else:
+            folder = os.getcwd()
 
-        executor_type = config['executors'][task.executor]['type']
         libraries = library_provider.dag(task.dag)
         was_installation = storage.import_folder(folder, libraries)
-        if was_installation:
+        if was_installation and not task.debug:
             if repeat_count > 0:
                 try:
                     queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
@@ -65,14 +67,16 @@ def execute_by_id(id: int, repeat_count=1):
                     pass
                 finally:
                     sys.exit()
+        os.chdir(folder)
+
+        config = Config.from_yaml(dag.config)
+        executor_type = config['executors'][task.executor]['type']
 
         assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
 
         additional_info = pickle.loads(task.additional_info) if task.additional_info else dict()
         executor = Executor.from_config(task.executor, config, additional_info=additional_info)
-        os.chdir(folder)
-
-        executor(task)
+        executor(task, dag)
 
         provider.change_status(task, TaskStatus.Success)
     except Exception:

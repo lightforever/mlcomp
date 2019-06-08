@@ -1,4 +1,4 @@
-from mlcomp.task.executors.base import *
+from mlcomp.worker.executors.base import *
 from mlcomp.utils.logging import logger
 from enum import Enum
 from mlcomp.utils.config import Config

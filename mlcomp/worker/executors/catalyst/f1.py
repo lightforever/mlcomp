@@ -1,4 +1,4 @@
-from mlcomp.task.executors.catalyst.base import BaseCallback
+from mlcomp.worker.executors.catalyst.base import BaseCallback
 import pickle
 from mlcomp.db.models import ReportImg
 from catalyst.dl.state import RunnerState

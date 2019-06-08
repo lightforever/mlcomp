@@ -7,7 +7,7 @@ from io import StringIO
 class Config(OrderedDict):
     @property
     def data_folder(self):
-        return os.path.join(self['info']['folder'], 'data')
+        return os.path.join(self['info']['project'], 'data')
 
     @staticmethod
     def from_json(config:str):

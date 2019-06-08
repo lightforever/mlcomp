@@ -1,8 +1,6 @@
 info:
   name: step
   project: catalyst
-  folder: examples/step
-  data_folder: catalyst
 executors:
   dummy1:
     type: StepExample

@@ -1,8 +1,8 @@
-from .top_classify import TopClassifyCallback
-from mlcomp.task.executors import Executor
-from mlcomp.task.executors.catalyst import Catalyst
-from mlcomp.task.executors.catalyst.f1 import F1Callback
-from mlcomp.task.executors.catalyst.precision_recall import PrecisionRecallCallback
+from top_classify import TopClassifyCallback
+from mlcomp.worker.executors import Executor
+from mlcomp.worker.executors.catalyst import Catalyst
+from mlcomp.worker.executors.catalyst.f1 import F1Callback
+from mlcomp.worker.executors.catalyst.precision_recall import PrecisionRecallCallback
 
 @Executor.register
 class Segmenter(Catalyst):

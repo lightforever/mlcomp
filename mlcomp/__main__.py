@@ -3,16 +3,16 @@ import ast
 import click
 from mlcomp.db.providers import *
 import os
-from mlcomp.task.storage import Storage
+from mlcomp.worker.storage import Storage
 from mlcomp.utils.config import load_ordered_yaml
-from mlcomp.task.app import app
+from mlcomp.worker.app import app
 import socket
 from multiprocessing import cpu_count
 from mlcomp.utils.misc import dict_func
 import psutil
 import GPUtil
 import numpy as np
-from mlcomp.task.tasks import execute_by_id
+from mlcomp.worker.tasks import execute_by_id
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
@@ -124,7 +124,7 @@ def _dag(config: str, debug: bool = False):
     report_tasks_provider = ReportTasksProvider()
     report_scheme_provider = ReportSchemeProvider()
 
-    folder = os.path.join(os.getcwd(), info['folder'])
+    folder = os.path.dirname(config)
     project = ProjectProvider().by_name(info['project']).id
     dag = dag_provider.add(Dag(config=config_text, project=project,
                                name=info['name'], docker_img=info.get('docker_img')))

@@ -7,7 +7,7 @@ from mlcomp.db.core import PaginatorOptions
 from flask_cors import CORS
 from mlcomp.server.back.supervisor import register_supervisor
 import os
-import mlcomp.task.tasks as celery_tasks
+import mlcomp.worker.tasks as celery_tasks
 from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
 from sqlalchemy.exc import ProgrammingError

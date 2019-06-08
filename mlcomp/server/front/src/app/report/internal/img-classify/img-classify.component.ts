@@ -37,7 +37,7 @@ export class ImgClassifyComponent extends Paginator<Img> {
 
             let data = event.data[this.item.index];
             for(let i=this.data.epochs.length;i<data.epochs.length;i++){
-                this.data.epochs.push(i);
+                this.data.epochs.push(data.epochs[i]);
             }
         });
     }
@@ -53,7 +53,7 @@ export class ImgClassifyComponent extends Paginator<Img> {
     }
 
     plot_confusion(confusion, part, class_names) {
-        if (!confusion) {
+        if (!confusion||!confusion.data) {
             return;
         }
         let self = this;

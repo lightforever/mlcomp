@@ -81,12 +81,13 @@ class Storage:
 
         config = Config.from_yaml(task.dag_rel.config)
         info = config['info']
-        if 'data_folder' in info:
-            try:
-                data_folder = os.path.join('/opt/mlcomp/data/', info['data_folder'])
-                os.symlink(data_folder, os.path.join(folder, 'data'))
-            except FileExistsError:
-                pass
+        try:
+            data_folder = os.path.join('/opt/mlcomp/data/', info['project'])
+            os.makedirs(data_folder, exist_ok=True)
+
+            os.symlink(data_folder, os.path.join(folder, 'data'))
+        except FileExistsError:
+            pass
 
         sys.path.insert(0, folder)
         return folder
@@ -110,8 +111,7 @@ class Storage:
                 was_installation = True
 
         for (module_loader, module_name, ispkg) in pkgutil.iter_modules(folders):
-            module = module_loader.find_module(module_name).load_module(module_name)
-            reload(module)
+            module_loader.find_module(module_name).load_module(module_name)
 
         return was_installation
 

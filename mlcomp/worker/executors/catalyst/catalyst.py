@@ -1,34 +1,36 @@
+from catalyst.dl.callbacks import VerboseLogger
+
 from catalyst.dl.state import RunnerState
 from mlcomp.utils.misc import now
 
 from mlcomp.db.providers import ReportSeriesProvider
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config
-from mlcomp.task.executors.base import Executor
+from mlcomp.worker.executors.base import Executor
 from pathlib import Path
 from catalyst.utils.config import parse_args_uargs
-from catalyst.utils.misc import set_global_seeds
 from catalyst.dl.scripts.utils import import_experiment_and_runner
 from catalyst.dl.experiments.runner import Runner
 from mlcomp.db.misc.report_info import *
-from mlcomp.task.executors.catalyst.precision_recall import PrecisionRecallCallback
-from mlcomp.task.executors.catalyst.f1 import F1Callback
+from mlcomp.worker.executors.catalyst.precision_recall import PrecisionRecallCallback
+from mlcomp.worker.executors.catalyst.f1 import F1Callback
 from catalyst.dl.callbacks.core import Callback
-from mlcomp.task.executors.catalyst.img_classify import ImgClassifyCallback
-
+from mlcomp.worker.executors.catalyst.img_classify import ImgClassifyCallback
+from catalyst.utils.misc import set_global_seed
 
 class Args:
     baselogdir = None
     batch_size = None
     check = False
     config = None
+    configs = []
     expdir = None
     logdir = None
     num_epochs = None
     num_workers = None
     resume = None
     seed = 42
-    verbose = False
+    verbose = True
 
     def _get_kwargs(self):
         return [(k, v) for k, v in self.__dict__.items() if not k.startswith('_')]
@@ -67,7 +69,7 @@ class Catalyst(Executor, Callback):
             self.series_provider.add(val)
 
     def on_stage_start(self, state: RunnerState):
-        state.loggers = []
+        state.loggers = [VerboseLogger()]
 
     @classmethod
     def _from_config(cls, executor: dict, config: Config, additional_info: dict):
@@ -81,11 +83,13 @@ class Catalyst(Executor, Callback):
             setattr(args, k, v)
 
         report = ReportSchemeInfo(additional_info.get('report_config', dict()))
+        if len(args.configs)==0:
+            args.configs = [args.config]
         return cls(args=args, report=report)
 
     def work(self):
         args, config = parse_args_uargs(self.args, [])
-        # set_global_seeds(config.get("seed", 42))
+        # set_global_seed(args.seed)
 
         Experiment, R = import_experiment_and_runner(Path(args.expdir))
 
@@ -101,7 +105,6 @@ class Catalyst(Executor, Callback):
             return _get_callbacks(stage) + self.callbacks()
 
         experiment.get_callbacks = get_callbacks
-
 
         runner.run_experiment(
             experiment,

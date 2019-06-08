@@ -1,4 +1,4 @@
-from mlcomp.task.executors.catalyst.base import BaseCallback
+from mlcomp.worker.executors.catalyst.base import BaseCallback
 from scipy.special import softmax
 import pickle
 from mlcomp.db.models import ReportImg

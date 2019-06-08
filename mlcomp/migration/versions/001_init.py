@@ -215,7 +215,7 @@ def upgrade(migrate_engine):
         ForeignKeyConstraint([file.c.project], [project.c.id], ondelete='CASCADE').create()
         Index('file_created_idx', file.c.created.desc()).create()
         Index('file_project_idx', file.c.project.desc()).create()
-        UniqueConstraint(file.c.md5, name='file_md5_idx').create()
+        UniqueConstraint(file.c.md5, file.c.project, name='file_md5_idx').create()
         Index('file_id_idx', file.c.id.desc()).create()
 
         ForeignKeyConstraint([log.c.step], [step.c.id], ondelete='CASCADE').create()

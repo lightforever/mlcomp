@@ -126,6 +126,9 @@ export class SeriesComponent implements OnInit {
     }
 
     public static create(item: ReportItem, data: Series[]) {
+        if(!data||data.length==0){
+            return []
+        }
         let tasks = Helpers.unique(data, 'task_id');
         if (tasks.length == 0) {
             return [];

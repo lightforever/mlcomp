@@ -1,6 +1,6 @@
 from mlcomp.utils.logging import logger
 import traceback
-from mlcomp.task.tasks import execute, queue_list
+from mlcomp.worker.tasks import execute, queue_list
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 from sqlalchemy.exc import ProgrammingError
