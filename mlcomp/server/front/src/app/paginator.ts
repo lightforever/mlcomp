@@ -143,7 +143,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         });
 
         if (this.enable_interval) {
-            this.interval = setInterval(() => this.change.emit('event'), 3000);
+            // this.interval = setInterval(() => this.change.emit('event'), 3000);
         }
 
     }

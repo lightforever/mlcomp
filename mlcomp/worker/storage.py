@@ -12,9 +12,6 @@ from mlcomp.utils.config import Config
 import sys
 import pathspec
 from mlcomp.utils.req import control_requirements, read_lines
-from importlib import reload
-import site
-from types import ModuleType
 import pkg_resources
 
 logger = logging.getLogger(__name__)

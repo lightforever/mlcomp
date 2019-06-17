@@ -1,4 +1,4 @@
 import os
 import uuid
 
-TOKEN = os.getenv('TOKEN', uuid.uuid4())
+TOKEN = str(os.getenv('TOKEN', uuid.uuid4()))

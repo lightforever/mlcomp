@@ -3,6 +3,7 @@ from sqlalchemy.orm import defer
 from mlcomp.db.providers.base import *
 from typing import List
 from mlcomp.utils.misc import to_snake, duration_format
+from datetime import datetime
 
 
 class TaskProvider(BaseDataProvider):
@@ -89,3 +90,11 @@ class TaskProvider(BaseDataProvider):
     def stop(self, id: int):
         task = self.by_id(id)
         self.change_status(task, TaskStatus.Stopped)
+
+    def last_succeed_time(self):
+        res = self.query(Task.finished).\
+            filter(Task.status == TaskStatus.Success.value).\
+            order_by(Task.finished.desc()).\
+            first()
+        return res[0] if res else None
+

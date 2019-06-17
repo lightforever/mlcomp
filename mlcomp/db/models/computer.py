@@ -9,6 +9,10 @@ class Computer(Base):
     cpu = sa.Column(sa.Integer, default=1)
     memory = sa.Column(sa.Float, default=0.1)
     usage = sa.Column(sa.String)
+    ip = sa.Column(sa.String)
+    port = sa.Column(sa.Integer)
+    user = sa.Column(sa.String)
+    last_synced = sa.Column(sa.DateTime)
 
 class ComputerUsage(Base):
     __tablename__ = 'computer_usage'

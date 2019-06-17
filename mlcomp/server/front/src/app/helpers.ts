@@ -39,6 +39,10 @@ export class Helpers {
         return [monthNames[month], day].join('.') + ' ' + date.toTimeString().slice(0, 8);
     }
 
+    public static parse_time(time){
+        return new Date(Date.parse(time));
+    }
+
     static clone(item) {
         return JSON.parse(JSON.stringify(item));
     }

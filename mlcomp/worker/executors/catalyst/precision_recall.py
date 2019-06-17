@@ -5,7 +5,6 @@ from mlcomp.db.models import ReportImg
 from catalyst.dl.state import RunnerState
 import numpy as np
 
-
 class PrecisionRecallCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):
         if state.loader_name != 'valid':
@@ -24,8 +23,9 @@ class PrecisionRecallCallback(BaseCallback):
         output_soft = softmax(output, axis=1)
         img = self.info.plot(target, output_soft[:,1])
         content = {'img': img}
+        content = pickle.dumps(content)
         obj = ReportImg(group=self.info.name, epoch=state.epoch,
-                        task=self.task.id, img=pickle.dumps(content),
+                        task=self.task.id, img=content,
                         project=self.dag.project,
                         dag=self.task.dag,
                         part=state.loader_name

@@ -1,5 +1,6 @@
 from mlcomp.utils.misc import now
-from .base import *
+from mlcomp.db.models.base import *
+import sys
 
 
 class ReportSeries(Base):
@@ -33,6 +34,11 @@ class ReportImg(Base):
     attr1 = sa.Column(sa.Float)
     attr2 = sa.Column(sa.Float)
     attr3 = sa.Column(sa.Float)
+    size = sa.Column(sa.BigInteger)
+
+    def __init__(self, **kwargs):
+        super(ReportImg, self).__init__(**kwargs)
+        self.size = sys.getsizeof(self.img)
 
 
 class Report(Base):

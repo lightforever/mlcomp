@@ -13,6 +13,7 @@ import {ReactiveFormsModule} from "@angular/forms";
 import {JwtInterceptor} from "./_helpers/jwt.intercepter";
 import {ErrorInterceptor} from "./_helpers/error.interceptor";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import {ModelComponent} from "./model/model.component";
 
 @NgModule({
     imports: [
@@ -26,6 +27,7 @@ import {HTTP_INTERCEPTORS} from "@angular/common/http";
         ProjectComponent,
         MessagesComponent,
         ComputerComponent,
+        ModelComponent,
         LoginComponent
     ],
     providers: [

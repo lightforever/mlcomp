@@ -10,7 +10,7 @@ from mlcomp.utils.misc import adapt_db_types
 from mlcomp.worker.executors.catalyst.base import BaseCallback
 from sklearn.metrics import confusion_matrix
 from numbers import Integral
-
+import sys
 
 class ImgClassifyCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):
@@ -50,8 +50,9 @@ class ImgClassifyCallback(BaseCallback):
 
             img = cv2.imencode('.jpg', prep['img'])[1].tostring()
             content = {'img': img}
+            content = pickle.dumps(content)
             obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,
-                            img=pickle.dumps(content),
+                            img=content,
                             project=self.dag.project,
                             dag=self.task.dag,
                             y=target_int,

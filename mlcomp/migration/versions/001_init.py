@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData, Float, TIMESTAMP, Boolean, LargeBinary, Index
+from sqlalchemy import Table, Column, Integer, String, MetaData, Float, TIMESTAMP, Boolean, LargeBinary, Index, BigInteger
 from migrate.changeset.constraint import ForeignKeyConstraint, UniqueConstraint
 
 meta = MetaData()
@@ -9,7 +9,11 @@ computer = Table(
     Column('gpu', Integer, default=0, nullable=False),
     Column('cpu', Integer, default=1, nullable=False),
     Column('memory', Float, default=0.1, nullable=False),
-    Column('usage', String(2000))
+    Column('usage', String(2000)),
+    Column('ip', String(100), nullable=False),
+    Column('port', Integer, nullable=False),
+    Column('user', String, nullable=False),
+    Column('last_synced', TIMESTAMP)
 )
 
 computer_usage = Table(
@@ -28,6 +32,8 @@ dag = Table(
     Column('config', String(8000), nullable=False),
     Column('project', Integer, nullable=False),
     Column('docker_img', String(100), nullable=True),
+    Column('img_size', BigInteger, nullable=False),
+    Column('file_size', BigInteger, nullable=False),
 )
 
 dag_library = Table(
@@ -54,7 +60,8 @@ file = Table(
     Column('created', TIMESTAMP, nullable=False, default='now()'),
     Column('content', LargeBinary, nullable=False),
     Column('project', Integer, nullable=False),
-    Column('dag', Integer, nullable=False)
+    Column('dag', Integer, nullable=False),
+    Column('size', BigInteger, nullable=False),
 )
 
 log = Table(
@@ -101,6 +108,7 @@ report_img = Table(
     Column('attr1', Float),
     Column('attr2', Float),
     Column('attr3', Float),
+    Column('size', BigInteger, nullable=False),
 )
 
 report_scheme = Table(
@@ -160,13 +168,31 @@ task = Table(
     Column('debug', Boolean, nullable=False, default=False),
     Column('pid', Integer),
     Column('worker_index', Integer),
-    Column('additional_info', LargeBinary)
+    Column('additional_info', LargeBinary),
+    Column('docker_assigned', String(100))
 )
 
 task_dependency = Table(
     'task_dependency', meta,
     Column('task_id', Integer, primary_key=True),
     Column('depend_id', Integer, primary_key=True),
+)
+
+docker = Table(
+    'docker', meta,
+    Column('name', String(100), primary_key=True),
+    Column('computer', String(100), primary_key=True),
+    Column('last_activity', TIMESTAMP, nullable=False),
+)
+
+model = Table(
+    'model', meta,
+    Column('name', String(500), nullable=False, primary_key=True),
+    Column('score_local', Float, nullable=False),
+    Column('score_public', Float),
+    Column('task', Integer),
+    Column('project', Integer, nullable=False),
+    Column('created', TIMESTAMP, nullable=False),
 )
 
 
@@ -193,6 +219,8 @@ def upgrade(migrate_engine):
         task.create()
         task_dependency.create()
         report_scheme.create()
+        docker.create()
+        model.create()
 
         ForeignKeyConstraint([computer_usage.c.computer], [computer.c.name], ondelete='CASCADE').create()
         Index('computer_name_idx', computer.c.name).create()
@@ -248,18 +276,26 @@ def upgrade(migrate_engine):
         ForeignKeyConstraint([task.c.computer], [computer.c.name], ondelete='CASCADE').create()
         ForeignKeyConstraint([task.c.computer_assigned], [computer.c.name], ondelete='CASCADE').create()
         ForeignKeyConstraint([task.c.dag], [dag.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([task.c.docker_assigned, task.c.computer_assigned], [docker.c.name, docker.c.computer], ondelete='CASCADE').create()
 
+        Index('task_status_idx', task.c.status).create()
         Index('task_dag_idx', task.c.dag.desc()).create()
         Index('task_finished_idx', task.c.finished.desc()).create()
         Index('task_name_idx', task.c.name).create()
         Index('task_started_idx', task.c.started.desc()).create()
-
         Index('task_id_idx', task.c.id.desc()).create()
+        Index('task_docker_idx', task.c.docker_assigned, task.c.computer_assigned).create()
+
         Index('task_dependency_task_idx', task_dependency.c.task_id.desc()).create()
         Index('task_dependency_depend_idx', task_dependency.c.depend_id.desc()).create()
 
         ForeignKeyConstraint([task_dependency.c.task_id], [task.c.id], ondelete='CASCADE').create()
         ForeignKeyConstraint([task_dependency.c.depend_id], [task.c.id], ondelete='CASCADE').create()
+
+        ForeignKeyConstraint([docker.c.computer], [computer.c.name], ondelete='CASCADE').create()
+
+        ForeignKeyConstraint([model.c.task], [task.c.id], ondelete='CASCADE').create()
+        ForeignKeyConstraint([model.c.project], [project.c.id], ondelete='CASCADE').create()
     except:
         trans.rollback()
         raise
@@ -272,6 +308,8 @@ def downgrade(migrate_engine):
     trans = conn.begin()
     meta.bind = conn
     try:
+        model.drop()
+        docker.drop()
         computer_usage.drop()
         dag_library.drop()
         dag_storage.drop()
@@ -293,7 +331,3 @@ def downgrade(migrate_engine):
         raise
     else:
         trans.commit()
-
-
-
-

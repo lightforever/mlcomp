@@ -8,3 +8,5 @@ from .step import *
 from .computer import *
 from .dag import *
 from .report import *
+from .docker import *
+from .model import *

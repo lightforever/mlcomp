@@ -1,21 +1,18 @@
 import socket
-from typing import Tuple
-
 from mlcomp.db.enums import ComponentType
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider, StepProvider
-from mlcomp.worker.executors import Executor
-from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
 from mlcomp.worker.app import app
 from mlcomp.db.models import *
 from mlcomp.worker.storage import Storage
 import traceback
-import os
 import sys
 from celery.signals import celeryd_after_setup
 import pickle
+from mlcomp.worker.executors import *
+from mlcomp.utils.config import Config
 
 def execute_by_id(id: int, repeat_count=1):
     logger = create_logger()
@@ -76,6 +73,7 @@ def execute_by_id(id: int, repeat_count=1):
 
         additional_info = pickle.loads(task.additional_info) if task.additional_info else dict()
         executor = Executor.from_config(task.executor, config, additional_info=additional_info)
+
         executor(task, dag)
 
         provider.change_status(task, TaskStatus.Success)

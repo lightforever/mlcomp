@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
 	libturbojpeg \
 	software-properties-common \
 	supervisor \
+	rsync \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -45,7 +46,10 @@ RUN pip install --no-cache-dir  \
     psycopg2-binary>=2.8.2 \
     tqdm>=4.29.1 \
     redis>=3.2.1 \
-    catalyst==19.3
+    catalyst==19.6.1 \
+    tiffile \
+    pandas>=0.22 \
+    albumentations>=0.2.3
 
 # Set the locale
 ENV LANG C.UTF-8

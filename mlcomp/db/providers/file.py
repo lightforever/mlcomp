@@ -15,3 +15,12 @@ class FileProvider(BaseDataProvider):
             query = query.filter(File.project == filter['project'])
         query.delete(synchronize_session=False)
         self.session.commit()
+
+        query = self.query(Dag)
+        if filter.get('dag'):
+            query.filter(Dag.id == filter['dag']).update({'file_size': 0})
+
+        if filter.get('project'):
+            query.filter(Dag.project == filter['project']).update({'file_size': 0})
+
+        self.session.commit()

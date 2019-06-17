@@ -4,6 +4,7 @@ from datetime import datetime
 import re
 from typing import List
 import numpy as np
+import os
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
@@ -101,6 +102,9 @@ def adapt_db_types(d: dict):
             d[k] = int(d[k])
         elif type(d[k]) in [np.float, np.float64]:
             d[k] = float(d[k])
+
+def memory():
+    return map(int, os.popen('free -t -m').readlines()[1].split()[1:4])
 
 if __name__=='__main__':
     print(dict_func([

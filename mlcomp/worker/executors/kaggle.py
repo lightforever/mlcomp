@@ -9,9 +9,11 @@ try:
 except OSError:
     logger.warning('Could not find kaggle.json. Kaggle executors can not be used')
 
+
 class DownloadType(Enum):
     Kaggle = 0
     Link = 1
+
 
 @Executor.register
 class Download(Executor):
@@ -31,6 +33,7 @@ class Download(Executor):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
 
+
 @Executor.register
 class Submit(Executor):
     def __init__(self, competition: str, file: str, message: str):
@@ -48,7 +51,6 @@ class Submit(Executor):
 
 
 if __name__ == '__main__':
-    # executor = Download('mlcomp/projects/test/data', competition='digit-recognizer')
     executor = Submit(competition='digit-recognizer', file='mlcomp/projects/test/data/sample_submission.csv',
                       message='test')
     executor.work()

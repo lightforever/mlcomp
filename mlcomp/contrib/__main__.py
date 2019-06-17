@@ -2,17 +2,17 @@ import click
 import re
 from mlcomp.contrib.scripts.split import file_group_kfold
 import os
-from glob import glob
+import pandas as pd
 
 current_folder = os.path.dirname(__file__)
 
 
 @click.group()
-def base():
+def main():
     pass
 
 
-@base.command()
+@main.command()
 @click.argument('img_path')
 @click.argument('mask_path')
 @click.argument('n_splits', type=int)
@@ -30,5 +30,13 @@ def split_segment(img_path: str, mask_path: str, n_splits: int, group_regex: str
                      )
 
 
+@main.command()
+@click.argument('img_path')
+def split_test_img(img_path: str):
+    output = os.path.join(current_folder, 'fold_test.csv')
+    df = pd.DataFrame({'image': sorted(list(os.listdir(img_path))), 'fold': 0})
+    df.to_csv(output, index=False)
+
+
 if __name__ == '__main__':
-    base()
+    main()

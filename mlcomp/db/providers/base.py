@@ -9,6 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified, set_attribute
 from sqlalchemy import func
 from sqlalchemy_serializer import Serializer
 
+
 class BaseDataProvider:
     model = None
 
@@ -41,19 +42,23 @@ class BaseDataProvider:
         self._session.add(obj, commit=commit)
         return obj
 
-    def by_id(self, id:int, joined_load=None):
+    def by_id(self, id: int, joined_load=None):
         res = self.query(self.model).filter(getattr(self.model, 'id') == id)
         if joined_load is not None:
             for n in joined_load:
-                res=res.options(joinedload(n))
+                res = res.options(joinedload(n))
         return res.first()
 
     def to_dict(self, item, rules=(), datetime_format=None):
         return item.to_dict(date_format=self.date_format, datetime_format=datetime_format or self.datetime_format,
                             time_format=self.time_format, rules=rules)
 
-    def create_or_update(self, obj: Base, field: str):
-        db = self.session.query(obj.__class__).filter(getattr(obj.__class__, field)==getattr(obj, field)).first()
+    def create_or_update(self, obj: Base, *fields):
+        query = self.session.query(obj.__class__)
+        for k in fields:
+            query = query.filter(getattr(obj.__class__, k) == getattr(obj, k))
+
+        db = query.first()
         if db is not None:
             for field, value in obj.__dict__.items():
                 if not field.startswith('_'):
@@ -61,6 +66,9 @@ class BaseDataProvider:
             self.session.update()
         else:
             self.add(obj)
+
+    def all(self):
+        return self.query(self.model).all()
 
     def update(self):
         self.session.update()
@@ -84,7 +92,7 @@ class BaseDataProvider:
             query = query.order_by(criterion)
 
         if options.page_size:
-            query = query.offset(options.page_size*options.page_number).limit(options.page_size)
+            query = query.offset(options.page_size * options.page_number).limit(options.page_size)
 
         return query
 

@@ -2,4 +2,4 @@
 
 python worker.py
 PYTHONPATH=../ supervisord -c supervisord.conf
-#PYTHONPATH=../ python __main__.py worker 0
+#PYTHONPATH=../ python worker/__main__.py worker 0

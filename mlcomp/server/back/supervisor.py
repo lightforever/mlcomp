@@ -1,18 +1,17 @@
 from mlcomp.utils.logging import logger
 import traceback
-from mlcomp.worker.tasks import execute, queue_list
+from mlcomp.worker.tasks import execute
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 from sqlalchemy.exc import ProgrammingError
 
+
 def supervisor():
     provider = TaskProvider()
     computer_provider = ComputerProvider()
-
+    docker_provider = DockerProvider()
     try:
-        queues = queue_list()
-        if len(queues) == 0:
-            return
+        queues = [f'{d.computer}_{d.name}' for d in docker_provider.all() if d.last_activity >= now() - datetime.timedelta(seconds=10)]
         not_ran_tasks = provider.by_status(TaskStatus.NotRan)
         not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
         logger.debug(f'Found {len(not_ran_tasks)} not ran tasks', ComponentType.Supervisor)

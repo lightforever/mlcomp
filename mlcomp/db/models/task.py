@@ -27,6 +27,7 @@ class Task(Base):
     pid = sa.Column(sa.Integer)
     worker_index = sa.Column(sa.Integer)
     additional_info = deferred(sa.Column(sa.LargeBinary))
+    docker_assigned = sa.Column(sa.String)
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependency'

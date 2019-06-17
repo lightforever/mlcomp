@@ -15,7 +15,7 @@ from mlcomp.utils.io import from_module_path
 from collections import OrderedDict
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
-PORT = 4201
+PORT = int(os.getenv('WEB_PORT', '4201'))
 
 app = Flask(__name__)
 CORS(app)
@@ -49,14 +49,14 @@ def construct_paginator_options(args: dict, default_sort_column: str):
 
 
 def check_auth(token):
-    return token == conf.TOKEN
+    return str(token).strip() == conf.TOKEN
 
 
 def authenticate():
     return Response(
         'Could not verify your access level for that URL.\n'
         'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+        {'WWW-Authenticate': 'xBasic'})
 
 
 def requires_auth(f):
@@ -90,6 +90,7 @@ def projects():
     provider = ProjectProvider()
     res = provider.get(data, options)
     return json.dumps(res)
+
 
 @app.route('/api/img_classify', methods=['POST'])
 @requires_auth
@@ -258,7 +259,7 @@ def steps():
 @app.route('/api/token', methods=['POST'])
 def token():
     data = request_data()
-    if str(data['token']) != conf.TOKEN:
+    if str(data['token']).strip() != conf.TOKEN:
         return Response(json.dumps({'success': False, 'reason': 'invalid token'}), status=401)
     return json.dumps({'success': True})
 
@@ -295,6 +296,16 @@ def dag_remove():
     id = request_data()['id']
     DagProvider().remove(id)
     return json.dumps({'success': True})
+
+
+@app.route('/api/models', methods=['POST'])
+@requires_auth
+def models():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    provider = ModelProvider()
+    res = provider.get(data, options)
+    return json.dumps(res)
 
 
 @app.route('/api/stop')

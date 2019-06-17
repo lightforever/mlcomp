@@ -29,3 +29,30 @@ td.usage_history, th.usage_history {
 .mat-header-cell{
   text-align: center !important;
 }
+
+.circle-green {
+    background: green;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.circle-red {
+    background: red;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.circle-gray {
+    background: gray;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}

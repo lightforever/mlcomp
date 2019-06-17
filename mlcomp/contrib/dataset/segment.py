@@ -6,16 +6,17 @@ import tifffile
 import pandas as pd
 
 
-class ImagesWithMasksDataset(Dataset):
+class ImageWithMaskDataset(Dataset):
     def __init__(
             self,
+            *,
             img_folder: str,
-            mask_folder: str,
             fold_csv: str,
             fold_number: int,
             is_test: bool,
             gray_scale: bool = False,
-            num_classes=1,
+            num_classes=2,
+            mask_folder: str = None,
             max_count=None,
             meta_cols=(),
             transforms=None):
@@ -38,35 +39,38 @@ class ImagesWithMasksDataset(Dataset):
     def join_path(self, k: str, v):
         if k == 'image':
             return os.path.join(self.img_folder, v)
-        if k == 'mask':
+        if k == 'mask' and self.mask_folder:
             return os.path.join(self.mask_folder, v)
         return v
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, item):
-        d = self.data[item]
+    def __getitem__(self, index):
+        d = self.data[index]
         image = self.read_image_file(d['image'], self.gray_scale)
-        mask = self.read_image_file(d['mask'], self.gray_scale)
-        res = {'image': image, 'mask': mask}
+        item = {'image': image}
+        if 'mask' in d and self.mask_folder:
+            item['mask'] = self.read_image_file(d['mask'], self.gray_scale)
+
         if self.transforms:
-            res = self.transforms(**res)
+            item = self.transforms(**item)
         if self.gray_scale:
-            res['image'] = np.expand_dims(res['image'], axis=0)
-
-        mask = res['mask']
-        if len(mask.shape) == 2:
-            mask_encoded = np.zeros((self.num_classes + 1, *mask.shape), dtype=mask.dtype)
-            for i in range(self.num_classes + 1):
-                mask_encoded[i] = mask == i
-
-            mask = mask_encoded
-        return {
-            'features': res['image'].astype(np.float32),
-            'targets': mask.astype(np.float32),
+            item['image'] = np.expand_dims(item['image'], axis=0)
+        res = {
+            'features': item['image'].astype(np.float32),
             'meta': {c: d[c] for c in self.meta_cols}
         }
+        if 'mask' in item:
+            mask = item['mask']
+            if len(mask.shape) == 2:
+                mask_encoded = np.zeros((self.num_classes, *mask.shape), dtype=mask.dtype)
+                for i in range(self.num_classes):
+                    mask_encoded[i] = mask == i
+
+                mask = mask_encoded
+            res['targets'] = mask.astype(np.float32)
+        return res
 
     @staticmethod
     def read_image_file(path: str, gray_scale=False):

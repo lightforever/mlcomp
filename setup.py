@@ -127,9 +127,10 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'mlcomp-sr = mlcomp.server.__main__:main',
-            'mlcomp-wr = mlcomp.worker.__main__:main',
-            'mlcomp-cb = mlcomp.contrib.__main__:main',
+            'mlcomp-server = mlcomp.server.__main__:main',
+            'mlcomp-worker = mlcomp.worker.__main__:main',
+            'mlcomp-contrib = mlcomp.contrib.__main__:main',
+            'mlcomp = mlcomp.__main__:main',
         ],
     }
 )

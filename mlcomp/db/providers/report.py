@@ -37,6 +37,15 @@ class ReportImgProvider(BaseDataProvider):
         query.delete(synchronize_session=False)
         self.session.commit()
 
+        query = self.query(Dag)
+        if filter.get('dag'):
+            query.filter(Dag.id == filter['dag']).update({'img_size': 0})
+
+        if filter.get('project'):
+            query.filter(Dag.project == filter['project']).update({'img_size': 0})
+
+        self.session.commit()
+
     def remove_lower(self, task_id: int, name: str, epoch: int):
         self.query(ReportImg).filter(ReportImg.task == task_id). \
             filter(ReportImg.group == name). \
@@ -74,11 +83,16 @@ class ReportImgProvider(BaseDataProvider):
         class_names = pickle.loads(project.class_names)
 
         res['total'] = query.count()
-        res['class_names'] = class_names['default']
+        if 'default' in class_names:
+            res['class_names'] = class_names['default']
+        else:
+            res['class_names'] = [str(i) for i in confusion.shape[0]]
+
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
             img = pickle.loads(img_obj.img)
+            # noinspection PyTypeChecker
             res['data'].append({
                 'content': base64.b64encode(img['img']).decode('utf-8'),
                 'id': img_obj.id,

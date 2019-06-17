@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from mlcomp.db.models import Step, Task, Dag
 from mlcomp.utils.config import Config
 from mlcomp.utils.logging import create_logger
-from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
+from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider, ComputerProvider
 from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
 import json
-
+import time
 
 class StepWrap:
     def __init__(self, task: Task):
@@ -110,6 +110,7 @@ class Executor(ABC):
         self.dag = dag
         self.step = StepWrap(task)
         with self.step:
+            self.wait_data_sync(task.computer_assigned)
             self.work()
 
     @abstractmethod
@@ -136,6 +137,17 @@ class Executor(ABC):
     @staticmethod
     def is_registered(cls: str):
         return cls in Executor._child
+
+    def wait_data_sync(self, computer_assigned: str):
+        self.step.info(f'Start data sync')
+        provider = ComputerProvider()
+        last_task_time = TaskProvider().last_succeed_time()
+        while True:
+            computer = provider.by_name(computer_assigned)
+            if not last_task_time or computer.last_synced>last_task_time:
+                break
+            time.sleep(1)
+        self.step.info(f'Finish data sync')
 
 
 __all__ = ['Executor']

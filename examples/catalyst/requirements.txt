@@ -1,0 +1,4 @@
+torchvision>=0.2.1
+numpy>=1.16.3
+catalyst>=19.3
+torch>=1.0.0

@@ -116,6 +116,32 @@
                     </mat-grid-tile>
                 </mat-grid-list>
 
+                <table>
+                    <td style="text-align: left">Dockers:</td>
+                </table>
+
+                <table>
+                    <th></th>
+                    <th></th>
+                    <th  style="width: 70px;min-width: 70px"></th>
+                    <th  style="width: 70px;min-width: 70px"></th>
+                    <tr *ngFor="let docker of element.dockers">
+                        <td>
+                            <span style="vertical-align: middle">{{docker.name}} &nbsp;</span>
+                            <span [className]="docker_status(docker)"></span>
+                        </td>
+                        <td>{{long_date_format(docker.last_activity)}}</td>
+                        <td style="width: 70px;min-width: 70px">
+                            <span style="vertical-align: middle">{{docker.in_progress}} &nbsp;</span>
+                            <span [className]="'circle-green'"></span>
+                        </td>
+                        <td style="width: 70px;min-width: 70px">
+                            <span style="vertical-align: middle">{{docker.free}} &nbsp;</span>
+                            <span [className]="'circle-gray'"></span>
+                        </td>
+                    </tr>
+                </table>
+
             </td>
         </ng-container>
 

@@ -1,99 +1,23 @@
 import ast
 
 import click
+from mlcomp.utils.logging import create_logger
+
 from mlcomp.db.providers import *
 import os
 from mlcomp.worker.storage import Storage
 from mlcomp.utils.config import load_ordered_yaml
-from mlcomp.worker.app import app
 import socket
 from multiprocessing import cpu_count
-from mlcomp.utils.misc import dict_func
-import psutil
 import GPUtil
-import numpy as np
 from mlcomp.worker.tasks import execute_by_id
-from mlcomp.utils.schedule import start_schedule
-from mlcomp.server.back.app import start_server as _start_server
-from mlcomp.server.back.app import stop_server as _stop_server
-import time
 from collections import OrderedDict
+from mlcomp.utils.misc import memory
+
 
 @click.group()
 def main():
     pass
-
-
-def worker_usage():
-    provider = ComputerProvider()
-    name = socket.gethostname()
-
-    usages = []
-
-    for _ in range(10):
-        memory = dict(psutil.virtual_memory()._asdict())
-
-        usage = {
-            'cpu': psutil.cpu_percent(),
-            'memory': memory['percent'],
-            'gpu': [{'memory': g.memoryUtil, 'load': g.load} for g in GPUtil.getGPUs()]
-        }
-
-        provider.current_usage(name, usage)
-        usage.update(usage)
-        usages.append(usage)
-        time.sleep(1)
-
-    usage = json.dumps({'mean': dict_func(usages, np.mean)})
-    provider.add(ComputerUsage(computer=name, usage=usage, time=now()))
-
-
-@main.command()
-@click.argument('number', type=int)
-def worker(number):
-    docker_img = os.getenv('DOCKER_IMG', 'default')
-    argv = [
-        'worker',
-        '--loglevel=INFO',
-        '-P=solo',
-        f'-n={number}',
-        '-O fair',
-        '-c=1',
-        '--prefetch-multiplier=1',
-        '-Q',
-        f'{socket.gethostname()}_{docker_img},{socket.gethostname()}_{docker_img}_{number}'
-    ]
-    app.worker_main(argv)
-
-
-@main.command()
-def worker_supervisor():
-    _create_computer()
-    start_schedule([(worker_usage, 0)])
-
-    docker_img = os.getenv('DOCKER_IMG', 'default')
-    argv = [
-        'worker',
-        '--loglevel=INFO',
-        '-P=solo',
-        f'-n=1',
-        '-O fair',
-        '-c=1',
-        '--prefetch-multiplier=1',
-        '-Q',
-        f'{socket.gethostname()}_{docker_img}_supervisor'
-    ]
-    app.worker_main(argv)
-
-
-@main.command()
-def start_server():
-    _start_server()
-
-
-@main.command()
-def stop_server():
-    _stop_server()
 
 
 @main.command()
@@ -190,8 +114,13 @@ def dag(config: str):
 
 
 def _create_computer():
-    tot_m, used_m, free_m = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()), cpu=cpu_count(), memory=tot_m)
+    tot_m, used_m, free_m = memory()
+    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()),
+                        cpu=cpu_count(), memory=tot_m,
+                        ip=os.getenv('IP'),
+                        port=int(os.getenv('PORT')),
+                        user=os.getenv('USER')
+                        )
     ComputerProvider().create_or_update(computer, 'name')
 
 
@@ -199,11 +128,26 @@ def _create_computer():
 @click.argument('config')
 def execute(config: str):
     _create_computer()
+
+    # Fail all InProgress Tasks
+    logger = create_logger()
+    worker_index = int(os.getenv("WORKER_INDEX", -1))
+
+    provider = TaskProvider()
+    step_provider = StepProvider()
+
+    for t in provider.by_status(TaskStatus.InProgress, worker_index=worker_index):
+        step = step_provider.last_for_task(t.id)
+        logger.error(f'Task Id = {t.id} was in InProgress state when another tasks arrived to the same worker', ComponentType.Worker, step)
+        provider.change_status(t, TaskStatus.Failed)
+
+    # Create dag
     created_dag = _dag(config, True)
 
     config = load_ordered_yaml(config)
     executors = config['executors']
 
+    # Execute
     created = set()
     while len(created) < len(executors):
         for k, v in executors.items():

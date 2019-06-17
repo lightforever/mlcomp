@@ -74,6 +74,7 @@ export class Computer {
     cpu: number;
     memory: number;
     usage: Usage;
+    dockers: any[];
 }
 
 export class Step {
@@ -238,4 +239,19 @@ export class ImgClassify {
     part: string;
     epoch: number;
 
+}
+
+export class Model {
+    name: string;
+    score_local: number;
+    score_public: number;
+    task: number;
+    project: number;
+    created: Date;
+}
+
+export class ModelFilter {
+    paginator: PaginatorFilter;
+    name: string;
+    project: number;
 }

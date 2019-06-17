@@ -12,3 +12,5 @@ class Dag(Base):
     tasks = relationship('Task', lazy='noload')
     project_rel = relationship('Project', lazy='noload')
     docker_img = sa.Column(sa.String)
+    img_size = sa.Column(sa.BigInteger, nullable=False, default=0)
+    file_size = sa.Column(sa.BigInteger, nullable=False, default=0)

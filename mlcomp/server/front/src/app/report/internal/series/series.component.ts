@@ -40,23 +40,26 @@ export class SeriesComponent implements OnInit {
 
                     row.text = text;
                 }
-                if (this.data.series.map(x=>x.plotted).reduce((s, c) => s + c, 0)>0) {
-                    let indices = Array.from(Array(this.data.series.length).keys());
-                    let y = {'y': [], 'text': []};
-                    for (let s of this.data.series) {
-                        y['y'].push(s.y.slice(s.plotted));
-                        let text = s.text.slice(s.plotted);
-                        y['text'].push(text);
+                if (this.data.series.length > 0) {
+                    if (this.data.series.map(x => x.plotted).reduce((s, c) => s + c, 0) > 0) {
+                        let indices = Array.from(Array(this.data.series.length).keys());
+                        let y = {'y': [], 'text': []};
+                        for (let s of this.data.series) {
+                            y['y'].push(s.y.slice(s.plotted));
+                            let text = s.text.slice(s.plotted);
+                            y['text'].push(text);
 
-                        s.plotted += text.length;
-                    }
-                    window['Plotly'].extendTraces(this.id, y, indices);
-                } else {
-                    window['Plotly'].newPlot(this.id, this.data.series, layout);
-                    for(let s of this.data.series){
-                        s.plotted = s.x.length;
+                            s.plotted += text.length;
+                        }
+                        window['Plotly'].extendTraces(this.id, y, indices);
+                    } else {
+                        window['Plotly'].newPlot(this.id, this.data.series, layout);
+                        for (let s of this.data.series) {
+                            s.plotted = s.x.length;
+                        }
                     }
                 }
+
 
             }
         }, 100);
@@ -126,7 +129,7 @@ export class SeriesComponent implements OnInit {
     }
 
     public static create(item: ReportItem, data: Series[]) {
-        if(!data||data.length==0){
+        if (!data || data.length == 0) {
             return []
         }
         let tasks = Helpers.unique(data, 'task_id');

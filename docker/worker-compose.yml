@@ -2,7 +2,6 @@ services:
   mlcomp-worker:
     container_name: mlcomp-worker
     restart: always
-    network_mode: "host"
     build:
       context: ../
       dockerfile: docker/worker
@@ -10,5 +9,5 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     runtime: nvidia
-    volumes: ["/opt/mlcomp/data:/opt/mlcomp/data"]
+    volumes: ["/opt/mlcomp/data:/opt/mlcomp/data", "/opt/mlcomp/ssh:/opt/mlcomp/ssh"]
 version: '2.3'

@@ -5,16 +5,6 @@ from mlcomp.utils.misc import to_snake, duration_format
 class DagProvider(BaseDataProvider):
     model = Dag
 
-    def img_size(self, id: int):
-        res = self.session.execute('SELECT sum(octet_length(t.*::text)) FROM report_img as t where dag=:p',
-                                   {'p': id}).fetchone()[0]
-        return 0 if not res else int(res / 2)
-
-    def file_size(self, id: int):
-        res = self.session.execute('SELECT sum(octet_length(t.*::text)) FROM file as t where dag=:p',
-                                   {'p': id}).fetchone()[0]
-        return 0 if not res else int(res / 2)
-
     def get(self, filter: dict, options: PaginatorOptions = None):
         task_status = []
         for e in TaskStatus:
@@ -35,7 +25,7 @@ class DagProvider(BaseDataProvider):
         if filter.get('id'):
             query = query.filter(Dag.id == int(filter['id']))
 
-        query = query.join(Task).group_by(Dag.id)
+        query = query.join(Task, isouter=True).group_by(Dag.id)
         total = query.count()
         paginator = self.paginator(query, options) if options else query
         res = []
@@ -54,8 +44,6 @@ class DagProvider(BaseDataProvider):
             r['last_activity'] = self.serializer.serialize_datetime(r['last_activity']) if r['last_activity'] else None
             r['started'] = self.serializer.serialize_datetime(r['started']) if r['started'] else None
             r['finished'] = self.serializer.serialize_datetime(r['finished'])if r['finished'] else None
-            r['img_size'] = self.img_size(r['id'])
-            r['file_size'] = self.file_size(r['id'])
 
             if task_status[TaskStatus.InProgress.value]>0:
                 delta = (now() - started).total_seconds()

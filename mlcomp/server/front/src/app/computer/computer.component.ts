@@ -4,6 +4,7 @@ import {Computer, ComputerFilter} from "../models";
 import {Location} from "@angular/common";
 import {ComputerService} from "../computer.service";
 import {DynamicresourceService} from "../dynamicresource.service";
+import {Helpers} from "../helpers";
 
 @Component({
     selector: 'app-computer',
@@ -83,17 +84,19 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
                                 self.last_time[computer.name] = new Date(Date.parse(series[0].x[series[0].x.length - 1]));
                             }
 
-                            if (self.plotted) {
-                                let indices = Array.from(Array(series.length).keys());
-                                let y = {'y': [], 'x': []};
-                                for (let s of series) {
-                                    y['y'].push(s.y);
-                                    y['x'].push(s.x);
+                            if (series.length > 0){
+                                if (self.plotted) {
+                                    let indices = Array.from(Array(series.length).keys());
+                                    let y = {'y': [], 'x': []};
+                                    for (let s of series) {
+                                        y['y'].push(s.y);
+                                        y['x'].push(s.x);
+                                    }
+                                    window['Plotly'].extendTraces(id, y, indices);
+                                } else {
+                                    window['Plotly'].newPlot(id, series, {}, {showSendToCloud: true});
+                                    self.plotted = true;
                                 }
-                                window['Plotly'].extendTraces(id, y, indices);
-                            } else {
-                                window['Plotly'].newPlot(id, series, {}, {showSendToCloud: true});
-                                self.plotted = true;
                             }
 
 
@@ -119,5 +122,17 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
         }
 
         return 'red'
+    }
+
+    docker_status(docker) {
+        // @ts-ignore
+        if(Helpers.parse_time(docker.last_activity)>=new Date(new Date()-10000)){
+            return 'circle-green';
+        }
+        return 'circle-red';
+    }
+
+    long_date_format(time: string) {
+        return Helpers.format_date_time(Helpers.parse_time(time));
     }
 }
