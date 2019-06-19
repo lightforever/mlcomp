@@ -1,16 +1,16 @@
 model_params:
-  model: SimpleUnet
+  model: ResNetUnetSimple
   num_classes: 3
-  in_channels: 1
+  arch: resnet101
 
 args:
   expdir: "."
-  logdir: "log"
+  logdir: "log/linknet"
 
 stages:
 
   data_params:
-    batch_size: 8
+    batch_size: 12
     num_workers: 1
     image_folder: data/img
     mask_folder: data/mask
@@ -28,7 +28,7 @@ stages:
 
   scheduler_params:
     scheduler: MultiStepLR
-    milestones: [10]
+    milestones: [100]
     gamma: 0.3
 
   callbacks_params:
@@ -47,4 +47,3 @@ stages:
     optimizer_params:
       optimizer: Adam
       lr: 0.001
-      weight_decay: 0.0001

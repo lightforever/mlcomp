@@ -1,5 +1,5 @@
 info:
-  name: unet
+  name: unet_resnet50
   project: batteries
 executors:
   dummy1:
@@ -63,8 +63,8 @@ reports:
     items:
       img_classify:
         type: img_classify
-        epoch_every: 3
-        count_class_max: 100
+        epoch_every: 1
+        count_class_max: 1000
         threshold:
           anode: 0.1
           cathode: 0.1

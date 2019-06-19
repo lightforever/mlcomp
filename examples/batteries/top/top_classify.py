@@ -1,7 +1,7 @@
 from mlcomp.worker.executors.catalyst.img_classify import ImgClassifyCallback
 import numpy as np
 import cv2
-from processor import ImgProcessor
+from examples.batteries.top.processor import ImgProcessor
 
 
 class TopClassifyCallback(ImgClassifyCallback):

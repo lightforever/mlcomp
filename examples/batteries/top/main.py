@@ -12,7 +12,8 @@ def base():
 
 @base.command()
 def cathode_count():
-    df = pd.read_csv('data/fold.csv')
+    file = 'data/fold_test.csv'
+    df = pd.read_csv(file)
     cathode_count = []
     image_type_by_id = pickle.load(open('data/image_type_by_id.p', 'rb'))
     for name in df['image']:
@@ -24,7 +25,7 @@ def cathode_count():
             print(f'name = {name} id not in image_type_by_id')
         cathode_count.append(image_type_by_id.get(id, 0))
     df['cathode_count'] = cathode_count
-    df.to_csv('data/fold.csv', index=False)
+    df.to_csv(file, index=False)
 
 if __name__=='__main__':
     base()

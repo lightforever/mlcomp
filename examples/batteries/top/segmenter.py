@@ -1,4 +1,4 @@
-from top_classify import TopClassifyCallback
+from examples.batteries.top.top_classify import TopClassifyCallback
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.executors.catalyst import Catalyst
 from mlcomp.worker.executors.catalyst.f1 import F1Callback
