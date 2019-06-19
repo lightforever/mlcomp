@@ -1,5 +1,6 @@
 from typing import List
-from catalyst.dl import RunnerState, CriterionCallback
+from catalyst.dl.core.state import RunnerState
+from catalyst.dl.callbacks import CriterionCallback
 import numpy as np
 import torch
 
@@ -39,3 +40,6 @@ class MixupCallback(CriterionCallback):
         y_b = state.input[self.input_key][self.index]
 
         return self.lam * criterion(pred, y_a) + (1 - self.lam) * criterion(pred, y_b)
+
+
+__all__ = ['MixupCallback']
