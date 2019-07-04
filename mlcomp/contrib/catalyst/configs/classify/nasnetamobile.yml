@@ -1,0 +1,8 @@
+model_params: {variant: nasnetamobile}
+stages:
+  data_params:
+    batch_size: 96
+    height: 224
+    mean: [0.5, 0.5, 0.5]
+    std: [0.5, 0.5, 0.5]
+    width: 224

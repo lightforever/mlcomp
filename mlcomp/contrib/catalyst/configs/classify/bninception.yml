@@ -1,0 +1,8 @@
+model_params: {variant: bninception}
+stages:
+  data_params:
+    batch_size: 208
+    height: 224
+    mean: [104, 117, 128]
+    std: [1, 1, 1]
+    width: 224

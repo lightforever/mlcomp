@@ -37,3 +37,5 @@ class RingLoss(nn.Module):
             diff_sq = torch.pow(torch.abs(diff), 2).mean()
             ringloss = diff_sq.mul_(self.loss_weight)
         return softmax+ringloss
+
+__all__ = ['RingLoss']

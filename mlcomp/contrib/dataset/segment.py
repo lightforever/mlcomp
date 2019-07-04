@@ -1,85 +1,32 @@
-import cv2
-from torch.utils.data import Dataset
 import os
 import numpy as np
-import tifffile
-import pandas as pd
+from mlcomp.contrib.dataset.classify import ImageDataset
+from os.path import join
 
 
-class ImageWithMaskDataset(Dataset):
-    def __init__(
-            self,
-            *,
-            img_folder: str,
-            fold_csv: str,
-            fold_number: int,
-            is_test: bool,
-            gray_scale: bool = False,
-            num_classes=2,
-            mask_folder: str = None,
-            max_count=None,
-            meta_cols=(),
-            transforms=None):
-        self.img_folder = img_folder
+class ImageWithMaskDataset(ImageDataset):
+    def __init__(self, *, mask_folder: str, **kwargs):
+        assert mask_folder, 'Mask folder is required'
         self.mask_folder = mask_folder
+        super().__init__(**kwargs)
 
-        df = pd.read_csv(fold_csv)
-        if is_test:
-            data = df[df['fold'] == fold_number].to_dict(orient='row')
-        else:
-            data = df[df['fold'] != fold_number].to_dict(orient='row')
-        self.data = [{k: self.join_path(k, v) for k, v in row.items()} for row in data]
-        if max_count:
-            self.data = self.data[:max_count]
-        self.transforms = transforms
-        self.gray_scale = gray_scale
-        self.num_classes = num_classes
-        self.meta_cols = meta_cols
+    def preprocess_row(self, row: dict):
+        row['image'] = join(self.img_folder, row['image'])
+        row['mask'] = join(self.mask_folder, row['mask'])
 
-    def join_path(self, k: str, v):
-        if k == 'image':
-            return os.path.join(self.img_folder, v)
-        if k == 'mask' and self.mask_folder:
-            return os.path.join(self.mask_folder, v)
-        return v
+    def _get_item_before_transform(self, row: dict, item: dict):
+        if 'mask' in row and self.mask_folder:
+            item['mask'] = self.read_image_file(row['mask'], True)
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        d = self.data[index]
-        image = self.read_image_file(d['image'], self.gray_scale)
-        item = {'image': image}
-        if 'mask' in d and self.mask_folder:
-            item['mask'] = self.read_image_file(d['mask'], self.gray_scale)
-
-        if self.transforms:
-            item = self.transforms(**item)
-        if self.gray_scale:
-            item['image'] = np.expand_dims(item['image'], axis=0)
-        res = {
-            'features': item['image'].astype(np.float32),
-            'meta': {c: d[c] for c in self.meta_cols}
-        }
-        if 'mask' in item:
-            mask = item['mask']
+    def _get_item_after_transform(self, row: dict,
+                                  transformed: dict, res: dict):
+        if 'mask' in transformed:
+            mask = transformed['mask']
             if len(mask.shape) == 2:
-                mask_encoded = np.zeros((self.num_classes, *mask.shape), dtype=mask.dtype)
+                mask_encoded = np.zeros((self.num_classes, *mask.shape),
+                                        dtype=mask.dtype)
                 for i in range(self.num_classes):
                     mask_encoded[i] = mask == i
 
                 mask = mask_encoded
             res['targets'] = mask.astype(np.float32)
-        return res
-
-    @staticmethod
-    def read_image_file(path: str, gray_scale=False):
-        if path.endswith('.tiff') and not gray_scale:
-            return tifffile.imread(path)
-        elif path.endswith('.npy'):
-            return np.load(path)
-        else:
-            if gray_scale:
-                return cv2.imread(path, cv2.IMREAD_GRAYSCALE).astype(np.uint8)
-            else:
-                return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)

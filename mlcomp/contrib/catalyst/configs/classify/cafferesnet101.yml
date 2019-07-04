@@ -1,0 +1,8 @@
+model_params: {variant: cafferesnet101}
+stages:
+  data_params:
+    batch_size: 64
+    height: 224
+    mean: [102.9801, 115.9465, 122.7717]
+    std: [1, 1, 1]
+    width: 224

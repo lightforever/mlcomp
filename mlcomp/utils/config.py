@@ -1,8 +1,11 @@
+from typing import List
+
 import yaml
 from collections import OrderedDict
 import os
 import json
-from io import StringIO
+import albumentations as A
+
 
 class Config(OrderedDict):
     @property
@@ -10,15 +13,17 @@ class Config(OrderedDict):
         return os.path.join(self['info']['project'], 'data')
 
     @staticmethod
-    def from_json(config:str):
+    def from_json(config: str):
         return Config(json.loads(config))
 
     @staticmethod
-    def from_yaml(config:str):
+    def from_yaml(config: str):
         return load_ordered_yaml(text=config)
 
-def load_ordered_yaml(file:str=None, text:str=None,
-                      Loader=yaml.Loader, object_pairs_hook=OrderedDict)->Config:
+
+def load_ordered_yaml(file: str = None, text: str = None,
+                      Loader=yaml.Loader,
+                      object_pairs_hook=OrderedDict) -> Config:
     """
     Loads `yaml` config into OrderedDict
     Args:
@@ -42,3 +47,18 @@ def load_ordered_yaml(file:str=None, text:str=None,
     )
     stream = open(file, "r") if file else text
     return Config(yaml.load(stream, OrderedLoader))
+
+
+def parse_albu(configs: List[dict]):
+    res = []
+    for config in configs:
+        assert 'name' in config, f'name is required in {config}'
+        config = config.copy()
+        name = config.pop('name')
+        if name == 'Compose':
+            items = config.pop('items')
+            aug = A.Compose(parse_albu(items), **config)
+        else:
+            aug = getattr(A, name)(**config)
+        res.append(aug)
+    return res

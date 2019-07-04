@@ -1,0 +1,8 @@
+model_params: {variant: densenet121}
+stages:
+  data_params:
+    batch_size: 64
+    height: 224
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+    width: 224
