@@ -18,7 +18,8 @@ def main():
 @click.argument('img_path')
 @click.argument('n_splits', type=int)
 @click.option('--group-regex')
-def split_classify(img_path: str, n_splits: int,
+def split_classify(img_path: str,
+                   n_splits: int,
                    group_regex: str = None):
     output = join(current_folder, 'fold.csv')
     get_group = None
@@ -46,7 +47,9 @@ def split_classify(img_path: str, n_splits: int,
 @click.argument('mask_path')
 @click.argument('n_splits', type=int)
 @click.option('--group-regex')
-def split_segment(img_path: str, mask_path: str, n_splits: int,
+def split_segment(img_path: str,
+                  mask_path: str,
+                  n_splits: int,
                   group_regex: str = None):
     output = join(current_folder, 'fold.csv')
     get_group = None
