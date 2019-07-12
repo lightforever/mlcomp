@@ -1,6 +1,77 @@
-<mat-form-field>
-  <input matInput (keyup)="filter_name($event.target.value)" placeholder="Name">
-</mat-form-field>
+<button mat-raised-button style="margin-top: 15px"
+        (click)="filter_hidden=!filter_hidden">
+    Filters {{filter_applied_text}}
+</button>
+
+<div [hidden]="filter_hidden">
+    <mat-form-field style="width: 150px">
+        <mat-label>Project</mat-label>
+        <mat-select (ngModelChange)="project=$event; onchange()"
+                    [ngModel]="project">
+            <mat-option *ngFor="let project of projects" [value]="project.id">
+                {{project.name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+     <mat-form-field style="width: 150px">
+        <mat-label>Dag</mat-label>
+        <mat-select (ngModelChange)="dag=$event; onchange()"
+                    [ngModel]="dag">
+            <mat-option *ngFor="let dag of dags" [value]="dag.id">
+                {{dag.name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field style="width: 150px">
+        <input matInput (keyup)="name=$event.target.value;onchange()"
+               placeholder="Name">
+    </mat-form-field>
+
+
+    <mat-form-field style="width: 200px">
+        <input matInput type="datetime-local" placeholder="created min"
+               [ngModel]="created_min"
+               (ngModelChange)="created_min = $event;onchange()">
+    </mat-form-field>
+
+    <mat-form-field style="width: 200px">
+        <input matInput type="datetime-local" placeholder="created max"
+               [ngModel]="created_max"
+               (ngModelChange)="created_max = $event;onchange()">
+    </mat-form-field>
+
+    <mat-form-field style="width: 200px">
+        <input matInput type="datetime-local" placeholder="last activity min"
+               [ngModel]="last_activity_min"
+               (ngModelChange)="last_activity_min = $event;onchange()">
+    </mat-form-field>
+
+    <mat-form-field style="width: 200px">
+        <input matInput type="datetime-local" placeholder="last activity max"
+               [ngModel]="last_activity_max"
+               (ngModelChange)="last_activity_max = $event;onchange()">
+    </mat-form-field>
+
+    <section class="checkbox-section">
+        <mat-checkbox [(ngModel)]="not_ran" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Not ran</mat-checkbox>
+        <mat-checkbox [(ngModel)]="queued" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Queued</mat-checkbox>
+        <mat-checkbox [(ngModel)]="in_progress" class="checkbox-margin"
+                      (ngModelChange)="onchange()">In progress </mat-checkbox>
+        <mat-checkbox [(ngModel)]="failed" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Failed </mat-checkbox>
+        <mat-checkbox [(ngModel)]="stopped" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Stopped</mat-checkbox>
+        <mat-checkbox [(ngModel)]="skipped" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Skipped</mat-checkbox>
+        <mat-checkbox [(ngModel)]="finished" class="checkbox-margin"
+                      (ngModelChange)="onchange()">Finished</mat-checkbox>
+    </section>
+</div>
+
 
 <div class="mat-elevation-z8">
   <table mat-table [dataSource]="dataSource" matSort>

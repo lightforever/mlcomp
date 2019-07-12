@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {BaseService} from "./base.service";
-import {BaseResult, DagStopResult} from "./models";
+import {BaseResult, DagStopResult, ProjectAddData} from "./models";
 import {AppSettings} from "./app-settings";
 import {catchError} from "rxjs/operators";
 
@@ -29,6 +29,13 @@ export class ProjectService extends BaseService {
     remove_files(id: number) {
         let message = `${this.constructor.name}.remove_files`;
         return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_files', {'project': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    add(data: ProjectAddData) {
+        let message = `${this.constructor.name}.add`;
+        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/add', {'name': data.name}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

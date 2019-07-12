@@ -4,7 +4,10 @@ import {SharedModule} from "./shared.module";
 import {AppRoutingModule} from './app-routing.module';
 
 import {AppComponent} from './app.component';
-import {ProjectComponent} from './project/project.component';
+import {
+    ProjectAddDialogComponent,
+    ProjectComponent
+} from './project/project.component';
 import {ComputerComponent} from './computer/computer.component';
 import {MessagesComponent} from './messages/messages.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -25,11 +28,13 @@ import {ModelComponent} from "./model/model.component";
     declarations: [
         AppComponent,
         ProjectComponent,
+        ProjectAddDialogComponent,
         MessagesComponent,
         ComputerComponent,
         ModelComponent,
         LoginComponent
     ],
+    entryComponents: [ProjectAddDialogComponent],
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }

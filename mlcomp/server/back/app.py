@@ -92,6 +92,16 @@ def projects():
     return json.dumps(res)
 
 
+@app.route('/api/project/add', methods=['POST'])
+@requires_auth
+def project_add():
+    data = request_data()
+
+    provider = ProjectProvider()
+    res = provider.add(data['name'], dict())
+    return json.dumps(res)
+
+
 @app.route('/api/img_classify', methods=['POST'])
 @requires_auth
 def img_classify():

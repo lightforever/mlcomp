@@ -20,9 +20,29 @@ export class DagsComponent extends Paginator<Dag> {
 
     displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started',
         'duration', 'last_activity','task_status', 'links',  'img_size', 'file_size'];
+    dag: number;
     project: number;
     name: string;
     @Input() report: number;
+
+    filter_hidden: boolean = true;
+    filter_applied_text: string;
+
+    created_min: string;
+    created_max: string;
+
+    not_ran: boolean;
+    queued: boolean;
+    in_progress: boolean;
+    failed: boolean;
+    stopped: boolean;
+    skipped: boolean;
+    finished: boolean;
+
+    projects: any[];
+
+    last_activity_min: string;
+    last_activity_max: string;
 
     constructor(protected service: DagService, protected location: Location,
                 protected router: Router, protected  route: ActivatedRoute,
@@ -54,16 +74,38 @@ export class DagsComponent extends Paginator<Dag> {
         let res = new DagFilter();
         res.paginator = super.get_filter();
         res.name = this.name;
-        res.project = this.project;
+        if(this.project!=-1) {
+            res.project = this.project;
+        }
         res.report = this.report;
+        res.status = {
+            'not_ran': this.not_ran,
+            'queued': this.queued,
+            'in_progress': this.in_progress,
+            'failed': this.failed,
+            'stopped': this.stopped,
+            'skipped': this.skipped,
+            'finished': this.finished
+        };
+        res.created_min = Helpers.parse_time(this.created_min);
+        res.created_max = Helpers.parse_time(this.created_max);
+        res.last_activity_min = Helpers.parse_time(this.last_activity_min);
+        res.last_activity_max = Helpers.parse_time(this.last_activity_max);
         return res;
     }
 
     protected _ngOnInit() {
+        let self = this;
         this.route.queryParams
             .subscribe(params => {
                 if (params['project']) this.project = parseInt(params['project']);
+                self.onchange();
             });
+
+        this.data_updated.subscribe(res=>{
+            self.projects = res.projects;
+            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+        });
 
     }
 
@@ -73,11 +115,6 @@ export class DagsComponent extends Paginator<Dag> {
 
     status_click(dag: Dag, status: NameCount) {
         this.router.navigate([`/dags/dag-detail/${dag.id}`], {queryParams: {status: status.name}});
-    }
-
-    filter_name(name: string) {
-        this.name = name;
-        this.change.emit();
     }
 
     stop(element: any) {
@@ -130,4 +167,21 @@ export class DagsComponent extends Paginator<Dag> {
     size(s: number) {
         return Helpers.size(s);
     }
+
+    onchange(){
+        this.change.emit();
+        let filter = this.get_filter();
+        let count = 0;
+        if(this.name) count += 1;
+        if(this.project&&this.project!=-1) count += 1;
+        if(this.created_min) count += 1;
+        if(this.created_max) count += 1;
+        if(this.last_activity_min) count += 1;
+        if(this.last_activity_max) count += 1;
+        for(let k of Object.getOwnPropertyNames(filter.status)){
+            count += filter.status[k]==true?1:0;
+        }
+        this.filter_applied_text = count>0? `(${count} applied)`:'';
+    }
+
 }

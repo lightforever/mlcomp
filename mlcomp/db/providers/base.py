@@ -1,4 +1,5 @@
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.elements import or_
 
 from mlcomp.db.core import *
 from mlcomp.db.models import *

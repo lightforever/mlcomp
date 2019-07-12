@@ -1,4 +1,12 @@
-import {Component, OnInit, ViewChild, EventEmitter, Input, ElementRef, OnDestroy} from '@angular/core';
+import {
+    Component,
+    OnInit,
+    ViewChild,
+    EventEmitter,
+    Input,
+    ElementRef,
+    OnDestroy
+} from '@angular/core';
 import {MatSort, MatTableDataSource, MatPaginator} from '@angular/material';
 import {Observable, of as observableOf, merge} from 'rxjs';
 import {catchError} from 'rxjs/operators';
@@ -69,16 +77,16 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         this._ngOnInit();
 
         // If the user changes the sort order, reset back to the first page.
-        if(this.sort){
+        if (this.sort) {
             this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
         }
 
 
         let m = merge(this.change);
-        if(this.sort){
+        if (this.sort) {
             m = merge(m, this.sort.sortChange);
         }
-        if(this.paginator){
+        if (this.paginator) {
             m = merge(m, this.paginator.page);
         }
 
@@ -87,7 +95,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
             switchMap(() => {
                 this.isLoading_results = true;
                 let filter = this.get_filter();
-                if(!filter){
+                if (!filter) {
                     return observableOf(new PaginatorRes<T>());
                 }
                 return this.service.get_paginator<T>(filter);
@@ -132,7 +140,9 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
                     data.splice(i, 0, res_a[i]);
                 }
 
+                data = data.sort((a, b) => a[this.id_column] > b[this.id_column] ? -1 : 1);
                 this.dataSource.data = data;
+
 
             } else {
                 this.dataSource.data = res.data;

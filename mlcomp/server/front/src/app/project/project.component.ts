@@ -1,12 +1,16 @@
 import {Component, Inject} from '@angular/core';
 import {ProjectService} from '../project.service';
 import {Paginator} from "../paginator";
-import {Project, ProjectFilter} from "../models";
+import {Project, ProjectAddData, ProjectFilter} from "../models";
 import {Location} from '@angular/common';
-import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatIconRegistry} from "@angular/material";
+import {
+    MAT_DIALOG_DATA,
+    MatDialog,
+    MatDialogRef,
+    MatIconRegistry
+} from "@angular/material";
 import {DomSanitizer} from "@angular/platform-browser";
 import {DialogComponent} from "../dialog/dialog.component";
-import {AppSettings} from "../app-settings";
 import {Helpers} from "../helpers";
 
 @Component({
@@ -62,10 +66,48 @@ export class ProjectComponent extends Paginator<Project> {
     }
 
     remove_imgs(element: Project) {
-        this.service.remove_imgs(element.id).subscribe(data=>{element.img_size=0});
+        this.service.remove_imgs(element.id).subscribe(data => {
+            element.img_size = 0
+        });
     }
 
     remove_files(element) {
-        this.service.remove_files(element.id).subscribe(data=>{element.file_size=0});
+        this.service.remove_files(element.id).subscribe(data => {
+            element.file_size = 0
+        });
+    }
+
+    add() {
+        const dialogRef = this.dialog.open(ProjectAddDialogComponent, {
+            width: '600px', height: '300px',
+            data: {'name': ''}
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.add(result).subscribe(_ => {
+                    this.change.emit();
+                });
+
+            }
+        });
     }
 }
+
+@Component({
+    selector: 'project-add-dialog',
+    templateUrl: 'project-add-dialog.html',
+})
+export class ProjectAddDialogComponent {
+
+    constructor(
+        public dialogRef: MatDialogRef<ProjectAddDialogComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: ProjectAddData) {
+    }
+
+    onNoClick(): void {
+        this.dialogRef.close();
+    }
+
+}
+

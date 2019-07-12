@@ -9,6 +9,7 @@ import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {TaskFilter} from "../../models";
 import {ReportService} from "../../report.service";
+import {Helpers} from "../../helpers";
 
 @Component({
     selector: 'app-tasks',
@@ -20,8 +21,31 @@ export class TasksComponent extends Paginator<TasksComponent> {
         'duration', 'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
     @Input() dag: number;
     name: string;
-    status: string;
     @Input() report: number;
+
+    project: number;
+
+    filter_hidden: boolean = true;
+    filter_applied_text: string;
+
+    created_min: string;
+    created_max: string;
+
+    not_ran: boolean;
+    queued: boolean;
+    in_progress: boolean;
+    failed: boolean;
+    stopped: boolean;
+    skipped: boolean;
+    finished: boolean;
+
+    dags: any[];
+    projects: any[];
+
+    last_activity_min: string;
+    last_activity_max: string;
+
+
 
     constructor(protected service: TaskService, protected location: Location,
                 protected router: Router, protected  route: ActivatedRoute,
@@ -37,17 +61,24 @@ export class TasksComponent extends Paginator<TasksComponent> {
     }
 
     protected _ngOnInit() {
+        let self = this;
         this.route.queryParams.subscribe(params => {
             if(params['dag']) parseInt(this.dag = params['dag']);
-            if(params['status']) parseInt(this.status = params['status']);
+            if(params['status']){
+                this[params['status']] = true;
+            }
+
+            self.onchange();
+        });
+
+        this.data_updated.subscribe(res=>{
+            self.projects = res.projects;
+            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+
+            self.dags = res.dags;
+            self.dags.splice(0, 0, {'id': -1, 'name': 'None'});
         });
     }
-
-    filter_name(name: string) {
-        this.name = name;
-        this.change.emit();
-    }
-
 
     status_color(status: string) {
         return AppSettings.status_colors[status];
@@ -58,9 +89,29 @@ export class TasksComponent extends Paginator<TasksComponent> {
         let res = new TaskFilter();
         res.paginator = super.get_filter();
         res.name = this.name;
-        res.dag = this.dag;
-        res.status = this.status;
         res.report = this.report;
+
+        if(this.project!=-1) {
+            res.project = this.project;
+        }
+        if(this.dag!=-1){
+            res.dag = this.dag;
+        }
+
+        res.status = {
+            'not_ran': this.not_ran,
+            'queued': this.queued,
+            'in_progress': this.in_progress,
+            'failed': this.failed,
+            'stopped': this.stopped,
+            'skipped': this.skipped,
+            'finished': this.finished
+        };
+        res.created_min = Helpers.parse_time(this.created_min);
+        res.created_max = Helpers.parse_time(this.created_max);
+        res.last_activity_min = Helpers.parse_time(this.last_activity_min);
+        res.last_activity_max = Helpers.parse_time(this.last_activity_max);
+
         return res;
     }
 
@@ -80,5 +131,23 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
     unfinished(element){
         return ['not_ran', 'in_progress', 'queued'].indexOf(element.status)!=-1;
+    }
+
+    onchange(){
+        this.change.emit();
+
+        let filter = this.get_filter();
+        let count = 0;
+        if(this.dag&&this.dag!=-1) count += 1;
+        if(this.name) count += 1;
+        if(this.project&&this.project!=-1) count += 1;
+        if(this.created_min) count += 1;
+        if(this.created_max) count += 1;
+        if(this.last_activity_min) count += 1;
+        if(this.last_activity_max) count += 1;
+        for(let k of Object.getOwnPropertyNames(filter.status)){
+            count += filter.status[k]==true?1:0;
+        }
+        this.filter_applied_text = count>0? `(${count} applied)`:'';
     }
 }

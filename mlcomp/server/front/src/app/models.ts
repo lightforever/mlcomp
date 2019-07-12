@@ -144,15 +144,26 @@ export class DagFilter {
     project: number;
     report: number;
     id: number;
+    status;
+    created_min: Date;
+    created_max: Date;
+    last_activity_min: Date;
+    last_activity_max: Date;
 }
 
 export class TaskFilter {
     paginator: PaginatorFilter;
     name: string;
     dag: number;
-    status: string;
     report: number;
     id: number;
+
+    status;
+    created_min: Date;
+    created_max: Date;
+    last_activity_min: Date;
+    last_activity_max: Date;
+    project: number;
 }
 
 export class ReportsFilter {
@@ -254,4 +265,8 @@ export class ModelFilter {
     paginator: PaginatorFilter;
     name: string;
     project: number;
+}
+
+export interface ProjectAddData {
+    name: string;
 }
