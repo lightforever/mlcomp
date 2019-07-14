@@ -1,9 +1,11 @@
+from catalyst.dl import RunnerState
+
 from mlcomp.worker.executors.catalyst.base import BaseCallback
 from scipy.special import softmax
 import pickle
 from mlcomp.db.models import ReportImg
-from catalyst.dl.state import RunnerState
 import numpy as np
+
 
 class PrecisionRecallCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):

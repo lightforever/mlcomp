@@ -24,6 +24,7 @@ td.usage_history, th.usage_history {
   display:flex;
   justify-content:center;
   text-align: center;
+    margin-left: 12px !important;
 }
 
 .mat-header-cell{

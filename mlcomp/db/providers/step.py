@@ -25,25 +25,36 @@ class StepProvider(BaseDataProvider):
 
     def step_info(self, step):
         step, *log_status = step
+        duration = ((step.finished if step.finished else now()) - step.started)
         res = {'id': step.id, 'name': step.name,
                'status': to_snake(StepStatus(step.status).name),
                'level': step.level,
-               'duration': ((step.finished if step.finished else now()) - step.started).total_seconds(),
-               'log_statuses': [{'name': to_snake(e.name), 'count': s} for e, s in zip(LogStatus, log_status)]
+               'duration': duration.total_seconds(),
+               'log_statuses': [{'name': to_snake(e.name), 'count': s} for e, s
+                                in zip(LogStatus, log_status)]
                }
         return res
 
     def get(self, task_id: int):
         log_status = []
         for s in LogStatus:
-            log_status.append(func.count(Log.level).filter(Log.level == s.value).label(s.name))
+            log_status.append(
+                func.count(Log.level).filter(Log.level == s.value).
+                    label(s.name)
+            )
 
-        query = self.query(Step, *log_status).filter(Step.task == task_id).order_by(Step.started)
+        query = self.query(Step, *log_status).filter(
+            Step.task == task_id).order_by(Step.started)
         query = query.join(Log).group_by(Step.id)
         steps = query.all()
-        hierarchy = {**(self.step_info(steps[0]) if len(steps)>0 else dict()), 'children': []}
+        if len(steps) == 0:
+            return []
+        hierarchy = {
+            **(self.step_info(steps[0]) if len(steps) > 0 else dict()),
+            'children': []}
         self._hierarchy(hierarchy, steps, 1, len(steps) - 1)
         return [hierarchy]
 
     def last_for_task(self, id: int):
-        return self.query(Step).filter(Step.task == id).order_by(Step.started.desc()).first()
+        return self.query(Step).filter(Step.task == id).order_by(
+            Step.started.desc()).first()

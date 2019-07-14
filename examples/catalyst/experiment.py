@@ -1,8 +1,9 @@
 from collections import OrderedDict
 import torchvision
 import numpy as np
+from catalyst.dl import ConfigExperiment
 from torchvision import transforms
-from catalyst.dl.experiments import ConfigExperiment
+
 
 class Experiment(ConfigExperiment):
     @staticmethod

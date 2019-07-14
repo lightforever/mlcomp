@@ -6,7 +6,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {MatIconRegistry} from "@angular/material";
 import {DomSanitizer} from "@angular/platform-browser";
 import {MessageService} from "../message.service";
-import {LogService} from "../log.service";
+import {LogService} from "./log.service";
 
 
 @Component({

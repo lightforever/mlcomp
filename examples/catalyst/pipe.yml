@@ -1,0 +1,12 @@
+info:
+  name: command
+  project: youtube
+  type: Pipe
+pipes:
+  valid:
+    infer:
+      type: catalyst_infer
+      slot: youtube
+
+interfaces: [torch]
+

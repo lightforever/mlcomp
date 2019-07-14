@@ -1,9 +1,9 @@
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {Report, ReportItem} from "../../../models";
-import {ReportService} from "../../../report.service";
 import {LayoutService} from "./layout.service";
 import {SeriesComponent} from "../series/series.component";
 import {Helpers} from "../../../helpers";
+import {ReportService} from "../../report.service";
 
 @Component({
     selector: 'app-layout',

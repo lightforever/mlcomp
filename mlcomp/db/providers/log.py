@@ -7,8 +7,9 @@ class LogProvider(BaseDataProvider):
     model = Log
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Log, Step, Task, Computer).join(Step, Step.id == Log.step, isouter=True). \
-            join(Task, Task.id == Step.task, isouter=True). \
+        query = self.query(Log, Step, Task, Computer).\
+            join(Step, Step.id == Log.step, isouter=True). \
+            join(Task, Task.id == Log.task, isouter=True). \
             join(Computer, Computer.name == Task.computer_assigned, isouter=True)
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])

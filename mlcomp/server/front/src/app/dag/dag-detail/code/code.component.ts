@@ -2,7 +2,7 @@ import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {FlatNode, CodeNode} from '../../../models'
-import {DagDetailService} from "../../../dag-detail.service";
+import {DagDetailService} from "../dag-detail/dag-detail.service";
 import {ActivatedRoute} from "@angular/router";
 import {MessageService} from "../../../message.service";
 import {DynamicresourceService} from "../../../dynamicresource.service";

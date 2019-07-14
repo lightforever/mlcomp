@@ -1,6 +1,7 @@
 import ast
-
 import click
+
+from mlcomp.db.enums import DagType, TaskType
 from mlcomp.utils.logging import create_logger
 
 from mlcomp.db.providers import *
@@ -10,9 +11,12 @@ from mlcomp.utils.config import load_ordered_yaml
 import socket
 from multiprocessing import cpu_count
 import GPUtil
-from mlcomp.worker.tasks import execute_by_id
+from mlcomp.worker.tasks import execute_by_id, Executor
 from collections import OrderedDict
 from mlcomp.utils.misc import memory
+import json
+
+from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 
 @click.group()
@@ -38,73 +42,14 @@ def project(name, class_names):
 def _dag(config: str, debug: bool = False):
     config_text = open(config, "r").read()
     config_parsed = load_ordered_yaml(config)
-    info = config_parsed['info']
-    executors = config_parsed['executors']
 
-    provider = TaskProvider()
-    storage = Storage()
-    dag_provider = DagProvider()
-    report_provider = ReportProvider()
-    report_tasks_provider = ReportTasksProvider()
-    report_scheme_provider = ReportSchemeProvider()
+    if config_parsed['info'].get('type', "Standard") == DagType.Standard.name:
+        return dag_standard(config_parsed,
+                            debug=debug,
+                            config_text=config_text)
 
-    folder = os.path.dirname(config)
-    project = ProjectProvider().by_name(info['project']).id
-    dag = dag_provider.add(Dag(config=config_text, project=project,
-                               name=info['name'], docker_img=info.get('docker_img')))
-    storage.upload(folder, dag)
-
-    created = OrderedDict()
-    schemes = report_scheme_provider.all()
-    for k, v in config_parsed.get('reports', dict()).items():
-        if k not in schemes:
-            report_scheme_provider.add_item(k, v)
-        else:
-            report_scheme_provider.change(k, v)
-
-        schemes[k] = v
-
-    while len(created) < len(executors):
-        for k, v in executors.items():
-            valid = True
-            if 'depends' in k:
-                for d in v['depends']:
-                    if d not in executors:
-                        raise Exception(f'Executor {k} depend on {d} which does not exist')
-
-                    valid = valid and d in created
-            if valid:
-                task = Task(
-                    name=f'{info["name"]}_{k}',
-                    executor=k,
-                    computer=info.get('computer'),
-                    gpu=v.get('gpu', 0),
-                    cpu=v.get('cpu', 1),
-                    memory=v.get('memory', 0.1),
-                    dag=dag.id,
-                    debug=debug,
-                    steps=int(v.get('steps', '1'))
-                )
-
-                if v.get('report'):
-                    if v['report'] not in schemes:
-                        raise Exception(f'Unknown report = {v["report"]}')
-                    report_config = ReportSchemeInfo.union_schemes(v['report'], schemes)
-                    task.additional_info = pickle.dumps({'report_config': report_config})
-                    provider.add(task)
-
-                    report = Report(config=json.dumps(report_config), name=task.name, project=project)
-                    report_provider.add(report)
-                    report_tasks_provider.add(ReportTasks(report=report.id, task=task.id))
-                else:
-                    provider.add(task)
-
-                created[k] = task.id
-
-                if 'depends' in v:
-                    for d in v['depends']:
-                        provider.add_dependency(created[k], created[d])
-    return created
+    return dag_pipe(config_parsed,
+                    config_text=config_text)
 
 
 @main.command()
@@ -126,7 +71,8 @@ def _create_computer():
 
 @main.command()
 @click.argument('config')
-def execute(config: str):
+@click.option('--debug', type=bool, default=True)
+def execute(config: str, debug: bool):
     _create_computer()
 
     # Fail all InProgress Tasks
@@ -136,13 +82,17 @@ def execute(config: str):
     provider = TaskProvider()
     step_provider = StepProvider()
 
-    for t in provider.by_status(TaskStatus.InProgress, worker_index=worker_index):
+    for t in provider.by_status(TaskStatus.InProgress,
+                                worker_index=worker_index):
         step = step_provider.last_for_task(t.id)
-        logger.error(f'Task Id = {t.id} was in InProgress state when another tasks arrived to the same worker', ComponentType.Worker, step)
+        logger.error(
+            f'Task Id = {t.id} was in InProgress state '
+            f'when another tasks arrived to the same worker',
+            ComponentType.Worker, step)
         provider.change_status(t, TaskStatus.Failed)
 
     # Create dag
-    created_dag = _dag(config, True)
+    created_dag = _dag(config, debug)
 
     config = load_ordered_yaml(config)
     executors = config['executors']
@@ -155,7 +105,8 @@ def execute(config: str):
             if 'depends' in k:
                 for d in v['depends']:
                     if d not in executors:
-                        raise Exception(f'Executor {k} depend on {d} which does not exist')
+                        raise Exception(
+                            f'Executor {k} depend on {d} which does not exist')
 
                     valid = valid and d in created
             if valid:

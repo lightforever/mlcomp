@@ -16,7 +16,10 @@ import {ReactiveFormsModule} from "@angular/forms";
 import {JwtInterceptor} from "./_helpers/jwt.intercepter";
 import {ErrorInterceptor} from "./_helpers/error.interceptor";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import {ModelStartDialogComponent} from "./model/model-start-dialog.component";
 import {ModelComponent} from "./model/model.component";
+import {ModelAddDialogComponent} from "./model/model-add-dialog.component";
+
 
 @NgModule({
     imports: [
@@ -29,12 +32,17 @@ import {ModelComponent} from "./model/model.component";
         AppComponent,
         ProjectComponent,
         ProjectAddDialogComponent,
+        ModelAddDialogComponent,
+        ModelStartDialogComponent,
         MessagesComponent,
         ComputerComponent,
         ModelComponent,
         LoginComponent
     ],
-    entryComponents: [ProjectAddDialogComponent],
+    entryComponents: [ProjectAddDialogComponent,
+        ModelAddDialogComponent,
+        ModelStartDialogComponent
+    ],
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }

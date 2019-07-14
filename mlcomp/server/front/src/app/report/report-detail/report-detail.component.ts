@@ -1,9 +1,9 @@
 import {Component, OnInit} from '@angular/core';
-import {ReportService} from "../../report.service";
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Report} from "../../models";
 import {DynamicresourceService} from "../../dynamicresource.service";
+import {ReportService} from "../report.service";
 
 @Component({
     selector: 'app-report-detail',

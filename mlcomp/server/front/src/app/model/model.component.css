@@ -1,0 +1,44 @@
+table {
+  width: 70%;
+  min-width: 1200px;
+}
+
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+td, th {
+  width: 10%;
+
+}
+
+mat-icon{
+  cursor: pointer;
+}
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+  margin-left: 12px !important;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
+
+td{
+  text-align: center;
+}
+
+.checkbox-section {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+}
+
+.checkbox-margin {
+  margin: 0 10px;
+}

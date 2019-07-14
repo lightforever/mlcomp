@@ -1,5 +1,6 @@
 from .base import *
 
+
 class Log(Base):
     __tablename__ = 'log'
 
@@ -11,3 +12,4 @@ class Log(Base):
     component = sa.Column(sa.Integer)
     module = sa.Column(sa.String)
     line = sa.Column(sa.Integer)
+    task = sa.Column(sa.Integer, ForeignKey('task.id'))

@@ -1,9 +1,11 @@
 from sqlalchemy.orm import defer
 
+from mlcomp.db.enums import TaskType, DagType
 from mlcomp.db.providers.base import *
 from typing import List
 from mlcomp.utils.misc import to_snake, duration_format
 from datetime import datetime
+from mlcomp.utils.config import Config
 
 
 class TaskProvider(BaseDataProvider):
@@ -46,6 +48,7 @@ class TaskProvider(BaseDataProvider):
         for p in paginator.all():
             item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
+            item['type'] = to_snake(TaskType(item['type']).name)
             if p.started is None:
                 delta = 0
             elif p.status == TaskStatus.InProgress.value:
@@ -74,10 +77,34 @@ class TaskProvider(BaseDataProvider):
             all()
         projects = [{'name': name, 'id': id} for name, id in projects]
         dags = [{'name': name, 'id': id} for name, id in dags]
+
+        dags_model = self.query(Dag.name, Dag.id, Dag.config). \
+            filter(Dag.type == DagType.Pipe.value). \
+            order_by(Dag.id.desc()). \
+            all()
+        dags_model_dict = []
+        for name, id, config in dags_model:
+            config = Config.from_yaml(config)
+            slots = []
+            for pipe in config['pipes'].values():
+                for k, v in pipe.items():
+                    if 'slot' in v:
+                        slots.append(v['slot'])
+                    elif 'slots' in v:
+                        slots.extend(v['slots'])
+
+            dag = {'name': name,
+                   'id': id,
+                   'slots': slots,
+                   'interfaces': config['interfaces']
+                   }
+            dags_model_dict.append(dag)
         return {'total': total,
                 'data': res,
                 'projects': projects,
-                'dags': dags}
+                'dags': dags,
+                'dags_model': dags_model_dict
+                }
 
     def add_dependency(self, task_id: int, depend_id: int) -> None:
         self.add(TaskDependence(task_id=task_id, depend_id=depend_id))

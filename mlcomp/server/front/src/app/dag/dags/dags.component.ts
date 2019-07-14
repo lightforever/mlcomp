@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Dag, NameCount, DagFilter, Project} from '../../models';
-import {DagService} from '../../dag.service';
+import {DagService} from '../dag.service';
 import {Location} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -8,8 +8,8 @@ import {MatIconRegistry} from '@angular/material';
 import {MessageService} from '../../message.service';
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
-import {ReportService} from "../../report.service";
 import {Helpers} from "../../helpers";
+import {ReportService} from "../../report/report.service";
 
 @Component({
     selector: 'app-dags',
@@ -28,6 +28,8 @@ export class DagsComponent extends Paginator<Dag> {
     filter_hidden: boolean = true;
     filter_applied_text: string;
 
+    projects: any[];
+
     created_min: string;
     created_max: string;
 
@@ -39,14 +41,15 @@ export class DagsComponent extends Paginator<Dag> {
     skipped: boolean;
     finished: boolean;
 
-    projects: any[];
-
     last_activity_min: string;
     last_activity_max: string;
 
-    constructor(protected service: DagService, protected location: Location,
-                protected router: Router, protected  route: ActivatedRoute,
-                iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
+    constructor(protected service: DagService,
+                protected location: Location,
+                protected router: Router,
+                protected  route: ActivatedRoute,
+                iconRegistry: MatIconRegistry,
+                sanitizer: DomSanitizer,
                 private message_service: MessageService,
                 private report_service: ReportService
     ) {

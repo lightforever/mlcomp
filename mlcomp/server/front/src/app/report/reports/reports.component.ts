@@ -1,9 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {Paginator} from "../../paginator";
 import {TasksComponent} from "../../task/tasks/tasks.component";
-import {ReportService} from "../../report.service";
 import {Location} from "@angular/common";
 import {DagFilter, ReportsFilter} from "../../models";
+import {ReportService} from "../report.service";
 
 @Component({
     selector: 'app-reports',

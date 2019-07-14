@@ -39,7 +39,7 @@ class DagProvider(BaseDataProvider):
 
         status_clauses = []
         for agg, e in zip(task_status, TaskStatus):
-            if filter['status'].get(to_snake(e.name)):
+            if filter.get('status', {}).get(to_snake(e.name)):
                 status_clauses.append(agg > 0)
         if len(status_clauses) > 0:
             query = query.having(or_(*status_clauses))

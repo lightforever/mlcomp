@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import {BaseService} from "./base.service";
-import {AppSettings} from "./app-settings";
+import {BaseService} from "../base.service";
+import {AppSettings} from "../app-settings";
 import {catchError, tap} from "rxjs/operators";
-import {PaginatorRes, Status, StepNode, ToogleReportResult} from "./models";
+import {PaginatorRes, Status, StepNode, ToogleReportResult} from "../models";
 
 @Injectable({
   providedIn: 'root'

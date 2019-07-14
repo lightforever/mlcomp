@@ -2,9 +2,9 @@ import {AfterViewInit, Component, OnChanges, OnInit, ViewChild} from '@angular/c
 import {Paginator} from "../paginator";
 import {Computer, ComputerFilter} from "../models";
 import {Location} from "@angular/common";
-import {ComputerService} from "../computer.service";
 import {DynamicresourceService} from "../dynamicresource.service";
 import {Helpers} from "../helpers";
+import {ComputerService} from "./computer.service";
 
 @Component({
     selector: 'app-computer',

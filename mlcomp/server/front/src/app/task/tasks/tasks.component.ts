@@ -1,15 +1,17 @@
 import {Component, Input} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {MatIconRegistry} from '@angular/material';
+import {MatDialog, MatIconRegistry} from '@angular/material';
 import {MessageService} from '../../message.service';
-import {TaskService} from '../../task.service';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {TaskFilter} from "../../models";
-import {ReportService} from "../../report.service";
 import {Helpers} from "../../helpers";
+import {ReportService} from "../../report/report.service";
+import {TaskService} from "../task.service";
+import {ModelService} from "../../model/model.service";
+import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
 
 @Component({
     selector: 'app-tasks',
@@ -17,8 +19,11 @@ import {Helpers} from "../../helpers";
     styleUrls: ['./tasks.component.css']
 })
 export class TasksComponent extends Paginator<TasksComponent> {
-    displayed_columns: string[] = ['id', 'name', 'created', 'started', 'last_activity',
-        'duration', 'status', 'executor', 'dag', 'computer', 'requirements', 'steps', 'links'];
+    displayed_columns: string[] = ['id', 'name', 'created',
+        'started', 'last_activity',
+        'duration', 'status', 'executor', 'dag',
+        'computer', 'requirements', 'steps', 'score', 'links'
+    ];
     @Input() dag: number;
     name: string;
     @Input() report: number;
@@ -45,38 +50,48 @@ export class TasksComponent extends Paginator<TasksComponent> {
     last_activity_min: string;
     last_activity_max: string;
 
+    dags_model: any[];
 
 
-    constructor(protected service: TaskService, protected location: Location,
-                protected router: Router, protected  route: ActivatedRoute,
-                iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
+    constructor(protected service: TaskService,
+                protected location: Location,
+                protected router: Router,
+                protected  route: ActivatedRoute,
+                iconRegistry: MatIconRegistry,
+                sanitizer: DomSanitizer,
                 private message_service: MessageService,
-                private report_service: ReportService
+                private report_service: ReportService,
+                public model_add_dialog: MatDialog,
+                private model_service: ModelService
     ) {
         super(service, location);
         iconRegistry.addSvgIcon('stop',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/stop.svg'));
         iconRegistry.addSvgIcon('report',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/report.svg'));
+        iconRegistry.addSvgIcon('model',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/model.svg'));
     }
 
     protected _ngOnInit() {
         let self = this;
         this.route.queryParams.subscribe(params => {
-            if(params['dag']) parseInt(this.dag = params['dag']);
-            if(params['status']){
+            if (params['dag']) parseInt(this.dag = params['dag']);
+            if (params['status']) {
                 this[params['status']] = true;
             }
 
             self.onchange();
         });
 
-        this.data_updated.subscribe(res=>{
+        this.data_updated.subscribe(res => {
             self.projects = res.projects;
             self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
 
             self.dags = res.dags;
             self.dags.splice(0, 0, {'id': -1, 'name': 'None'});
+
+            self.dags_model = res.dags_model;
         });
     }
 
@@ -91,10 +106,10 @@ export class TasksComponent extends Paginator<TasksComponent> {
         res.name = this.name;
         res.report = this.report;
 
-        if(this.project!=-1) {
+        if (this.project != -1) {
             res.project = this.project;
         }
-        if(this.dag!=-1){
+        if (this.dag != -1) {
             res.dag = this.dag;
         }
 
@@ -129,25 +144,49 @@ export class TasksComponent extends Paginator<TasksComponent> {
         });
     }
 
-    unfinished(element){
-        return ['not_ran', 'in_progress', 'queued'].indexOf(element.status)!=-1;
+    unfinished(element) {
+        return ['not_ran', 'in_progress', 'queued'].indexOf(element.status) != -1;
     }
 
-    onchange(){
+    onchange() {
         this.change.emit();
 
         let filter = this.get_filter();
         let count = 0;
-        if(this.dag&&this.dag!=-1) count += 1;
-        if(this.name) count += 1;
-        if(this.project&&this.project!=-1) count += 1;
-        if(this.created_min) count += 1;
-        if(this.created_max) count += 1;
-        if(this.last_activity_min) count += 1;
-        if(this.last_activity_max) count += 1;
-        for(let k of Object.getOwnPropertyNames(filter.status)){
-            count += filter.status[k]==true?1:0;
+        if (this.dag && this.dag != -1) count += 1;
+        if (this.name) count += 1;
+        if (this.project && this.project != -1) count += 1;
+        if (this.created_min) count += 1;
+        if (this.created_max) count += 1;
+        if (this.last_activity_min) count += 1;
+        if (this.last_activity_max) count += 1;
+        for (let k of Object.getOwnPropertyNames(filter.status)) {
+            count += filter.status[k] == true ? 1 : 0;
         }
-        this.filter_applied_text = count>0? `(${count} applied)`:'';
+        this.filter_applied_text = count > 0 ? `(${count} applied)` : '';
+    }
+
+    not_a_model(element) {
+        return element.type != 'train';
+    }
+
+    model(element){
+        const dialogRef = this.model_add_dialog.open(ModelAddDialogComponent, {
+            width: '600px', height: '300px',
+            data: {
+                'dag': null,
+                'dags':this.dags_model,
+                'task': element.id
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.model_service.add(result).subscribe(_ => {
+
+                });
+
+            }
+        });
     }
 }

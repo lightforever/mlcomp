@@ -6,6 +6,7 @@ from mlcomp.utils.plot import figure_to_binary, plot_classification_report
 from sklearn.metrics import precision_recall_curve, classification_report
 from copy import deepcopy
 
+
 class ReportSchemeItem:
     def __init__(self, name: str):
         self.name = name
@@ -176,6 +177,7 @@ class ReportSchemeInfo:
             return r
 
         return ReportSchemeInfo(r)
+
 
 __all__ = ['ReportSchemeItem', 'ReportSchemeSeries', 'ReportSchemePrecisionRecall',
            'ReportSchemeF1', 'ReportSchemeMetric', 'ReportSchemeImgClassify', 'ReportSchemeInfo']

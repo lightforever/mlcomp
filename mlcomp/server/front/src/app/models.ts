@@ -28,6 +28,7 @@ export class Task {
   id: number;
   name: string;
   dag: Dag;
+  type: string;
 }
 
 export class PaginatorRes<T> {
@@ -259,14 +260,37 @@ export class Model {
     task: number;
     project: number;
     created: Date;
+    dags: any[];
+    interface: string;
+    slot: string;
+    dag: number;
 }
 
 export class ModelFilter {
     paginator: PaginatorFilter;
     name: string;
     project: number;
+    created_min: Date;
+    created_max: Date;
 }
 
 export interface ProjectAddData {
     name: string;
+}
+
+export interface ModelAddData {
+    dag: any;
+    slot: string;
+    interface: string;
+    dags: any[];
+    name: string;
+    task: number;
+}
+
+export interface ModelStartData {
+    dags: any[];
+    dag: any;
+    slot: string;
+    interface: string;
+    pipe: string;
 }

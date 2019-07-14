@@ -14,6 +14,7 @@ import pickle
 from mlcomp.worker.executors import *
 from mlcomp.utils.config import Config
 
+
 def execute_by_id(id: int, repeat_count=1):
     logger = create_logger()
     provider = TaskProvider()
@@ -27,7 +28,9 @@ def execute_by_id(id: int, repeat_count=1):
         assert dag is not None, 'You must fetch task with dag_rel'
 
         if task.status >= TaskStatus.InProgress.value and repeat_count >= 1:
-            logger.warning(f'Task = {task.id}. Status = {task.status}, before the execute_by_id invocation',
+            msg = f'Task = {task.id}. Status = {task.status}, ' \
+                f'before the execute_by_id invocation'
+            logger.warning(msg,
                            ComponentType.Worker)
             return
 
@@ -36,10 +39,14 @@ def execute_by_id(id: int, repeat_count=1):
         worker_index = int(os.getenv("WORKER_INDEX", -1))
 
         # Fail all InProgress Tasks assigned to this worker except that task
-        for t in provider.by_status(TaskStatus.InProgress, docker_img=docker_img, worker_index=worker_index):
+        for t in provider.by_status(TaskStatus.InProgress,
+                                    docker_img=docker_img,
+                                    worker_index=worker_index):
             if t.id != id:
                 step = step_provider.last_for_task(t.id)
-                logger.error(f'Task Id = {t.id} was in InProgress state when another tasks arrived to the same worker', ComponentType.Worker, step)
+                msg = f'Task Id = {t.id} was in InProgress state ' \
+                    f'when another tasks arrived to the same worker'
+                logger.error(msg, ComponentType.Worker, step)
                 provider.change_status(t, TaskStatus.Failed)
 
         task.computer_assigned = hostname
@@ -69,17 +76,19 @@ def execute_by_id(id: int, repeat_count=1):
         config = Config.from_yaml(dag.config)
         executor_type = config['executors'][task.executor]['type']
 
-        assert Executor.is_registered(executor_type), f'Executor {executor_type} was not found'
+        assert Executor.is_registered(executor_type), \
+            f'Executor {executor_type} was not found'
 
-        additional_info = pickle.loads(task.additional_info) if task.additional_info else dict()
-        executor = Executor.from_config(task.executor, config, additional_info=additional_info)
+        additional_info = pickle.loads(task.additional_info) \
+            if task.additional_info else dict()
+        executor = Executor.from_config(task.executor, config, additional_info)
 
         executor(task, dag)
 
         provider.change_status(task, TaskStatus.Success)
     except Exception:
         step = executor.step.id if (executor and executor.step) else None
-        logger.error(traceback.format_exc(), ComponentType.Worker, step)
+        logger.error(traceback.format_exc(), ComponentType.Worker, id, step)
         provider.change_status(task, TaskStatus.Failed)
     finally:
         sys.exit()

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
-import {BaseService} from "./base.service";
-import {BaseResult, DagStopResult, ProjectAddData} from "./models";
-import {AppSettings} from "./app-settings";
+import {BaseService} from "../base.service";
+import {BaseResult, DagStopResult, ProjectAddData} from "../models";
+import {AppSettings} from "../app-settings";
 import {catchError} from "rxjs/operators";
 
 @Injectable({

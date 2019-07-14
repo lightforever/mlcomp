@@ -1,9 +1,9 @@
 info:
   name: catalyst
-  project: catalyst
+  project: youtube
 executors:
   dummy1:
-    type: Catalyst
-    report: classify-img
+    type: catalyst
+    report: catalyst
     args:
-      config: catalyst-config.yml
+      config: catalyst.yml

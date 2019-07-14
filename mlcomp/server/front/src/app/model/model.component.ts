@@ -1,9 +1,16 @@
-import {Component} from '@angular/core';
+import {Component, Inject} from '@angular/core';
 import {Paginator} from "../paginator";
 import {Model, ModelFilter} from "../models";
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
-import {ModelService} from "../model.service";
+import {ModelService} from "./model.service";
+import {
+    MatDialog,
+    MatIconRegistry
+} from "@angular/material";
+import {Helpers} from "../helpers";
+import {DomSanitizer} from "@angular/platform-browser";
+import {ModelStartDialogComponent} from "./model-start-dialog.component";
 
 @Component({
     selector: 'app-model',
@@ -11,19 +18,50 @@ import {ModelService} from "../model.service";
     styleUrls: ['./model.component.css']
 })
 export class ModelComponent extends Paginator<Model> {
-    protected displayed_columns: string[] = ['name', 'score_local', 'score_public'];
+    protected displayed_columns: string[] = [
+        'id',
+        'name',
+        'dag',
+        'created',
+        'slot',
+        'interface',
+        'score_local',
+        'score_public',
+        'links'
+    ];
     name: string;
     project: number;
 
-    constructor(protected service: ModelService, protected location: Location,
-                protected router: Router, protected  route: ActivatedRoute
+    filter_hidden: boolean = true;
+    filter_applied_text: string;
+    projects: any[];
+
+    created_min: string;
+    created_max: string;
+
+    constructor(protected service: ModelService,
+                protected location: Location,
+                protected router: Router,
+                protected  route: ActivatedRoute,
+                iconRegistry: MatIconRegistry,
+                sanitizer: DomSanitizer,
+                public start_dialog: MatDialog,
     ) {
         super(service, location);
+
+        iconRegistry.addSvgIcon('edit',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/edit.svg'));
+        iconRegistry.addSvgIcon('start',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/play-button.svg'));
     }
 
-    filter_name(name: string) {
-        this.name = name;
-        this.change.emit();
+    protected _ngOnInit() {
+        let self = this;
+        this.data_updated.subscribe(res => {
+            self.projects = res.projects;
+            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+        });
+
     }
 
     get_filter(): any {
@@ -32,9 +70,58 @@ export class ModelComponent extends Paginator<Model> {
         res.paginator.sort_column = 'created';
 
         res.name = this.name;
-        res.project = this.project;
+        if (this.project != -1) {
+            res.project = this.project;
+        }
+        res.created_min = Helpers.parse_time(this.created_min);
+        res.created_max = Helpers.parse_time(this.created_max);
         return res;
     }
 
+    onchange() {
+        this.change.emit();
+        let count = 0;
+        if (this.name) count += 1;
+        if (this.project && this.project != -1) count += 1;
+        if (this.created_min) count += 1;
+        if (this.created_max) count += 1;
+        this.filter_applied_text = count > 0 ? `(${count} applied)` : '';
+    }
 
+
+    edit(element: Model) {
+
+    }
+
+    start(element: Model) {
+        let self = this;
+        let dag;
+        for (let d of element.dags) {
+            if (element.dag == d.id) {
+                dag = d;
+                break
+            }
+        }
+        let config = {
+            width: '600px', height: '300px',
+            data: {
+                'dags': element.dags,
+                'interface': element.interface,
+                'slot': element.slot,
+                'dag': dag
+            }
+        };
+        const dialogRef = this.start_dialog.open(
+            ModelStartDialogComponent,
+            config);
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                self.service.start(result).subscribe(res=>{});
+            }
+        });
+    }
 }
+
+
+

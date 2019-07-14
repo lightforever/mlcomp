@@ -21,6 +21,7 @@ mat-icon{
   display:flex;
   justify-content:center;
   text-align: center;
+  margin-left: 12px !important;
 }
 
 .mat-header-cell{

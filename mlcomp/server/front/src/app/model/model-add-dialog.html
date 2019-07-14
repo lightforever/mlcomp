@@ -1,0 +1,38 @@
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="data.name">
+  </mat-form-field>
+</div>
+
+<mat-form-field style="width: 150px">
+    <mat-label>Dag</mat-label>
+    <mat-select (ngModelChange)="data.dag=$event; dag_changed()" [(ngModel)]="data.dag">
+        <mat-option *ngFor="let dag of data.dags" [value]="dag">
+            {{dag.name}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field style="width: 150px" *ngIf="data.dag">
+    <mat-label>Slot</mat-label>
+    <mat-select (ngModelChange)="data.slot=$event;" [(ngModel)]="data.slot">
+        <mat-option *ngFor="let slot of data.dag.slots" [value]="slot">
+            {{slot}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field style="width: 150px" *ngIf="data.dag">
+    <mat-label>Interface</mat-label>
+    <mat-select (ngModelChange)="data.interface=$event;" [(ngModel)]="data.interface">
+        <mat-option *ngFor="let interface of data.dag.interfaces" [value]="interface">
+            {{interface}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+</div>

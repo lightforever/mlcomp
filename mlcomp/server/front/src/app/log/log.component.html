@@ -83,7 +83,7 @@
         <ng-container matColumnDef="step">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Step</th>
             <td mat-cell *matCellDef="let element">
-                <span *ngIf="element.task">{{element.step.name}}</span>
+                <span *ngIf="element.task">{{element.step?element.step.name:''}}</span>
             </td>
         </ng-container>
 

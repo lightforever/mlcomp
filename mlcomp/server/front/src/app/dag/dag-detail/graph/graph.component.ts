@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnDestroy, OnInit} from '@angular/core';
 import {MessageService} from "../../../message.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {DagDetailService} from "../../../dag-detail.service";
+import {DagDetailService} from "../dag-detail/dag-detail.service";
 import {DynamicresourceService} from "../../../dynamicresource.service";
 import {AppSettings} from "../../../app-settings";
 

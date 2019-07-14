@@ -1,6 +1,8 @@
+from catalyst.dl import RunnerState, Callback, Runner
 from catalyst.dl.callbacks import VerboseLogger
+from catalyst.dl.utils.scripts import import_experiment_and_runner
 
-from catalyst.dl.state import RunnerState
+from mlcomp.db import TaskProvider
 from mlcomp.utils.misc import now
 
 from mlcomp.db.providers import ReportSeriesProvider
@@ -9,14 +11,12 @@ from mlcomp.utils.config import Config
 from mlcomp.worker.executors.base import Executor
 from pathlib import Path
 from catalyst.utils.config import parse_args_uargs
-from catalyst.dl.scripts.utils import import_experiment_and_runner
-from catalyst.dl.experiments.runner import Runner
 from mlcomp.db.misc.report_info import *
-from mlcomp.worker.executors.catalyst.precision_recall import PrecisionRecallCallback
+from mlcomp.worker.executors.catalyst.precision_recall import \
+    PrecisionRecallCallback
 from mlcomp.worker.executors.catalyst.f1 import F1Callback
-from catalyst.dl.callbacks.core import Callback
 from mlcomp.worker.executors.catalyst.img_classify import ImgClassifyCallback
-from catalyst.utils.misc import set_global_seed
+
 
 class Args:
     baselogdir = None
@@ -33,18 +33,22 @@ class Args:
     verbose = True
 
     def _get_kwargs(self):
-        return [(k, v) for k, v in self.__dict__.items() if not k.startswith('_')]
+        return [(k, v) for k, v in self.__dict__.items() if
+                not k.startswith('_')]
 
 
 # noinspection PyTypeChecker
 @Executor.register
 class Catalyst(Executor, Callback):
+    __syn__ = 'catalyst'
+
     def __init__(self, args: Args, report: ReportSchemeInfo):
         self.args = args
         self.report = report
         self.experiment = None
         self.runner = None
         self.series_provider = ReportSeriesProvider()
+        self.task_provider = TaskProvider()
 
     def callbacks(self):
         result = [self]
@@ -62,17 +66,43 @@ class Catalyst(Executor, Callback):
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
 
-            train = ReportSeries(part='train', name=s.key, epoch=state.epoch, task=self.task.id, value=train, time=now())
-            val = ReportSeries(part='valid', name=s.key, epoch=state.epoch, task=self.task.id, value=val, time=now())
+            train = ReportSeries(part='train',
+                                 name=s.key,
+                                 epoch=state.epoch,
+                                 task=self.task.id,
+                                 value=train,
+                                 time=now())
+
+            val = ReportSeries(part='valid',
+                               name=s.key,
+                               epoch=state.epoch,
+                               task=self.task.id,
+                               value=val,
+                               time=now())
 
             self.series_provider.add(train)
             self.series_provider.add(val)
+
+            if s.key == self.report.metric.name:
+                best = False
+                if self.report.metric.minimize:
+                    if self.task.score is None or val.value < self.task.score:
+                        best = True
+                else:
+                    if self.task.score is None or val.value > self.task.score:
+                        best = True
+                if best:
+                    self.task.score = val.value
+                    self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):
         state.loggers = [VerboseLogger()]
 
     @classmethod
-    def _from_config(cls, executor: dict, config: Config, additional_info: dict):
+    def _from_config(cls,
+                     executor: dict,
+                     config: Config,
+                     additional_info: dict):
         args = Args()
         for k, v in executor['args'].items():
             if v in ['False', 'True']:
@@ -83,7 +113,7 @@ class Catalyst(Executor, Callback):
             setattr(args, k, v)
 
         report = ReportSchemeInfo(additional_info.get('report_config', dict()))
-        if len(args.configs)==0:
+        if len(args.configs) == 0:
             args.configs = [args.config]
         return cls(args=args, report=report)
 

@@ -7,7 +7,6 @@ class Task(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String)
-    status = sa.Column(sa.Integer)
     started = sa.Column(sa.DateTime)
     finished = sa.Column(sa.DateTime)
     last_activity = sa.Column(sa.DateTime)
@@ -28,6 +27,9 @@ class Task(Base):
     worker_index = sa.Column(sa.Integer)
     additional_info = deferred(sa.Column(sa.LargeBinary))
     docker_assigned = sa.Column(sa.String)
+    type = sa.Column(sa.Integer)
+    score = sa.Column(sa.Float)
+
 
 class TaskDependence(Base):
     __tablename__ = 'task_dependency'

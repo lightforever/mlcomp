@@ -3,5 +3,5 @@ info:
   project: first
 executors:
   dummy1:
-    type: StepExample
+    type: step
 

@@ -6,9 +6,9 @@ import {DomSanitizer} from "@angular/platform-browser";
 import {MessageService} from "../../../message.service";
 import {StepNode, FlatNode} from "../../../models";
 import {FlatTreeControl} from "@angular/cdk/tree";
-import {TaskService} from "../../../task.service";
 import {AppSettings} from "../../../app-settings";
 import {of as ofObservable} from 'rxjs';
+import {TaskService} from "../../task.service";
 
 @Component({
     selector: 'app-step',

@@ -1,6 +1,7 @@
+from typing import List
+
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.elements import or_
-
 from mlcomp.db.core import *
 from mlcomp.db.models import *
 from sqlalchemy.orm.query import Query
@@ -38,6 +39,9 @@ class BaseDataProvider:
     @property
     def query(self):
         return self.session.query
+
+    def add_all(self, obs: List[Base], commit=True):
+        self._session.add_all(obs, commit=commit)
 
     def add(self, obj: Base, commit=True):
         self._session.add(obj, commit=commit)

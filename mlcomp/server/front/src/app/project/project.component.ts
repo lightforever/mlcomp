@@ -1,5 +1,4 @@
 import {Component, Inject} from '@angular/core';
-import {ProjectService} from '../project.service';
 import {Paginator} from "../paginator";
 import {Project, ProjectAddData, ProjectFilter} from "../models";
 import {Location} from '@angular/common';
@@ -12,6 +11,7 @@ import {
 import {DomSanitizer} from "@angular/platform-browser";
 import {DialogComponent} from "../dialog/dialog.component";
 import {Helpers} from "../helpers";
+import {ProjectService} from "./project.service";
 
 @Component({
     selector: 'app-project',

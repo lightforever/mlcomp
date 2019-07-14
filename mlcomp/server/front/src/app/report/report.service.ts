@@ -1,5 +1,5 @@
 import {EventEmitter, Injectable} from '@angular/core';
-import {BaseService} from "./base.service";
+import {BaseService} from "../base.service";
 
 @Injectable({
   providedIn: 'root'

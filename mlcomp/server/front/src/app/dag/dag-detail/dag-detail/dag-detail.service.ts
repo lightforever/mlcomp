@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
-import {AppSettings} from './app-settings'
-import {CodeNode, Data, Graph} from "./models";
-import {BaseService} from "./base.service";
+import {AppSettings} from '../../../app-settings'
+import {CodeNode, Data, Graph} from "../../../models";
+import {BaseService} from "../../../base.service";
 
 @Injectable({providedIn: 'root'})
 export class DagDetailService extends BaseService{

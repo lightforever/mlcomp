@@ -13,6 +13,7 @@ from mlcomp.utils.logging import logger
 from sqlalchemy.exc import ProgrammingError
 from mlcomp.utils.io import from_module_path
 from collections import OrderedDict
+from mlcomp.server.back.create_dags import dag_model_add
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -101,6 +102,23 @@ def project_add():
     res = provider.add(data['name'], dict())
     return json.dumps(res)
 
+
+@app.route('/api/model/add', methods=['POST'])
+@requires_auth
+def model_add():
+    data = request_data()
+    if data.get('task'):
+        dag_model_add(data)
+    return json.dumps({'success': True})
+
+
+@app.route('/api/model/start', methods=['POST'])
+@requires_auth
+def model_start():
+    data = request_data()
+    if data.get('task'):
+        dag_model_start(data)
+    return json.dumps({'success': True})
 
 @app.route('/api/img_classify', methods=['POST'])
 @requires_auth

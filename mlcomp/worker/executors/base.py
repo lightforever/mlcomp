@@ -7,6 +7,7 @@ from mlcomp.utils.misc import now
 from mlcomp.db.enums import *
 import json
 import time
+import os
 
 class StepWrap:
     def __init__(self, task: Task):
@@ -110,7 +111,9 @@ class Executor(ABC):
         self.dag = dag
         self.step = StepWrap(task)
         with self.step:
-            self.wait_data_sync(task.computer_assigned)
+            use_sync = os.getenv('USE_SYNC', 'True') == 'True'
+            if not task.debug and use_sync:
+                self.wait_data_sync(task.computer_assigned)
             self.work()
 
     @abstractmethod
@@ -132,6 +135,8 @@ class Executor(ABC):
     @staticmethod
     def register(cls):
         Executor._child[cls.__name__] = cls
+        if hasattr(cls, '__syn__'):
+            Executor._child[cls.__syn__] = cls
         return cls
 
     @staticmethod
@@ -148,6 +153,11 @@ class Executor(ABC):
                 break
             time.sleep(1)
         self.step.info(f'Finish data sync')
+
+    @staticmethod
+    def is_trainable(type: str):
+        variants = ['Catalyst']
+        return type in (variants + [v.lower() for v in variants])
 
 
 __all__ = ['Executor']

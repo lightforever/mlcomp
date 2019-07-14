@@ -153,6 +153,13 @@
       </td>
     </ng-container>
 
+      <ng-container matColumnDef="score">
+      <th mat-header-cell *matHeaderCellDef> Score </th>
+      <td mat-cell *matCellDef="let element">
+          {{element.score}}
+      </td>
+    </ng-container>
+
     <ng-container matColumnDef="requirements">
       <th mat-header-cell *matHeaderCellDef style="width: 100px"> Requirements </th>
       <td mat-cell *matCellDef="let element">
@@ -196,6 +203,7 @@
       <th mat-header-cell *matHeaderCellDef style="width: 60px"> Links </th>
       <td mat-cell *matCellDef="let element" style="min-width: 100px">
         <mat-icon svgIcon="stop"  matTooltip="Stop" (click)="stop(element)" [class.transparent]="!unfinished(element)"></mat-icon>
+          <mat-icon svgIcon="model"  matTooltip="Create model" (click)="model(element)" [class.transparent]="element.status!='success'||not_a_model(element)"></mat-icon>
           <mat-icon svgIcon="report"  matTooltip="Report" (click)="toogle_report(element)" *ngIf="report" [class.transparent]="!element.report_full"></mat-icon>
       </td>
     </ng-container>

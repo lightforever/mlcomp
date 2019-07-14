@@ -3,5 +3,5 @@ info:
   project: catalyst
 executors:
   dummy1:
-    type: StepExample
+    type: step
     steps: 2

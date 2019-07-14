@@ -1,6 +1,7 @@
 from typing import Union
 
-from catalyst.dl.state import RunnerState
+from catalyst.dl import RunnerState
+
 from mlcomp.db.models import ReportImg
 from scipy.special import softmax
 import numpy as np
@@ -10,7 +11,7 @@ from mlcomp.utils.misc import adapt_db_types
 from mlcomp.worker.executors.catalyst.base import BaseCallback
 from sklearn.metrics import confusion_matrix
 from numbers import Integral
-import sys
+
 
 class ImgClassifyCallback(BaseCallback):
     def on_batch_end(self, state: RunnerState):

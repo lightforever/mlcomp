@@ -1,6 +1,7 @@
 from .base import *
 from mlcomp.utils.misc import now
 
+
 class Dag(Base):
     __tablename__ = 'dag'
 
@@ -14,3 +15,5 @@ class Dag(Base):
     docker_img = sa.Column(sa.String)
     img_size = sa.Column(sa.BigInteger, nullable=False, default=0)
     file_size = sa.Column(sa.BigInteger, nullable=False, default=0)
+    type = sa.Column(sa.Integer, default=0)
+

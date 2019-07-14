@@ -1,7 +1,8 @@
+from catalyst.dl import RunnerState
+
 from mlcomp.worker.executors.catalyst.base import BaseCallback
 import pickle
 from mlcomp.db.models import ReportImg
-from catalyst.dl.state import RunnerState
 import numpy as np
 
 

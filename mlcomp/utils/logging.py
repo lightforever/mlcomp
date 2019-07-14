@@ -60,24 +60,33 @@ class DbHandler(logging.Handler):
             if not record.pathname.startswith(ROOT):
                 return
 
-            assert 1 <= len(record.args), 'Args weer not been provided for logging'
-            assert len(record.args) <= 2, 'Too many args for logging'
+            assert 1 <= len(record.args), \
+                'Args weer not been provided for logging'
+            assert len(record.args) <= 3, 'Too many args for logging'
 
             if len(record.args) == 1:
                 component = record.args[0]
                 step = None
+            elif len(record.args) == 2:
+                component, task = record.args
             else:
-                component, step = record.args
+                component, task, step = record.args
 
             if not isinstance(component, int):
                 component = component.value
 
-            module = os.path.relpath(record.pathname, ROOT).replace(os.sep, '.').replace('.py', '')
+            module = os.path.relpath(record.pathname, ROOT).\
+                replace(os.sep, '.').replace('.py', '')
             if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
-            log = Log(message=record.msg[:4000], time=now(), level=record.levelno,
-                      step=step, component=component, line=record.lineno,
-                      module=module
+            log = Log(message=record.msg[:4000],
+                      time=now(),
+                      level=record.levelno,
+                      step=step,
+                      component=component,
+                      line=record.lineno,
+                      module=module,
+                      task=task
                       )
             self.provider.add(log)
         except Exception:
