@@ -17,3 +17,5 @@ class Dag(Base):
     file_size = sa.Column(sa.BigInteger, nullable=False, default=0)
     type = sa.Column(sa.Integer, default=0)
 
+
+__all__ = ['Dag']

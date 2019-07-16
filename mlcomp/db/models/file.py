@@ -1,6 +1,7 @@
 from mlcomp.db.models.base import *
 import sys
 
+
 class File(Base):
     __tablename__ = 'file'
 
@@ -15,3 +16,6 @@ class File(Base):
     def __init__(self, **kwargs):
         super(File, self).__init__(**kwargs)
         self.size = sys.getsizeof(self.content)
+
+
+__all__ = ['File']

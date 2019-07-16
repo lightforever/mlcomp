@@ -1,123 +1,19 @@
-from mlcomp.db.providers.base import *
-import json
+import base64
+import pickle
 from itertools import groupby
 from typing import List
-import pickle
-from mlcomp.db.misc.report_info import ReportSchemeInfo, ReportSchemeSeries, \
+import json
+
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+
+from mlcomp.db.core import PaginatorOptions, Session
+from mlcomp.db.enums import TaskStatus
+from mlcomp.db.misc.report_info import ReportSchemeSeries, \
+    ReportSchemeInfo, \
     ReportSchemeItem
-import base64
-from sqlalchemy import and_
-
-
-class ReportSeriesProvider(BaseDataProvider):
-    model = ReportSeries
-
-
-class ReportSchemeProvider(BaseDataProvider):
-    model = ReportScheme
-
-    def by_name(self, name: str):
-        return self.query(ReportScheme).filter(ReportScheme.name == name).one()
-
-    def add_item(self, k: str, v: dict):
-        self.add(
-            ReportScheme(content=pickle.dumps(v), name=k, last_modified=now()))
-
-    def all(self):
-        return {s.name: pickle.loads(s.content) for s in
-                self.query(ReportScheme).all()}
-
-    def change(self, k: str, v: dict):
-        self.query(ReportScheme).filter(ReportScheme.name == k).update(
-            {'last_modified': now(), 'content': pickle.dumps(v)})
-
-
-class ReportImgProvider(BaseDataProvider):
-    model = ReportImg
-
-    def remove(self, filter: dict):
-        query = self.query(ReportImg)
-        if filter.get('dag'):
-            query = query.filter(ReportImg.dag == filter['dag'])
-        if filter.get('project'):
-            query = query.filter(ReportImg.project == filter['project'])
-        query.delete(synchronize_session=False)
-        self.session.commit()
-
-        query = self.query(Dag)
-        if filter.get('dag'):
-            query.filter(Dag.id == filter['dag']).update({'img_size': 0})
-
-        if filter.get('project'):
-            query.filter(Dag.project == filter['project']).update(
-                {'img_size': 0})
-
-        self.session.commit()
-
-    def remove_lower(self, task_id: int, name: str, epoch: int):
-        self.query(ReportImg).filter(ReportImg.task == task_id). \
-            filter(ReportImg.group == name). \
-            filter(ReportImg.epoch < epoch). \
-            delete(synchronize_session=False)
-        self.session.commit()
-
-    def detail_img_classify(self, filter: dict,
-                            options: PaginatorOptions = None):
-        res = {'data': []}
-        confusion = self.query(ReportImg.img). \
-            filter(ReportImg.task == filter['task']). \
-            filter(ReportImg.part == filter['part']). \
-            filter(ReportImg.group == filter['group'] + '_confusion'). \
-            filter(ReportImg.epoch == filter['epoch']).first()
-        if confusion:
-            confusion = pickle.loads(confusion[0])['data'].tolist()
-            res['confusion'] = {'data': confusion}
-
-        res.update(filter)
-
-        query = self.query(ReportImg).filter(
-            ReportImg.task == filter['task']).filter(
-            ReportImg.epoch == filter['epoch']). \
-            filter(ReportImg.group == filter['group']).filter(
-            ReportImg.part == filter['part'])
-
-        if filter.get('y') is not None and filter.get('y_pred') is not None:
-            query = query.filter(
-                and_(ReportImg.y == filter['y'],
-                     ReportImg.y_pred == filter['y_pred'])
-            )
-
-        if filter.get('metric_diff_min') is not None:
-            query = query.filter(
-                ReportImg.metric_diff >= filter['metric_diff_min'])
-        if filter.get('metric_diff_max') is not None:
-            query = query.filter(
-                ReportImg.metric_diff <= filter['metric_diff_max'])
-
-        project = self.query(Project).join(Dag).join(Task).filter(
-            Task.id == filter['task']).first()
-        class_names = pickle.loads(project.class_names)
-
-        res['total'] = query.count()
-        if 'default' in class_names:
-            res['class_names'] = class_names['default']
-        else:
-            res['class_names'] = [str(i) for i in confusion.shape[0]]
-
-        query = self.paginator(query, options)
-        img_objs = query.all()
-        for img_obj in img_objs:
-            img = pickle.loads(img_obj.img)
-            # noinspection PyTypeChecker
-            res['data'].append({
-                'content': base64.b64encode(img['img']).decode('utf-8'),
-                'id': img_obj.id,
-                'y_pred': img_obj.y_pred,
-                'y': img_obj.y,
-                'metric_diff': round(img_obj.metric_diff, 2)
-            })
-
-        return res
+from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, ReportImg
+from mlcomp.db.providers import BaseDataProvider
 
 
 class ReportProvider(BaseDataProvider):
@@ -127,11 +23,13 @@ class ReportProvider(BaseDataProvider):
         super(ReportProvider, self).__init__(session)
 
     def get(self, filter: dict, options: PaginatorOptions):
+        task_count_cond = func.count(ReportTasks.task). \
+            filter(Task.status <= TaskStatus.InProgress.value). \
+            label('tasks_not_finished')
+
         query = self.query(Report,
                            func.count(ReportTasks.task).label('tasks_count'),
-                           func.count(ReportTasks.task).filter(
-                               Task.status <= TaskStatus.InProgress.value).label(
-                               'tasks_not_finished'), ). \
+                           task_count_cond, ). \
             join(ReportTasks, ReportTasks.report == Report.id, isouter=True). \
             join(Task, Task.id == ReportTasks.task, isouter=True)
 
@@ -182,12 +80,14 @@ class ReportProvider(BaseDataProvider):
         return res
 
     def _best_task_epoch(self, report: ReportSchemeInfo,
-                         series: List[ReportSeries], item: ReportSchemeItem):
+                         series: List[ReportSeries],
+                         item: ReportSchemeItem):
         tasks = [s.task for s in series]
-        tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch).filter(
-            ReportImg.task.in_(tasks)). \
-            filter(ReportImg.group == item.name).group_by(ReportImg.task,
-                                                          ReportImg.epoch).all()
+        tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch). \
+            filter(ReportImg.task.in_(tasks)). \
+            filter(ReportImg.group == item.name). \
+            group_by(ReportImg.task, ReportImg.epoch).all()
+
         tasks_with_obj = {(t, e) for t, e in tasks_with_obj}
 
         best_task_epoch = None
@@ -262,7 +162,8 @@ class ReportProvider(BaseDataProvider):
         config = json.loads(report_obj.config)
         report = ReportSchemeInfo(config)
 
-        series = self.query(ReportSeries).filter(ReportSeries.task.in_(tasks)). \
+        series = self.query(ReportSeries). \
+            filter(ReportSeries.task.in_(tasks)). \
             order_by(ReportSeries.epoch). \
             options(joinedload(ReportSeries.task_rel)).all()
 
@@ -309,5 +210,4 @@ class ReportProvider(BaseDataProvider):
         self.session.commit()
 
 
-class ReportTasksProvider(BaseDataProvider):
-    model = ReportTasks
+__all__ = ['ReportProvider']

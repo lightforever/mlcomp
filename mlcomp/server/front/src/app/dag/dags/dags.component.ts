@@ -18,8 +18,19 @@ import {ReportService} from "../../report/report.service";
 })
 export class DagsComponent extends Paginator<Dag> {
 
-    displayed_columns: string[] = ['id', 'name', 'task_count', 'created', 'started',
-        'duration', 'last_activity','task_status', 'links',  'img_size', 'file_size'];
+    displayed_columns: string[] = [
+        'project',
+        'id',
+        'name',
+        'task_count',
+        'created',
+        'started',
+        'last_activity',
+        'duration',
+        'task_status',
+        'links',
+        'img_size',
+        'file_size'];
     dag: number;
     project: number;
     name: string;

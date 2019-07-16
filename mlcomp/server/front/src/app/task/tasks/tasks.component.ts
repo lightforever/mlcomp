@@ -10,7 +10,6 @@ import {TaskFilter} from "../../models";
 import {Helpers} from "../../helpers";
 import {ReportService} from "../../report/report.service";
 import {TaskService} from "../task.service";
-import {ModelService} from "../../model/model.service";
 import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
 
 @Component({
@@ -19,10 +18,22 @@ import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
     styleUrls: ['./tasks.component.css']
 })
 export class TasksComponent extends Paginator<TasksComponent> {
-    displayed_columns: string[] = ['id', 'name', 'created',
-        'started', 'last_activity',
-        'duration', 'status', 'executor', 'dag',
-        'computer', 'requirements', 'steps', 'score', 'links'
+    displayed_columns: string[] = [
+        'project',
+        'dag',
+        'id',
+        'name',
+        'executor',
+        'status',
+        'created',
+        'started',
+        'last_activity',
+        'duration',
+        'computer',
+        'requirements',
+        'steps',
+        'score',
+        'links'
     ];
     @Input() dag: number;
     name: string;
@@ -61,8 +72,7 @@ export class TasksComponent extends Paginator<TasksComponent> {
                 sanitizer: DomSanitizer,
                 private message_service: MessageService,
                 private report_service: ReportService,
-                public model_add_dialog: MatDialog,
-                private model_service: ModelService
+                public model_add_dialog: MatDialog
     ) {
         super(service, location);
         iconRegistry.addSvgIcon('stop',
@@ -171,21 +181,12 @@ export class TasksComponent extends Paginator<TasksComponent> {
     }
 
     model(element){
-        const dialogRef = this.model_add_dialog.open(ModelAddDialogComponent, {
-            width: '600px', height: '300px',
+        this.model_add_dialog.open(ModelAddDialogComponent, {
+            width: '500px', height: '400px',
             data: {
                 'dag': null,
                 'dags':this.dags_model,
                 'task': element.id
-            }
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.model_service.add(result).subscribe(_ => {
-
-                });
-
             }
         });
     }

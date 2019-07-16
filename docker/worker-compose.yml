@@ -9,5 +9,5 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     runtime: nvidia
-    volumes: ["/opt/mlcomp/data:/opt/mlcomp/data", "/opt/mlcomp/ssh:/opt/mlcomp/ssh"]
+    volumes: ["/opt/mlcomp:/opt/mlcomp"]
 version: '2.3'

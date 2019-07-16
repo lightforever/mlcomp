@@ -14,7 +14,9 @@ if DB_DRIVER=='sqlite':
     f = os.path.abspath(f)
     SA_CONNECTION_STRING = f'sqlite:////{f}/mlcomp.db'
 else:
-    SA_CONNECTION_STRING = f"{DB_DRIVER}://{DATABASE['user']}:{DATABASE['password']}@{DATABASE['host']}:{DATABASE['port']}/{DATABASE['dbname']}"
+    SA_CONNECTION_STRING = f"{DB_DRIVER}://{DATABASE['user']}:" \
+        f"{DATABASE['password']}@{DATABASE['host']}:" \
+        f"{DATABASE['port']}/{DATABASE['dbname']}"
 
 __all__ = [
     'SA_CONNECTION_STRING'

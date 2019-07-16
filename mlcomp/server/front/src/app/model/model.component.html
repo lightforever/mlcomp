@@ -56,6 +56,13 @@
             </td>
         </ng-container>
 
+        <ng-container matColumnDef="project">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
+            <td mat-cell *matCellDef="let element">
+              {{element.project_rel.name}}
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="score_local">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Score local</th>
             <td mat-cell *matCellDef="let element">
@@ -106,11 +113,14 @@
             </th>
             <td mat-cell *matCellDef="let element"
                 style="padding-left: 1%;min-width: 120px">
-                <mat-icon svgIcon="edit" matTooltip="Edit"
-                          (click)="edit(element)">
-                </mat-icon>
                 <mat-icon svgIcon="start" matTooltip="Start"
                           (click)="start(element)">
+                </mat-icon>
+                   <mat-icon svgIcon="edit" matTooltip="Edit"
+                          (click)="edit(element)">
+                </mat-icon>
+                   <mat-icon svgIcon="remove" matTooltip="Remove"
+                          (click)="remove(element)">
                 </mat-icon>
             </td>
         </ng-container>

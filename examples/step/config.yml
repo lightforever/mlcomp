@@ -1,6 +1,6 @@
 info:
   name: step
-  project: catalyst
+  project: examples
 executors:
   dummy1:
     type: step

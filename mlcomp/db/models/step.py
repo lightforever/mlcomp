@@ -1,5 +1,6 @@
 from .base import *
 
+
 class Step(Base):
     __tablename__ = 'step'
 
@@ -11,3 +12,6 @@ class Step(Base):
     status = sa.Column(sa.Integer)
     name = sa.Column(sa.String)
     task_rel = relationship('Task', lazy='noload')
+
+
+__all__ = ['Step']

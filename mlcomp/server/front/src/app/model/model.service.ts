@@ -37,4 +37,11 @@ export class ModelService extends BaseService {
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
+
+    remove(id: number) {
+         let message = `${this.constructor.name}.remove`;
+        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/remove', {'id': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
 }

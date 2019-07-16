@@ -1,8 +1,8 @@
 info:
-  name: catalyst
-  project: youtube
+  name: cifar
+  project: examples
 executors:
-  dummy1:
+  train:
     type: catalyst
     report: catalyst
     args:

@@ -1,7 +1,0 @@
-info:
-  name: first
-  project: first
-executors:
-  dummy1:
-    type: step
-

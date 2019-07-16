@@ -11,7 +11,7 @@ all_cap_re = re.compile('([a-z0-9])([A-Z])')
 
 
 def dict_func(objcts: List, func=np.mean):
-    if len(objcts)==0:
+    if len(objcts) == 0:
         return {}
     first = objcts[0]
 
@@ -21,10 +21,12 @@ def dict_func(objcts: List, func=np.mean):
         if isinstance(first[k], dict):
             res[k] = dict_func(k_objcts, func)
         elif isinstance(first[k], list):
-            res[k] = [dict_func([o[k][i] for o in objcts], func) for i in range(len(first[k]))]
+            res[k] = [dict_func([o[k][i] for o in objcts], func) for i in
+                      range(len(first[k]))]
         else:
             res[k] = func(k_objcts)
     return res
+
 
 def now():
     return datetime.utcnow()
@@ -76,6 +78,7 @@ def log_name(level: int):
 
     raise Exception('Unknown log level')
 
+
 def duration_format(delta: float):
     """
     Duration format
@@ -90,12 +93,16 @@ def duration_format(delta: float):
         delta = f'{int(delta / 60)} min {int(delta % 60)} sec'
     elif delta < 3600 * 24:
         hour = int(delta / 3600)
-        delta = f'{hour} {"hours" if hour > 1 else "hour"} {int((delta % 3600) / 60)} min'
+        delta = f'{hour} {"hours" if hour > 1 else "hour"} ' \
+            f'{int((delta % 3600) / 60)} min'
     else:
         day = int(delta / (3600 * 24))
         hour = int((delta % (3600 * 24)) / 3600)
-        delta = f'{day} {"days" if day > 1 else "day"} {hour} {"hours" if hour > 1 else "hour"} {int((delta % 3600) / 60)} min'
+        delta = f'{day} {"days" if day > 1 else "day"} {hour}' \
+            f' {"hours" if hour > 1 else "hour"} ' \
+            f'{int((delta % 3600) / 60)} min'
     return delta
+
 
 def adapt_db_types(d: dict):
     for k in d:
@@ -104,11 +111,15 @@ def adapt_db_types(d: dict):
         elif type(d[k]) in [np.float, np.float64]:
             d[k] = float(d[k])
 
+
 def memory():
     return map(int, os.popen('free -t -m').readlines()[1].split()[1:4])
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     print(dict_func([
-        {'cpu': 10, 'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},
-        {'cpu': 50, 'gpu': [{'memory': 100, 'load': 100}, {'memory': 0, 'load': 0}]},
+        {'cpu': 10,
+         'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},
+        {'cpu': 50,
+         'gpu': [{'memory': 100, 'load': 100}, {'memory': 0, 'load': 0}]},
     ]))

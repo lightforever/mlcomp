@@ -175,6 +175,7 @@ export class ReportsFilter {
 
 export class BaseResult {
     success: boolean;
+    error: string;
 }
 
 export class ToogleReportResult extends BaseResult{
@@ -254,6 +255,7 @@ export class ImgClassify {
 }
 
 export class Model {
+    id: number;
     name: string;
     score_local: number;
     score_public: number;
@@ -264,6 +266,7 @@ export class Model {
     interface: string;
     slot: string;
     dag: number;
+    interface_params: string;
 }
 
 export class ModelFilter {
@@ -285,6 +288,7 @@ export interface ModelAddData {
     dags: any[];
     name: string;
     task: number;
+    interface_params: string;
 }
 
 export interface ModelStartData {
@@ -293,4 +297,5 @@ export interface ModelStartData {
     slot: string;
     interface: string;
     pipe: string;
+    interface_params: string;
 }

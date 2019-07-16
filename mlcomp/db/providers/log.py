@@ -1,3 +1,5 @@
+from mlcomp.db.models import Log, Step, Task, Computer
+from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import ComponentType
 from mlcomp.db.providers.base import *
 from mlcomp.utils.misc import log_name, to_snake
@@ -7,10 +9,13 @@ class LogProvider(BaseDataProvider):
     model = Log
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Log, Step, Task, Computer).\
+        query = self.query(Log, Step, Task, Computer). \
             join(Step, Step.id == Log.step, isouter=True). \
             join(Task, Task.id == Log.task, isouter=True). \
-            join(Computer, Computer.name == Task.computer_assigned, isouter=True)
+            join(Computer,
+                 Computer.name == Task.computer_assigned,
+                 isouter=True)
+
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
         if filter.get('task'):
@@ -47,8 +52,12 @@ class LogProvider(BaseDataProvider):
                 'component': to_snake(ComponentType(log.component).name),
                 'computer': self.to_dict(computer) if computer else None,
                 'step': self.to_dict(step) if step else None,
-                'task': self.to_dict(task, rules=('-additional_info',)) if task else None
+                'task': self.to_dict(task, rules=('-additional_info',))
+                    if task else None
             }
             data.append(item)
 
         return {'total': total, 'data': data}
+
+
+__all__ = ['LogProvider']

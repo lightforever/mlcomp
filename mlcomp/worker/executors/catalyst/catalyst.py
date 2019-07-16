@@ -1,16 +1,15 @@
+from pathlib import Path
+
 from catalyst.dl import RunnerState, Callback, Runner
 from catalyst.dl.callbacks import VerboseLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
+from catalyst.utils.config import parse_args_uargs, dump_config
 
-from mlcomp.db import TaskProvider
+from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
 from mlcomp.utils.misc import now
-
-from mlcomp.db.providers import ReportSeriesProvider
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config
 from mlcomp.worker.executors.base import Executor
-from pathlib import Path
-from catalyst.utils.config import parse_args_uargs
 from mlcomp.db.misc.report_info import *
 from mlcomp.worker.executors.catalyst.precision_recall import \
     PrecisionRecallCallback
@@ -135,6 +134,9 @@ class Catalyst(Executor, Callback):
             return _get_callbacks(stage) + self.callbacks()
 
         experiment.get_callbacks = get_callbacks
+
+        if experiment.logdir is not None:
+            dump_config(config, experiment.logdir, args.configs)
 
         runner.run_experiment(
             experiment,

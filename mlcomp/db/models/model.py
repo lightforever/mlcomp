@@ -11,7 +11,6 @@ class Model(Base):
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     created = sa.Column(sa.DateTime)
-    file = sa.Column(sa.String)
     interface = sa.Column(sa.String)
     pred_file_valid = sa.Column(sa.String)
     pred_file_test = sa.Column(sa.String)
@@ -19,3 +18,7 @@ class Model(Base):
     slot = sa.Column(sa.String)
 
     dag_rel = relationship('Dag', lazy='noload')
+    project_rel = relationship('Project', lazy='noload')
+
+
+__all__ = ['Model']

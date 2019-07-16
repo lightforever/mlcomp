@@ -1,16 +1,18 @@
 from typing import List
-
-import yaml
-from collections import OrderedDict
 import os
 import json
+
+import yaml
+
 import albumentations as A
 
+from mlcomp.utils.settings import DATA_FOLDER
 
-class Config(OrderedDict):
+
+class Config(dict):
     @property
     def data_folder(self):
-        return os.path.join(self['info']['project'], 'data')
+        return os.path.join(DATA_FOLDER, self['info']['project'])
 
     @staticmethod
     def from_json(config: str):
@@ -21,9 +23,10 @@ class Config(OrderedDict):
         return load_ordered_yaml(text=config)
 
 
-def load_ordered_yaml(file: str = None, text: str = None,
+def load_ordered_yaml(file: str = None,
+                      text: str = None,
                       Loader=yaml.Loader,
-                      object_pairs_hook=OrderedDict) -> Config:
+                      object_pairs_hook=dict) -> Config:
     """
     Loads `yaml` config into OrderedDict
     Args:

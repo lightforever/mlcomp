@@ -1,4 +1,7 @@
+from sqlalchemy import func
+
 from mlcomp.db.enums import StepStatus, LogStatus
+from mlcomp.db.models import Step, Log
 from mlcomp.db.providers.base import *
 from mlcomp.utils.misc import to_snake
 
@@ -58,3 +61,6 @@ class StepProvider(BaseDataProvider):
     def last_for_task(self, id: int):
         return self.query(Step).filter(Step.task == id).order_by(
             Step.started.desc()).first()
+
+
+__all__ = ['StepProvider']

@@ -1,26 +1,27 @@
-from mlcomp.db.providers import DockerProvider
-from mlcomp.db.enums import ComponentType
-
-from mlcomp.db import TaskProvider
-
-from mlcomp.utils.schedule import start_schedule
 import time
-import numpy as np
-from mlcomp.utils.misc import dict_func, now
-import psutil
-from mlcomp.worker.app import app
 import socket
 import json
 import os
+import traceback
+from multiprocessing import cpu_count
+from datetime import timedelta, datetime
+
 import click
+import GPUtil
+import psutil
+import numpy as np
+
+from mlcomp.utils.settings import DATA_FOLDER
+from mlcomp.db.providers import DockerProvider
+from mlcomp.db.enums import ComponentType
+from mlcomp.utils.schedule import start_schedule
+from mlcomp.utils.misc import dict_func, now
+from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider, Session
 from mlcomp.db.models import ComputerUsage, Computer, Docker
-import GPUtil
-from multiprocessing import cpu_count
 from mlcomp.utils.misc import memory
-from datetime import timedelta, datetime
 from mlcomp.utils.logging import logger
-import traceback
+
 
 
 @click.group()
@@ -42,7 +43,8 @@ def worker_usage():
         usage = {
             'cpu': psutil.cpu_percent(),
             'memory': memory['percent'],
-            'gpu': [{'memory': g.memoryUtil, 'load': g.load} for g in GPUtil.getGPUs()]
+            'gpu': [{'memory': g.memoryUtil, 'load': g.load}
+                    for g in GPUtil.getGPUs()]
         }
 
         provider.current_usage(computer, usage)
@@ -59,7 +61,8 @@ def worker_usage():
 
 class FileSync:
     def sync_from(self, computer: Computer):
-        command = f'rsync -vhru -e "ssh -p {computer.port}" {computer.user}@{computer.ip}:/opt/mlcomp/data  /opt/mlcomp/data'
+        command = f'rsync -vhru -e "ssh -p {computer.port}" ' \
+            f'{computer.user}@{computer.ip}:{DATA_FOLDER} {DATA_FOLDER}'
         os.system(command)
 
     def sync(self):
@@ -68,7 +71,8 @@ class FileSync:
 
             provider = ComputerProvider(session)
             computer = provider.by_name(socket.gethostname())
-            min_time = (computer.last_synced - timedelta(seconds=5)) if computer.last_synced else datetime.min
+            min_time = (computer.last_synced - timedelta(seconds=5)) \
+                if computer.last_synced else datetime.min
             computers = provider.computers_have_succeeded_tasks(min_time)
             computer.last_synced = datetime.now()
 
@@ -78,7 +82,8 @@ class FileSync:
 
             provider.update()
         except:
-            logger.error(traceback.format_exc(), ComponentType.WorkerSupervisor)
+            logger.error(traceback.format_exc(),
+                         ComponentType.WorkerSupervisor)
 
 
 @main.command()
@@ -94,7 +99,8 @@ def worker(number):
         '-c=1',
         '--prefetch-multiplier=1',
         '-Q',
-        f'{socket.gethostname()}_{docker_img},{socket.gethostname()}_{docker_img}_{number}'
+        f'{socket.gethostname()}_{docker_img},'
+        f'{socket.gethostname()}_{docker_img}_{number}'
     ]
     print(argv)
     app.worker_main(argv)
@@ -126,13 +132,17 @@ def supervisor():
 
 
 def _create_docker():
-    docker = Docker(name=os.getenv('DOCKER_IMG', 'default'), computer=socket.gethostname(), last_activity=now())
+    docker = Docker(
+        name=os.getenv('DOCKER_IMG', 'default'),
+        computer=socket.gethostname(),
+        last_activity=now())
     DockerProvider().create_or_update(docker, 'name', 'computer')
 
 
 def _create_computer():
     tot_m, used_m, free_m = memory()
-    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()),
+    computer = Computer(name=socket.gethostname(),
+                        gpu=len(GPUtil.getGPUs()),
                         cpu=cpu_count(), memory=tot_m,
                         ip=os.getenv('IP'),
                         port=int(os.getenv('PORT')),

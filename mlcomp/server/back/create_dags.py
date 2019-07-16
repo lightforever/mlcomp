@@ -1,11 +1,14 @@
 from collections import OrderedDict
 import os
 import yaml
+import json
+
+from sqlalchemy.orm import joinedload
 
 from mlcomp.db.providers import *
-from mlcomp.db.enums import TaskType
+from mlcomp.db.enums import TaskType, DagType
 from mlcomp.db.models import *
-from mlcomp.db import TaskProvider
+from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
 
@@ -30,12 +33,15 @@ def dag_standard(config: dict,
     assert type in DagType.names(), 'unknown dag type, ' + type
 
     project = ProjectProvider().by_name(info['project']).id
-    dag = dag_provider.add(Dag(config=config_text or yaml.dump(config),
-                               project=project,
-                               name=info['name'],
-                               docker_img=info.get('docker_img'),
-                               type=DagType.from_name(type)
-                               ))
+    dag = Dag(config=config_text or yaml.dump(config,
+                                              default_flow_style=False
+                                              ),
+              project=project,
+              name=info['name'],
+              docker_img=info.get('docker_img'),
+              type=DagType.from_name(type),
+              created=now())
+    dag = dag_provider.add(dag)
     if upload_files:
         folder = os.getcwd()
         storage.upload(folder, dag)
@@ -126,6 +132,8 @@ def dag_model_add(data: dict):
     task_provider = TaskProvider()
     task = task_provider.by_id(data['task'], options=joinedload(Task.dag_rel))
     project = ProjectProvider().by_id(task.dag_rel.project)
+    interface_params = data.get('interface_params', '')
+    interface_params = yaml.load(interface_params) or {}
     config = {
         'info': {
             'name': 'model_add',
@@ -138,7 +146,8 @@ def dag_model_add(data: dict):
                 'slot': data['slot'],
                 'interface': data['interface'],
                 'task': data.get('task'),
-                'name': data['name']
+                'name': data['name'],
+                'interface_params': interface_params
             }
         }
     }
@@ -146,18 +155,30 @@ def dag_model_add(data: dict):
     dag_standard(config, debug=False, upload_files=False)
 
 
-def dag_model_start(data: dict):
+def dag_model_start(model_id: int, data: dict):
+    model = ModelProvider().by_id(model_id)
     dag = DagProvider().by_id(data['dag'], joined_load=[Dag.project_rel])
     project = dag.project_rel
     src_config = Config.from_yaml(dag.config)
+    pipe = src_config['pipes'][data['pipe']]
+    for k, v in pipe.items():
+        if v.get('slot') != data['slot']:
+            continue
+        params = yaml.load(data['interface_params'])
+        model = {
+            'interface': data['interface'],
+            'interface_params': params,
+            'slot': k,
+            'model_name': model.name
+        }
+        v['slot'] = model
+
     config = {
         'info': {
             'name': data['pipe'],
             'project': project.name
         },
-        'executors': {
-            src_config['pipes'][data['pipe']]
-        }
+        'executors': pipe
     }
 
     dag_standard(config,

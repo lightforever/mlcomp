@@ -1,6 +1,13 @@
 <div class="mat-elevation-z8">
     <table mat-table [dataSource]="dataSource" matSort>
 
+        <ng-container matColumnDef="project">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.name}}
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="id">
             <th mat-header-cell *matHeaderCellDef  style="width: 18px" mat-sort-header> Id</th>
             <td mat-cell *matCellDef="let element" style="width: 18px">
@@ -54,7 +61,7 @@
 
         <ng-container matColumnDef="img_size">
             <th mat-header-cell *matHeaderCellDef> Image size</th>
-            <td mat-cell *matCellDef="let element" style="width: 50px">
+            <td mat-cell *matCellDef="let element" style="min-width: 120px">
                 {{size(element.img_size)}}
                 <mat-icon svgIcon="remove" matTooltip="Remove" (click)="remove_imgs(element)"></mat-icon>
             </td>
@@ -62,7 +69,7 @@
 
         <ng-container matColumnDef="file_size">
             <th mat-header-cell *matHeaderCellDef> File size</th>
-            <td mat-cell *matCellDef="let element"  style="width: 50px">
+            <td mat-cell *matCellDef="let element"  style="width: 120px">
                 {{size(element.file_size)}}
                 <mat-icon svgIcon="remove" matTooltip="Remove" (click)="remove_files(element)"
                 [class.transparent]="has_unfinished(element)"></mat-icon>

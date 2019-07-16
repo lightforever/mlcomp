@@ -13,3 +13,6 @@ class Log(Base):
     module = sa.Column(sa.String)
     line = sa.Column(sa.Integer)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
+
+
+__all__ = ['Log']

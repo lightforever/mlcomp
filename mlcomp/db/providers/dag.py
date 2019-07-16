@@ -1,5 +1,10 @@
-from mlcomp.db.providers.base import *
-from mlcomp.utils.misc import to_snake, duration_format
+from sqlalchemy import func, or_
+
+from mlcomp.db.core import PaginatorOptions
+from mlcomp.db.enums import TaskStatus
+from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
+from mlcomp.db.providers.base import BaseDataProvider
+from mlcomp.utils.misc import to_snake, duration_format, now
 
 
 class DagProvider(BaseDataProvider):
@@ -9,8 +14,10 @@ class DagProvider(BaseDataProvider):
         task_status = []
         for e in TaskStatus:
             task_status.append(
-                func.count(Task.status).filter(Task.status == e.value).label(
-                    e.name))
+                func.count(Task.status).
+                    filter(Task.status == e.value).
+                    label(e.name)
+            )
 
         last_activity = func.max(Task.last_activity).label('last_activity')
         funcs = [
@@ -20,7 +27,7 @@ class DagProvider(BaseDataProvider):
             func.min(Task.finished).label('finished')
         ]
 
-        query = self.query(Dag, *funcs, *task_status)
+        query = self.query(Dag, Project.name, *funcs, *task_status)
         if filter.get('project'):
             query = query.filter(Dag.project == filter['project'])
         if filter.get('name'):
@@ -44,12 +51,12 @@ class DagProvider(BaseDataProvider):
         if len(status_clauses) > 0:
             query = query.having(or_(*status_clauses))
 
-        query = query.join(Task, isouter=True).group_by(Dag.id)
+        query = query.join(Task, isouter=True).group_by(Dag.id, Project.name)
         total = query.count()
         paginator = self.paginator(query, options) if options else query
         res = []
         rules = ('-tasks.dag_rel',)
-        for dag, task_count, last_activity, \
+        for dag, project_name, task_count, last_activity, \
             started, finished, *(task_status) in paginator.all():
             # noinspection PyDictCreation
             r = {
@@ -57,16 +64,17 @@ class DagProvider(BaseDataProvider):
                 'last_activity': last_activity,
                 'started': started,
                 'finished': finished,
-                **{k: v for k, v in self.to_dict(dag, rules=rules).items() if
-                   k not in ['tasks', 'config']}
+                **{k: v for k, v in self.to_dict(dag, rules=rules).items()
+                   if k not in ['tasks', 'config']}
             }
+            r['project'] = {'name': project_name}
 
             r['task_statuses'] = [{'name': to_snake(e.name), 'count': s} for
                                   e, s in zip(TaskStatus, task_status)]
             r['last_activity'] = self.serializer.serialize_datetime(
                 r['last_activity']) if r['last_activity'] else None
-            r['started'] = self.serializer.serialize_datetime(r['started']) if \
-                r['started'] else None
+            r['started'] = self.serializer.serialize_datetime(r['started']) \
+                if r['started'] else None
             r['finished'] = self.serializer.serialize_datetime(
                 r['finished']) if r['finished'] else None
 
@@ -103,8 +111,9 @@ class DagProvider(BaseDataProvider):
     def duration(self, t: Task):
         if not t.started:
             return duration_format(0)
-        delta = ((
-                     t.finished if t.status > TaskStatus.InProgress.value else now()) - t.started).total_seconds()
+        finished = (
+            t.finished if t.status > TaskStatus.InProgress.value else now())
+        delta = (finished - t.started).total_seconds()
         return duration_format(delta)
 
     def graph(self, id: int):
@@ -134,5 +143,4 @@ class DagProvider(BaseDataProvider):
         return {'nodes': nodes, 'edges': edges}
 
 
-if __name__ == '__main__':
-    DagProvider().graph(39)
+__all__ = ['DagProvider']

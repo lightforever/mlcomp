@@ -1,21 +1,19 @@
 import ast
 import click
-
-from mlcomp.db.enums import DagType, TaskType
-from mlcomp.utils.logging import create_logger
-
-from mlcomp.db.providers import *
 import os
-from mlcomp.worker.storage import Storage
-from mlcomp.utils.config import load_ordered_yaml
 import socket
-from multiprocessing import cpu_count
-import GPUtil
-from mlcomp.worker.tasks import execute_by_id, Executor
-from collections import OrderedDict
-from mlcomp.utils.misc import memory
 import json
 
+import GPUtil
+
+from mlcomp.db.enums import DagType, ComponentType, TaskStatus
+from mlcomp.db.models import Computer
+from mlcomp.utils.logging import create_logger
+from mlcomp.db.providers import *
+from mlcomp.utils.config import load_ordered_yaml
+from multiprocessing import cpu_count
+from mlcomp.worker.tasks import execute_by_id
+from mlcomp.utils.misc import memory
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 
@@ -60,7 +58,8 @@ def dag(config: str):
 
 def _create_computer():
     tot_m, used_m, free_m = memory()
-    computer = Computer(name=socket.gethostname(), gpu=len(GPUtil.getGPUs()),
+    computer = Computer(name=socket.gethostname(),
+                        gpu=len(GPUtil.getGPUs()),
                         cpu=cpu_count(), memory=tot_m,
                         ip=os.getenv('IP'),
                         port=int(os.getenv('PORT')),

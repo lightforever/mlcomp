@@ -1,0 +1,8 @@
+info:
+  name: mnist_download
+  project: examples
+executors:
+  download:
+    type: download
+    competition: digit-recognizer
+

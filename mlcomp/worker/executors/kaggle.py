@@ -25,7 +25,8 @@ class Download(Executor):
                  output: str,
                  type=DownloadType.Kaggle,
                  competition: str = None,
-                 link: str = None):
+                 link: str = None,
+                 ):
         if type == DownloadType.Kaggle and competition is None:
             raise Exception('Competition is required for Kaggle')
         self.type = type

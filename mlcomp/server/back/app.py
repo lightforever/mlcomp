@@ -1,19 +1,25 @@
 import traceback
-from functools import wraps
-from flask import Flask, request, Response, send_from_directory
 import requests
-from mlcomp.db.providers import *
-from mlcomp.db.core import PaginatorOptions
-from flask_cors import CORS
-from mlcomp.server.back.supervisor import register_supervisor
 import os
+import json
+from collections import OrderedDict
+from functools import wraps
+
+from flask import Flask, request, Response, send_from_directory
+from flask_cors import CORS
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm import joinedload
+
 import mlcomp.worker.tasks as celery_tasks
+from mlcomp.db.enums import TaskStatus, ComponentType
+from mlcomp.db.providers import *
+from mlcomp.db.core import PaginatorOptions, Session
+from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
-from sqlalchemy.exc import ProgrammingError
 from mlcomp.utils.io import from_module_path
-from collections import OrderedDict
-from mlcomp.server.back.create_dags import dag_model_add
+from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
+from mlcomp.utils.misc import to_snake
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -42,11 +48,12 @@ def parse_int(args: dict, key: str):
 
 
 def construct_paginator_options(args: dict, default_sort_column: str):
-    return PaginatorOptions(sort_column=args.get('sort_column') or default_sort_column,
-                            sort_descending=args['sort_descending'] == 'true' if 'sort_descending' in args else True,
-                            page_number=parse_int(args, 'page_number'),
-                            page_size=parse_int(args, 'page_size'),
-                            )
+    return PaginatorOptions(
+        sort_column=args.get('sort_column') or default_sort_column,
+        sort_descending=args.get('sort_descending', 'true') == 'true',
+        page_number=parse_int(args, 'page_number'),
+        page_size=parse_int(args, 'page_size'),
+        )
 
 
 def check_auth(token):
@@ -107,9 +114,28 @@ def project_add():
 @requires_auth
 def model_add():
     data = request_data()
-    if data.get('task'):
+    success = True
+    error = ''
+    try:
         dag_model_add(data)
-    return json.dumps({'success': True})
+    except Exception:
+        error = traceback.format_exc()
+        success = False
+    return json.dumps({'success': success, 'error': error})
+
+
+@app.route('/api/model/remove', methods=['POST'])
+@requires_auth
+def model_remove():
+    data = request_data()
+    success = True
+    error = ''
+    try:
+        ModelProvider().remove(data['id'])
+    except Exception:
+        error = traceback.format_exc()
+        success = False
+    return json.dumps({'success': success, 'error': error})
 
 
 @app.route('/api/model/start', methods=['POST'])
@@ -119,6 +145,7 @@ def model_start():
     if data.get('task'):
         dag_model_start(data)
     return json.dumps({'success': True})
+
 
 @app.route('/api/img_classify', methods=['POST'])
 @requires_auth
@@ -206,7 +233,10 @@ def task_stop():
     data = request_data()
     task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
     status = celery_tasks.stop(task)
-    return json.dumps({'success': True, 'status': to_snake(TaskStatus(status).name)})
+    return json.dumps({
+        'success': True,
+        'status': to_snake(TaskStatus(status).name)
+    })
 
 
 @app.route('/api/dag/stop', methods=['POST'])
@@ -219,7 +249,10 @@ def dag_stop():
     for t in dag.tasks:
         t.dag_rel = dag
         celery_tasks.stop(t)
-    return json.dumps({'success': True, 'dag': provider.get({'id': id})['data'][0]})
+    return json.dumps(
+        {'success': True,
+         'dag': provider.get({'id': id})['data'][0]
+         })
 
 
 @app.route('/api/dag/toogle_report', methods=['POST'])
@@ -231,7 +264,10 @@ def dag_toogle_report():
         provider.remove_dag(int(data['id']), int(data['report']))
     else:
         provider.add_dag(int(data['id']), int(data['report']))
-    return json.dumps({'success': True, 'report_full': not data.get('remove')})
+    return json.dumps({
+        'success': True,
+        'report_full': not data.get('remove')
+    })
 
 
 @app.route('/api/task/toogle_report', methods=['POST'])
@@ -243,7 +279,10 @@ def task_toogle_report():
         provider.remove_task(int(data['id']), int(data['report']))
     else:
         provider.add_task(int(data['id']), int(data['report']))
-    return json.dumps({'success': True, 'report_full': not data.get('remove')})
+    return json.dumps({
+        'success': True,
+        'report_full': not data.get('remove')
+    })
 
 
 @app.route('/api/logs', methods=['POST'])
@@ -288,7 +327,9 @@ def steps():
 def token():
     data = request_data()
     if str(data['token']).strip() != conf.TOKEN:
-        return Response(json.dumps({'success': False, 'reason': 'invalid token'}), status=401)
+        return Response(
+            json.dumps({'success': False, 'reason': 'invalid token'}),
+            status=401)
     return json.dumps({'success': True})
 
 
@@ -347,7 +388,8 @@ def all_exception_handler(error):
     if type(error) == ProgrammingError:
         Session.cleanup()
 
-    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}', ComponentType.API)
+    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
+                 ComponentType.API)
     return str(error), 500
 
 
@@ -369,8 +411,10 @@ def start_server():
     if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
         register_supervisor()
-    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=PORT, host=HOST)
+    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=PORT,
+            host=HOST)
 
 
 def stop_server():
-    requests.post(f'http://localhost:{PORT}/api/shutdown', headers={'Authorization': conf.TOKEN})
+    requests.post(f'http://localhost:{PORT}/api/shutdown',
+                  headers={'Authorization': conf.TOKEN})

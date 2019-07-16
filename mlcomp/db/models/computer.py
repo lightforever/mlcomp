@@ -1,6 +1,7 @@
 from mlcomp.utils.misc import now
 from .base import *
 
+
 class Computer(Base):
     __tablename__ = 'computer'
 
@@ -14,6 +15,7 @@ class Computer(Base):
     user = sa.Column(sa.String)
     last_synced = sa.Column(sa.DateTime)
 
+
 class ComputerUsage(Base):
     __tablename__ = 'computer_usage'
 
@@ -21,3 +23,6 @@ class ComputerUsage(Base):
     computer = sa.Column(sa.String, ForeignKey('computer.name'))
     usage = sa.Column(sa.String)
     time = sa.Column(sa.DateTime, default=now())
+
+
+__all__ = ['Computer', 'ComputerUsage']

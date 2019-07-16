@@ -1,16 +1,17 @@
 import socket
-from mlcomp.db.enums import ComponentType
-from sqlalchemy.orm import joinedload
+import traceback
+import sys
+import pickle
 
+from sqlalchemy.orm import joinedload
+from celery.signals import celeryd_after_setup
+
+from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.db.providers import TaskProvider, DagLibraryProvider, StepProvider
 from mlcomp.utils.logging import create_logger
 from mlcomp.worker.app import app
 from mlcomp.db.models import *
 from mlcomp.worker.storage import Storage
-import traceback
-import sys
-from celery.signals import celeryd_after_setup
-import pickle
 from mlcomp.worker.executors import *
 from mlcomp.utils.config import Config
 
@@ -64,8 +65,10 @@ def execute_by_id(id: int, repeat_count=1):
         if was_installation and not task.debug:
             if repeat_count > 0:
                 try:
-                    queue = f'{hostname}_{docker_img}_{os.getenv("WORKER_INDEX")}'
-                    logger.warning(traceback.format_exc(), ComponentType.Worker)
+                    queue = f'{hostname}_{docker_img}_' \
+                        f'{os.getenv("WORKER_INDEX")}'
+                    logger.warning(traceback.format_exc(),
+                                   ComponentType.Worker)
                     execute.apply_async((id, repeat_count - 1), queue=queue)
                 except Exception:
                     pass
@@ -132,7 +135,8 @@ def stop(task: Task):
         logger.error(traceback.format_exc(), ComponentType.API)
     finally:
         if task.pid:
-            queue = f'{task.computer_assigned}_{task.dag_rel.docker_img or "default"}_supervisor'
+            queue = f'{task.computer_assigned}_' \
+                f'{task.dag_rel.docker_img or "default"}_supervisor'
             kill.apply_async((task.pid,), queue=queue)
         provider.change_status(task, TaskStatus.Stopped)
 

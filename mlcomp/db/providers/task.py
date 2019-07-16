@@ -1,18 +1,22 @@
-from sqlalchemy.orm import defer
-
-from mlcomp.db.enums import TaskType, DagType
-from mlcomp.db.providers.base import *
 from typing import List
-from mlcomp.utils.misc import to_snake, duration_format
-from datetime import datetime
+
+from sqlalchemy.orm import joinedload
+
+from mlcomp.db.core import PaginatorOptions
+from mlcomp.db.providers.base import BaseDataProvider, ReportTasks
+from mlcomp.db.enums import TaskType, DagType, TaskStatus
+from mlcomp.utils.misc import to_snake, duration_format, now
 from mlcomp.utils.config import Config
+from mlcomp.db.models import Task, Project, Dag, TaskDependence
 
 
 class TaskProvider(BaseDataProvider):
     model = Task
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Task).options(joinedload(Task.dag_rel))
+        query = self.query(Task, Project.name). \
+            options(joinedload(Task.dag_rel))
+
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
 
@@ -45,17 +49,21 @@ class TaskProvider(BaseDataProvider):
         total = query.count()
         paginator = self.paginator(query, options)
         res = []
-        for p in paginator.all():
+        for p, project_name in paginator.all():
             item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
+            item['dag_rel']['project'] = {
+                'id': item['dag_rel']['project'],
+                'name': project_name
+            }
             if p.started is None:
                 delta = 0
             elif p.status == TaskStatus.InProgress.value:
                 delta = (now() - p.started).total_seconds()
             else:
-                delta = ((
-                                 p.finished or p.last_activity) - p.started).total_seconds()
+                finish = (p.finished or p.last_activity)
+                delta = (finish - p.started).total_seconds()
             item['duration'] = duration_format(delta)
             if p.dag_rel is not None:
                 res.append(item)
@@ -118,7 +126,8 @@ class TaskProvider(BaseDataProvider):
     def change_status(self, task, status: TaskStatus):
         if status == TaskStatus.InProgress:
             task.started = now()
-        elif status in [TaskStatus.Failed, TaskStatus.Stopped,
+        elif status in [TaskStatus.Failed,
+                        TaskStatus.Stopped,
                         TaskStatus.Success]:
             task.finished = now()
 
@@ -127,8 +136,9 @@ class TaskProvider(BaseDataProvider):
 
     def by_status(self, status: TaskStatus, docker_img: str = None,
                   worker_index: int = None):
-        query = self.query(Task).filter(Task.status == status.value).options(
-            joinedload(Task.dag_rel))
+        query = self.query(Task).filter(Task.status == status.value). \
+            options(joinedload(Task.dag_rel))
+
         if docker_img:
             query = query.join(Dag).filter(Dag.docker_img == docker_img)
         if worker_index is not None:
@@ -138,8 +148,8 @@ class TaskProvider(BaseDataProvider):
     def dependency_status(self, tasks: List[Task]):
         res = {t.id: [] for t in tasks}
         task_ids = [task.id for task in tasks]
-        items = self.query(TaskDependence, Task).filter(
-            TaskDependence.task_id.in_(task_ids)). \
+        items = self.query(TaskDependence, Task). \
+            filter(TaskDependence.task_id.in_(task_ids)). \
             join(Task, Task.id == TaskDependence.depend_id).all()
         for item, task in items:
             res[item.task_id].append(task.status)
@@ -161,3 +171,6 @@ class TaskProvider(BaseDataProvider):
             order_by(Task.finished.desc()). \
             first()
         return res[0] if res else None
+
+
+__all__ = ['TaskProvider']

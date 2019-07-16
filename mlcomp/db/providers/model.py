@@ -1,6 +1,10 @@
 from collections import defaultdict
 
+from sqlalchemy.orm import joinedload
+
+from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import DagType
+from mlcomp.db.models import Model, Dag, Project
 from mlcomp.db.providers.base import *
 from mlcomp.utils.config import Config
 
@@ -9,7 +13,9 @@ class ModelProvider(BaseDataProvider):
     model = Model
 
     def get(self, filter, options: PaginatorOptions):
-        query = self.query(Model).options(joinedload(Model.dag_rel))
+        query = self.query(Model).\
+            options(joinedload(Model.dag_rel)).\
+            options(joinedload(Model.project_rel))
 
         if filter.get('project'):
             query = query.filter(Model.project == filter['project'])
@@ -27,7 +33,7 @@ class ModelProvider(BaseDataProvider):
         models = paginator.all()
         models_projects = set()
         for model in models:
-            row = self.to_dict(model)
+            row = self.to_dict(model, rules=('-project_rel.class_names',))
             res.append(row)
             models_projects.add(model.project)
 
@@ -64,3 +70,6 @@ class ModelProvider(BaseDataProvider):
             all()
         projects = [{'name': name, 'id': id} for name, id in projects]
         return {'total': total, 'data': res, 'projects': projects}
+
+
+__all__ = ['ModelProvider']

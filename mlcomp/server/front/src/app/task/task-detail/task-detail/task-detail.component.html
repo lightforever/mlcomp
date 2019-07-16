@@ -1,6 +1,18 @@
 <div class="mat-elevation-z8">
     <table mat-table [dataSource]="dataSource" matSort>
 
+        <ng-container matColumnDef="project">
+            <th mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                style="width: 3%">
+                Project
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.dag_rel.project.name}}
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="id">
             <th mat-header-cell *matHeaderCellDef mat-sort-header
                 style="width: 3%"> Id

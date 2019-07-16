@@ -65,3 +65,10 @@ class ReportScheme(Base):
     name = sa.Column(sa.String, primary_key=True)
     content = sa.Column(sa.LargeBinary)
     last_modified = sa.Column(sa.TIMESTAMP)
+
+
+__all__ = ['ReportSeries',
+           'ReportImg',
+           'ReportTasks',
+           'Report',
+           'ReportScheme']

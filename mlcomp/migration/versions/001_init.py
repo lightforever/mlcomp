@@ -199,7 +199,6 @@ model = Table(
     Column('dag', Integer, nullable=False),
     Column('project', Integer, nullable=False),
     Column('created', TIMESTAMP, nullable=False),
-    Column('file', String(200)),
     Column('interface', String(100), nullable=False),
     Column('pred_file_valid', String(200)),
     Column('pred_file_test', String(200)),
@@ -338,6 +337,8 @@ def upgrade(migrate_engine):
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([model.c.project], [project.c.id],
                              ondelete='CASCADE').create()
+        UniqueConstraint(model.c.project, model.c.name,
+                         name='model_project_name_unique').create()
     except:
         trans.rollback()
         raise

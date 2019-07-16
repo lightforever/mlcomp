@@ -2,6 +2,7 @@ from .base import *
 from mlcomp.db.enums import TaskStatus
 from sqlalchemy.orm import deferred
 
+
 class Task(Base):
     __tablename__ = 'task'
 
@@ -36,3 +37,6 @@ class TaskDependence(Base):
 
     task_id = sa.Column(sa.Integer, primary_key=True)
     depend_id = sa.Column(sa.Integer, primary_key=True)
+
+
+__all__ = ['Task', 'TaskDependence']

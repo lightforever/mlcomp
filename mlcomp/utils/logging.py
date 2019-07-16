@@ -64,9 +64,12 @@ class DbHandler(logging.Handler):
                 'Args weer not been provided for logging'
             assert len(record.args) <= 3, 'Too many args for logging'
 
+            step = None
+            task = None
+
             if len(record.args) == 1:
-                component = record.args[0]
-                step = None
+                component =\
+                    record.args[0]
             elif len(record.args) == 2:
                 component, task = record.args
             else:
@@ -140,4 +143,5 @@ def create_logger():
 
 
 logger = create_logger()
-__all__ = ['create_logger']
+
+__all__ = ['create_logger', 'logger']

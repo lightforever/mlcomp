@@ -1,19 +1,24 @@
 from glob import glob
 import os
 import logging
-from os.path import isdir
+from os.path import isdir, join
 import hashlib
 from typing import List, Tuple
+import pkgutil
+import sys
+import pathspec
+import pkg_resources
+
 from sqlalchemy.orm import joinedload
+
+from mlcomp.utils.settings import TASK_FOLDER, DATA_FOLDER
 from mlcomp.db.models import *
 from mlcomp.db.providers import FileProvider, DagStorageProvider, TaskProvider, \
     DagLibraryProvider
-import pkgutil
+
 from mlcomp.utils.config import Config
-import sys
-import pathspec
 from mlcomp.utils.req import control_requirements, read_lines
-import pkg_resources
+
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +106,7 @@ class Storage:
 
     def download(self, task: int):
         task = self.task_provider.by_id(task, joinedload(Task.dag_rel))
-        folder = f'/opt/mlcomp/tasks/{task.id}'
+        folder = join(TASK_FOLDER, str(task.id))
         os.makedirs(folder, exist_ok=True)
         items = self.provider.by_dag(task.dag)
         items = sorted(items, key=lambda x: x[1] is not None)
@@ -116,7 +121,7 @@ class Storage:
         config = Config.from_yaml(task.dag_rel.config)
         info = config['info']
         try:
-            data_folder = os.path.join('/opt/mlcomp/data/', info['project'])
+            data_folder = os.path.join(DATA_FOLDER, info['project'])
             os.makedirs(data_folder, exist_ok=True)
 
             os.symlink(data_folder, os.path.join(folder, 'data'))

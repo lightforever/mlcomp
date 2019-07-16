@@ -19,12 +19,13 @@ import {ModelStartDialogComponent} from "./model-start-dialog.component";
 })
 export class ModelComponent extends Paginator<Model> {
     protected displayed_columns: string[] = [
+        'project',
+        'dag',
         'id',
         'name',
-        'dag',
-        'created',
         'slot',
         'interface',
+        'created',
         'score_local',
         'score_public',
         'links'
@@ -53,6 +54,8 @@ export class ModelComponent extends Paginator<Model> {
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/edit.svg'));
         iconRegistry.addSvgIcon('start',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/play-button.svg'));
+        iconRegistry.addSvgIcon('remove',
+            sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
     }
 
     protected _ngOnInit() {
@@ -93,8 +96,15 @@ export class ModelComponent extends Paginator<Model> {
 
     }
 
-    start(element: Model) {
+    remove(element: Model) {
         let self = this;
+        this.service.remove(element.id).subscribe(res => {
+            self.change.emit();
+        });
+    }
+
+
+    start(element: Model) {
         let dag;
         for (let d of element.dags) {
             if (element.dag == d.id) {
@@ -103,23 +113,16 @@ export class ModelComponent extends Paginator<Model> {
             }
         }
         let config = {
-            width: '600px', height: '300px',
+            width: '500px', height: '400px',
             data: {
                 'dags': element.dags,
                 'interface': element.interface,
                 'slot': element.slot,
-                'dag': dag
+                'dag': dag,
+                'interface_params': element.interface_params
             }
         };
-        const dialogRef = this.start_dialog.open(
-            ModelStartDialogComponent,
-            config);
-
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                self.service.start(result).subscribe(res=>{});
-            }
-        });
+        this.start_dialog.open(ModelStartDialogComponent, config);
     }
 }
 
