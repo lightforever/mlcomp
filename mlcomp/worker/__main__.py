@@ -11,13 +11,14 @@ import GPUtil
 import psutil
 import numpy as np
 
+from mlcomp.db.core import Session
 from mlcomp.utils.settings import DATA_FOLDER
 from mlcomp.db.providers import DockerProvider
 from mlcomp.db.enums import ComponentType
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.utils.misc import dict_func, now
 from mlcomp.worker.app import app
-from mlcomp.db.providers import ComputerProvider, Session
+from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
 from mlcomp.utils.misc import memory
 from mlcomp.utils.logging import logger

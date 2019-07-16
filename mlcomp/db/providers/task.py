@@ -1,5 +1,6 @@
 from typing import List
 
+import yaml
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import PaginatorOptions
@@ -104,7 +105,12 @@ class TaskProvider(BaseDataProvider):
             dag = {'name': name,
                    'id': id,
                    'slots': slots,
-                   'interfaces': config['interfaces']
+                   'interfaces': [
+                       {
+                           'name': k,
+                           'params': yaml.dump(v, default_flow_style=False)
+                       } for k, v in config['interfaces'].items()
+                   ]
                    }
             dags_model_dict.append(dag)
         return {'total': total,

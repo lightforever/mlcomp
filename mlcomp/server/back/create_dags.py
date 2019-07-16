@@ -29,18 +29,15 @@ def dag_standard(config: dict,
     storage = Storage()
     dag_provider = DagProvider()
 
-    type = info.get('type', 'Standard')
-    assert type in DagType.names(), 'unknown dag type, ' + type
-
     project = ProjectProvider().by_name(info['project']).id
-    dag = Dag(config=config_text or yaml.dump(config,
-                                              default_flow_style=False
-                                              ),
+    default_config_text = yaml.dump(config, default_flow_style=False)
+    dag = Dag(config=config_text or default_config_text,
               project=project,
               name=info['name'],
               docker_img=info.get('docker_img'),
-              type=DagType.from_name(type),
+              type=DagType.Standard.value,
               created=now())
+
     dag = dag_provider.add(dag)
     if upload_files:
         folder = os.getcwd()
@@ -114,16 +111,13 @@ def dag_pipe(config: dict, config_text: str = None):
     storage = Storage()
     dag_provider = DagProvider()
 
-    type = info.get('type', 'Standard')
-    assert type in DagType.names(), 'unknown dag type, ' + type
-
     folder = os.getcwd()
     project = ProjectProvider().by_name(info['project']).id
     dag = dag_provider.add(Dag(config=config_text,
                                project=project,
                                name=info['name'],
                                docker_img=info.get('docker_img'),
-                               type=DagType.from_name(type)
+                               type=DagType.Pipe.value
                                ))
     storage.upload(folder, dag)
 
@@ -169,7 +163,7 @@ def dag_model_start(model_id: int, data: dict):
             'interface': data['interface'],
             'interface_params': params,
             'slot': k,
-            'model_name': model.name
+            'name': model.name
         }
         v['slot'] = model
 

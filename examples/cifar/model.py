@@ -1,10 +1,11 @@
 import torch.nn as nn
 import torch.nn.functional as F
+
 from catalyst.contrib import registry
 
 
 @registry.Model
-class SimpleNet(nn.Module):
+class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -12,7 +13,7 @@ class SimpleNet(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 2)
+        self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))

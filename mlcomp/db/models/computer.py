@@ -1,5 +1,8 @@
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
+
+from mlcomp.db.models.base import Base
 from mlcomp.utils.misc import now
-from .base import *
 
 
 class Computer(Base):

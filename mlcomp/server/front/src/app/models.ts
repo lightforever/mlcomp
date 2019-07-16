@@ -284,11 +284,10 @@ export interface ProjectAddData {
 export interface ModelAddData {
     dag: any;
     slot: string;
-    interface: string;
+    interface: any;
     dags: any[];
     name: string;
     task: number;
-    interface_params: string;
 }
 
 export interface ModelStartData {

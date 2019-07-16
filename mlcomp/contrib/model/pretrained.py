@@ -1,6 +1,7 @@
 import torch.nn as nn
-import pretrainedmodels
 import torch
+
+import pretrainedmodels
 
 
 class Pretrained(nn.Module):

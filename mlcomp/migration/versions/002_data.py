@@ -9,10 +9,15 @@ def upgrade(migrate_engine):
     folder = os.path.dirname(__file__)
     provider = ReportSchemeProvider()
     try:
-        for path in glob(os.path.join(folder, '002', 'report_scheme', '*.yml')):
+        files = os.path.join(folder, '002', 'report_scheme', '*.yml')
+        for path in glob(files):
             name = os.path.basename(path).split('.')[0]
             text = open(path).read()
-            provider.add(ReportScheme(name=name, content=pickle.dumps(text), last_modified=now()), commit=False)
+            provider.add(ReportScheme(
+                name=name,
+                content=pickle.dumps(text),
+                last_modified=now()),
+                commit=False)
 
         provider.commit()
     except:

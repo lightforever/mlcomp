@@ -48,14 +48,17 @@ class ModelProvider(BaseDataProvider):
             for pipe in config['pipes'].values():
                 for k, v in pipe.items():
                     if 'slot' in v:
-                        slots.append(v['slot'])
+                        if v['slot'] not in slots:
+                            slots.append(v['slot'])
                     elif 'slots' in v:
-                        slots.extend(v['slots'])
+                        for slot in v['slots']:
+                            if slot not in slots:
+                                slots.append(slot)
 
             d = {'name': dag.name,
                  'id': dag.id,
                  'slots': slots,
-                 'interfaces': config['interfaces'],
+                 'interfaces': list(config['interfaces']),
                  'pipes': list(config['pipes'])
                  }
 

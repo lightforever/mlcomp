@@ -1,6 +1,9 @@
-from .base import *
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, deferred
+
 from mlcomp.db.enums import TaskStatus
-from sqlalchemy.orm import deferred
+from mlcomp.db.models.base import Base
 
 
 class Task(Base):

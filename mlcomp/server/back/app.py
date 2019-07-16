@@ -142,8 +142,7 @@ def model_remove():
 @requires_auth
 def model_start():
     data = request_data()
-    if data.get('task'):
-        dag_model_start(data)
+    dag_model_start(data)
     return json.dumps({'success': True})
 
 

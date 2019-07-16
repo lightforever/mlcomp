@@ -1,11 +1,13 @@
-import cv2
-from torch.utils.data import Dataset
-import numpy as np
-import tifffile
-import pandas as pd
 from os.path import join
 from numbers import Number
 from collections import defaultdict
+
+import tifffile
+import numpy as np
+import pandas as pd
+import cv2
+
+from torch.utils.data import Dataset
 
 
 class ImageDataset(Dataset):

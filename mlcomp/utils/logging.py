@@ -1,9 +1,11 @@
+import os
 import logging
 from logging.config import dictConfig
+
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
 from mlcomp.utils.misc import now
-import os
+
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 

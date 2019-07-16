@@ -3,8 +3,9 @@ import copy
 from datetime import datetime
 import re
 from typing import List
-import numpy as np
 import os
+
+import numpy as np
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')

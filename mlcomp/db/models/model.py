@@ -1,4 +1,8 @@
-from mlcomp.db.models.base import *
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
+from mlcomp.db.models.base import Base
 
 
 class Model(Base):

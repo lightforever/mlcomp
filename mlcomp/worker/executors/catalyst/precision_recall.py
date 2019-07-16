@@ -1,10 +1,13 @@
+import pickle
+
+import numpy as np
+
+from scipy.special import softmax
+
 from catalyst.dl import RunnerState
 
 from mlcomp.worker.executors.catalyst.base import BaseCallback
-from scipy.special import softmax
-import pickle
 from mlcomp.db.models import ReportImg
-import numpy as np
 
 
 class PrecisionRecallCallback(BaseCallback):
@@ -34,6 +37,8 @@ class PrecisionRecallCallback(BaseCallback):
                         )
 
         self.img_provider.add(obj)
-        self.img_provider.remove_lower(self.task.id, self.info.name, state.epoch)
+        self.img_provider.remove_lower(self.task.id,
+                                       self.info.name,
+                                       state.epoch)
 
         super(self.__class__, self).on_epoch_end(state)

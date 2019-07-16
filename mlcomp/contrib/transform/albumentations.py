@@ -1,5 +1,6 @@
-from albumentations.augmentations.transforms import ImageOnlyTransform
 import numpy as np
+
+from albumentations.augmentations.transforms import ImageOnlyTransform
 
 
 class ChannelTranspose(ImageOnlyTransform):

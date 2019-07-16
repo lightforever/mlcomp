@@ -5,4 +5,7 @@ executors:
   download:
     type: download
     competition: digit-recognizer
-
+  split:
+    type: split
+    variant: frame
+    file: train.csv

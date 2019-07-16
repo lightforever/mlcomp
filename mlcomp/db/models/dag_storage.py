@@ -1,4 +1,7 @@
-from .base import *
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
+
+from mlcomp.db.models.base import Base
 
 
 class DagStorage(Base):

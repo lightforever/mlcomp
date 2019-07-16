@@ -1,5 +1,9 @@
-from mlcomp.db.models.base import *
 import sys
+
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
+
+from mlcomp.db.models.base import Base
 
 
 class File(Base):

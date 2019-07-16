@@ -1,4 +1,6 @@
-from .base import *
+import sqlalchemy as sa
+
+from mlcomp.db.models.base import Base
 
 
 class Project(Base):

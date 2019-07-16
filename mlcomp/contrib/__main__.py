@@ -1,10 +1,12 @@
-import click
 import re
-from mlcomp.contrib.scripts.split import file_group_kfold
 import os
-import pandas as pd
 from os.path import join
 from uuid import uuid4
+
+import click
+import pandas as pd
+
+from mlcomp.contrib.scripts.split import file_group_kfold
 
 current_folder = os.getcwd()
 
@@ -74,7 +76,10 @@ def split_segment(img_path: str,
 @click.argument('img_path')
 def split_test_img(img_path: str):
     output = join(current_folder, 'fold_test.csv')
-    df = pd.DataFrame({'image': sorted(list(os.listdir(img_path))), 'fold': 0})
+    df = pd.DataFrame({
+        'image': sorted(list(os.listdir(img_path))),
+        'fold': 0
+    })
     df.to_csv(output, index=False)
 
 

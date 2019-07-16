@@ -1,12 +1,19 @@
 info:
-  name: command
-  project: youtube
-  type: Pipe
+  name: mnist_pipe
+  project: examples
+  type: pipe
 pipes:
-  valid:
+  infer_valid:
     infer:
-      type: catalyst_infer
-      slot: youtube
+      type: infer
+      slot: model
+      suffix: valid
+  infer_test:
+    infer:
+      type: infer
+      slot: model
+      suffix: test
 
-interfaces: [torch]
-
+interfaces:
+  torch:
+    batch_size: 512

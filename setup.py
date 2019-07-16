@@ -15,7 +15,8 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = "mlcomp"
-DESCRIPTION = "Machine learning pipelines. Especially, for competitions, like Kaggle"
+DESCRIPTION = "Machine learning pipelines. " \
+              "Especially, for competitions, like Kaggle"
 URL = "https://github.com/lightforever/mlcomp"
 EMAIL = "lightsanweb@gmail.com"
 AUTHOR = "Evgeny Semyonov"

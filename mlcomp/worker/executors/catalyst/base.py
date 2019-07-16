@@ -1,9 +1,10 @@
+from collections import defaultdict
+
 from catalyst.dl import Callback, Experiment, RunnerState
 
 from mlcomp.db.providers import ReportImgProvider
 from mlcomp.db.misc.report_info import ReportSchemeItem
 from mlcomp.db.models import Task, Dag
-from collections import defaultdict
 
 
 class BaseCallback(Callback):

@@ -1,6 +1,8 @@
-from sklearn.model_selection import GroupKFold
-import pandas as pd
 from os.path import basename, splitext
+
+import pandas as pd
+
+from sklearn.model_selection import GroupKFold
 
 
 def file_group_kfold(n_splits: int,

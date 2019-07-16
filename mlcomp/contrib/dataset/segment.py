@@ -1,7 +1,8 @@
-import os
-import numpy as np
-from mlcomp.contrib.dataset.classify import ImageDataset
 from os.path import join
+
+import numpy as np
+
+from mlcomp.contrib.dataset.classify import ImageDataset
 
 
 class ImageWithMaskDataset(ImageDataset):

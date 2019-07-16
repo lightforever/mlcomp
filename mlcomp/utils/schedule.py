@@ -1,8 +1,7 @@
 import atexit
-import datetime
+import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
-import logging
 
 
 def start_schedule(jobs):

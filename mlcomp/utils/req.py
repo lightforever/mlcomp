@@ -1,12 +1,12 @@
-from typing import List, Tuple
+from typing import List
 import os
 import ast
-
+from glob import glob
 import pathspec
+import pkg_resources
+
 from mlcomp.utils.logging import logger
 from mlcomp.utils.io import read_lines
-import pkg_resources
-from glob import glob
 
 _mapping = {
     'cv2': 'opencv-python',
@@ -15,12 +15,19 @@ _mapping = {
 }
 
 
-def find_imports(path: str, files: List[str] = None, exclude_patterns: List[str] = None, encoding='utf-8'):
+def find_imports(path: str,
+                 files: List[str] = None,
+                 exclude_patterns: List[str] = None,
+                 encoding='utf-8'):
     res = []
     raw_imports = []
-    files = files if files is not None else glob(os.path.join(path, '**', '*.py'), recursive=True)
-    exclude_patterns = exclude_patterns if exclude_patterns is not None else []
-    spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, exclude_patterns)
+    files = files if files is not None \
+        else glob(os.path.join(path, '**', '*.py'), recursive=True)
+
+    exclude_patterns = exclude_patterns \
+        if exclude_patterns is not None else []
+    spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
+                                        exclude_patterns)
 
     for file in files:
         if not file.endswith('.py'):
@@ -79,11 +86,15 @@ def _read_requirements(file: str):
 
 def _write_requirements(file: str, reqs: List):
     with open(file, 'w') as f:
-        text = '\n'.join([f'{name}{rel}{ver}' if rel else name for name, rel, ver in reqs])
+        text = '\n'.join([f'{name}{rel}{ver}'
+                          if rel else name for name, rel, ver in reqs])
+
         f.write(text)
 
 
-def control_requirements(path: str, files: List[str] = None, exclude_patterns: List[str] = None):
+def control_requirements(path: str,
+                         files: List[str] = None,
+                         exclude_patterns: List[str] = None):
     req_file = os.path.join(path, 'requirements.txt')
     if not os.path.exists(req_file):
         with open(req_file, 'w') as f:

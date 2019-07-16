@@ -1,9 +1,11 @@
+import pickle
+
+import numpy as np
+
 from catalyst.dl import RunnerState
 
 from mlcomp.worker.executors.catalyst.base import BaseCallback
-import pickle
 from mlcomp.db.models import ReportImg
-import numpy as np
 
 
 class F1Callback(BaseCallback):

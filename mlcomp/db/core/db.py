@@ -1,7 +1,8 @@
 import sqlalchemy as sa
-from mlcomp.db.conf import *
 import sqlalchemy.orm.session as session
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from mlcomp.db.conf import *
 
 __all__ = ['Session']
 
@@ -21,7 +22,8 @@ class Session(session.Session):
             return Session.__session[key][0]
 
         session_factory = scoped_session(sessionmaker(class_=Session, key=key))
-        engine = sa.create_engine(connection_string or SA_CONNECTION_STRING, echo=False)
+        engine = sa.create_engine(connection_string or SA_CONNECTION_STRING,
+                                  echo=False)
         session_factory.configure(bind=engine)
         session = session_factory()
 

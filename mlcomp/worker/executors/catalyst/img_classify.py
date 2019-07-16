@@ -1,16 +1,18 @@
 from typing import Union
+import pickle
+from numbers import Integral
+
+import numpy as np
+
+import cv2
+from sklearn.metrics import confusion_matrix
+from scipy.special import softmax
 
 from catalyst.dl import RunnerState
 
 from mlcomp.db.models import ReportImg
-from scipy.special import softmax
-import numpy as np
-import cv2
-import pickle
 from mlcomp.utils.misc import adapt_db_types
 from mlcomp.worker.executors.catalyst.base import BaseCallback
-from sklearn.metrics import confusion_matrix
-from numbers import Integral
 
 
 class ImgClassifyCallback(BaseCallback):
@@ -26,7 +28,8 @@ class ImgClassifyCallback(BaseCallback):
         targets = state.input['targets'].detach().cpu().numpy()
         preds = state.output['logits'].detach().cpu().numpy()
         inputs = state.input['features'].detach().cpu().numpy()
-        metas = [{k: state.input['meta'][k][i] for k in state.input['meta']} for i in range(len(inputs))]
+        metas = [{k: state.input['meta'][k][i]
+                  for k in state.input['meta']} for i in range(len(inputs))]
 
         data = self.data[state.loader_name]
 
@@ -42,17 +45,26 @@ class ImgClassifyCallback(BaseCallback):
             data['target'].append(target_int)
             data['output'].append(prob)
 
-            if self.added[state.loader_name][target_int] >= self.info.count_class_max:
+            target_current = self.added[state.loader_name][target_int]
+            if target_current >= self.info.count_class_max:
                 continue
-            prep = self.classify_prepare(input, pred, target, prob, target_int, meta)
+            prep = self.classify_prepare(input,
+                                         pred,
+                                         target,
+                                         prob,
+                                         target_int,
+                                         meta)
             adapt_db_types(prep)
             for field in necessary_fields:
-                assert prep[field] is not None, f'{field} is None after classify_prepare'
+                assert prep[field] is not None, \
+                    f'{field} is None after classify_prepare'
 
             img = cv2.imencode('.jpg', prep['img'])[1].tostring()
             content = {'img': img}
             content = pickle.dumps(content)
-            obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,
+            obj = ReportImg(group=self.info.name,
+                            epoch=state.epoch,
+                            task=self.task.id,
                             img=content,
                             project=self.dag.project,
                             dag=self.task.dag,
@@ -65,22 +77,28 @@ class ImgClassifyCallback(BaseCallback):
                             part=state.loader_name
                             )
             self.img_provider.add(obj, commit=False)
-            self.added[state.loader_name][target_int] += 1
+            target += 1
 
         self.img_provider.commit()
 
     def on_epoch_end(self, state: RunnerState):
         if self.info.epoch_every is None and self.is_best:
-            self.img_provider.remove_lower(self.task.id, self.info.name, state.epoch)
+            self.img_provider.remove_lower(self.task.id,
+                                           self.info.name,
+                                           state.epoch)
 
         for name, value in self.data.items():
             targets = np.array(self.data[name]['target'])
             outputs = np.array(self.data[name]['output'])
 
-            matrix = confusion_matrix(targets, outputs.argmax(1), labels=np.arange(outputs.shape[1]))
+            matrix = confusion_matrix(targets,
+                                      outputs.argmax(1),
+                                      labels=np.arange(outputs.shape[1]))
 
             c = {'data': matrix}
-            obj = ReportImg(group=self.info.name + '_confusion', epoch=state.epoch, task=self.task.id,
+            obj = ReportImg(group=self.info.name + '_confusion',
+                            epoch=state.epoch,
+                            task=self.task.id,
                             img=pickle.dumps(c),
                             project=self.dag.project,
                             dag=self.task.dag,
@@ -97,7 +115,10 @@ class ImgClassifyCallback(BaseCallback):
         assert isinstance(target, Integral), 'Target is not a number'
         return int(target)
 
-    def img(self, input: np.array, pred: np.array, target: Union[np.array, int], meta: dict):
+    def img(self, input: np.array,
+            pred: np.array,
+            target: Union[np.array, int],
+            meta: dict):
         return self.experiment.denormilize(input)
 
     def classify_prepare(self, input: np.array, pred: np.array,

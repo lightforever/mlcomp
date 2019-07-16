@@ -1,8 +1,6 @@
-import ast
 import click
 import os
 import socket
-import json
 
 import GPUtil
 
@@ -17,43 +15,18 @@ from mlcomp.utils.misc import memory
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 
-@click.group()
-def main():
-    pass
-
-
-@main.command()
-@click.argument('name')
-@click.option('--class_names')
-def project(name, class_names):
-    if class_names:
-        if os.path.exists(class_names):
-            class_names = json.load(open(class_names))
-        else:
-            class_names = {'default': ast.literal_eval(class_names)}
-    else:
-        class_names = dict()
-    provider = ProjectProvider()
-    provider.add(name, class_names)
-
-
 def _dag(config: str, debug: bool = False):
     config_text = open(config, "r").read()
     config_parsed = load_ordered_yaml(config)
 
-    if config_parsed['info'].get('type', "Standard") == DagType.Standard.name:
+    type_name = config_parsed['info'].get('type', "standard")
+    if type_name == DagType.Standard.name.lower():
         return dag_standard(config_parsed,
                             debug=debug,
                             config_text=config_text)
 
     return dag_pipe(config_parsed,
                     config_text=config_text)
-
-
-@main.command()
-@click.argument('config')
-def dag(config: str):
-    _dag(config)
 
 
 def _create_computer():
@@ -66,6 +39,17 @@ def _create_computer():
                         user=os.getenv('USER')
                         )
     ComputerProvider().create_or_update(computer, 'name')
+
+
+@click.group()
+def main():
+    pass
+
+
+@main.command()
+@click.argument('config')
+def dag(config: str):
+    _dag(config)
 
 
 @main.command()

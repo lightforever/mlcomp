@@ -1,10 +1,13 @@
 from collections import OrderedDict
 from typing import List
+from copy import deepcopy
+
 import numpy as np
 import matplotlib.pyplot as plt
-from mlcomp.utils.plot import figure_to_binary, plot_classification_report
+
 from sklearn.metrics import precision_recall_curve, classification_report
-from copy import deepcopy
+
+from mlcomp.utils.plot import figure_to_binary, plot_classification_report
 
 
 class ReportSchemeItem:
@@ -14,7 +17,8 @@ class ReportSchemeItem:
     @classmethod
     def from_dict(cls, name: str, value: OrderedDict):
         value.pop('type')
-        assert len(value) == 0, f'Unknown parameter in report info item = {name}: {value.popitem()}'
+        assert len(value) == 0, f'Unknown parameter in ' \
+            f'report info item = {name}: {value.popitem()}'
         return cls(name)
 
 
@@ -30,7 +34,8 @@ class ReportSchemeSeries(ReportSchemeItem):
         value.pop('type')
         key = value.pop('key')
 
-        assert len(value) == 0, f'Unknown parameter in report.series={name}: {value.popitem()}'
+        assert len(value) == 0, f'Unknown parameter in ' \
+            f'report.series={name}: {value.popitem()}'
         return cls(name, key)
 
 
@@ -69,12 +74,18 @@ class ReportSchemeMetric:
     def from_dict(data: dict):
         name = data.pop('name')
         minimize = data.pop('minimize')
-        assert len(data) == 0, f'Unknown parameter in report.metric={data.popitem()}'
+        assert len(data) == 0, f'Unknown parameter in ' \
+            f'report.metric={data.popitem()}'
         return ReportSchemeMetric(name, minimize)
 
 
 class ReportSchemeImgClassify(ReportSchemeItem):
-    def __init__(self, name: str, epoch_every: int, count_class_max: int, train: bool, threshold=None):
+    def __init__(self,
+                 name: str,
+                 epoch_every: int,
+                 count_class_max: int,
+                 train: bool,
+                 threshold=None):
         super(ReportSchemeImgClassify, self).__init__(name)
         self.epoch_every = epoch_every
         self.count_class_max = count_class_max
@@ -89,13 +100,19 @@ class ReportSchemeImgClassify(ReportSchemeItem):
         train = value.pop('train', False)
         threshold = value.pop('threshold', dict())
 
-        assert len(value) == 0, f'Unknown parameter in report.img_classify={value.popitem()}'
-        return cls(name, epoch_every=epoch_every, count_class_max=count_class_max,
+        assert len(value) == 0, f'Unknown parameter in ' \
+            f'report.img_classify={value.popitem()}'
+        return cls(name,
+                   epoch_every=epoch_every,
+                   count_class_max=count_class_max,
                    train=train, threshold=threshold)
 
 
 class ReportSchemeInfo:
     def __init__(self, data: OrderedDict):
+        assert 'items' in data, 'no items in report'
+        assert 'metric' in data, 'no metric in report'
+
         self.data = data
         self.series = self._get_series()
         self.precision_recall = self._get_precision_recall()
@@ -112,11 +129,31 @@ class ReportSchemeInfo:
 
         fields = {
             'root': [('items', False)],
-            'panel': ['title', ('parent_cols', False), ('cols', False),
-                      ('row_height', False), ('rows', False), ('items', False), ('expanded', False), ('table', False)],
-            'blank': [('cols', False), ('rows', False)],
-            'series': [('multi', False), ('group', False), 'source', ('cols', False), ('rows', False)],
-            **{k: ['source', ('cols', False), ('rows', False)] for k in types[4:]}
+            'panel': [
+                'title',
+                ('parent_cols', False),
+                ('cols', False),
+                ('row_height', False),
+                ('rows', False),
+                ('items', False),
+                ('expanded', False),
+                ('table', False)
+            ],
+            'blank': [
+                ('cols', False),
+                ('rows', False)
+            ],
+            'series': [
+                ('multi', False),
+                ('group', False),
+                'source',
+                ('cols', False),
+                ('rows', False)],
+            **{k: [
+                'source',
+                ('cols', False),
+                ('rows', False)]
+                for k in types[4:]}
         }
         keys = set(item.keys()) - {'type'}
         for f in fields[item['type']]:
@@ -127,7 +164,8 @@ class ReportSchemeInfo:
                 raise Exception(f'Type {item["type"]} must contain field {f}')
             if f in keys:
                 keys.remove(f)
-        assert len(keys) == 0, f'Unknown fields {keys} for type = {item["type"]}'
+        assert len(keys) == 0, \
+            f'Unknown fields {keys} for type = {item["type"]}'
 
         if 'items' in item:
             for item in item['items']:
@@ -137,7 +175,8 @@ class ReportSchemeInfo:
         return len(self.precision_recall) > 0
 
     def _by_type(self, t: str, c):
-        return [c.from_dict(k, v) for k, v in self.data['items'].items() if v.get('type') == t]
+        return [c.from_dict(k, v)
+                for k, v in self.data['items'].items() if v.get('type') == t]
 
     def _get_img_classify(self) -> List[ReportSchemeImgClassify]:
         return self._by_type('img_classify', ReportSchemeImgClassify)
@@ -160,7 +199,9 @@ class ReportSchemeInfo:
         l = deepcopy(schemes[name])
         r = dict()
         if l.get('extend'):
-            assert l['extend'] in schemes, f'Scheme for extending = {l["extend"]} is not in the collection'
+            assert l['extend'] in schemes, \
+                f'Scheme for extending = {l["extend"]}' \
+                    f' is not in the collection'
             r = cls.union_schemes(l['extend'], schemes)
 
         if 'metric' in l:
@@ -179,5 +220,11 @@ class ReportSchemeInfo:
         return ReportSchemeInfo(r)
 
 
-__all__ = ['ReportSchemeItem', 'ReportSchemeSeries', 'ReportSchemePrecisionRecall',
-           'ReportSchemeF1', 'ReportSchemeMetric', 'ReportSchemeImgClassify', 'ReportSchemeInfo']
+__all__ = [
+    'ReportSchemeItem',
+    'ReportSchemeSeries',
+    'ReportSchemePrecisionRecall',
+    'ReportSchemeF1',
+    'ReportSchemeMetric',
+    'ReportSchemeImgClassify',
+    'ReportSchemeInfo']

@@ -9,12 +9,12 @@ args:
 stages:
 
   data_params:
-    batch_size: 32
+    batch_size: 256
     num_workers: 1
 
   state_params:
     num_epochs: 1
-    main_metric: &reduce_metric accuracy01
+    main_metric: accuracy01
     minimize_metric: False
     checkpoint_data:
       exp: "thin is my best experiments"
@@ -22,11 +22,6 @@ stages:
 
   criterion_params:
     criterion: CrossEntropyLoss
-
-  scheduler_params:
-    scheduler: MultiStepLR
-    milestones: [10]
-    gamma: 0.3
 
   callbacks_params:
     loss:
@@ -36,9 +31,6 @@ stages:
     accuracy:
       callback: AccuracyCallback
       accuracy_args: [1]
-    scheduler:
-      callback: SchedulerCallback
-      reduce_metric: *reduce_metric
     saver:
       callback: CheckpointCallback
 

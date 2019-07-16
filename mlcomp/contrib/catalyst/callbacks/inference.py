@@ -1,10 +1,10 @@
-from collections import defaultdict
-
-from catalyst.dl import RunnerState
-
-from catalyst.dl.core import Callback
-import numpy as np
 import os
+
+import numpy as np
+
+from collections import defaultdict
+from catalyst.dl import RunnerState
+from catalyst.dl.core import Callback
 
 
 class InferBestCallback(Callback):

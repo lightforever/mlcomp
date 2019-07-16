@@ -1,7 +1,9 @@
 import io
 from PIL import Image
-from matplotlib.figure import Figure
+
 import numpy as np
+
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 

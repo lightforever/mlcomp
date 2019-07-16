@@ -45,9 +45,8 @@ class Executor(ABC):
                      additional_info: dict):
         return cls()
 
-    @classmethod
-    def from_config(cls,
-                    executor: str,
+    @staticmethod
+    def from_config(executor: str,
                     config: Config,
                     additional_info: dict) -> 'Executor':
         if executor not in config['executors']:
@@ -55,6 +54,7 @@ class Executor(ABC):
                                       f'has not been found')
         executor = config['executors'][executor]
         child_class = Executor._child[executor['type']]
+        # noinspection PyProtectedMember
         return child_class._from_config(executor, config, additional_info)
 
     @staticmethod

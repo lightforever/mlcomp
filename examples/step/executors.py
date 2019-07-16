@@ -1,5 +1,6 @@
-from mlcomp.worker.executors import Executor
 import time
+
+from mlcomp.worker.executors import Executor
 
 
 @Executor.register
