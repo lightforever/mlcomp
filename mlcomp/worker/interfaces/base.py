@@ -21,8 +21,8 @@ class Interface(ABC):
     @staticmethod
     def from_config(config: dict):
         interface = config['interface']
-        if interface in Interface._child:
+        if interface not in Interface._child:
             raise ModuleNotFoundError(f'Interface {interface} '
                                       f'has not been found')
         child_class = Interface._child[interface]
-        return child_class(**config)
+        return child_class(**config, **config['interface_params'])

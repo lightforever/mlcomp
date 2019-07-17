@@ -121,6 +121,13 @@ def dag_pipe(config: dict, config_text: str = None):
                                ))
     storage.upload(folder, dag)
 
+    # Change model dags which have the same name
+    ModelProvider().change_dag(
+        project=project,
+        name=info['name'],
+        to=dag.id
+    )
+
 
 def dag_model_add(data: dict):
     task_provider = TaskProvider()
@@ -149,8 +156,8 @@ def dag_model_add(data: dict):
     dag_standard(config, debug=False, upload_files=False)
 
 
-def dag_model_start(model_id: int, data: dict):
-    model = ModelProvider().by_id(model_id)
+def dag_model_start(data: dict):
+    model = ModelProvider().by_id(data['model_id'])
     dag = DagProvider().by_id(data['dag'], joined_load=[Dag.project_rel])
     project = dag.project_rel
     src_config = Config.from_yaml(dag.config)
@@ -163,7 +170,8 @@ def dag_model_start(model_id: int, data: dict):
             'interface': data['interface'],
             'interface_params': params,
             'slot': k,
-            'name': model.name
+            'name': model.name,
+            'id': data['model_id']
         }
         v['slot'] = model
 

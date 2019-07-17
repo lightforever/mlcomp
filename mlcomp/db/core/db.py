@@ -14,7 +14,7 @@ class Session(session.Session):
         key = kwargs.pop('key')
         if key in self.__session:
             raise Exception('Use static create_session for session creating')
-        super(Session, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def create_session(connection_string: str = None, key='default'):
@@ -46,14 +46,14 @@ class Session(session.Session):
 
     def query(self, *entities, **kwargs):
         try:
-            return super(Session, self).query(*entities, **kwargs)
+            return super().query(*entities, **kwargs)
         except Exception as e:
             self.rollback()
             raise e
 
     def add_all(self, objs, commit=True):
         try:
-            super(Session, self).add_all(objs)
+            super().add_all(objs)
         except Exception as e:
             raise e
 
@@ -64,9 +64,9 @@ class Session(session.Session):
                 self.rollback()
                 raise e
 
-    def add(self, obj, commit=True):
+    def add(self, obj, commit=True, _warn=False):
         try:
-            super(Session, self).add(obj)
+            super().add(obj, _warn=_warn)
         except Exception as e:
             raise e
 
@@ -79,7 +79,7 @@ class Session(session.Session):
 
     def commit(self):
         try:
-            super(Session, self).commit()
+            super().commit()
         except Exception as e:
             self.rollback()
             raise e

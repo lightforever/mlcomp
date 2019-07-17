@@ -33,6 +33,7 @@ class Executor(ABC):
             if not task.debug and use_sync:
                 self.wait_data_sync(task.computer_assigned)
             self.work()
+            self.step.task_provider.commit()
 
     @abstractmethod
     def work(self):

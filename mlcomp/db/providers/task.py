@@ -91,8 +91,14 @@ class TaskProvider(BaseDataProvider):
             filter(Dag.type == DagType.Pipe.value). \
             order_by(Dag.id.desc()). \
             all()
+
         dags_model_dict = []
+        used_dag_names = set()
+
         for name, id, config in dags_model:
+            if name in used_dag_names:
+                continue
+
             config = Config.from_yaml(config)
             slots = []
             for pipe in config['pipes'].values():
@@ -113,6 +119,8 @@ class TaskProvider(BaseDataProvider):
                    ]
                    }
             dags_model_dict.append(dag)
+            used_dag_names.add(name)
+
         return {'total': total,
                 'data': res,
                 'projects': projects,

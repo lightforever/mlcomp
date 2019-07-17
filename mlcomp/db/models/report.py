@@ -42,7 +42,8 @@ class ReportImg(Base):
     size = sa.Column(sa.BigInteger)
 
     def __init__(self, **kwargs):
-        super(ReportImg, self).__init__(**kwargs)
+        super().__init__(**kwargs)
+
         self.size = sys.getsizeof(self.img)
 
 

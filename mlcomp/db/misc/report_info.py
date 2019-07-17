@@ -24,7 +24,7 @@ class ReportSchemeItem:
 
 class ReportSchemeSeries(ReportSchemeItem):
     def __init__(self, name: str, key: str):
-        super(ReportSchemeSeries, self).__init__(name)
+        super().__init__(name)
 
         self.key = key
 
@@ -86,7 +86,8 @@ class ReportSchemeImgClassify(ReportSchemeItem):
                  count_class_max: int,
                  train: bool,
                  threshold=None):
-        super(ReportSchemeImgClassify, self).__init__(name)
+        super().__init__(name)
+
         self.epoch_every = epoch_every
         self.count_class_max = count_class_max
         self.train = train

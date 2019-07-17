@@ -13,7 +13,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 class Formatter(logging.Formatter):
     def format(self, record):
         if not record.pathname.startswith(ROOT):
-            return super(Formatter, self).format(record)
+            return super().format(record)
 
         msg = str(record.msg)
         if record.args:

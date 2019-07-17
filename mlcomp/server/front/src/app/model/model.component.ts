@@ -11,6 +11,7 @@ import {
 import {Helpers} from "../helpers";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ModelStartDialogComponent} from "./model-start-dialog.component";
+import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'app-model',
@@ -119,7 +120,8 @@ export class ModelComponent extends Paginator<Model> {
                 'interface': element.interface,
                 'slot': element.slot,
                 'dag': dag,
-                'interface_params': element.interface_params
+                'interface_params': element.interface_params,
+                'model_id': element.id
             }
         };
         this.start_dialog.open(ModelStartDialogComponent, config);

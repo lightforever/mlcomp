@@ -1,7 +1,8 @@
 from enum import Enum
 import os
+import time
 
-from mlcomp.worker.executors.base import *
+from mlcomp.worker.executors.base.executor import Executor
 from mlcomp.utils.logging import logger
 from mlcomp.utils.config import Config
 
@@ -50,15 +51,39 @@ class Download(Executor):
 class Submit(Executor):
     __syn__ = 'submit'
 
-    def __init__(self, competition: str, file: str, message: str):
+    def __init__(self,
+                 competition: str,
+                 file: str,
+                 message: str = '',
+                 wait_seconds=60 * 10
+                 ):
         self.competition = competition
         self.file = file
         self.message = message
+        self.wait_seconds = wait_seconds
 
     def work(self):
         api.competition_submit(self.file,
                                message=self.message,
                                competition=self.competition)
+        step = 10
+        for i in range(int(self.wait_seconds//step)):
+            submissions = api.competition_submissions(self.competition)
+            for s in submissions:
+                if s.description == self.message:
+                    if s.status == 'complete':
+                        if s.publicScore is None:
+                            raise Exception('Submission is complete, '
+                                            'but publicScore is None')
+                        return float(s.publicScore)
+                    elif s.status == 'error':
+                        raise Exception(f'Submission error '
+                                        f'on Kaggle: {s.errorDescription}')
+
+                    break
+            time.sleep(step)
+        raise Exception(f'Submission is not '
+                        f'complete after {self.wait_seconds}')
 
     @classmethod
     def from_config(cls,
@@ -73,6 +98,6 @@ class Submit(Executor):
 
 if __name__ == '__main__':
     executor = Submit(competition='digit-recognizer',
-                      file='mlcomp/projects/test/data/sample_submission.csv',
-                      message='test')
+                      file='/opt/mlcomp/tasks/152/data/a.csv',
+                      message='Task id = 152')
     executor.work()

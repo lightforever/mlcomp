@@ -162,7 +162,7 @@
       <ng-container matColumnDef="score">
       <th mat-header-cell *matHeaderCellDef> Score </th>
       <td mat-cell *matCellDef="let element">
-          {{element.score}}
+          {{element.score|number:'.5'}}
       </td>
     </ng-container>
 

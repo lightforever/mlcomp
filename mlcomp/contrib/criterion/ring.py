@@ -17,7 +17,7 @@ class RingLoss(nn.Module):
 
         Source: https://github.com/Paralysis/ringloss
         """
-        super(RingLoss, self).__init__()
+        super().__init__()
         self.radius = Parameter(torch.Tensor(1))
         self.radius.data.fill_(-1)
         self.loss_weight = loss_weight

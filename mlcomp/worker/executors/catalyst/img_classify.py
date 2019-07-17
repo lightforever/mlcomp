@@ -106,7 +106,7 @@ class ImgClassifyCallback(BaseCallback):
                             )
             self.img_provider.add(obj)
 
-        super(ImgClassifyCallback, self).on_epoch_end(state)
+        super().on_epoch_end(state)
 
     def prob(self, pred: np.array, meta: dict) -> np.array:
         return softmax(pred)

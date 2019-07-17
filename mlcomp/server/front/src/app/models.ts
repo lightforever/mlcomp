@@ -297,4 +297,5 @@ export interface ModelStartData {
     interface: string;
     pipe: string;
     interface_params: string;
+    model_id: number;
 }

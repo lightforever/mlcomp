@@ -5,7 +5,7 @@ services:
     build:
       context: ../
       dockerfile: docker/worker
-    env_file: dev.env
+    env_file: .env
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     runtime: nvidia

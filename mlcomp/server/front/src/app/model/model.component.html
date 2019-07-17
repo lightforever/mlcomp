@@ -66,14 +66,14 @@
         <ng-container matColumnDef="score_local">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Score local</th>
             <td mat-cell *matCellDef="let element">
-              {{element.score_local|number}}
+              {{element.score_local|number:'.5'}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="score_public">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Score public</th>
             <td mat-cell *matCellDef="let element">
-              {{element.score_public|number}}
+              {{element.score_public|number:'.5'}}
             </td>
         </ng-container>
 

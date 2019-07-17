@@ -13,8 +13,8 @@ class ModelProvider(BaseDataProvider):
     model = Model
 
     def get(self, filter, options: PaginatorOptions):
-        query = self.query(Model).\
-            options(joinedload(Model.dag_rel)).\
+        query = self.query(Model). \
+            options(joinedload(Model.dag_rel)). \
             options(joinedload(Model.project_rel))
 
         if filter.get('project'):
@@ -40,9 +40,16 @@ class ModelProvider(BaseDataProvider):
         models_dags = self.query(Dag). \
             filter(Dag.type == DagType.Pipe.value). \
             filter(Dag.project.in_(list(models_projects))). \
+            order_by(Dag.id.desc()). \
             all()
+
         dags_by_project = defaultdict(list)
+        used_dag_names = set()
+
         for dag in models_dags:
+            if dag.name in used_dag_names:
+                continue
+
             config = Config.from_yaml(dag.config)
             slots = []
             for pipe in config['pipes'].values():
@@ -63,6 +70,7 @@ class ModelProvider(BaseDataProvider):
                  }
 
             dags_by_project[dag.project].append(d)
+            used_dag_names.add(dag.name)
 
         for row in res:
             row['dags'] = dags_by_project[row['project']]
@@ -73,6 +81,21 @@ class ModelProvider(BaseDataProvider):
             all()
         projects = [{'name': name, 'id': id} for name, id in projects]
         return {'total': total, 'data': res, 'projects': projects}
+
+    def change_dag(self, project: int, name: str, to: int):
+        ids = self.query(Model.id). \
+            join(Dag). \
+            filter(Model.project == project). \
+            filter(Dag.name == name). \
+            filter(Dag.type == DagType.Pipe.value). \
+            all()
+
+        ids = [id[0] for id in ids]
+
+        self.query(Model). \
+            filter(Model.id.in_(ids)). \
+            update({'dag': to}, synchronize_session=False)
+        self.commit()
 
 
 __all__ = ['ModelProvider']

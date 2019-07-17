@@ -111,7 +111,7 @@ def worker(number):
 def supervisor():
     _create_computer()
     _create_docker()
-    if bool(os.getenv('DOCKER_MAIN', 'True')):
+    if os.getenv('DOCKER_MAIN', 'True') == 'True':
         file_sync = FileSync()
 
         start_schedule([(worker_usage, 0)])
@@ -144,7 +144,8 @@ def _create_computer():
     tot_m, used_m, free_m = memory()
     computer = Computer(name=socket.gethostname(),
                         gpu=len(GPUtil.getGPUs()),
-                        cpu=cpu_count(), memory=tot_m,
+                        cpu=cpu_count(),
+                        memory=tot_m,
                         ip=os.getenv('IP'),
                         port=int(os.getenv('PORT')),
                         user=os.getenv('USER')

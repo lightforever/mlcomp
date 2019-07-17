@@ -113,6 +113,9 @@ examples/**/log
 dist
 docker/*.conf
 *.db
-dev.env
+.env
 Readme.dev.md
 *ignore.txt
+sys
+re
+supervisord*

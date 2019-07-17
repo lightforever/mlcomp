@@ -33,6 +33,8 @@ export class ModelService extends BaseService {
             'slot': data.slot,
             'interface': data.interface,
             'pipe': data.pipe,
+            'model_id': data.model_id,
+            'interface_params': data.interface_params
         };
         return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/start', info).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))

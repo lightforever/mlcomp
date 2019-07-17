@@ -3,6 +3,10 @@ info:
   project: examples
   type: pipe
 pipes:
+  valid:
+    valid:
+      type: valid
+      slot: model
   infer_valid:
     infer:
       type: infer
@@ -13,6 +17,11 @@ pipes:
       type: infer
       slot: model
       suffix: test
+  submit:
+    submit_mnist:
+      type: submit_mnist
+      slot: model
+
 
 interfaces:
   torch:

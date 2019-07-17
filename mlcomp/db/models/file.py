@@ -18,7 +18,7 @@ class File(Base):
     size = sa.Column(sa.BigInteger, nullable=False, default=0)
 
     def __init__(self, **kwargs):
-        super(File, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.size = sys.getsizeof(self.content)
 
 

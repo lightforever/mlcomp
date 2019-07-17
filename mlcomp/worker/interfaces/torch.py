@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from mlcomp.worker.interfaces.base import Interface
 
 
+@Interface.register
 class TorchInterface(Interface):
     __syn__ = 'torch'
 
@@ -26,8 +27,8 @@ class TorchInterface(Interface):
                             shuffle=False)
         pred = []
         for batch in loader:
-            logits = self.model(batch)
+            logits = self.model(batch['features'])
             p = softmax(logits, 1).detach().cpu().numpy()
             pred.append(p)
         pred = np.vstack(pred)
-        return {'pred': pred}
+        return {'prob': pred}

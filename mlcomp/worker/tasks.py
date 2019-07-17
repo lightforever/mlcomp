@@ -89,10 +89,11 @@ def execute_by_id(id: int, repeat_count=1):
         executor(task, dag)
 
         provider.change_status(task, TaskStatus.Success)
-    except Exception:
+    except Exception as e:
         step = executor.step.id if (executor and executor.step) else None
         logger.error(traceback.format_exc(), ComponentType.Worker, id, step)
         provider.change_status(task, TaskStatus.Failed)
+        raise e
     finally:
         sys.exit()
 
