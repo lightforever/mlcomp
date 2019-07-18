@@ -33,6 +33,8 @@ class Task(Base):
     docker_assigned = sa.Column(sa.String)
     type = sa.Column(sa.Integer)
     score = sa.Column(sa.Float)
+    report = sa.Column(sa.Integer, ForeignKey('report.id'))
+    report_rel = relationship('Report', lazy='noload')
 
 
 class TaskDependence(Base):

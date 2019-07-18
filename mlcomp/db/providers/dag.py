@@ -1,7 +1,7 @@
 from sqlalchemy import func, or_
 
 from mlcomp.db.core import PaginatorOptions
-from mlcomp.db.enums import TaskStatus
+from mlcomp.db.enums import TaskStatus, DagType
 from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, duration_format, now
@@ -43,6 +43,8 @@ class DagProvider(BaseDataProvider):
             query = query.having(last_activity >= filter['last_activity_min'])
         if filter.get('last_activity_max'):
             query = query.having(last_activity <= filter['last_activity_max'])
+        if filter.get('report'):
+            query = query.filter(Dag.report != None)
 
         status_clauses = []
         for agg, e in zip(task_status, TaskStatus):
@@ -91,15 +93,18 @@ class DagProvider(BaseDataProvider):
 
         if filter.get('report'):
             dag_ids = [r['id'] for r in res]
-            tasks_dags = self.query(Task.id, Task.dag).filter(
-                Task.dag.in_(dag_ids)).all()
-            tasks_within_report = self.query(ReportTasks.task).filter(
-                ReportTasks.report == int(filter['report']))
+            tasks_dags = self.query(Task.id, Task.dag). \
+                filter(Task.dag.in_(dag_ids)).all()
+
+            tasks_within_report = self.query(ReportTasks.task). \
+                filter(ReportTasks.report == int(filter['report']))
+
             tasks_within_report = {t[0] for t in tasks_within_report}
             dags_not_full_included = {d for t, d in tasks_dags if
                                       t not in tasks_within_report}
             for r in res:
                 r['report_full'] = r['id'] not in dags_not_full_included
+
         projects = self.query(Project.name, Project.id).order_by(
             Project.id.desc()).limit(20).all()
         projects = [{'name': name, 'id': id} for name, id in projects]

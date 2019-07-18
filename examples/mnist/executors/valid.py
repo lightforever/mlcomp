@@ -32,5 +32,6 @@ class Valid(Executor):
                      executor: dict,
                      config: Config,
                      additional_info: dict):
-        model = Interface.from_config(executor['slot'])
+        args = Executor.kwargs_for_interface(executor, config, suffix='valid')
+        model = Interface.from_config(args)
         return cls(model)

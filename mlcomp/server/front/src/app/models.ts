@@ -22,6 +22,7 @@ export class Dag {
   task_statuses: NameCount;
   img_size: number;
   file_size: number;
+  report: number;
 }
 
 export class Task {
@@ -29,6 +30,7 @@ export class Task {
   name: string;
   dag: Dag;
   type: string;
+  report: number;
 }
 
 export class PaginatorRes<T> {
@@ -51,6 +53,10 @@ export class CodeNode {
     name: string;
     content: string;
     children?: CodeNode[];
+}
+
+export class CodeResult {
+    items: CodeNode[];
 }
 
 export class Gpu {

@@ -1,9 +1,9 @@
 info:
   name: mnist_train
   project: examples
+  report: catalyst
 executors:
   train:
     type: catalyst
-    report: catalyst
     args:
         config: catalyst.yml

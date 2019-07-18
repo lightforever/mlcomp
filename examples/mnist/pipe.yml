@@ -26,3 +26,5 @@ pipes:
 interfaces:
   torch:
     batch_size: 512
+  equation:
+    equation: ''

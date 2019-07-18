@@ -45,35 +45,38 @@
             <td mat-cell
                 *matCellDef="let element"
                 style="width: 5%">
-              {{element.id}}
+                {{element.id}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Name</th>
             <td mat-cell *matCellDef="let element">
-              {{element.name}}
+                {{element.name}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="project">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
             <td mat-cell *matCellDef="let element">
-              {{element.project_rel.name}}
+                {{element.project_rel.name}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="score_local">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Score local</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Score local
+            </th>
             <td mat-cell *matCellDef="let element">
-              {{element.score_local|number:'.5'}}
+                {{element.score_local|number:'.5'}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="score_public">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Score public</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Score
+                public
+            </th>
             <td mat-cell *matCellDef="let element">
-              {{element.score_public|number:'.5'}}
+                {{element.score_public|number:'.5'}}
             </td>
         </ng-container>
 
@@ -87,23 +90,24 @@
         <ng-container matColumnDef="dag">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Dag</th>
             <td mat-cell *matCellDef="let element">
-              <a routerLink="/dags/dag-detail/{{element.dag}}">
-                  {{element.dag_rel.name}}
-              </a>
+                <a routerLink="/dags/dag-detail/{{element.dag}}">
+                    {{element.dag_rel.name}}
+                </a>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="slot">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Slot</th>
             <td mat-cell *matCellDef="let element">
-              {{element.slot}}
+                {{element.slot}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="interface">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Interface</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Interface
+            </th>
             <td mat-cell *matCellDef="let element">
-              {{element.interface}}
+                {{element.interface}}
             </td>
         </ng-container>
 
@@ -116,10 +120,8 @@
                 <mat-icon svgIcon="start" matTooltip="Start"
                           (click)="start(element)">
                 </mat-icon>
-                   <mat-icon svgIcon="edit" matTooltip="Edit"
-                          (click)="edit(element)">
-                </mat-icon>
-                   <mat-icon svgIcon="remove" matTooltip="Remove"
+
+                <mat-icon svgIcon="remove" matTooltip="Remove"
                           (click)="remove(element)">
                 </mat-icon>
             </td>
@@ -130,7 +132,8 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total" [pageSize]="15"></mat-paginator>
+    <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total"
+                   [pageSize]="15"></mat-paginator>
 
 </div>
 

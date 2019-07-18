@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {catchError, map, tap} from 'rxjs/operators';
 import {AppSettings} from '../../../app-settings'
-import {CodeNode, Data, Graph} from "../../../models";
+import {CodeResult, Data, Graph} from "../../../models";
 import {BaseService} from "../../../base.service";
 
 @Injectable({providedIn: 'root'})
@@ -19,11 +19,11 @@ export class DagDetailService extends BaseService{
       );
   }
 
-  get_code(dag_id: number): Observable<CodeNode[]> {
-     return this.http.post<CodeNode[]>(`${this.url}code`, dag_id)
+  get_code(dag_id: number): Observable<CodeResult> {
+     return this.http.post<CodeResult>(`${this.url}code`, dag_id)
       .pipe(
         tap(_ => this.log('fetched code')),
-        catchError(this.handleError<CodeNode[]>('config', []))
+        catchError(this.handleError<CodeResult>('config', {'items': []}))
       );
   }
   get_graph(dag_id: number): Observable<Graph> {

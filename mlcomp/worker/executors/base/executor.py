@@ -35,6 +35,14 @@ class Executor(ABC):
             self.work()
             self.step.task_provider.commit()
 
+    @staticmethod
+    def kwargs_for_interface(executor: dict, config: Config, **kwargs):
+        return {
+            **executor['slot'],
+            'project_name': config['info']['project'],
+            **kwargs
+        }
+
     @abstractmethod
     def work(self):
         pass
@@ -75,7 +83,7 @@ class Executor(ABC):
         last_task_time = TaskProvider().last_succeed_time()
         while True:
             computer = provider.by_name(computer_assigned)
-            if not last_task_time or computer.last_synced>last_task_time:
+            if not last_task_time or computer.last_synced > last_task_time:
                 break
             time.sleep(1)
         self.step.info(f'Finish data sync')

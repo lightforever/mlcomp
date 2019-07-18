@@ -146,13 +146,6 @@ export class TasksComponent extends Paginator<TasksComponent> {
         });
     }
 
-    toogle_report(element: any) {
-        let self = this;
-        this.service.toogle_report(element.id, this.report, element.report_full).subscribe(data => {
-            element.report_full = data.report_full;
-            self.report_service.data_updated.emit();
-        });
-    }
 
     unfinished(element) {
         return ['not_ran', 'in_progress', 'queued'].indexOf(element.status) != -1;
@@ -189,5 +182,35 @@ export class TasksComponent extends Paginator<TasksComponent> {
                 'task': element.id
             }
         });
+    }
+
+     is_report_transparent(element: any) {
+        if (this.report) {
+            return false;
+        }
+
+        return !element.report;
+    }
+
+    is_report_transparent_active(element: any) {
+        if (!this.report) {
+            return false;
+        }
+
+        return !element.report_full;
+    }
+
+    report_click(element: any) {
+        let self = this;
+        if (this.report) {
+            this.service.toogle_report(
+                element.id,
+                this.report,
+                element.report_full).subscribe(data => {
+                element.report_full = data.report_full;
+                self.report_service.data_updated.emit();
+            });
+            return
+        }
     }
 }

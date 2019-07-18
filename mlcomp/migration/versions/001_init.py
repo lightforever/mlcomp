@@ -36,6 +36,7 @@ dag = Table(
     Column('img_size', BigInteger, nullable=False),
     Column('file_size', BigInteger, nullable=False),
     Column('type', Integer, nullable=False),
+    Column('report', Integer)
 )
 
 dag_library = Table(
@@ -174,7 +175,8 @@ task = Table(
     Column('additional_info', LargeBinary),
     Column('docker_assigned', String(100)),
     Column('type', Integer, nullable=False),
-    Column('score', Float)
+    Column('score', Float),
+    Column('report', Integer)
 )
 
 task_dependency = Table(
@@ -242,6 +244,9 @@ def upgrade(migrate_engine):
 
         ForeignKeyConstraint([dag.c.project], [project.c.id],
                              ondelete='CASCADE').create()
+        ForeignKeyConstraint([dag.c.report], [report.c.id],
+                             ondelete='CASCADE').create()
+
         Index('dag_project_idx', dag.c.project.desc()).create()
         Index('dag_created_idx', dag.c.created.desc()).create()
         ForeignKeyConstraint([dag_library.c.dag], [dag.c.id],
@@ -302,6 +307,8 @@ def upgrade(migrate_engine):
         Index('step_id_idx', step.c.id.desc()).create()
 
         ForeignKeyConstraint([task.c.computer], [computer.c.name],
+                             ondelete='CASCADE').create()
+        ForeignKeyConstraint([task.c.report], [report.c.id],
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([task.c.computer_assigned], [computer.c.name],
                              ondelete='CASCADE').create()

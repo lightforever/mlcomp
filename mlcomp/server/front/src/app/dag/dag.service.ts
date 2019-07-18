@@ -13,39 +13,53 @@ export class DagService extends BaseService {
 
     stop(id: number) {
         let message = `${this.constructor.name}.stop`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + this.single_part + '/stop', {'id': id}).pipe(
-            catchError(this.handleError<DagStopResult>(message, new DagStopResult()))
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/stop';
+        return this.http.post<DagStopResult>(url, {'id': id}).
+        pipe(
+            catchError(this.handleError<DagStopResult>(message,
+                new DagStopResult()))
         );
     }
 
     toogle_report(id: any, report: number, report_full: boolean) {
         let message = `${this.constructor.name}.toogle_report`;
-        return this.http.post<ToogleReportResult>(AppSettings.API_ENDPOINT + this.single_part + '/toogle_report', {
+        let url = AppSettings.API_ENDPOINT +
+            this.single_part +
+            '/toogle_report';
+
+        return this.http.post<ToogleReportResult>(url, {
             'id': id,
             'report': report,
             'remove': report_full
         }).pipe(
-            catchError(this.handleError<ToogleReportResult>(message, new ToogleReportResult()))
+            catchError(this.handleError<ToogleReportResult>(message,
+                new ToogleReportResult()))
         );
     }
 
     remove(id: number) {
         let message = `${this.constructor.name}.remove`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + this.single_part + '/remove', {'id': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/remove';
+        return this.http.post<DagStopResult>(url, {'id': id}).
+        pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove_imgs(id: number) {
         let message = `${this.constructor.name}.remove_imgs`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_imgs', {'dag': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + 'remove_imgs';
+        return this.http.post<DagStopResult>(url, {'dag': id}).
+        pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove_files(id: number) {
         let message = `${this.constructor.name}.remove_files`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_files', {'dag': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + 'remove_files';
+        return this.http.post<DagStopResult>(url, {'dag': id}).
+        pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

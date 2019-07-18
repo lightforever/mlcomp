@@ -20,6 +20,7 @@ from mlcomp.utils.logging import logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake
+from mlcomp.db.models import Model
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -53,7 +54,7 @@ def construct_paginator_options(args: dict, default_sort_column: str):
         sort_descending=args.get('sort_descending', 'true') == 'true',
         page_number=parse_int(args, 'page_number'),
         page_size=parse_int(args, 'page_size'),
-        )
+    )
 
 
 def check_auth(token):
@@ -78,111 +79,142 @@ def requires_auth(f):
     return decorated
 
 
+def error_handler(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        success = True
+        status = 200
+        error = ''
+        try:
+            res = f(*args, **kwargs)
+        except Exception as e:
+            if type(e) == ProgrammingError:
+                Session.cleanup()
+
+            logger.error(
+                f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
+                ComponentType.API)
+
+            error = traceback.format_exc()
+            success = False
+            status = 500
+            res = None
+
+        res = res or {}
+        res['success'] = success
+        res['error'] = error
+
+        return Response(
+            json.dumps(res),
+            status=status)
+
+    return decorated
+
+
 @app.route('/api/computers', methods=['POST'])
 @requires_auth
+@error_handler
 def computers():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     options.sort_column = 'name'
 
     provider = ComputerProvider()
-    return json.dumps(provider.get(data, options))
+    return provider.get(data, options)
 
 
 @app.route('/api/projects', methods=['POST'])
 @requires_auth
+@error_handler
 def projects():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
 
     provider = ProjectProvider()
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/project/add', methods=['POST'])
 @requires_auth
+@error_handler
 def project_add():
     data = request_data()
 
     provider = ProjectProvider()
     res = provider.add(data['name'], dict())
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/model/add', methods=['POST'])
 @requires_auth
+@error_handler
 def model_add():
     data = request_data()
-    success = True
-    error = ''
-    try:
-        dag_model_add(data)
-    except Exception:
-        error = traceback.format_exc()
-        success = False
-    return json.dumps({'success': success, 'error': error})
+    dag_model_add(data)
 
 
 @app.route('/api/model/remove', methods=['POST'])
 @requires_auth
+@error_handler
 def model_remove():
     data = request_data()
-    success = True
-    error = ''
-    try:
-        ModelProvider().remove(data['id'])
-    except Exception:
-        error = traceback.format_exc()
-        success = False
-    return json.dumps({'success': success, 'error': error})
+    provider = ModelProvider()
+    model = provider.by_id(data['id'], joined_load=[Model.project_rel])
+    celery_tasks.remove_model(model.project_rel.name, model.name)
+    provider.remove(model.id)
 
 
 @app.route('/api/model/start', methods=['POST'])
 @requires_auth
+@error_handler
 def model_start():
     data = request_data()
     dag_model_start(data)
-    return json.dumps({'success': True})
 
 
 @app.route('/api/img_classify', methods=['POST'])
 @requires_auth
+@error_handler
 def img_classify():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     res = ReportImgProvider().detail_img_classify(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/config', methods=['POST'])
 @requires_auth
+@error_handler
 def config():
     id = request_data()
     res = DagProvider().config(id)
-    return json.dumps({'data': res})
+    return {'data': res}
 
 
 @app.route('/api/graph', methods=['POST'])
 @requires_auth
+@error_handler
 def graph():
     id = request_data()
     res = DagProvider().graph(id)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/dags', methods=['POST'])
 @requires_auth
+@error_handler
 def dags():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     provider = DagProvider()
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/code', methods=['POST'])
 @requires_auth
+@error_handler
 def code():
     id = request_data()
     res = OrderedDict()
@@ -213,33 +245,51 @@ def code():
             else:
                 parents[parent]['children'].append(node)
 
-    return json.dumps(list(res.values()))
+    def sort_key(x):
+        if 'children' in x and len(x['children']) > 0:
+            return '_'*5+x['name']
+        return x['name']
+
+    def sort(node: dict):
+        if 'children' in node and len(node['children']) > 0:
+            node['children'] = sorted(node['children'], key=sort_key)
+
+            for c in node['children']:
+                sort(c)
+
+    res = sorted(list(res.values()), key=sort_key)
+    for r in res:
+        sort(r)
+
+    return {'items': res}
 
 
 @app.route('/api/tasks', methods=['POST'])
 @requires_auth
+@error_handler
 def tasks():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     provider = TaskProvider()
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/task/stop', methods=['POST'])
 @requires_auth
+@error_handler
 def task_stop():
     data = request_data()
     task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
     status = celery_tasks.stop(task)
-    return json.dumps({
-        'success': True,
+    return {
         'status': to_snake(TaskStatus(status).name)
-    })
+    }
 
 
 @app.route('/api/dag/stop', methods=['POST'])
 @requires_auth
+@error_handler
 def dag_stop():
     data = request_data()
     provider = DagProvider()
@@ -248,14 +298,14 @@ def dag_stop():
     for t in dag.tasks:
         t.dag_rel = dag
         celery_tasks.stop(t)
-    return json.dumps(
-        {'success': True,
-         'dag': provider.get({'id': id})['data'][0]
-         })
+    return {
+        'dag': provider.get({'id': id})['data'][0]
+    }
 
 
 @app.route('/api/dag/toogle_report', methods=['POST'])
 @requires_auth
+@error_handler
 def dag_toogle_report():
     data = request_data()
     provider = ReportProvider()
@@ -263,14 +313,14 @@ def dag_toogle_report():
         provider.remove_dag(int(data['id']), int(data['report']))
     else:
         provider.add_dag(int(data['id']), int(data['report']))
-    return json.dumps({
-        'success': True,
+    return {
         'report_full': not data.get('remove')
-    })
+    }
 
 
 @app.route('/api/task/toogle_report', methods=['POST'])
 @requires_auth
+@error_handler
 def task_toogle_report():
     data = request_data()
     provider = ReportProvider()
@@ -278,48 +328,51 @@ def task_toogle_report():
         provider.remove_task(int(data['id']), int(data['report']))
     else:
         provider.add_task(int(data['id']), int(data['report']))
-    return json.dumps({
-        'success': True,
+    return {
         'report_full': not data.get('remove')
-    })
+    }
 
 
 @app.route('/api/logs', methods=['POST'])
 @requires_auth
+@error_handler
 def logs():
     provider = LogProvider()
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/reports', methods=['POST'])
 @requires_auth
+@error_handler
 def reports():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     provider = ReportProvider()
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/report', methods=['POST'])
 @requires_auth
+@error_handler
 def report():
     id = request_data()
     provider = ReportProvider()
     res = provider.detail(id)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/task/steps', methods=['POST'])
 @requires_auth
+@error_handler
 def steps():
     id = request_data()
     provider = StepProvider()
     res = provider.get(id)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/token', methods=['POST'])
@@ -334,62 +387,57 @@ def token():
 
 @app.route('/api/project/remove', methods=['POST'])
 @requires_auth
+@error_handler
 def project_remove():
     id = request_data()['id']
     ProjectProvider().remove(id)
-    return json.dumps({'success': True})
 
 
 @app.route('/api/remove_imgs', methods=['POST'])
 @requires_auth
+@error_handler
 def remove_imgs():
     data = request_data()
     provider = ReportImgProvider()
     res = provider.remove(data)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/remove_files', methods=['POST'])
 @requires_auth
+@error_handler
 def remove_files():
     data = request_data()
     provider = FileProvider()
     res = provider.remove(data)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/dag/remove', methods=['POST'])
 @requires_auth
+@error_handler
 def dag_remove():
     id = request_data()['id']
+    celery_tasks.remove_dag(id)
     DagProvider().remove(id)
-    return json.dumps({'success': True})
 
 
 @app.route('/api/models', methods=['POST'])
 @requires_auth
+@error_handler
 def models():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     provider = ModelProvider()
     res = provider.get(data, options)
-    return json.dumps(res)
+    return res
 
 
 @app.route('/api/stop')
 @requires_auth
+@error_handler
 def stop():
     pass
-
-
-@app.errorhandler(Exception)
-def all_exception_handler(error):
-    if type(error) == ProgrammingError:
-        Session.cleanup()
-
-    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
-                 ComponentType.API)
-    return str(error), 500
 
 
 def shutdown_server():
@@ -401,9 +449,20 @@ def shutdown_server():
 
 @app.route('/api/shutdown', methods=['POST'])
 @requires_auth
+@error_handler
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'
+
+
+@app.errorhandler(Exception)
+def all_exception_handler(error):
+    if type(error) == ProgrammingError:
+        Session.cleanup()
+
+    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
+                 ComponentType.API)
+    return str(error), 500
 
 
 def start_server():

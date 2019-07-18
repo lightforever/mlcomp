@@ -46,10 +46,13 @@ class TaskProvider(BaseDataProvider):
         if filter.get('last_activity_max'):
             query = query.filter(
                 Task.last_activity <= filter['last_activity_max'])
+        if filter.get('report'):
+            query = query.filter(Task.report != None)
 
         total = query.count()
         paginator = self.paginator(query, options)
         res = []
+
         for p, project_name in paginator.all():
             item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
@@ -185,6 +188,9 @@ class TaskProvider(BaseDataProvider):
             order_by(Task.finished.desc()). \
             first()
         return res[0] if res else None
+
+    def by_dag(self, id: int):
+        return self.query(Task).filter(Task.dag == id).all()
 
 
 __all__ = ['TaskProvider']

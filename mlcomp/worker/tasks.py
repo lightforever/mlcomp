@@ -1,19 +1,25 @@
+import shutil
 import socket
 import traceback
 import sys
 import pickle
+from os.path import join
 
 from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 
 from mlcomp.db.enums import ComponentType, TaskStatus
-from mlcomp.db.providers import TaskProvider, DagLibraryProvider, StepProvider
+from mlcomp.db.providers import TaskProvider, \
+    DagLibraryProvider, \
+    StepProvider, \
+    DockerProvider
 from mlcomp.utils.logging import create_logger
 from mlcomp.worker.app import app
 from mlcomp.db.models import *
 from mlcomp.worker.storage import Storage
 from mlcomp.worker.executors import *
 from mlcomp.utils.config import Config
+from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 
 
 def execute_by_id(id: int, repeat_count=1):
@@ -113,14 +119,38 @@ def kill(pid: int):
     os.system(f'kill -9 {pid}')
 
 
-def queue_list():
-    inspect = app.control.inspect()
-    if inspect is None:
-        return []
-    queues = inspect.active_queues()
-    if queues is None:
-        return []
-    return [queue['name'] for node in queues.values() for queue in node]
+@app.task
+def remove(path: str):
+    if not os.path.exists(path):
+        return
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        os.remove(path)
+
+
+def remove_from_all(path: str):
+    provider = DockerProvider()
+    dockers = provider.get_online()
+    for docker in dockers:
+        queue = f'{docker.computer}_{docker.name or "default"}_supervisor'
+        remove.apply((path,), queue=queue)
+
+
+def remove_model(project_name: str, model_name: str):
+    path = join(MODEL_FOLDER, project_name, model_name + '.pth')
+    remove_from_all(path)
+
+
+def remove_task(id: int):
+    path = join(TASK_FOLDER, str(id))
+    remove_from_all(path)
+
+
+def remove_dag(id: int):
+    tasks = TaskProvider().by_dag(id)
+    for task in tasks:
+        remove_task(task.id)
 
 
 def stop(task: Task):

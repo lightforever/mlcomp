@@ -20,6 +20,8 @@ class Dag(Base):
     img_size = sa.Column(sa.BigInteger, nullable=False, default=0)
     file_size = sa.Column(sa.BigInteger, nullable=False, default=0)
     type = sa.Column(sa.Integer, default=0)
+    report = sa.Column(sa.Integer, ForeignKey('report.id'))
+    report_rel = relationship('Report', lazy='noload')
 
 
 __all__ = ['Dag']

@@ -67,28 +67,36 @@ export class DagsComponent extends Paginator<Dag> {
         super(service, location);
 
         iconRegistry.addSvgIcon('config',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/config.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/config.svg'));
         iconRegistry.addSvgIcon('start',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/play-button.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/play-button.svg'));
         iconRegistry.addSvgIcon('stop',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/stop.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/stop.svg'));
         iconRegistry.addSvgIcon('code',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/programming-code.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/programming-code.svg'));
         iconRegistry.addSvgIcon('delete',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/delete.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/delete.svg'));
         iconRegistry.addSvgIcon('graph',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/network.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/network.svg'));
         iconRegistry.addSvgIcon('report',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/report.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/report.svg'));
         iconRegistry.addSvgIcon('remove',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/trash.svg'));
     }
 
     get_filter(): any {
         let res = new DagFilter();
         res.paginator = super.get_filter();
         res.name = this.name;
-        if(this.project!=-1) {
+        if (this.project != -1) {
             res.project = this.project;
         }
         res.report = this.report;
@@ -112,13 +120,17 @@ export class DagsComponent extends Paginator<Dag> {
         let self = this;
         this.route.queryParams
             .subscribe(params => {
-                if (params['project']) this.project = parseInt(params['project']);
+                if (params['project']) {
+                    this.project = parseInt(params['project']);
+                }
                 self.onchange();
             });
 
-        this.data_updated.subscribe(res=>{
+        this.data_updated.subscribe(res => {
             self.projects = res.projects;
-            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+            self.projects.splice(0, 0,
+                {'id': -1, 'name': 'None'}
+            );
         });
 
     }
@@ -128,26 +140,23 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     status_click(dag: Dag, status: NameCount) {
-        this.router.navigate([`/dags/dag-detail/${dag.id}`], {queryParams: {status: status.name}});
+        this.router.navigate([`/dags/dag-detail/${dag.id}`],
+            {queryParams: {status: status.name}});
     }
 
     stop(element: any) {
         if (element.finished) {
             return;
         }
-        this.service.stop(element.id).subscribe(data => element.task_statuses = data.dag.task_statuses);
+        this.service.stop(element.id).subscribe(data =>
+            element.task_statuses = data.dag.task_statuses);
     }
 
-    toogle_report(element: any) {
-        let self = this;
-        this.service.toogle_report(element.id, this.report, element.report_full).subscribe(data => {
-            element.report_full = data.report_full;
-            self.report_service.data_updated.emit();
-        });
-    }
 
     has_unfinished(element: Dag) {
-        return element.task_statuses[0].count + element.task_statuses[1].count + element.task_statuses[2].count > 0;
+        return element.task_statuses[0].count +
+            element.task_statuses[1].count +
+            element.task_statuses[2].count > 0;
     }
 
     remove(element: Dag) {
@@ -159,7 +168,9 @@ export class DagsComponent extends Paginator<Dag> {
             return;
         }
 
-        this.service.remove(element.id).subscribe(data => self.change.emit());
+        this.service.remove(element.id).subscribe(data =>
+            self.change.emit()
+        );
 
     }
 
@@ -170,7 +181,7 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     remove_files(element: Dag) {
-        if(this.has_unfinished(element)){
+        if (this.has_unfinished(element)) {
             return;
         }
         this.service.remove_files(element.id).subscribe(data => {
@@ -182,20 +193,49 @@ export class DagsComponent extends Paginator<Dag> {
         return Helpers.size(s);
     }
 
-    onchange(){
+    onchange() {
         this.change.emit();
         let filter = this.get_filter();
         let count = 0;
-        if(this.name) count += 1;
-        if(this.project&&this.project!=-1) count += 1;
-        if(this.created_min) count += 1;
-        if(this.created_max) count += 1;
-        if(this.last_activity_min) count += 1;
-        if(this.last_activity_max) count += 1;
-        for(let k of Object.getOwnPropertyNames(filter.status)){
-            count += filter.status[k]==true?1:0;
+        if (this.name) count += 1;
+        if (this.project && this.project != -1) count += 1;
+        if (this.created_min) count += 1;
+        if (this.created_max) count += 1;
+        if (this.last_activity_min) count += 1;
+        if (this.last_activity_max) count += 1;
+        for (let k of Object.getOwnPropertyNames(filter.status)) {
+            count += filter.status[k] == true ? 1 : 0;
         }
-        this.filter_applied_text = count>0? `(${count} applied)`:'';
+        this.filter_applied_text = count > 0 ? `(${count} applied)` : '';
     }
 
+    is_report_transparent(element: any) {
+        if (this.report) {
+            return false;
+        }
+
+        return !element.report;
+    }
+
+    is_report_transparent_active(element: any) {
+        if (!this.report) {
+            return false;
+        }
+
+        return !element.report_full;
+    }
+
+    report_click(element: any) {
+        let self = this;
+        if (this.report) {
+            this.service.toogle_report(
+                element.id,
+                this.report,
+                element.report_full).subscribe(data => {
+                element.report_full = data.report_full;
+                self.report_service.data_updated.emit();
+            });
+            return
+        }
+    }
 }

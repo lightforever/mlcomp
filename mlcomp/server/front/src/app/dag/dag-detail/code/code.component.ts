@@ -30,11 +30,16 @@ export class CodeComponent implements AfterViewInit {
         node => node.level, node => node.expandable);
 
     treeFlattener = new MatTreeFlattener(
-        this.transformer, node => node.level, node => node.expandable, node => node.children);
+        this.transformer,
+            node => node.level,
+            node => node.expandable,
+            node => node.children);
 
-    dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+    dataSource = new MatTreeFlatDataSource(this.treeControl,
+        this.treeFlattener);
 
-    constructor(private service: DagDetailService, private route: ActivatedRoute,
+    constructor(private service: DagDetailService,
+                private route: ActivatedRoute,
                 private message_service: MessageService,
                 private resource_service: DynamicresourceService
     ) {
@@ -44,9 +49,11 @@ export class CodeComponent implements AfterViewInit {
     ngAfterViewInit() {
         let self = this;
         this.service.get_code(this.dag).subscribe(res => {
-            self.dataSource.data = res;
+            self.dataSource.data = res.items;
         });
-        this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css')
+        this.resource_service.load('prettify',
+            'prettify-yaml',
+            'prettify-css')
     }
 
     prettify_lang(ext: string) {
@@ -66,7 +73,8 @@ export class CodeComponent implements AfterViewInit {
     node_click(node: FlatNode) {
         let pre = document.createElement('pre');
         pre.textContent = node.content;
-        let ext = node.name.indexOf('.')!=-1?node.name.split('.')[1].toLowerCase():'';
+        let ext = node.name.indexOf('.')!=-1?
+            node.name.split('.')[1].toLowerCase():'';
         pre.className = "prettyprint linenums " + this.prettify_lang(ext);
         let code_holder = document.getElementById('codeholder');
         code_holder.innerHTML = '';

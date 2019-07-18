@@ -93,10 +93,6 @@ export class ModelComponent extends Paginator<Model> {
     }
 
 
-    edit(element: Model) {
-
-    }
-
     remove(element: Model) {
         let self = this;
         this.service.remove(element.id).subscribe(res => {
@@ -124,7 +120,8 @@ export class ModelComponent extends Paginator<Model> {
                 'model_id': element.id
             }
         };
-        this.start_dialog.open(ModelStartDialogComponent, config);
+        let dialog = this.start_dialog.open(ModelStartDialogComponent, config);
+        dialog.afterClosed().subscribe(res=>this.change.emit());
     }
 }
 

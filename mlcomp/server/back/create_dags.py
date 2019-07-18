@@ -20,6 +20,8 @@ def dag_standard(config: dict,
                  copy_files_from: int = None
                  ):
     info = config['info']
+    report_name = info.get('report')
+
     provider = TaskProvider()
     report_provider = ReportProvider()
     report_tasks_provider = ReportTasksProvider()
@@ -31,12 +33,27 @@ def dag_standard(config: dict,
 
     project = ProjectProvider().by_name(info['project']).id
     default_config_text = yaml.dump(config, default_flow_style=False)
+
+    dag_report_id = None
+    if report_name:
+        if report_name not in schemes:
+            raise Exception(f'Unknown report = {report_name}')
+
+        report = Report(
+            config=json.dumps(schemes[report_name]),
+            name=info['name'],
+            project=project)
+        report_provider.add(report)
+        dag_report_id = report.id
+
     dag = Dag(config=config_text or default_config_text,
               project=project,
               name=info['name'],
               docker_img=info.get('docker_img'),
               type=DagType.Standard.value,
-              created=now())
+              created=now(),
+              report=dag_report_id
+              )
 
     dag = dag_provider.add(dag)
     if upload_files:
@@ -77,11 +94,11 @@ def dag_standard(config: dict,
                     type=task_type
                 )
 
-                if v.get('report'):
-                    if v['report'] not in schemes:
+                if report_name and task_type == TaskType.Train.value:
+                    if report_name not in schemes:
                         raise Exception(f'Unknown report = {v["report"]}')
 
-                    report_config = schemes[v['report']]
+                    report_config = schemes[report_name]
                     additional_info = {'report_config': report_config}
                     task.additional_info = pickle.dumps(additional_info)
                     provider.add(task)
@@ -91,6 +108,12 @@ def dag_standard(config: dict,
                     report_provider.add(report)
                     report_tasks_provider.add(
                         ReportTasks(report=report.id, task=task.id))
+
+                    report_tasks_provider.add(
+                        ReportTasks(report=dag_report_id, task=task.id))
+
+                    task.report = report.id
+                    provider.commit()
                 else:
                     provider.add(task)
 
@@ -157,7 +180,8 @@ def dag_model_add(data: dict):
 
 
 def dag_model_start(data: dict):
-    model = ModelProvider().by_id(data['model_id'])
+    provider = ModelProvider()
+    model = provider.by_id(data['model_id'])
     dag = DagProvider().by_id(data['dag'], joined_load=[Dag.project_rel])
     project = dag.project_rel
     src_config = Config.from_yaml(dag.config)
@@ -166,14 +190,14 @@ def dag_model_start(data: dict):
         if v.get('slot') != data['slot']:
             continue
         params = yaml.load(data['interface_params'])
-        model = {
+        slot = {
             'interface': data['interface'],
             'interface_params': params,
             'slot': k,
             'name': model.name,
             'id': data['model_id']
         }
-        v['slot'] = model
+        v['slot'] = slot
 
     config = {
         'info': {
@@ -188,3 +212,18 @@ def dag_model_start(data: dict):
                  upload_files=False,
                  copy_files_from=data['dag']
                  )
+
+    model.dag = data['dag']
+    model.interface = data['interface']
+    model.interface_params = data['interface_params']
+    model.slot = data['slot']
+
+    provider.commit()
+
+
+__all__ = [
+    'dag_standard',
+    'dag_pipe',
+    'dag_model_start',
+    'dag_model_add'
+]

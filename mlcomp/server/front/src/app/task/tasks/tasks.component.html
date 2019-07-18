@@ -14,7 +14,7 @@
         </mat-select>
     </mat-form-field>
 
-     <mat-form-field style="width: 150px">
+    <mat-form-field style="width: 150px">
         <mat-label>Dag</mat-label>
         <mat-select (ngModelChange)="dag=$event; onchange()"
                     [ngModel]="dag">
@@ -56,169 +56,262 @@
 
     <section class="checkbox-section">
         <mat-checkbox [(ngModel)]="not_ran" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Not ran</mat-checkbox>
+                      (ngModelChange)="onchange()">Not ran
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="queued" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Queued</mat-checkbox>
+                      (ngModelChange)="onchange()">Queued
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="in_progress" class="checkbox-margin"
-                      (ngModelChange)="onchange()">In progress </mat-checkbox>
+                      (ngModelChange)="onchange()">In progress
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="failed" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Failed </mat-checkbox>
+                      (ngModelChange)="onchange()">Failed
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="stopped" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Stopped</mat-checkbox>
+                      (ngModelChange)="onchange()">Stopped
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="skipped" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Skipped</mat-checkbox>
+                      (ngModelChange)="onchange()">Skipped
+        </mat-checkbox>
         <mat-checkbox [(ngModel)]="finished" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Finished</mat-checkbox>
+                      (ngModelChange)="onchange()">Finished
+        </mat-checkbox>
     </section>
 </div>
 
 
 <div class="mat-elevation-z8">
-  <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="dataSource" matSort>
 
-    <ng-container matColumnDef="project">
-      <th mat-header-cell *matHeaderCellDef> Project </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.dag_rel.project.name}}
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="project">
+            <th mat-header-cell *matHeaderCellDef> Project</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.dag_rel.project.name}}
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="dag">
-      <th mat-header-cell *matHeaderCellDef> Dag </th>
-      <td mat-cell *matCellDef="let element">
-          <a class="col-1-4" routerLink="/dags/dag-detail/{{element.dag_rel.id}}">
-          {{element.dag_rel.name}}({{element.dag_rel.id}})
-        </a>
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="dag">
+            <th mat-header-cell *matHeaderCellDef> Dag</th>
+            <td mat-cell *matCellDef="let element">
+                <a class="col-1-4"
+                   routerLink="/dags/dag-detail/{{element.dag_rel.id}}">
+                    {{element.dag_rel.name}}({{element.dag_rel.id}})
+                </a>
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="id">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header style="width: 3%"> Id </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.id}}
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+                style="width: 3%">
+                Id
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.id}}
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header  style="min-width: 100px"> Name </th>
-      <td mat-cell *matCellDef="let element">
-        <a class="col-1-4" routerLink="/tasks/task-detail/{{element.id}}">
-          {{element.name}}
-        </a>
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+                style="min-width: 100px">
+                Name
+            </th>
+            <td mat-cell *matCellDef="let element">
+                <a class="col-1-4"
+                   routerLink="/tasks/task-detail/{{element.id}}">
+                    {{element.name}}
+                </a>
 
-      </td>
-    </ng-container>
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="created">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header style="min-width: 100px"> Created </th>
-      <td mat-cell *matCellDef="let element" style="min-width: 100px">
-          {{element.dag_rel.created| date:"MM.dd H:mm"}}
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="created">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+                style="min-width: 100px">
+                Created
+            </th>
+            <td mat-cell *matCellDef="let element" style="min-width: 100px">
+                {{element.dag_rel.created| date:"MM.dd H:mm"}}
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="started">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header style="min-width: 100px"> Started </th>
-      <td mat-cell *matCellDef="let element" style="min-width: 100px">
-          {{element.started| date:"MM.dd H:mm"}}
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="started">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+                style="min-width: 100px">
+                Started
+            </th>
+            <td mat-cell *matCellDef="let element" style="min-width: 100px">
+                {{element.started| date:"MM.dd H:mm"}}
+            </td>
+        </ng-container>
 
-    <ng-container matColumnDef="last_activity">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header style="min-width: 100px"> Last activity </th>
-      <td mat-cell *matCellDef="let element" style="min-width: 100px">
-          {{element.last_activity| date:"MM.dd H:mm"}}
-      </td>
-    </ng-container>
-
-
-    <ng-container matColumnDef="duration">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Duration</th>
-        <td mat-cell *matCellDef="let element">
-            {{element.duration}}
-        </td>
-    </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
-      <td mat-cell *matCellDef="let element"  [style.color]="status_color(element.status)">
-          {{element.status}}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="executor">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Executor </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.executor}}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="computer">
-      <th mat-header-cell *matHeaderCellDef> Computer/assigned </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.computer}}/{{element.computer_assigned}}
-      </td>
-    </ng-container>
-
-      <ng-container matColumnDef="score">
-      <th mat-header-cell *matHeaderCellDef> Score </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.score|number:'.5'}}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="requirements">
-      <th mat-header-cell *matHeaderCellDef style="width: 100px"> Requirements </th>
-      <td mat-cell *matCellDef="let element">
-           <svg height="40" width="100px" style="display: block;" >
-              <g  matTooltip="gpu"  transform="translate(20, 20)">
-
-                <text fill="black" text-anchor="middle" vertical-align="middle" font-size="10" y="3">{{element.gpu>0?element.gpu:''}}</text>
-
-                <circle [attr.stroke-width]="element.gpu>0?2:1"
-                        [attr.stroke] = "element.gpu>0?'green':'gainsboro'" fill-opacity="0" r="12.5" ></circle>
-              </g>
-
-             <g  matTooltip="cpu"  transform="translate(50, 20)">
-
-                <text fill="black" text-anchor="middle" vertical-align="middle" font-size="10" y="3">{{element.cpu>1?element.cpu:''}}</text>
-
-                <circle [attr.stroke-width]="element.cpu>1?2:1"
-                        [attr.stroke] = "element.cpu>1?'OrangeRed':'gainsboro'" fill-opacity="0" r="12.5" ></circle>
-              </g>
-
-             <g  matTooltip="memory"  transform="translate(80, 20)">
-
-                <text fill="black" text-anchor="middle" vertical-align="middle" font-size="10" y="3">{{element.memory>0.1?element.memory:''}}</text>
-
-                <circle [attr.stroke-width]="element.memory>0.1?2:1"
-                        [attr.stroke] = "element.memory>0.1?'blue':'gainsboro'" fill-opacity="0" r="12.5" ></circle>
-              </g>
-           </svg>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="steps">
-      <th mat-header-cell *matHeaderCellDef style="width: 60px"> Steps </th>
-      <td mat-cell *matCellDef="let element">
-          {{element.current_step}}<span *ngIf="element.steps>0">/{{element.steps}}</span>
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="last_activity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+                style="min-width: 100px">
+                Last activity
+            </th>
+            <td mat-cell *matCellDef="let element" style="min-width: 100px">
+                {{element.last_activity| date:"MM.dd H:mm"}}
+            </td>
+        </ng-container>
 
 
-    <ng-container matColumnDef="links">
-      <th mat-header-cell *matHeaderCellDef style="width: 60px"> Links </th>
-      <td mat-cell *matCellDef="let element" style="min-width: 100px">
-        <mat-icon svgIcon="stop"  matTooltip="Stop" (click)="stop(element)" [class.transparent]="!unfinished(element)"></mat-icon>
-          <mat-icon svgIcon="model"  matTooltip="Create model" (click)="model(element)" [class.transparent]="element.status!='success'||not_a_model(element)"></mat-icon>
-          <mat-icon svgIcon="report"  matTooltip="Report" (click)="toogle_report(element)" *ngIf="report" [class.transparent]="!element.report_full"></mat-icon>
-      </td>
-    </ng-container>
+        <ng-container matColumnDef="duration">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Duration
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.duration}}
+            </td>
+        </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
-  </table>
+        <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Status</th>
+            <td mat-cell *matCellDef="let element"
+                [style.color]="status_color(element.status)">
+                {{element.status}}
+            </td>
+        </ng-container>
 
-  <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total" [pageSize]="15"></mat-paginator>
+        <ng-container matColumnDef="executor">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Executor
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.executor}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="computer">
+            <th mat-header-cell *matHeaderCellDef> Computer/assigned</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.computer}}/{{element.computer_assigned}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="score">
+            <th mat-header-cell *matHeaderCellDef> Score</th>
+            <td mat-cell *matCellDef="let element">
+                {{element.score|number:'.5'}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="requirements">
+            <th mat-header-cell *matHeaderCellDef style="width: 100px">
+                Requirements
+            </th>
+            <td mat-cell *matCellDef="let element">
+                <svg height="40" width="100px" style="display: block;">
+                    <g matTooltip="gpu" transform="translate(20, 20)">
+
+                        <text
+                                fill="black"
+                                text-anchor="middle"
+                                vertical-align="middle"
+                                font-size="10"
+                                y="3">
+                            {{element.gpu > 0 ? element.gpu : ''}}
+                        </text>
+
+                        <circle [attr.stroke-width]="element.gpu>0?2:1"
+                                [attr.stroke]="element.gpu>0?'green':'gainsboro'"
+                                fill-opacity="0" r="12.5">
+                        </circle>
+
+                    </g>
+
+                    <g matTooltip="cpu" transform="translate(50, 20)">
+
+                        <text fill="black"
+                              text-anchor="middle"
+                              vertical-align="middle"
+                              font-size="10"
+                              y="3">
+                            {{element.cpu > 1 ? element.cpu : ''}}
+                        </text>
+
+                        <circle [attr.stroke-width]="element.cpu>1?2:1"
+                                [attr.stroke]="element.cpu>1?
+                                    'OrangeRed':'gainsboro'"
+                                fill-opacity="0" r="12.5">
+                        </circle>
+
+                    </g>
+
+                    <g matTooltip="memory" transform="translate(80, 20)">
+
+                        <text
+                                fill="black"
+                                text-anchor="middle"
+                                vertical-align="middle"
+                                font-size="10" y="3">
+                            {{element.memory > 0.1 ? element.memory : ''}}
+                        </text>
+
+                        <circle [attr.stroke-width]="element.memory>0.1?2:1"
+                                [attr.stroke]="element.memory>0.1?
+                                    'blue':'gainsboro'"
+                                fill-opacity="0" r="12.5">
+                        </circle>
+                    </g>
+
+                </svg>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="steps">
+            <th mat-header-cell *matHeaderCellDef style="width: 60px"> Steps
+            </th>
+            <td mat-cell *matCellDef="let element">
+                {{element.current_step}}
+                <span *ngIf="element.steps>0">
+                /{{element.steps}}
+            </span>
+            </td>
+        </ng-container>
+
+
+        <ng-container matColumnDef="links">
+            <th mat-header-cell *matHeaderCellDef style="width: 60px"> Links
+            </th>
+            <td mat-cell *matCellDef="let element" style="min-width: 100px">
+
+                <mat-icon
+                        svgIcon="report"
+                        matTooltip="Report"
+                        [class.transparent]="is_report_transparent(element)"
+                        [class.transparent-active]=
+                                "is_report_transparent_active(element)"
+                        routerLink="/reports/report-detail/{{element.report}}"
+                        (click)="report_click(element, $event)">
+                </mat-icon>
+
+                <mat-icon
+                        svgIcon="stop"
+                        matTooltip="Stop"
+                        (click)="stop(element)"
+                        [class.transparent]="!unfinished(element)">
+                </mat-icon>
+
+                <mat-icon
+                        svgIcon="model"
+                        matTooltip="Create model"
+                        (click)="model(element)"
+                        [class.transparent]=
+                                "element.status!='success'
+                                    ||not_a_model(element)">
+                </mat-icon>
+
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+    </table>
+
+    <mat-paginator
+            [pageSizeOptions]="[15, 30, 100]"
+            [length]="total"
+            [pageSize]="15">
+    </mat-paginator>
 
 </div>
 
