@@ -206,6 +206,7 @@ def report_layout_edit():
 
     provider = ReportLayoutProvider()
     layout = provider.by_name(data['name'])
+    layout.last_modified = now()
     layout.content = data['content']
     provider.commit()
 

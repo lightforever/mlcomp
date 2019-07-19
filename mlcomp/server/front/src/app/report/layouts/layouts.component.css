@@ -1,0 +1,24 @@
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+mat-icon{
+  cursor: pointer;
+}
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+  margin-left: 12px !important;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
+
+td{
+  text-align: center;
+}
+
