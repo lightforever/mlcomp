@@ -5,7 +5,6 @@ import {AppRoutingModule} from './app-routing.module';
 
 import {AppComponent} from './app.component';
 import {
-    ProjectAddDialogComponent,
     ProjectComponent
 } from './project/project.component';
 import {ComputerComponent} from './computer/computer.component';
@@ -19,6 +18,9 @@ import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {ModelStartDialogComponent} from "./model/model-start-dialog.component";
 import {ModelComponent} from "./model/model.component";
 import {ModelAddDialogComponent} from "./model/model-add-dialog.component";
+import {ProjectAddDialogComponent} from "./project/project-add-dialog";
+import {ReportAddDialogComponent} from "./report/reports/report-add-dialog";
+import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
 
 
 @NgModule({
@@ -32,6 +34,8 @@ import {ModelAddDialogComponent} from "./model/model-add-dialog.component";
         AppComponent,
         ProjectComponent,
         ProjectAddDialogComponent,
+        ReportAddDialogComponent,
+        LayoutAddDialogComponent,
         ModelAddDialogComponent,
         ModelStartDialogComponent,
         MessagesComponent,
@@ -39,9 +43,12 @@ import {ModelAddDialogComponent} from "./model/model-add-dialog.component";
         ModelComponent,
         LoginComponent
     ],
-    entryComponents: [ProjectAddDialogComponent,
+    entryComponents: [
+        ProjectAddDialogComponent,
         ModelAddDialogComponent,
-        ModelStartDialogComponent
+        ModelStartDialogComponent,
+        ReportAddDialogComponent,
+        LayoutAddDialogComponent
     ],
     providers: [
         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },

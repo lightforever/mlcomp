@@ -76,7 +76,7 @@
         <ng-container matColumnDef="task">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> Task</th>
             <td mat-cell *matCellDef="let element">
-                <a [routerLink]="'/tasks/task-detail/'+element.task.id.toString()" *ngIf="element.task">{{element.task.name}} ({{element.task.id}})</a>
+                <a [routerLink]="'/tasks/task-detail/'+element.task.id.toString()+'/logs'" *ngIf="element.task">{{element.task.name}} ({{element.task.id}})</a>
             </td>
         </ng-container>
 

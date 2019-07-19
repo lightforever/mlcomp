@@ -14,14 +14,16 @@ class ProjectProvider(BaseDataProvider):
         project = Project(name=name, class_names=pickle.dumps(class_names))
         self.session.add(project)
 
-    def get(self, filter: dict, options: PaginatorOptions):
+    def get(self, filter: dict = None, options: PaginatorOptions = None):
+        filter = filter or {}
+
         query = self.query(Project,
                            func.count(Dag.id),
                            func.max(Task.last_activity),
                            func.sum(Dag.img_size),
                            func.sum(Dag.file_size)). \
-            join(Dag, Dag.project == Project.id, isouter=True).\
-            join(Task, isouter=True).\
+            join(Dag, Dag.project == Project.id, isouter=True). \
+            join(Task, isouter=True). \
             group_by(Project.id)
 
         if filter.get('name'):

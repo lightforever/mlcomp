@@ -115,10 +115,10 @@ report_img = Table(
     Column('size', BigInteger, nullable=False),
 )
 
-report_scheme = Table(
-    'report_scheme', meta,
+report_layout = Table(
+    'report_layout', meta,
     Column('name', String(400), primary_key=True),
-    Column('content', LargeBinary, nullable=False),
+    Column('content', String(8000), nullable=False),
     Column('last_modified', TIMESTAMP, nullable=False, default='now()')
 )
 
@@ -231,7 +231,7 @@ def upgrade(migrate_engine):
         step.create()
         task.create()
         task_dependency.create()
-        report_scheme.create()
+        report_layout.create()
         docker.create()
         model.create()
 
@@ -368,7 +368,7 @@ def downgrade(migrate_engine):
         report_task.drop()
         report_img.drop()
         report_series.drop()
-        report_scheme.drop()
+        report_layout.drop()
         report.drop()
         task_dependency.drop()
         step.drop()

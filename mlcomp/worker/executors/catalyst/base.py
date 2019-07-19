@@ -3,7 +3,7 @@ from collections import defaultdict
 from catalyst.dl import Callback, Experiment, RunnerState
 
 from mlcomp.db.providers import ReportImgProvider
-from mlcomp.db.misc.report_info import ReportSchemeItem
+from mlcomp.db.report_info import ReportLayoutItem
 from mlcomp.db.models import Task, Dag
 
 
@@ -12,7 +12,7 @@ class BaseCallback(Callback):
                  experiment: Experiment,
                  task: Task,
                  dag: Dag,
-                 info: ReportSchemeItem):
+                 info: ReportLayoutItem):
         self.info = info
         self.task = task
         self.dag = dag

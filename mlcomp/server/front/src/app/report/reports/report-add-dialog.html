@@ -1,0 +1,35 @@
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="data.name">
+  </mat-form-field>
+</div>
+
+<mat-form-field style="width: 150px">
+    <mat-label>Project</mat-label>
+    <mat-select
+            [(ngModel)]="data.project">
+        <mat-option
+                *ngFor="let project of data.projects"
+                [value]="project.id">
+            {{project.name}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field style="width: 150px">
+    <mat-label>Layout</mat-label>
+    <mat-select
+            [(ngModel)]="data.project">
+        <mat-option
+                *ngFor="let layout of data.layouts"
+                [value]="layout.id">
+            {{layout.name}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+</div>

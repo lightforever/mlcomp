@@ -95,6 +95,9 @@ class BaseDataProvider:
         return self._session
 
     def paginator(self, query: Query, options: PaginatorOptions):
+        if options is None:
+            return query
+
         if options.sort_column:
             column = getattr(self.model, options.sort_column) if \
                 options.sort_column in self.model.__dict__  \

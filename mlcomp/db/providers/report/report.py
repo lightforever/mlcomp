@@ -9,11 +9,10 @@ from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.enums import TaskStatus
-from mlcomp.db.misc.report_info import ReportSchemeSeries, \
-    ReportSchemeInfo, \
-    ReportSchemeItem
 from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, ReportImg
 from mlcomp.db.providers import BaseDataProvider
+from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
+from mlcomp.db.report_info.item import ReportLayoutItem
 
 
 class ReportProvider(BaseDataProvider):
@@ -54,7 +53,7 @@ class ReportProvider(BaseDataProvider):
         return {'total': total, 'data': data}
 
     def _detail_series(self, series: List[ReportSeries],
-                       r: ReportSchemeSeries):
+                       r: ReportLayoutSeries):
         series = [s for s in series if s.name == r.name]
         res = []
 
@@ -79,9 +78,9 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def _best_task_epoch(self, report: ReportSchemeInfo,
+    def _best_task_epoch(self, report: ReportLayoutInfo,
                          series: List[ReportSeries],
-                         item: ReportSchemeItem):
+                         item: ReportLayoutItem):
         tasks = [s.task for s in series]
         tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch). \
             filter(ReportImg.task.in_(tasks)). \
@@ -104,8 +103,8 @@ class ReportProvider(BaseDataProvider):
 
         return best_task_epoch[0] if best_task_epoch else (None, None)
 
-    def _detail_single_img(self, report: ReportSchemeInfo,
-                           series: List[ReportSeries], item: ReportSchemeItem):
+    def _detail_single_img(self, report: ReportLayoutInfo,
+                           series: List[ReportSeries], item: ReportLayoutItem):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -124,9 +123,9 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def detail_img_classify_descr(self, report: ReportSchemeInfo,
+    def detail_img_classify_descr(self, report: ReportLayoutInfo,
                                   series: List[ReportSeries],
-                                  item: ReportSchemeItem):
+                                  item: ReportLayoutItem):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -160,7 +159,7 @@ class ReportProvider(BaseDataProvider):
             ReportTasks.report == id).all()
         tasks = [t[0] for t in tasks]
         config = json.loads(report_obj.config)
-        report = ReportSchemeInfo(config)
+        report = ReportLayoutInfo(config)
 
         series = self.query(ReportSeries). \
             filter(ReportSeries.task.in_(tasks)). \

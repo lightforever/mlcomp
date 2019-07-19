@@ -140,7 +140,7 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     status_click(dag: Dag, status: NameCount) {
-        this.router.navigate([`/dags/dag-detail/${dag.id}`],
+        this.router.navigate([`/dags/dag-detail/${dag.id}/tasks`],
             {queryParams: {status: status.name}});
     }
 

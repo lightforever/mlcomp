@@ -65,11 +65,11 @@ class ReportTasks(Base):
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
 
 
-class ReportScheme(Base):
-    __tablename__ = 'report_scheme'
+class ReportLayout(Base):
+    __tablename__ = 'report_layout'
 
     name = sa.Column(sa.String, primary_key=True)
-    content = sa.Column(sa.LargeBinary)
+    content = sa.Column(sa.String)
     last_modified = sa.Column(sa.TIMESTAMP)
 
 
@@ -77,4 +77,4 @@ __all__ = ['ReportSeries',
            'ReportImg',
            'ReportTasks',
            'Report',
-           'ReportScheme']
+           'ReportLayout']

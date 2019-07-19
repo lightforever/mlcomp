@@ -5,6 +5,7 @@ import json
 from collections import OrderedDict
 from functools import wraps
 
+import yaml
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 from sqlalchemy.exc import ProgrammingError
@@ -20,7 +21,7 @@ from mlcomp.utils.logging import logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake
-from mlcomp.db.models import Model
+from mlcomp.db.models import Model, Report
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -146,6 +147,69 @@ def project_add():
     return res
 
 
+@app.route('/api/report/add_start', methods=['POST'])
+@requires_auth
+@error_handler
+def report_add_start():
+    return {
+        'projects': ProjectProvider().get()['data'],
+        'layouts': ReportLayoutProvider().get()['data']
+    }
+
+
+@app.route('/api/report/add_end', methods=['POST'])
+@requires_auth
+@error_handler
+def report_add_end():
+    data = request_data()
+
+    provider = ReportProvider()
+    layout = ReportLayoutProvider().by_id(data['layout'])
+    report = Report(
+        name=data['name'],
+        project=data['project'],
+        config=pickle.load(layout.config)
+    )
+    provider.add(report)
+
+
+@app.route('/api/layouts', methods=['POST'])
+@requires_auth
+@error_handler
+def report_layouts():
+    data = request_data()
+
+    provider = ReportLayoutProvider()
+    options = PaginatorOptions(**data['paginator'])
+    res = provider.get(data, options)
+    return res
+
+
+@app.route('/api/layout/add', methods=['POST'])
+@requires_auth
+@error_handler
+def report_layout_add():
+    data = request_data()
+
+    provider = ReportLayoutProvider()
+    layout = ReportLayout(name=data['name'], content='', last_modified=now())
+    provider.add(layout)
+
+
+@app.route('/api/layout/edit', methods=['POST'])
+@requires_auth
+@error_handler
+def report_layout_edit():
+    data = request_data()
+
+    yaml.load(data['content'])
+
+    provider = ReportLayoutProvider()
+    layout = provider.by_name(data['name'])
+    layout.content = data['content']
+    provider.commit()
+
+
 @app.route('/api/model/add', methods=['POST'])
 @requires_auth
 @error_handler
@@ -247,7 +311,7 @@ def code():
 
     def sort_key(x):
         if 'children' in x and len(x['children']) > 0:
-            return '_'*5+x['name']
+            return '_' * 5 + x['name']
         return x['name']
 
     def sort(node: dict):

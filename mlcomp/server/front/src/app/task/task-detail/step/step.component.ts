@@ -20,10 +20,8 @@ export class StepComponent implements OnInit, OnDestroy {
     private interval: number;
     flat_node_map: Map<StepNode, FlatNode> = new Map<StepNode, FlatNode>();
 
-    constructor(protected service: TaskService, protected location: Location,
-                private router: Router, private  route: ActivatedRoute,
-                iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-                private message_service: MessageService
+    constructor(protected service: TaskService,
+                protected location: Location
     ) {
     }
 
@@ -38,7 +36,8 @@ export class StepComponent implements OnInit, OnDestroy {
             let node_flat = this.flat_node_map[node.id];
             for (let k in res) {
                 if(res[k]!=node_flat[k]){
-                    Object.defineProperty(node_flat, k, {'value': res[k]});
+                    Object.defineProperty(node_flat, k,
+                        {'value': res[k]});
                 }
             }
 
@@ -54,14 +53,18 @@ export class StepComponent implements OnInit, OnDestroy {
         node => node.level, node => node.expandable);
 
     treeFlattener = new MatTreeFlattener(
-        this.transformer, node => node.level, node => node.expandable, this.get_children);
+        this.transformer,
+            node => node.level,
+            node => node.expandable,
+        this.get_children);
 
-    dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+    dataSource = new MatTreeFlatDataSource(this.treeControl,
+        this.treeFlattener);
 
     load() {
         let self = this;
         this.service.steps(this.task).subscribe(res => {
-            self.dataSource.data = res;
+            self.dataSource.data = res.data;
             self.treeControl.expandAll();
 
         });

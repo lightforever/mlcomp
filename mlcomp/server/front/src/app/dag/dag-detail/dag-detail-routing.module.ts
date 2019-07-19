@@ -17,7 +17,7 @@ const routes: Routes = [
             {path: 'code', component: CodeComponent},
             {path: 'config', component: ConfigComponent},
             {path: 'graph', component: GraphComponent},
-            {path: '', component: TasksComponent}
+            {path: 'tasks', component: TasksComponent}
         ]
 
 

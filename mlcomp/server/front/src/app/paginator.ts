@@ -32,7 +32,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
     private interval: number;
     id_column: string = 'id';
 
-    constructor(
+    protected constructor(
         protected service: BaseService,
         protected location: Location,
         protected enable_interval: boolean = true
@@ -47,10 +47,12 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
     get_filter(): any {
         let res = new PaginatorFilter();
         res.page_number = this.paginator ? this.paginator.pageIndex : 0;
-        res.page_size = this.paginator ? this.paginator.pageSize || this.default_page_size : 10;
+        res.page_size = this.paginator ?
+            this.paginator.pageSize || this.default_page_size : 10;
         if (this.sort) {
             res.sort_column = this.sort.active ? this.sort.active : '';
-            res.sort_descending = this.sort.direction ? this.sort.direction == 'desc' : true;
+            res.sort_descending = this.sort.direction ?
+                this.sort.direction == 'desc' : true;
         }
 
         return res;
@@ -65,7 +67,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         return normalizedObject as { [key: string]: T }
     }
 
-    sync_objects(source, target) {
+    static sync_objects(source, target) {
         for (let name in source) {
             if (JSON.stringify(source[name]) != JSON.stringify(target[name])) {
                 target[name] = source[name];
@@ -78,7 +80,9 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
 
         // If the user changes the sort order, reset back to the first page.
         if (this.sort) {
-            this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+            this.sort.sortChange.subscribe(
+                () => this.paginator.pageIndex = 0
+            );
         }
 
 
@@ -114,13 +118,14 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
             if (!res.data) {
                 return;
             }
-            if (this.dataSource.data && res.data.length == this.dataSource.data.length) {
+            if (this.dataSource.data &&
+                res.data.length == this.dataSource.data.length) {
                 let res_d = this.normalizeArray(res.data);
                 let target_d = this.normalizeArray(this.dataSource.data);
                 let names = Object.getOwnPropertyNames(res_d);
                 for (let k of names) {
                     if (k in target_d) {
-                        this.sync_objects(res_d[k], target_d[k]);
+                        Paginator.sync_objects(res_d[k], target_d[k]);
                         delete res_d[k];
                         delete target_d[k];
                     }
@@ -140,7 +145,9 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
                     data.splice(i, 0, res_a[i]);
                 }
 
-                data = data.sort((a, b) => a[this.id_column] > b[this.id_column] ? -1 : 1);
+                data = data.sort(
+                    (a, b) => a[this.id_column] > b[this.id_column]
+                        ? -1 : 1);
                 this.dataSource.data = data;
 
 
@@ -153,7 +160,9 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
         });
 
         if (this.enable_interval) {
-            // this.interval = setInterval(() => this.change.emit('event'), 3000);
+            // this.interval = setInterval(
+            //     () => this.change.emit('event'),
+            //     3000);
         }
 
     }

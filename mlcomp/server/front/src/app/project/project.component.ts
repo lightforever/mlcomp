@@ -1,17 +1,16 @@
-import {Component, Inject} from '@angular/core';
+import {Component} from '@angular/core';
 import {Paginator} from "../paginator";
-import {Project, ProjectAddData, ProjectFilter} from "../models";
+import {Project, ProjectFilter} from "../models";
 import {Location} from '@angular/common';
 import {
-    MAT_DIALOG_DATA,
     MatDialog,
-    MatDialogRef,
     MatIconRegistry
 } from "@angular/material";
 import {DomSanitizer} from "@angular/platform-browser";
 import {DialogComponent} from "../dialog/dialog.component";
 import {Helpers} from "../helpers";
 import {ProjectService} from "./project.service";
+import {ProjectAddDialogComponent} from "./project-add-dialog";
 
 @Component({
     selector: 'app-project',
@@ -92,22 +91,5 @@ export class ProjectComponent extends Paginator<Project> {
             }
         });
     }
-}
-
-@Component({
-    selector: 'project-add-dialog',
-    templateUrl: 'project-add-dialog.html',
-})
-export class ProjectAddDialogComponent {
-
-    constructor(
-        public dialogRef: MatDialogRef<ProjectAddDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: ProjectAddData) {
-    }
-
-    onNoClick(): void {
-        this.dialogRef.close();
-    }
-
 }
 

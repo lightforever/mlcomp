@@ -14,7 +14,7 @@ const routes: Routes = [
         children: [
             {path: 'report', component: ReportsComponent},
             {path: 'step', component: StepComponent},
-            {path: '', component: LogComponent}
+            {path: 'logs', component: LogComponent}
         ]
 
 

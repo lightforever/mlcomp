@@ -68,7 +68,7 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
                     network.on('doubleClick', function (properties) {
                         var ids = properties.nodes;
                         var clickedNodes = nodes.get(ids);
-                        self.router.navigate(['/tasks/task-detail/' + clickedNodes[0].id + '/log']);
+                        self.router.navigate(['/tasks/task-detail/' + clickedNodes[0].id + '/logs']);
                     });
                     return;
                 }

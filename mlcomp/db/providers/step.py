@@ -56,7 +56,7 @@ class StepProvider(BaseDataProvider):
             **(self.step_info(steps[0]) if len(steps) > 0 else dict()),
             'children': []}
         self._hierarchy(hierarchy, steps, 1, len(steps) - 1)
-        return [hierarchy]
+        return {'data': [hierarchy]}
 
     def last_for_task(self, id: int):
         return self.query(Step).filter(Step.task == id).order_by(

@@ -10,7 +10,7 @@ from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config
 from mlcomp.worker.executors.base import Executor
-from mlcomp.db.misc.report_info import *
+from mlcomp.db.report_info import *
 from mlcomp.worker.executors.catalyst.precision_recall import \
     PrecisionRecallCallback
 from mlcomp.worker.executors.catalyst.f1 import F1Callback
@@ -41,7 +41,7 @@ class Args:
 class Catalyst(Executor, Callback):
     __syn__ = 'catalyst'
 
-    def __init__(self, args: Args, report: ReportSchemeInfo):
+    def __init__(self, args: Args, report: ReportLayoutInfo):
         self.args = args
         self.report = report
         self.experiment = None
@@ -111,7 +111,7 @@ class Catalyst(Executor, Callback):
 
             setattr(args, k, v)
 
-        report = ReportSchemeInfo(additional_info.get('report_config', dict()))
+        report = ReportLayoutInfo(additional_info.get('report_config', dict()))
         if len(args.configs) == 0:
             args.configs = [args.config]
         return cls(args=args, report=report)

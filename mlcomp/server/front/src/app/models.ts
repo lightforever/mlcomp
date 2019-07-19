@@ -226,6 +226,10 @@ export class StepNode {
     children?: StepNode[];
 }
 
+export class StepNodeResult {
+    data: StepNode[];
+}
+
 export class Img {
     content: string;
 }
@@ -287,6 +291,14 @@ export interface ProjectAddData {
     name: string;
 }
 
+export interface ReportAddData {
+    name: string;
+    project: number;
+    layout: number;
+    projects: Project[];
+    layouts: any[];
+}
+
 export interface ModelAddData {
     dag: any;
     slot: string;
@@ -304,4 +316,14 @@ export interface ModelStartData {
     pipe: string;
     interface_params: string;
     model_id: number;
+}
+
+export class Layout {
+    name: string;
+    content: string;
+    last_modified: Date;
+}
+
+export interface LayoutAddData {
+    name: string;
 }

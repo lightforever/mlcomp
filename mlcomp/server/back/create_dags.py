@@ -25,8 +25,8 @@ def dag_standard(config: dict,
     provider = TaskProvider()
     report_provider = ReportProvider()
     report_tasks_provider = ReportTasksProvider()
-    report_scheme_provider = ReportSchemeProvider()
-    schemes = report_scheme_provider.all()
+    report_layout_provider = ReportLayoutProvider()
+    layouts = report_layout_provider.all()
 
     storage = Storage()
     dag_provider = DagProvider()
@@ -36,11 +36,11 @@ def dag_standard(config: dict,
 
     dag_report_id = None
     if report_name:
-        if report_name not in schemes:
+        if report_name not in layouts:
             raise Exception(f'Unknown report = {report_name}')
 
         report = Report(
-            config=json.dumps(schemes[report_name]),
+            config=json.dumps(layouts[report_name]),
             name=info['name'],
             project=project)
         report_provider.add(report)
@@ -95,10 +95,10 @@ def dag_standard(config: dict,
                 )
 
                 if report_name and task_type == TaskType.Train.value:
-                    if report_name not in schemes:
+                    if report_name not in layouts:
                         raise Exception(f'Unknown report = {v["report"]}')
 
-                    report_config = schemes[report_name]
+                    report_config = layouts[report_name]
                     additional_info = {'report_config': report_config}
                     task.additional_info = pickle.dumps(additional_info)
                     provider.add(task)

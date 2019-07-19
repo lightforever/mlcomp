@@ -19,9 +19,7 @@ export class ErrorInterceptor implements HttpInterceptor {
                 this.router.navigate(['/login'], {queryParams: {returnUrl: this.router.routerState.snapshot.url}});
 
             }
-
-            const error = err.error.message || err.statusText;
-            return throwError(error);
+            return throwError(err);
         }))
     }
 }
