@@ -26,8 +26,19 @@ export class Helpers {
     }
 
     public static format_date_time(date) {
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
         ];
 
         var d = new Date(date),
@@ -36,7 +47,8 @@ export class Helpers {
 
         if (day.length < 2) day = '0' + day;
 
-        return [monthNames[month], day].join('.') + ' ' + date.toTimeString().slice(0, 8);
+        return [monthNames[month], day].join('.') + ' ' +
+            date.toTimeString().slice(0, 8);
     }
 
     public static parse_time(time){

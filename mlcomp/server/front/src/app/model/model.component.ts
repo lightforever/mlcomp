@@ -1,4 +1,4 @@
-import {Component, Inject} from '@angular/core';
+import {Component} from '@angular/core';
 import {Paginator} from "../paginator";
 import {Model, ModelFilter} from "../models";
 import {Location} from "@angular/common";
@@ -11,7 +11,6 @@ import {
 import {Helpers} from "../helpers";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ModelStartDialogComponent} from "./model-start-dialog.component";
-import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'app-model',
@@ -52,18 +51,25 @@ export class ModelComponent extends Paginator<Model> {
         super(service, location);
 
         iconRegistry.addSvgIcon('edit',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/edit.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/edit.svg'));
+
         iconRegistry.addSvgIcon('start',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/play-button.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/play-button.svg'));
+
         iconRegistry.addSvgIcon('remove',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/trash.svg'));
+
     }
 
     protected _ngOnInit() {
         let self = this;
         this.data_updated.subscribe(res => {
             self.projects = res.projects;
-            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+            self.projects.splice(0, 0,
+                {'id': -1, 'name': 'None'});
         });
 
     }

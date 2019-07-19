@@ -1,31 +1,60 @@
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-    <!-- This is the tree node template for leaf nodes -->
     <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-        <!-- use a disabled button to provide padding for tree leaf -->
-        <button mat-icon-button mat-button class="mat-icon-button" (click)="node_click(node)"></button>
+        <button
+                mat-icon-button
+                mat-button class="mat-icon-button"
+                (click)="node_click(node)">
+
+        </button>
 
         <mat-accordion>
-            <mat-expansion-panel  (opened)="node.opened = true" (closed)="node.opened = false">
+            <mat-expansion-panel
+                    (opened)="node.opened = true"
+                    (closed)="node.opened = false">
                 <mat-expansion-panel-header>
                     <mat-panel-title>
-                        <span [style.margin]="'auto'">{{node.name}}</span>
+                        <span [style.margin]="'auto'">
+                            {{node.name}}
+                        </span>
+
                     </mat-panel-title>
                     <mat-panel-description>
-                        <span [style.color]="status_color(node.content.status)" [style.margin]="'auto'">{{node.content.status}}</span>
+                        <span
+                                [style.color]=
+                                        "status_color(node.content.status)"
+                                [style.margin]="'auto'">
+                            {{node.content.status}}
+                        </span>
 
-                        <span style="padding: 10px">{{node.content.duration}}</span>
+                        <span style="padding: 10px">
+                            {{node.content.duration}}
+                        </span>
 
                         <svg height="40" width="220px" style="display: block;">
                             <g matTooltip="{{status.name}}"
-                               [attr.transform]="'translate('+(16+i*30).toString()+','+'20)'"
-                               *ngFor="let status of node.content.log_statuses; let i = index">
+                               [attr.transform]="'translate('+
+                               (16+i*30).toString()+','+'20)'"
+                               *ngFor="let status of
+                               node.content.log_statuses; let i = index">
 
-                                <text fill="black" text-anchor="middle" vertical-align="middle"
-                                      font-size="10" y="3">{{status.count > 0 ? status.count : ''}}</text>
+                                <text
+                                        fill="black"
+                                        text-anchor="middle"
+                                        vertical-align="middle"
+                                      font-size="10" y="3">
+                                    {{status.count > 0 ? status.count : ''}}
+                                </text>
 
-                                <circle [attr.stroke-width]="status.count>0?2:1" (click)="status_click(node, status.name)"
-                                        [attr.stroke]="color_for_log_status(status.name, status.count)"
-                                        fill-opacity="0" r="12.5" style="cursor: pointer; opacity: 1;"></circle>
+                                <circle [attr.stroke-width]=
+                                                "status.count>0?2:1"
+                                        (click)="status_click(node,
+                                        status.name)"
+                                        [attr.stroke]="color_for_log_status(
+                                        status.name, status.count)"
+                                        fill-opacity="0" r="12.5"
+                                        style="cursor: pointer; opacity: 1;">
+
+                                </circle>
                             </g>
 
                         </svg>
@@ -33,44 +62,79 @@
                     </mat-panel-description>
                 </mat-expansion-panel-header>
 
-                <app-log *ngIf="node.opened" [step]="node.content.id" [init_level]="node.content.init_level"></app-log>
+                <app-log
+                        *ngIf="node.opened"
+                        [step]="node.content.id"
+                        [init_level]="node.content.init_level">
+
+                </app-log>
+
 
             </mat-expansion-panel>
         </mat-accordion>
 
 
     </mat-tree-node>
-    This is the tree node template for expandable nodes
-    <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodePadding>
+
+    <mat-tree-node *matTreeNodeDef="let node;when: hasChild"
+                   matTreeNodePadding>
         <button mat-icon-button matTreeNodeToggle
-                [attr.aria-label]="'toggle ' + node.name" class="mat-icon-button">
+                [attr.aria-label]="'toggle ' + node.name"
+                class="mat-icon-button">
+
             <mat-icon class="mat-icon-rtl-mirror">
 
             </mat-icon>
         </button>
 
             <mat-accordion>
-            <mat-expansion-panel  (opened)="node.opened = true" (closed)="node.opened = false">
+            <mat-expansion-panel
+                    (opened)="node.opened = true"
+                    (closed)="node.opened = false">
                 <mat-expansion-panel-header>
                     <mat-panel-title>
-                        <span [style.margin]="'auto'">{{node.name}}</span>
+                        <span [style.margin]="'auto'">
+                            {{node.name}}
+                        </span>
+
                     </mat-panel-title>
                     <mat-panel-description>
-                        <span [style.color]="status_color(node.content.status)" [style.margin]="'auto'">{{node.content.status}}</span>
+                        <span
+                                [style.color]=
+                                        "status_color(node.content.status)"
+                                [style.margin]="'auto'">
+                            {{node.content.status}}
+                        </span>
 
-                        <span style="padding: 10px">{{node.content.duration}}</span>
+                        <span style="padding: 10px">
+                            {{node.content.duration}}
+                        </span>
 
                         <svg height="40" width="220px" style="display: block;">
                             <g matTooltip="{{status.name}}"
-                               [attr.transform]="'translate('+(16+i*30).toString()+','+'20)'"
-                               *ngFor="let status of node.content.log_statuses; let i = index">
+                               [attr.transform]="'translate('+
+                               (16+i*30).toString()+','+'20)'"
+                               *ngFor="let status of
+                               node.content.log_statuses; let i = index">
 
-                                <text fill="black" text-anchor="middle" vertical-align="middle"
-                                      font-size="10" y="3">{{status.count > 0 ? status.count : ''}}</text>
+                                <text
+                                        fill="black"
+                                        text-anchor="middle"
+                                        vertical-align="middle"
+                                      font-size="10" y="3">
+                                    {{status.count > 0 ? status.count : ''}}
+                                </text>
 
-                                <circle [attr.stroke-width]="status.count>0?2:1" (click)="status_click(node, status.name)"
-                                        [attr.stroke]="color_for_log_status(status.name, status.count)"
-                                        fill-opacity="0" r="12.5" style="cursor: pointer; opacity: 1;"></circle>
+                                <circle [attr.stroke-width]=
+                                                "status.count>0?2:1"
+                                        (click)="status_click(node,
+                                        status.name)"
+                                        [attr.stroke]="color_for_log_status(
+                                        status.name, status.count)"
+                                        fill-opacity="0" r="12.5"
+                                        style="cursor: pointer; opacity: 1;">
+
+                                </circle>
                             </g>
 
                         </svg>
@@ -78,7 +142,12 @@
                     </mat-panel-description>
                 </mat-expansion-panel-header>
 
-                <app-log *ngIf="node.opened" [step]="node.content.id" [init_level]="node.content.init_level"></app-log>
+                <app-log
+                        *ngIf="node.opened"
+                        [step]="node.content.id"
+                        [init_level]="node.content.init_level">
+
+                </app-log>
 
             </mat-expansion-panel>
         </mat-accordion>

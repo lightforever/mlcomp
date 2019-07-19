@@ -1,6 +1,8 @@
 <mat-form-field style="width: 150px">
     <mat-label>Dag</mat-label>
-    <mat-select (ngModelChange)="data.dag=$event; dag_changed()" [(ngModel)]="data.dag">
+    <mat-select
+            (ngModelChange)="data.dag=$event; dag_changed()"
+            [(ngModel)]="data.dag">
         <mat-option *ngFor="let dag of data.dags" [value]="dag">
             {{dag.name}}
         </mat-option>
@@ -18,8 +20,11 @@
 
 <mat-form-field style="width: 150px" *ngIf="data.dag">
     <mat-label>Interface</mat-label>
-    <mat-select (ngModelChange)="data.interface=$event;" [(ngModel)]="data.interface">
-        <mat-option *ngFor="let interface of data.dag.interfaces" [value]="interface">
+    <mat-select
+            (ngModelChange)="data.interface=$event;"
+            [(ngModel)]="data.interface">
+        <mat-option *ngFor="let interface of data.dag.interfaces"
+                    [value]="interface">
             {{interface}}
         </mat-option>
     </mat-select>
@@ -27,7 +32,9 @@
 
 <mat-form-field style="width: 150px" *ngIf="data.dag">
     <mat-label>Pipe</mat-label>
-    <mat-select (ngModelChange)="data.pipe=$event;" [(ngModel)]="data.pipe">
+    <mat-select
+            (ngModelChange)="data.pipe=$event;"
+            [(ngModel)]="data.pipe">
         <mat-option *ngFor="let pipe of data.dag.pipes" [value]="pipe">
             {{pipe}}
         </mat-option>

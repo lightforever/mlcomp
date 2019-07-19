@@ -53,7 +53,7 @@ export class TasksComponent extends Paginator<TasksComponent> {
     failed: boolean;
     stopped: boolean;
     skipped: boolean;
-    finished: boolean;
+    success: boolean;
 
     dags: any[];
     projects: any[];
@@ -76,11 +76,14 @@ export class TasksComponent extends Paginator<TasksComponent> {
     ) {
         super(service, location);
         iconRegistry.addSvgIcon('stop',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/stop.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/stop.svg'));
         iconRegistry.addSvgIcon('report',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/report.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/report.svg'));
         iconRegistry.addSvgIcon('model',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/model.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/model.svg'));
     }
 
     protected _ngOnInit() {
@@ -96,10 +99,12 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
         this.data_updated.subscribe(res => {
             self.projects = res.projects;
-            self.projects.splice(0, 0, {'id': -1, 'name': 'None'});
+            self.projects.splice(0, 0,
+                {'id': -1, 'name': 'None'});
 
             self.dags = res.dags;
-            self.dags.splice(0, 0, {'id': -1, 'name': 'None'});
+            self.dags.splice(0, 0,
+                {'id': -1, 'name': 'None'});
 
             self.dags_model = res.dags_model;
         });
@@ -130,7 +135,7 @@ export class TasksComponent extends Paginator<TasksComponent> {
             'failed': this.failed,
             'stopped': this.stopped,
             'skipped': this.skipped,
-            'finished': this.finished
+            'success': this.success
         };
         res.created_min = Helpers.parse_time(this.created_min);
         res.created_max = Helpers.parse_time(this.created_max);
@@ -148,7 +153,10 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
 
     unfinished(element) {
-        return ['not_ran', 'in_progress', 'queued'].indexOf(element.status) != -1;
+        return [
+            'not_ran',
+            'in_progress',
+            'queued'].indexOf(element.status) != -1;
     }
 
     onchange() {

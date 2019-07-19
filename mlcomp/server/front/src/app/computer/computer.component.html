@@ -2,7 +2,9 @@
     <table mat-table [dataSource]="dataSource" matSort>
 
         <ng-container matColumnDef="main">
-            <th mat-header-cell *matHeaderCellDef class="name">Current stats</th>
+            <th mat-header-cell *matHeaderCellDef class="name">
+                Current stats
+            </th>
             <td mat-cell *matCellDef="let element" class="name" style="vertical-align: top">
                 <mat-grid-list rowHeight="50px" cols="8">
                     <mat-grid-tile
@@ -22,19 +24,32 @@
                             </div>
                             <div class="flex-wrapper">
                                 <div class="single-chart">
-                                    <svg viewBox="0 0 36 36" [attr.class]="'circular-chart '+color(element.usage.cpu)">
+                                    <svg
+                                            viewBox="0 0 36 36"
+                                            [attr.class]="'circular-chart '+
+                                            color(element.usage.cpu)">
                                         <path class="circle-bg"
                                               d="M18 2.0845
                           a 15.9155 15.9155 0 0 1 0 31.831
                           a 15.9155 15.9155 0 0 1 0 -31.831"
                                         />
+
                                         <path class="circle"
-                                              [attr.stroke-dasharray]="element.usage.cpu+', 100'"
+                                              [attr.stroke-dasharray]=
+                                                      "element.usage.cpu+
+                                                      ', 100'"
                                               d="M18 2.0845
                           a 15.9155 15.9155 0 0 1 0 31.831
                           a 15.9155 15.9155 0 0 1 0 -31.831"
                                         />
-                                        <text x="18" y="20.35" class="percentage">{{element.cpu}}</text>
+
+                                        <text
+                                                x="18"
+                                                y="20.35"
+                                                class="percentage">
+                                            {{element.cpu}}
+                                        </text>
+
                                     </svg>
                                 </div>
 
@@ -52,19 +67,29 @@
                             </div>
                             <div class="flex-wrapper">
                                 <div class="single-chart">
-                                    <svg viewBox="0 0 36 36" [attr.class]="'circular-chart '+color(element.usage.memory)">
+                                    <svg
+                                            viewBox="0 0 36 36"
+                                            [attr.class]="'circular-chart '+
+                                            color(element.usage.memory)">
                                         <path class="circle-bg"
                                               d="M18 2.0845
                   a 15.9155 15.9155 0 0 1 0 31.831
                   a 15.9155 15.9155 0 0 1 0 -31.831"
                                         />
                                         <path class="circle"
-                                              [attr.stroke-dasharray]="element.usage.memory+', 100'"
+                                              [attr.stroke-dasharray]=
+                                                      "element.usage.memory+
+                                                      ', 100'"
                                               d="M18 2.0845
                   a 15.9155 15.9155 0 0 1 0 31.831
                   a 15.9155 15.9155 0 0 1 0 -31.831"
                                         />
-                                        <text x="18" y="20.35" class="percentage">{{element.memory}}</text>
+                                        <text
+                                                x="18"
+                                                y="20.35"
+                                                class="percentage">
+                                            {{element.memory}}
+                                        </text>
                                     </svg>
                                 </div>
 
@@ -79,35 +104,46 @@
                         <div style="width: 100%">
                             <div>Gpu {{i}}</div>
                             <div class="single-chart" matTooltip="load">
-                                <svg viewBox="0 0 36 36" [attr.class]="'circular-chart '+color(gpu.load)">
+                                <svg
+                                        viewBox="0 0 36 36"
+                                        [attr.class]="'circular-chart '+
+                                        color(gpu.load)">
                                     <path class="circle-bg"
                                           d="M18 2.0845
                                       a 15.9155 15.9155 0 0 1 0 31.831
                                       a 15.9155 15.9155 0 0 1 0 -31.831"
                                     />
                                     <path class="circle"
-                                          [attr.stroke-dasharray]="gpu.load+', 100'"
+                                          [attr.stroke-dasharray]=
+                                                  "gpu.load+', 100'"
                                           d="M18 2.0845
                                       a 15.9155 15.9155 0 0 1 0 31.831
                                       a 15.9155 15.9155 0 0 1 0 -31.831"
                                     />
-                                    <text x="18" y="20.35" class="percentage">{{gpu.load}}%</text>
+                                    <text x="18" y="20.35" class="percentage">
+                                        {{gpu.load}}%
+                                    </text>
                                 </svg>
                             </div>
                             <div class="single-chart" matTooltip="memory" >
-                                <svg viewBox="0 0 36 36" [attr.class]="'circular-chart '+color(gpu.memory)">
+                                <svg viewBox="0 0 36 36"
+                                     [attr.class]="'circular-chart '+
+                                     color(gpu.memory)">
                                     <path class="circle-bg"
                                           d="M18 2.0845
                                       a 15.9155 15.9155 0 0 1 0 31.831
                                       a 15.9155 15.9155 0 0 1 0 -31.831"
                                     />
                                     <path class="circle"
-                                          [attr.stroke-dasharray]="gpu.memory+', 100'"
+                                          [attr.stroke-dasharray]=
+                                                  "gpu.memory+', 100'"
                                           d="M18 2.0845
                                       a 15.9155 15.9155 0 0 1 0 31.831
                                       a 15.9155 15.9155 0 0 1 0 -31.831"
                                     />
-                                    <text x="18" y="20.35" class="percentage">{{gpu.memory}}%</text>
+                                    <text x="18" y="20.35" class="percentage">
+                                        {{gpu.memory}}%
+                                    </text>
                                 </svg>
                             </div>
                         </div>
@@ -128,16 +164,28 @@
                     <tr *ngFor="let docker of element.dockers">
                         <td>
                             <span style="vertical-align: middle">{{docker.name}} &nbsp;</span>
-                            <span [className]="docker_status(docker)"></span>
+                            <span
+                                    [matTooltip]="docker_status_tip(docker)"
+                                    [className]="docker_status(docker)">
+
+                            </span>
                         </td>
                         <td>{{long_date_format(docker.last_activity)}}</td>
                         <td style="width: 70px;min-width: 70px">
                             <span style="vertical-align: middle">{{docker.in_progress}} &nbsp;</span>
-                            <span [className]="'circle-green'"></span>
+                            <span
+                                    matTooltip="in_progress"
+                                    [className]="'circle-green'">
+
+                            </span>
                         </td>
                         <td style="width: 70px;min-width: 70px">
                             <span style="vertical-align: middle">{{docker.free}} &nbsp;</span>
-                            <span [className]="'circle-gray'"></span>
+                            <span
+                                    matTooltip="free"
+                                    [className]="'circle-gray'">
+
+                            </span>
                         </td>
                     </tr>
                 </table>
@@ -148,7 +196,11 @@
         <ng-container matColumnDef="usage_history">
             <th mat-header-cell *matHeaderCellDef class="usage_history">
                 Stat history &nbsp; &nbsp;&nbsp;
-                <mat-button-toggle-group [value]="pressed" (change)="pressed_changed($event)" appearance="legacy" style="height: 30px">
+                <mat-button-toggle-group
+                        [value]="pressed"
+                        (change)="pressed_changed($event)"
+                        appearance="legacy"
+                        style="height: 30px">
                     <mat-button-toggle value="min15">
                         <mat-icon>15 min</mat-icon>
                     </mat-button-toggle>
@@ -179,7 +231,12 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 50, 100]" [length]="total" [pageSize]="15"></mat-paginator>
+    <mat-paginator
+            [pageSizeOptions]="[15, 30, 50, 100]"
+            [length]="total"
+            [pageSize]="15">
+
+    </mat-paginator>
 </div>
 
 

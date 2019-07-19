@@ -41,8 +41,11 @@ export class SeriesComponent implements OnInit {
                     row.text = text;
                 }
                 if (this.data.series.length > 0) {
-                    if (this.data.series.map(x => x.plotted).reduce((s, c) => s + c, 0) > 0) {
-                        let indices = Array.from(Array(this.data.series.length).keys());
+                    if (this.data.series.map(
+                        x => x.plotted).
+                    reduce((s, c) => s + c, 0) > 0) {
+                        let keys = Array(this.data.series.length).keys();
+                        let indices = Array.from(keys);
                         let y = {'y': [], 'text': []};
                         for (let s of this.data.series) {
                             y['y'].push(s.y.slice(s.plotted));
@@ -53,7 +56,10 @@ export class SeriesComponent implements OnInit {
                         }
                         window['Plotly'].extendTraces(this.id, y, indices);
                     } else {
-                        window['Plotly'].newPlot(this.id, this.data.series, layout);
+                        window['Plotly'].newPlot(this.id,
+                            this.data.series,
+                            layout);
+
                         for (let s of this.data.series) {
                             s.plotted = s.x.length;
                         }
@@ -75,7 +81,8 @@ export class SeriesComponent implements OnInit {
             for (let i = 0; i < this.data.series.length; i++) {
                 let d = this.data.series[i];
                 for (let serie of event.data) {
-                    if (serie.task_id == d.task_id && serie.group == d.group && serie.source == d.source) {
+                    if (serie.task_id == d.task_id &&
+                        serie.group == d.group && serie.source == d.source) {
                         if (serie.x.length > this.data.series[i].x.length) {
                             this.data.series[i].x = serie.x;
                             this.data.series[i].y = serie.y;
@@ -99,7 +106,11 @@ export class SeriesComponent implements OnInit {
 
     private static create_single_task(data) {
         let first = data[0];
-        let plot: SeriesItem = {'name': first.source + ' - ' + first.task_name, 'series': []};
+        let plot: SeriesItem = {'name': first.source +
+                ' - ' + first.task_name,
+            'series': []
+        };
+
         for (let d of data) {
             d = Helpers.clone(d);
             d.plotted = 0;
@@ -114,7 +125,11 @@ export class SeriesComponent implements OnInit {
         for (let d of data) {
             d = Helpers.clone(d);
             if (!(d[key] in by_key)) {
-                by_key[d[key]] = {'name': d.source + ' - ' + (key == 'group' ? d[key] : d['task_name']), 'series': []};
+                by_key[d[key]] = {'name': d.source + ' - ' +
+                        (key == 'group' ?
+                            d[key] :
+                            d['task_name']), 'series': []
+                };
             }
             d.name = key == 'task_id' ? d.group : d.task_name;
             d.plotted = 0;
@@ -137,7 +152,8 @@ export class SeriesComponent implements OnInit {
             return [];
         }
 
-        data = data.filter(d => !item.group || item.part.indexOf(d.group) != -1);
+        data = data.filter(d => !item.group ||
+            item.part.indexOf(d.group) != -1);
 
         let plots: SeriesItem[] = [];
         if (tasks.length == 1) {

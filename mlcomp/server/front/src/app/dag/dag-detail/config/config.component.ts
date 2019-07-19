@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component} from '@angular/core';
 import {MessageService} from '../../../message.service'
 import {DagDetailService} from "../dag-detail/dag-detail.service";
 import {DynamicresourceService} from "../../../dynamicresource.service";
@@ -20,12 +20,18 @@ export class ConfigComponent implements AfterViewInit {
 
     ngAfterViewInit() {
         let self = this;
-        this.resource_service.load('prettify', 'prettify-yaml', 'prettify-css').then(() => {
+        this.resource_service.load(
+            'prettify',
+            'prettify-yaml',
+            'prettify-css').then(() => {
             self.service.get_config(self.dag).subscribe(res => {
                 let node = document.createElement('pre');
                 node.textContent = res.data;
                 node.className = "prettyprint linenums lang-yaml";
-                document.getElementById('codeholder').appendChild(node);
+                let codeholder = document.getElementById(
+                    'codeholder');
+
+                codeholder.appendChild(node);
                 window['PR'].prettyPrint();
             });
         })

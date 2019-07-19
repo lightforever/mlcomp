@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {Dag, NameCount, DagFilter, Project} from '../../models';
+import {Dag, NameCount, DagFilter} from '../../models';
 import {DagService} from '../dag.service';
 import {Location} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
@@ -145,7 +145,7 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     stop(element: any) {
-        if (element.finished) {
+        if (element.success) {
             return;
         }
         this.service.stop(element.id).subscribe(data =>
@@ -163,7 +163,9 @@ export class DagsComponent extends Paginator<Dag> {
         let self = this;
         if (!element.finished) {
             this.service.stop(element.id).subscribe(data => {
-                this.service.remove(element.id).subscribe(data => self.change.emit());
+                this.service.remove(element.id).subscribe(data =>
+                    self.change.emit()
+                );
             });
             return;
         }

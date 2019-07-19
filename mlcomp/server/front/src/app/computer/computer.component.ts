@@ -11,9 +11,14 @@ import {ComputerService} from "./computer.service";
     templateUrl: './computer.component.html',
     styleUrls: ['./computer.component.css']
 })
-export class ComputerComponent extends Paginator<Computer> implements AfterViewInit {
+export class ComputerComponent extends Paginator<Computer>
+    implements AfterViewInit {
 
-    displayed_columns: string[] = ['main', 'usage_history'];
+    displayed_columns: string[] = [
+        'main',
+        'usage_history'
+    ];
+
     @ViewChild('table') table;
     last_time = {};
     plotted: boolean;
@@ -31,9 +36,11 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
         this.last_time = {};
         this.plotted = false;
         this.pressed = event.value;
+        this.change.emit();
     };
 
-    constructor(protected service: ComputerService, protected location: Location,
+    constructor(protected service: ComputerService,
+                protected location: Location,
                 protected resource_service: DynamicresourceService
     ) {
         super(service, location);
@@ -43,7 +50,9 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
     get_filter(): any {
         let res = new ComputerFilter();
         res.paginator = super.get_filter();
-        res.usage_min_time = new Date(Date.now() - this.intervals[this.pressed] * 1000);
+        res.usage_min_time = new Date(Date.now() -
+            this.intervals[this.pressed] * 1000);
+
         for (let key in this.last_time) {
             if (this.last_time[key] > res.usage_min_time) {
                 res.usage_min_time = this.last_time[key];
@@ -56,7 +65,8 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
         let self = this;
         this.data_updated.subscribe((res) => {
                 let data = res.data;
-                this.resource_service.load('plotly').then(() => {
+                this.resource_service.load('plotly').
+                then(() => {
                     setTimeout(() => {
                         let rendered = true;
                         for (let computer of data) {
@@ -67,8 +77,12 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
                             }
                             let series = [];
                             for (let item of computer.usage_history.mean) {
-                                let x = computer.usage_history.time.map(x => new Date(Date.parse(x)));
-                                if (self.last_time[computer.name] && self.last_time[computer.name] >= x[x.length - 1]) {
+                                let x = computer.usage_history.time.
+                                    map(x => new Date(Date.parse(x)));
+
+
+                                let last = self.last_time[computer.name];
+                                if (last && last >= x[x.length - 1]) {
                                     continue;
                                 }
                                 series.push({
@@ -81,20 +95,29 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
                             }
 
                             if (series.length > 0) {
-                                self.last_time[computer.name] = new Date(Date.parse(series[0].x[series[0].x.length - 1]));
+                                let x1 = series[0].x[series[0].x.length - 1];
+                                let parsed = Date.parse(x1);
+                                self.last_time[computer.name] = new Date(
+                                    parsed
+                                );
                             }
 
                             if (series.length > 0){
                                 if (self.plotted) {
-                                    let indices = Array.from(Array(series.length).keys());
+                                    let keys = Array(series.length).keys();
+                                    let indices = Array.from(keys);
                                     let y = {'y': [], 'x': []};
                                     for (let s of series) {
                                         y['y'].push(s.y);
                                         y['x'].push(s.x);
                                     }
-                                    window['Plotly'].extendTraces(id, y, indices);
+                                    window['Plotly'].extendTraces(id,
+                                        y,
+                                        indices);
+
                                 } else {
-                                    window['Plotly'].newPlot(id, series, {}, {showSendToCloud: true});
+                                    window['Plotly'].newPlot(id, series, {},
+                                        {showSendToCloud: true});
                                     self.plotted = true;
                                 }
                             }
@@ -126,10 +149,20 @@ export class ComputerComponent extends Paginator<Computer> implements AfterViewI
 
     docker_status(docker) {
         // @ts-ignore
-        if(Helpers.parse_time(docker.last_activity)>=new Date(new Date()-10000)){
+        if(Helpers.parse_time(docker.last_activity)>=new Date(
+            Date.now()-10000)){
             return 'circle-green';
         }
         return 'circle-red';
+    }
+
+    docker_status_tip(docker){
+        if(Helpers.parse_time(docker.last_activity)>=new Date(
+            Date.now()-10000)){
+            return 'online';
+        }
+
+        return 'offline';
     }
 
     long_date_format(time: string) {

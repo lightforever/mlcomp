@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {BaseService} from "../base.service";
 import {AppSettings} from "../app-settings";
 import {catchError} from "rxjs/operators";
-import {BaseResult, DagStopResult, Status, ToogleReportResult} from "../models";
+import {BaseResult, DagStopResult, ToogleReportResult} from "../models";
 
 @Injectable({
     providedIn: 'root'

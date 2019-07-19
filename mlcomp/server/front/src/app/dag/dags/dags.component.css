@@ -18,3 +18,34 @@ td, th {
 .checkbox-margin {
   margin: 0 10px;
 }
+
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+td{
+  text-align: center;
+}
+
+::ng-deep .mat-sort-header-container{
+  display:flex;
+  justify-content:center;
+  text-align: center;
+  margin-left: 12px !important;
+}
+
+.mat-header-cell{
+  text-align: center !important;
+}
+
+mat-icon{
+  cursor: pointer;
+}
+
+.checkbox-section {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+}

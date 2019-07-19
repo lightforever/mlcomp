@@ -4,10 +4,18 @@ export class AppSettings {
     }
 
     public static status_colors = {
-        'not_ran': 'gray', 'queued': 'lightblue', 'in_progress': 'lime',
-        'failed': '#e83217', 'stopped': '#cb88ea', 'skipped': 'orange', 'success': 'green'
+        'not_ran': 'gray',
+        'queued': 'lightblue',
+        'in_progress': 'lime',
+        'failed': '#e83217',
+        'stopped': '#cb88ea',
+        'skipped': 'orange',
+        'success': 'green'
     };
     public static log_colors = {
-        'debug': 'gray', 'info': 'lightblue', 'warning': 'lightyellow', 'error': 'red'
+        'debug': 'gray',
+        'info': 'lightblue',
+        'warning': 'lightyellow',
+        'error': 'red'
     };
 }

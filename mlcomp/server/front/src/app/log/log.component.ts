@@ -3,9 +3,6 @@ import {Paginator} from "../paginator";
 import {Log, LogFilter} from "../models";
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
-import {MatIconRegistry} from "@angular/material";
-import {DomSanitizer} from "@angular/platform-browser";
-import {MessageService} from "../message.service";
 import {LogService} from "./log.service";
 
 
@@ -15,7 +12,17 @@ import {LogService} from "./log.service";
     styleUrls: ['./log.component.css']
 })
 export class LogComponent extends Paginator<Log>{
-    displayed_columns: string[] = ['time',  'task', 'component', 'step', 'module', 'line', 'level', 'computer', 'message'];
+    displayed_columns: string[] = [
+        'time',
+        'task',
+        'component',
+        'step',
+        'module',
+        'line',
+        'level',
+        'computer',
+        'message'];
+
     dag: number;
     total: number;
     @Input() task: number;
@@ -38,9 +45,8 @@ export class LogComponent extends Paginator<Log>{
     constructor(
         protected service: LogService,
         protected location: Location,
-        private router: Router, private  route: ActivatedRoute,
-        iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-        private message_service: MessageService
+        private router: Router,
+        private  route: ActivatedRoute
     ) {
         super(service, location);
     }

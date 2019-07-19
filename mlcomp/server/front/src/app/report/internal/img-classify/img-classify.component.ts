@@ -23,7 +23,8 @@ export class ImgClassifyComponent extends Paginator<Img> {
     metric_diff_min: number = 0;
     metric_diff_max: number = 1;
 
-    constructor(protected service: ImgClassifyService, protected location: Location,
+    constructor(protected service: ImgClassifyService,
+                protected location: Location,
                 protected layout_service: LayoutService,
                 protected resource_service: DynamicresourceService) {
         super(service, location, false);
@@ -46,7 +47,8 @@ export class ImgClassifyComponent extends Paginator<Img> {
         let self = this;
         this.subscribe_data_changed();
         this.data_updated.subscribe(res => {
-            self.resource_service.load('plotly').then(() => {
+            self.resource_service.load('plotly').
+            then(() => {
                 self.plot_confusion(res.confusion, res.part, res.class_names);
             });
         });

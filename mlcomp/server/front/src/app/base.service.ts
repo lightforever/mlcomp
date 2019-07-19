@@ -19,15 +19,18 @@ export abstract class BaseService {
 
     get_paginator<T>(filter: any): Observable<PaginatorRes<T>> {
         let message = `${this.constructor.name}.get_paginator`;
-        return this.http.post<PaginatorRes<T>>(AppSettings.API_ENDPOINT + this.collection_part, filter).pipe(
+        let url = AppSettings.API_ENDPOINT + this.collection_part;
+        return this.http.post<PaginatorRes<T>>(url, filter).pipe(
             tap(_ => this.log(message)),
-            catchError(this.handleError<PaginatorRes<T>>(message, new PaginatorRes<T>()))
+            catchError(this.handleError<PaginatorRes<T>>(message,
+                new PaginatorRes<T>()))
         );
     }
 
     get_obj<T>(filter: any): Observable<T>{
         let message = `${this.constructor.name}.get_obj`;
-        return this.http.post<T>(AppSettings.API_ENDPOINT + this.single_part, filter).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part;
+        return this.http.post<T>(url, filter).pipe(
             tap(_ => this.log(message)),
             catchError(this.handleError<T>(message, null))
         );

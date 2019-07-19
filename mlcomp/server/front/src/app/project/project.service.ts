@@ -14,28 +14,32 @@ export class ProjectService extends BaseService {
 
     remove(id: number) {
         let message = `${this.constructor.name}.remove`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + this.single_part + '/remove', {'id': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/remove';
+        return this.http.post<DagStopResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove_imgs(id: number) {
         let message = `${this.constructor.name}.remove_imgs`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_imgs', {'project': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + 'remove_imgs';
+        return this.http.post<DagStopResult>(url, {'project': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove_files(id: number) {
         let message = `${this.constructor.name}.remove_files`;
-        return this.http.post<DagStopResult>(AppSettings.API_ENDPOINT + 'remove_files', {'project': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + 'remove_files';
+        return this.http.post<DagStopResult>(url, {'project': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     add(data: ProjectAddData) {
         let message = `${this.constructor.name}.add`;
-        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/add', {'name': data.name}).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
+        return this.http.post<BaseResult>(url, {'name': data.name}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

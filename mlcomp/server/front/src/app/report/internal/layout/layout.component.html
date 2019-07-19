@@ -1,8 +1,15 @@
 <div *ngIf="item.type=='root'" style="margin-top: 10px">
-    <app-layout [data]="data" [item]="child" *ngFor="let child of items_joined"></app-layout>
+    <app-layout
+            [data]="data"
+            [item]="child"
+            *ngFor="let child of items_joined">
+
+    </app-layout>
 </div>
 
-<mat-expansion-panel [expanded]="item.expanded!=null?item.expanded:true" *ngIf="item.type=='panel'">
+<mat-expansion-panel
+        [expanded]="item.expanded!=null?item.expanded:true"
+        *ngIf="item.type=='panel'">
     <mat-expansion-panel-header>
         <mat-panel-title>
             {{item.title}}
@@ -11,11 +18,21 @@
 
     <div *ngIf="items_joined.length>0">
         <div *ngIf="item.parent_cols">
-            <mat-grid-list cols="{{item.parent_cols}}" rowHeight="{{item.row_height}}px" *ngIf="!item.table">
+            <mat-grid-list
+                    cols="{{item.parent_cols}}"
+                    rowHeight="{{item.row_height}}px"
+                    *ngIf="!item.table">
 
                 <div *ngFor="let child of items_joined; index as i">
-                    <mat-grid-tile [colspan]="child.cols!=null?child.cols:1" [rowspan]="child.rows!=null?child.rows:1">
-                        <app-layout [item]="child" [data]="items_joined_data[i]"></app-layout>
+                    <mat-grid-tile
+                            [colspan]="child.cols!=null?child.cols:1"
+                            [rowspan]="child.rows!=null?child.rows:1">
+                        <app-layout
+                                [item]="child"
+                                [data]="items_joined_data[i]">
+
+                        </app-layout>
+
                     </mat-grid-tile>
                 </div>
 
@@ -24,13 +41,23 @@
         </div>
 
         <table *ngIf="item.table" style="width: 100%;height: 100%">
-            <td *ngFor="let child of items_joined; index as i" [style.width]="td_width(child)">
-                <app-layout [item]="child" [data]="items_joined_data[i]"></app-layout>
+            <td
+                    *ngFor="let child of items_joined; index as i"
+                    [style.width]="td_width(child)">
+                <app-layout
+                        [item]="child"
+                        [data]="items_joined_data[i]">
+
+                </app-layout>
             </td>
         </table>
 
         <div *ngIf="item.row_height==null&&!item.table">
-            <app-layout [item]="child" [data]="items_joined_data[i]" *ngFor="let child of items_joined; index as i"></app-layout>
+            <app-layout [item]="child"
+                        [data]="items_joined_data[i]"
+                        *ngFor="let child of items_joined; index as i">
+
+            </app-layout>
         </div>
     </div>
 

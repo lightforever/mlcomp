@@ -12,7 +12,10 @@
     <table mat-table [dataSource]="dataSource" matSort>
 
         <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Name</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Name
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 <a class="col-1-4" routerLink="/dags"
                    [queryParams]="{ project: element.id }">
@@ -22,14 +25,20 @@
         </ng-container>
 
         <ng-container matColumnDef="dag_count">
-            <th mat-header-cell *matHeaderCellDef> Dags</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Dags
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.dag_count}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="last_activity">
-            <th mat-header-cell *matHeaderCellDef> Last activity</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Last activity
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.last_activity| date:'medium'}}
             </td>
@@ -37,26 +46,42 @@
 
 
         <ng-container matColumnDef="img_size">
-            <th mat-header-cell *matHeaderCellDef> Image size</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Image size
+            </th>
+
             <td mat-cell *matCellDef="let element">
+                <mat-icon svgIcon="remove"
+                          matTooltip="Remove"
+                          (click)="remove_imgs(element)">
+
+                </mat-icon>
+
                 {{size(element.img_size)}}
-                <mat-icon svgIcon="remove" matTooltip="Remove"
-                          (click)="remove_imgs(element)"></mat-icon>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="file_size">
-            <th mat-header-cell *matHeaderCellDef> File size</th>
+            <th mat-header-cell *matHeaderCellDef>
+                File size
+            </th>
+
             <td mat-cell *matCellDef="let element">
-                {{size(element.file_size)}}
                 <mat-icon svgIcon="remove" matTooltip="Remove"
-                          (click)="remove_files(element)"></mat-icon>
+                          (click)="remove_files(element)">
+
+                </mat-icon>
+
+                {{size(element.file_size)}}
+
+
             </td>
         </ng-container>
 
         <ng-container matColumnDef="links">
             <th mat-header-cell *matHeaderCellDef
-                style="text-align: center; width: 18%;"> Links
+                style="text-align: center; width: 18%;">
+                Links
             </th>
             <td mat-cell *matCellDef="let element"
                 style="min-width: 120px">
@@ -69,6 +94,8 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 50, 100]" [length]="total"
-                   [pageSize]="15"></mat-paginator>
+    <mat-paginator [pageSizeOptions]="[15, 30, 50, 100]"
+                   [length]="total"
+                   [pageSize]="15">
+    </mat-paginator>
 </div>

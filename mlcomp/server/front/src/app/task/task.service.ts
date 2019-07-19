@@ -1,11 +1,9 @@
 import {Injectable} from '@angular/core';
 import {BaseService} from "../base.service";
 import {AppSettings} from "../app-settings";
-import {catchError, tap} from "rxjs/operators";
+import {catchError} from "rxjs/operators";
 import {
-    PaginatorRes,
     Status,
-    StepNode,
     StepNodeResult,
     ToogleReportResult
 } from "../models";

@@ -50,16 +50,45 @@ export class LayoutsComponent extends Paginator<Layout> {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.service.add(result).subscribe(_ => {
+                this.service.add(result).subscribe(res => {
                     this.change.emit();
+
+                    this.error = res.error;
+                });
+            }
+        });
+    }
+
+    edit_name() {
+        let name = this.selected.name;
+        const dialogRef = this.dialog.open(LayoutAddDialogComponent,
+            {
+                width: '400px', height: '200px',
+                data: {'name': name}
+            });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.edit(name, null, result.name).
+                subscribe(res => {
+                    this.change.emit();
+                    this.error = res.error;
                 });
 
             }
         });
     }
 
-    remove(element){
-
+    remove() {
+        this.service.remove(this.selected.name)
+            .subscribe(res => {
+                    if (res.success) {
+                        this.change.emit();
+                        this.selected = null;
+                    }
+                    this.error = res.error;
+                },
+            );
     }
 
     save() {
@@ -82,7 +111,7 @@ export class LayoutsComponent extends Paginator<Layout> {
             let start = event.target.selectionStart;
             this.selected.content = content.substring(0, start) +
                 "  " + content.substring(event.target.selectionEnd);
-            this.secetion_start = start+2;
+            this.secetion_start = start + 2;
         }
 
     }

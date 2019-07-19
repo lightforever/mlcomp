@@ -3,6 +3,18 @@
     Add
 </button>
 
+<button mat-raised-button style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="edit_name()">
+    Edit name
+</button>
+
+<button mat-raised-button style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="remove()">
+    Remove
+</button>
+
 <table style="width: 100%;">
     <td style="width: 30%" valign="top">
         <table mat-table [dataSource]="dataSource" matSort>
@@ -56,7 +68,8 @@
                         (keyup)="key_up($event)"
                         [(ngModel)]="selected.content">
 
-            </textarea>
+                </textarea>
+
             </mat-form-field>
 
             <button mat-raised-button (click)="save()">Save</button>

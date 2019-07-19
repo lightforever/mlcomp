@@ -1,14 +1,11 @@
 import {
-    Component,
     OnInit,
     ViewChild,
     EventEmitter,
-    Input,
-    ElementRef,
     OnDestroy
 } from '@angular/core';
 import {MatSort, MatTableDataSource, MatPaginator} from '@angular/material';
-import {Observable, of as observableOf, merge} from 'rxjs';
+import {of as observableOf, merge} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {map} from 'rxjs/operators';
 import {startWith} from 'rxjs/operators';

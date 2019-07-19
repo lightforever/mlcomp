@@ -1,5 +1,4 @@
 import {Component} from '@angular/core';
-import {DagFilter} from "../../../models";
 import {DagsComponent} from "../../dags/dags.component";
 
 @Component({

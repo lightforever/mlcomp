@@ -19,16 +19,25 @@ import {ProjectAddDialogComponent} from "./project-add-dialog";
 })
 export class ProjectComponent extends Paginator<Project> {
 
-    displayed_columns: string[] = ['name', 'dag_count', 'last_activity', 'img_size', 'file_size', 'links'];
+    displayed_columns: string[] = [
+        'name',
+        'dag_count',
+        'last_activity',
+        'img_size',
+        'file_size',
+        'links'];
     name: string;
 
-    constructor(protected service: ProjectService, protected location: Location,
-                iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
+    constructor(protected service: ProjectService,
+                protected location: Location,
+                iconRegistry: MatIconRegistry,
+                sanitizer: DomSanitizer,
                 public dialog: MatDialog
     ) {
         super(service, location);
         iconRegistry.addSvgIcon('remove',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/trash.svg'));
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/trash.svg'));
     }
 
     get_filter() {
@@ -47,7 +56,8 @@ export class ProjectComponent extends Paginator<Project> {
     remove(element: Project) {
         const dialogRef = this.dialog.open(DialogComponent, {
             width: '550px', height: '200px',
-            data: {'message': 'The all content will be deleted. Do you want to continue?'}
+            data: {'message': 'The all content will be deleted. ' +
+                    'Do you want to continue?'}
         });
 
         dialogRef.afterClosed().subscribe(result => {

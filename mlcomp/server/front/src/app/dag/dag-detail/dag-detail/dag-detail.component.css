@@ -20,7 +20,7 @@ mat-icon{
 ::ng-deep .mat-sort-header-container{
   display:flex;
   justify-content:center;
-  text-align: center;
+  text-align: center !important;
   margin-left: 12px !important;
 }
 

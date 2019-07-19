@@ -35,13 +35,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
         }
         for (let child of this.item.items) {
             if (child.type == 'series') {
-                let subchildren = SeriesComponent.create(child, this.data[child.source]);
+                let subchildren = SeriesComponent.create(child,
+                    this.data[child.source]);
+
                 for (let s of subchildren) {
                     this.items_joined.push(s[0]);
                     this.items_joined_data.push(s[1]);
                 }
             } else if (['img_classify', 'img'].indexOf(child.type) != -1) {
-                if(!(child.source in this.data)){
+                if (!(child.source in this.data)) {
                     continue
                 }
                 let i = 0;
@@ -70,7 +72,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     private subscribe_report_changed() {
         if (this.report_id != null) {
-            this.interval = setInterval(() => this.update(), 5000);
+            this.interval = setInterval(() =>
+                this.update(), 5000);
 
             this.service.data_updated.subscribe(res => {
                 this.update(true);
@@ -79,38 +82,50 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }
 
     private update(hard = false) {
-        this.service.get_obj<Report>(this.report_id).subscribe(data => {
-            if (this.item && !hard) {
-                if (JSON.stringify(this.item) != JSON.stringify(data.layout)) {
+        this.service.get_obj<Report>(this.report_id).subscribe(
+            data => {
+                if (this.item && !hard) {
+                    if (JSON.stringify(this.item) !=
+                        JSON.stringify(data.layout)
+                    ) {
+                        this.data = data.data;
+                        this.item = data.layout;
+                        this.form_items_joined();
+                    } else {
+                        for (let key in data.data) {
+                            // noinspection JSUnfilteredForInLoop
+                            if (JSON.stringify(this.data[key]) !=
+                                JSON.stringify(data.data[key])) {
+                                if (data.data[key].length !=
+                                    this.data[key].length
+                                ) {
+                                    this.data = data.data;
+                                    this.item = data.layout;
+                                    this.form_items_joined();
+                                    break;
+                                } else {
+                                    // noinspection JSUnfilteredForInLoop
+                                    let value = {
+                                        'key': key,
+                                        'data': data.data[key]
+                                    };
+                                    this.layout_service.
+                                    data_updated.
+                                    emit(value);
+                                    // noinspection JSUnfilteredForInLoop
+                                    this.data[key] = data.data[key];
+                                }
+
+                            }
+                        }
+                    }
+                } else {
                     this.data = data.data;
                     this.item = data.layout;
                     this.form_items_joined();
-                } else {
-                    for (let key in data.data) {
-                        // noinspection JSUnfilteredForInLoop
-                        if (JSON.stringify(this.data[key]) != JSON.stringify(data.data[key])) {
-                            if (data.data[key].length != this.data[key].length) {
-                                this.data = data.data;
-                                this.item = data.layout;
-                                this.form_items_joined();
-                                break;
-                            } else {
-                                // noinspection JSUnfilteredForInLoop
-                                this.layout_service.data_updated.emit({'key': key, 'data': data.data[key]});
-                                // noinspection JSUnfilteredForInLoop
-                                this.data[key] = data.data[key];
-                            }
-
-                        }
-                    }
                 }
-            } else {
-                this.data = data.data;
-                this.item = data.layout;
-                this.form_items_joined();
-            }
 
-        });
+            });
     }
 
     ngOnDestroy(): void {

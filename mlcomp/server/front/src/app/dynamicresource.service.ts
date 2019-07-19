@@ -35,7 +35,8 @@ export class DynamicresourceService {
 
     load(...resources: string[]) {
         const promises: any[] = [];
-        resources.forEach((resource) => promises.push(this.loadResource(resource)));
+        resources.forEach((resource) =>
+            promises.push(this.loadResource(resource)));
         return Promise.all(promises);
     }
 
@@ -43,8 +44,12 @@ export class DynamicresourceService {
         return new Promise((resolve, reject) => {
             if (!this.resources[name].loaded) {
                 //load resource
-                let resource = document.createElement(this.resources[name].type == 'js' ? 'script' : 'link');
-                if (this.resources[name].type == 'js') {
+                let type = this.resources[name].type;
+                let resource = document.createElement(type == 'js' ?
+                    'script' :
+                    'link');
+
+                if (type == 'js') {
                     resource.type = 'text/javascript';
                     resource.async = true;
                     resource.src = this.resources[name].src;
@@ -56,22 +61,39 @@ export class DynamicresourceService {
 
                 if (resource.readyState) {  //IE
                     resource.onreadystatechange = () => {
-                        if (resource.readyState === "loaded" || resource.readyState === "complete") {
+                        if (resource.readyState === "loaded" ||
+                            resource.readyState === "complete") {
                             resource.onreadystatechange = null;
                             this.resources[name].loaded = true;
-                            resolve({resource: name, loaded: true, status: 'Loaded'});
+                            resolve({
+                                resource: name,
+                                loaded: true,
+                                status: 'Loaded'
+                            });
                         }
                     };
                 } else {  //Others
                     resource.onload = () => {
                         this.resources[name].loaded = true;
-                        resolve({resource: name, loaded: true, status: 'Loaded'});
+                        resolve({
+                            resource: name,
+                            loaded: true,
+                            status: 'Loaded'
+                        });
                     };
                 }
-                resource.onerror = (error: any) => resolve({resource: name, loaded: false, status: 'Loaded'});
+                resource.onerror = (error: any) => resolve({
+                    resource: name,
+                    loaded: false,
+                    status: 'Loaded'
+                });
                 document.getElementsByTagName('head')[0].appendChild(resource);
             } else {
-                resolve({resource: name, loaded: true, status: 'Already Loaded'});
+                resolve({
+                    resource: name,
+                    loaded: true,
+                    status: 'Already Loaded'
+                });
             }
         });
     }

@@ -1,9 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Location} from "@angular/common";
-import {ActivatedRoute, Router} from "@angular/router";
-import {MatIconRegistry, MatTreeFlatDataSource, MatTreeFlattener} from "@angular/material";
-import {DomSanitizer} from "@angular/platform-browser";
-import {MessageService} from "../../../message.service";
+import {MatTreeFlatDataSource, MatTreeFlattener} from "@angular/material";
 import {StepNode, FlatNode} from "../../../models";
 import {FlatTreeControl} from "@angular/cdk/tree";
 import {AppSettings} from "../../../app-settings";

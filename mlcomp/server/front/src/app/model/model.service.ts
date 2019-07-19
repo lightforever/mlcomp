@@ -21,7 +21,8 @@ export class ModelService extends BaseService {
             'interface': data.interface.name,
             'interface_params': data.interface.params
         };
-        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/add', info).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
+        return this.http.post<BaseResult>(url, info).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
@@ -36,14 +37,16 @@ export class ModelService extends BaseService {
             'model_id': data.model_id,
             'interface_params': data.interface_params
         };
-        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/start', info).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
+        return this.http.post<BaseResult>(url, info).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove(id: number) {
          let message = `${this.constructor.name}.remove`;
-        return this.http.post<BaseResult>(AppSettings.API_ENDPOINT + this.single_part + '/remove', {'id': id}).pipe(
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/remove';
+        return this.http.post<BaseResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

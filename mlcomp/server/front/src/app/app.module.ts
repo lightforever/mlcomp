@@ -51,8 +51,14 @@ import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
         LayoutAddDialogComponent
     ],
     providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-        { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
+        { provide: HTTP_INTERCEPTORS,
+            useClass: JwtInterceptor,
+            multi: true
+        },
+        { provide: HTTP_INTERCEPTORS,
+            useClass: ErrorInterceptor,
+            multi: true
+        }
     ],
     bootstrap: [AppComponent]
 })

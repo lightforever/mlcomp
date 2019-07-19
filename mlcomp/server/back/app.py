@@ -202,13 +202,26 @@ def report_layout_add():
 def report_layout_edit():
     data = request_data()
 
-    yaml.load(data['content'])
-
     provider = ReportLayoutProvider()
     layout = provider.by_name(data['name'])
     layout.last_modified = now()
-    layout.content = data['content']
+    if 'content' in data and data['content'] is not None:
+        yaml.load(data['content'])
+        layout.content = data['content']
+    if 'new_name' in data and data['new_name'] is not None:
+        layout.name = data['new_name']
+
     provider.commit()
+
+
+@app.route('/api/layout/remove', methods=['POST'])
+@requires_auth
+@error_handler
+def report_layout_remove():
+    data = request_data()
+
+    provider = ReportLayoutProvider()
+    provider.remove(data['name'], key_column='name')
 
 
 @app.route('/api/model/add', methods=['POST'])

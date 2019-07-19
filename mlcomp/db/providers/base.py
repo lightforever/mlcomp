@@ -29,9 +29,9 @@ class BaseDataProvider:
     def serialize_datetime(self, value):
         return self.serializer.serialize_datetime(value)
 
-    def remove(self, id: int):
+    def remove(self, key_value, key_column: str = 'id'):
         self.query(self.model).\
-            filter(getattr(self.model, 'id') == id).\
+            filter(getattr(self.model, key_column) == key_value).\
             delete(synchronize_session=False)
         self.session.commit()
 

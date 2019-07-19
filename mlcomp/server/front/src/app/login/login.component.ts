@@ -50,7 +50,8 @@ export class LoginComponent implements OnInit {
 
         this.loading = true;
         let token = this.f.token.value;
-        this.http.post(AppSettings.API_ENDPOINT + "token", {'token': token}).subscribe(
+        this.http.post(AppSettings.API_ENDPOINT + "token",
+            {'token': token}).subscribe(
             data => {
                 localStorage.setItem('token', token);
                 this.invalid = false;

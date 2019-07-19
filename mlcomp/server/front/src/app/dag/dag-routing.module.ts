@@ -8,8 +8,12 @@ const routes: Routes = [
         path: '',
         component: DagComponent,
         children: [
-                {path: 'dag-detail/:id', loadChildren: './dag-detail/dag-detail.module#DagDetailModule'},
-                 {path: '', component: DagsComponent}
+            {
+                path: 'dag-detail/:id',
+                loadChildren:
+                    './dag-detail/dag-detail.module#DagDetailModule'
+            },
+            {path: '', component: DagsComponent}
         ]
     }
 ];

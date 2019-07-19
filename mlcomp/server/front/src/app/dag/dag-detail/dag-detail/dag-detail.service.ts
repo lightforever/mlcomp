@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import {Observable, of} from 'rxjs';
-import {catchError, map, tap} from 'rxjs/operators';
+import {Observable} from 'rxjs';
+import {catchError, tap} from 'rxjs/operators';
 import {AppSettings} from '../../../app-settings'
 import {CodeResult, Data, Graph} from "../../../models";
 import {BaseService} from "../../../base.service";
@@ -15,7 +15,8 @@ export class DagDetailService extends BaseService{
     return this.http.post<Data<string>>(`${this.url}config`, dag_id)
       .pipe(
         tap(_ => this.log('fetched config')),
-        catchError(this.handleError<Data<string>>('config', new Data<string>()))
+        catchError(this.handleError<Data<string>>('config',
+            new Data<string>()))
       );
   }
 
@@ -23,7 +24,8 @@ export class DagDetailService extends BaseService{
      return this.http.post<CodeResult>(`${this.url}code`, dag_id)
       .pipe(
         tap(_ => this.log('fetched code')),
-        catchError(this.handleError<CodeResult>('config', {'items': []}))
+        catchError(this.handleError<CodeResult>('config',
+            {'items': []}))
       );
   }
   get_graph(dag_id: number): Observable<Graph> {

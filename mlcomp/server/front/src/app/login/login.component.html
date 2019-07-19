@@ -4,7 +4,10 @@
         <label for="token">Token</label>
         <input type="text" formControlName="token" class="form-control"
                [ngClass]="{ 'is-invalid': submitted && f.token.errors }"/>
-        <div *ngIf="submitted && invalid" class="invalid-feedback" style="color:red">
+        <div
+                *ngIf="submitted && invalid"
+                class="invalid-feedback"
+                style="color:red">
             <div>Invalid token</div>
         </div>
     </div>

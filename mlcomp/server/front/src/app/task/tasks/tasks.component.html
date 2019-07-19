@@ -56,25 +56,38 @@
 
     <section class="checkbox-section">
         <mat-checkbox [(ngModel)]="not_ran" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Not ran
+                      (ngModelChange)="onchange()">
+            Not ran
         </mat-checkbox>
+
         <mat-checkbox [(ngModel)]="queued" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Queued
+                      (ngModelChange)="onchange()">
+            Queued
         </mat-checkbox>
+
         <mat-checkbox [(ngModel)]="in_progress" class="checkbox-margin"
-                      (ngModelChange)="onchange()">In progress
+                      (ngModelChange)="onchange()">
+            In progress
         </mat-checkbox>
+
         <mat-checkbox [(ngModel)]="failed" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Failed
+                      (ngModelChange)="onchange()">
+            Failed
         </mat-checkbox>
+
         <mat-checkbox [(ngModel)]="stopped" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Stopped
+                      (ngModelChange)="onchange()">
+            Stopped
         </mat-checkbox>
+
         <mat-checkbox [(ngModel)]="skipped" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Skipped
+                      (ngModelChange)="onchange()">
+            Skipped
         </mat-checkbox>
-        <mat-checkbox [(ngModel)]="finished" class="checkbox-margin"
-                      (ngModelChange)="onchange()">Finished
+
+        <mat-checkbox [(ngModel)]="success" class="checkbox-margin"
+                      (ngModelChange)="onchange()">
+            Success
         </mat-checkbox>
     </section>
 </div>
@@ -91,7 +104,10 @@
         </ng-container>
 
         <ng-container matColumnDef="dag">
-            <th mat-header-cell *matHeaderCellDef> Dag</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Dag
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 <a class="col-1-4"
                    routerLink="/dags/dag-detail/{{element.dag_rel.id}}/tasks">
@@ -165,7 +181,10 @@
         </ng-container>
 
         <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Status</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Status
+            </th>
+
             <td mat-cell *matCellDef="let element"
                 [style.color]="status_color(element.status)">
                 {{element.status}}
@@ -173,22 +192,30 @@
         </ng-container>
 
         <ng-container matColumnDef="executor">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Executor
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Executor
             </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.executor}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="computer">
-            <th mat-header-cell *matHeaderCellDef> Computer/assigned</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Computer/assigned
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.computer}}/{{element.computer_assigned}}
             </td>
         </ng-container>
 
         <ng-container matColumnDef="score">
-            <th mat-header-cell *matHeaderCellDef> Score</th>
+            <th mat-header-cell *matHeaderCellDef>
+                Score
+            </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.score|number:'.5'}}
             </td>
@@ -212,7 +239,8 @@
                         </text>
 
                         <circle [attr.stroke-width]="element.gpu>0?2:1"
-                                [attr.stroke]="element.gpu>0?'green':'gainsboro'"
+                                [attr.stroke]=
+                                        "element.gpu>0?'green':'gainsboro'"
                                 fill-opacity="0" r="12.5">
                         </circle>
 
@@ -258,8 +286,10 @@
         </ng-container>
 
         <ng-container matColumnDef="steps">
-            <th mat-header-cell *matHeaderCellDef style="width: 60px"> Steps
+            <th mat-header-cell *matHeaderCellDef style="width: 60px">
+                Steps
             </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.current_step}}
                 <span *ngIf="element.steps>0">
@@ -270,7 +300,8 @@
 
 
         <ng-container matColumnDef="links">
-            <th mat-header-cell *matHeaderCellDef style="width: 60px"> Links
+            <th mat-header-cell *matHeaderCellDef style="width: 60px">
+                Links
             </th>
             <td mat-cell *matCellDef="let element" style="min-width: 100px">
 
