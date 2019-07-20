@@ -17,6 +17,9 @@ class Computer(Base):
     port = sa.Column(sa.Integer)
     user = sa.Column(sa.String)
     last_synced = sa.Column(sa.DateTime)
+    last_online = sa.Column(sa.DateTime)
+    disk = sa.Column(sa.Integer)
+    syncing_computer = sa.Column(sa.String, ForeignKey('computer.name'))
 
 
 class ComputerUsage(Base):

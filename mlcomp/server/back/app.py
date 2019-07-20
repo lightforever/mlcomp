@@ -5,7 +5,6 @@ import json
 from collections import OrderedDict
 from functools import wraps
 
-import yaml
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 from sqlalchemy.exc import ProgrammingError
@@ -20,8 +19,8 @@ from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
-from mlcomp.utils.misc import to_snake
-from mlcomp.db.models import Model, Report
+from mlcomp.utils.misc import to_snake, yaml_dump, now, yaml_load
+from mlcomp.db.models import Model, Report, ReportLayout, Task
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -164,11 +163,12 @@ def report_add_end():
     data = request_data()
 
     provider = ReportProvider()
-    layout = ReportLayoutProvider().by_id(data['layout'])
+    layouts = ReportLayoutProvider().all()
+    layout = layouts[data['layout']]
     report = Report(
         name=data['name'],
         project=data['project'],
-        config=pickle.load(layout.config)
+        config=yaml_dump(layout)
     )
     provider.add(report)
 
@@ -206,7 +206,7 @@ def report_layout_edit():
     layout = provider.by_name(data['name'])
     layout.last_modified = now()
     if 'content' in data and data['content'] is not None:
-        yaml.load(data['content'])
+        yaml_load(data['content'])
         layout.content = data['content']
     if 'new_name' in data and data['new_name'] is not None:
         layout.name = data['new_name']

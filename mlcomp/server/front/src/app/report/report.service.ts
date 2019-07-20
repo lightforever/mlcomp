@@ -24,7 +24,7 @@ export class ReportService extends BaseService {
     add_end(data: ReportAddData) {
         let message = `${this.constructor.name}.add_end`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/add_end';
-        return this.http.post<BaseResult>(url, {'name': data.name}).pipe(
+        return this.http.post<BaseResult>(url, data).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

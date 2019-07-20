@@ -1,9 +1,8 @@
-import pickle
-
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import ReportLayout
 from mlcomp.db.providers import BaseDataProvider
-from mlcomp.utils.misc import now
+from mlcomp.db.report_info import ReportLayoutInfo
+from mlcomp.utils.misc import now, yaml_dump, yaml_load
 
 
 class ReportLayoutProvider(BaseDataProvider):
@@ -27,12 +26,24 @@ class ReportLayoutProvider(BaseDataProvider):
 
     def add_item(self, k: str, v: dict):
         self.add(
-            ReportLayout(content=pickle.dumps(v), name=k, last_modified=now()))
+            ReportLayout(content=yaml_dump(v),
+                         name=k,
+                         last_modified=now()))
 
     def all(self):
-        return {s.name: pickle.loads(s.content) for s in
-                self.query(ReportLayout).all()}
+        res = {s.name: yaml_load(s.content) for s in
+               self.query(ReportLayout).all()}
+
+        for k, v in res.items():
+            res[k] = ReportLayoutInfo.union_layouts(k, res)
+        return res
 
     def change(self, k: str, v: dict):
         self.query(ReportLayout).filter(ReportLayout.name == k).update(
-            {'last_modified': now(), 'content': pickle.dumps(v)})
+            {
+                'last_modified': now(),
+                'content': yaml_dump(v)
+            })
+
+
+__all__ = ['ReportLayoutProvider']

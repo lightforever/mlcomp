@@ -1,7 +1,7 @@
 from sqlalchemy import func, or_
 
 from mlcomp.db.core import PaginatorOptions
-from mlcomp.db.enums import TaskStatus, DagType
+from mlcomp.db.enums import TaskStatus
 from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, duration_format, now

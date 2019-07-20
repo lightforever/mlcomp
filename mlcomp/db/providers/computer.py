@@ -62,6 +62,7 @@ class ComputerProvider(BaseDataProvider):
 
             mean['cpu'].append(usage['mean']['cpu'])
             mean['memory'].append(usage['mean']['memory'])
+            mean['disk'].append(usage['mean']['disk'])
             for i, gpu in enumerate(usage['mean']['gpu']):
                 mean[f'gpu_{i}'].append(gpu['load'])
 
@@ -79,11 +80,14 @@ class ComputerProvider(BaseDataProvider):
         return self.query(Computer).filter(Computer.name == name).one()
 
     def computers_have_succeeded_tasks(self, min_time: datetime):
-        res = self.session.query(Task.computer_assigned). \
+        res = self.session.query(Task.computer_assigned.distinct()). \
             filter(Task.finished >= min_time). \
             filter(Task.status == TaskStatus.Success.value). \
             all()
-        return [r[0] for r in res]
+        res = [r[0] for r in res]
+        return self.session.query(Computer). \
+            filter(Computer.name.in_(res)). \
+            all()
 
     def dockers(self, computer: str, cpu: int):
         res = self.query(Docker, func.count(Task.computer).filter(

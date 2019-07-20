@@ -2,7 +2,6 @@ import base64
 import pickle
 from itertools import groupby
 from typing import List
-import json
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -13,6 +12,7 @@ from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, ReportImg
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
+from mlcomp.utils.misc import yaml_load
 
 
 class ReportProvider(BaseDataProvider):
@@ -158,7 +158,7 @@ class ReportProvider(BaseDataProvider):
         tasks = self.query(ReportTasks.task).filter(
             ReportTasks.report == id).all()
         tasks = [t[0] for t in tasks]
-        config = json.loads(report_obj.config)
+        config = yaml_load(report_obj.config)
         report = ReportLayoutInfo(config)
 
         series = self.query(ReportSeries). \

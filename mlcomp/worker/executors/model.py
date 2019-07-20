@@ -1,6 +1,5 @@
 import os
 from os.path import join
-import yaml
 import shutil
 from pathlib import Path
 
@@ -12,7 +11,7 @@ from mlcomp.utils.settings import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model, Dag
 from mlcomp.worker.executors.base import *
 from mlcomp.db.providers import TaskProvider, ModelProvider, DagProvider
-from mlcomp.utils.misc import now
+from mlcomp.utils.misc import now, yaml_dump, yaml_load
 from mlcomp.utils.config import Config
 
 
@@ -57,8 +56,7 @@ class ModelAdd(Executor):
             created=now(),
             name=self.name,
             project=dag.project,
-            interface_params=yaml.dump(self.interface_params,
-                                       default_flow_style=False)
+            interface_params=yaml_dump(self.interface_params)
         )
         provider = ModelProvider()
         provider.add(model)
@@ -67,10 +65,9 @@ class ModelAdd(Executor):
         torch.jit.save(traced, model_path_tmp)
         shutil.copy(model_path_tmp, model_path)
 
-        interface_params = yaml.load(model.interface_params)
+        interface_params = yaml_load(model.interface_params)
         interface_params['file'] = model_path
-        model.interface_params = yaml.dump(interface_params,
-                                           default_flow_style=False)
+        model.interface_params = yaml_dump(interface_params)
         provider.update()
 
     @classmethod

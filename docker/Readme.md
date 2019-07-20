@@ -1,6 +1,10 @@
+export $(cat docker/.env | xargs)
+
+PYTHONPATH=. python mlcomp/worker/__main__.py supervisor
+
 **Test it into docker**:
 
-Worker:
+Worker: 
 
 docker build -f docker/worker -t mlcomp-worker .
 

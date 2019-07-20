@@ -294,7 +294,7 @@ export interface ProjectAddData {
 export interface ReportAddData {
     name: string;
     project: number;
-    layout: number;
+    layout: string;
     projects: Project[];
     layouts: any[];
 }

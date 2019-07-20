@@ -2,27 +2,22 @@ import time
 import socket
 import json
 import os
-import traceback
 from multiprocessing import cpu_count
-from datetime import timedelta, datetime
 
 import click
 import GPUtil
 import psutil
 import numpy as np
 
-from mlcomp.db.core import Session
-from mlcomp.utils.settings import DATA_FOLDER
+from mlcomp.utils.settings import ROOT_FOLDER
 from mlcomp.db.providers import DockerProvider
-from mlcomp.db.enums import ComponentType
 from mlcomp.utils.schedule import start_schedule
-from mlcomp.utils.misc import dict_func, now
+from mlcomp.utils.misc import dict_func, now, disk
 from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
 from mlcomp.utils.misc import memory
-from mlcomp.utils.logging import logger
-
+from mlcomp.worker.sync import sync
 
 
 @click.group()
@@ -43,13 +38,13 @@ def worker_usage():
 
         usage = {
             'cpu': psutil.cpu_percent(),
+            'disk': disk(ROOT_FOLDER)[1],
             'memory': memory['percent'],
             'gpu': [{'memory': g.memoryUtil, 'load': g.load}
                     for g in GPUtil.getGPUs()]
         }
 
         provider.current_usage(computer, usage)
-        usage.update(usage)
         usages.append(usage)
         docker.last_activity = now()
         docker_provider.update()
@@ -58,33 +53,6 @@ def worker_usage():
 
     usage = json.dumps({'mean': dict_func(usages, np.mean)})
     provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
-
-
-class FileSync:
-    def sync_from(self, computer: Computer):
-        command = f'rsync -vhru -e "ssh -p {computer.port}" ' \
-            f'{computer.user}@{computer.ip}:{DATA_FOLDER} {DATA_FOLDER}'
-        os.system(command)
-
-    def sync(self):
-        try:
-            session = Session.create_session(key='FileSync')
-
-            provider = ComputerProvider(session)
-            computer = provider.by_name(socket.gethostname())
-            min_time = (computer.last_synced - timedelta(seconds=5)) \
-                if computer.last_synced else datetime.min
-            computers = provider.computers_have_succeeded_tasks(min_time)
-            computer.last_synced = datetime.now()
-
-            for c in computers:
-                if c.name != computer.name:
-                    self.sync_from(c)
-
-            provider.update()
-        except:
-            logger.error(traceback.format_exc(),
-                         ComponentType.WorkerSupervisor)
 
 
 @main.command()
@@ -112,10 +80,8 @@ def supervisor():
     _create_computer()
     _create_docker()
     if os.getenv('DOCKER_MAIN', 'True') == 'True':
-        file_sync = FileSync()
-
         start_schedule([(worker_usage, 0)])
-        start_schedule([(file_sync.sync, 1)])
+        start_schedule([(sync, 1)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [
@@ -142,13 +108,14 @@ def _create_docker():
 
 def _create_computer():
     tot_m, used_m, free_m = memory()
+    tot_d, used_d, free_d = disk(ROOT_FOLDER)
     computer = Computer(name=socket.gethostname(),
                         gpu=len(GPUtil.getGPUs()),
-                        cpu=cpu_count(),
-                        memory=tot_m,
+                        cpu=cpu_count(), memory=tot_m,
                         ip=os.getenv('IP'),
                         port=int(os.getenv('PORT')),
-                        user=os.getenv('USER')
+                        user=os.getenv('USER'),
+                        disk=tot_d
                         )
     ComputerProvider().create_or_update(computer, 'name')
 

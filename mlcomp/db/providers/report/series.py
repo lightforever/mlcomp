@@ -4,3 +4,6 @@ from mlcomp.db.providers import BaseDataProvider
 
 class ReportSeriesProvider(BaseDataProvider):
     model = ReportSeries
+
+
+__all__ = ['ReportSeriesProvider']

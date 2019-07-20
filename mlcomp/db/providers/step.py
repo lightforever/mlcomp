@@ -3,7 +3,7 @@ from sqlalchemy import func
 from mlcomp.db.enums import StepStatus, LogStatus
 from mlcomp.db.models import Step, Log
 from mlcomp.db.providers.base import *
-from mlcomp.utils.misc import to_snake
+from mlcomp.utils.misc import to_snake, now
 
 
 class StepProvider(BaseDataProvider):

@@ -2,10 +2,9 @@ from typing import List
 import os
 import json
 
-import yaml
-
 import albumentations as A
 
+from mlcomp.utils.misc import yaml_load
 from mlcomp.utils.settings import DATA_FOLDER
 
 
@@ -20,36 +19,7 @@ class Config(dict):
 
     @staticmethod
     def from_yaml(config: str):
-        return load_ordered_yaml(text=config)
-
-
-def load_ordered_yaml(file: str = None,
-                      text: str = None,
-                      Loader=yaml.Loader,
-                      object_pairs_hook=dict) -> Config:
-    """
-    Loads `yaml` config into OrderedDict
-    Args:
-        file: file with yaml
-        text: file's yaml content
-        Loader: base class for yaml Loader
-        object_pairs_hook: type of mapping
-    Returns:
-        dict: configuration
-    """
-
-    class OrderedLoader(Loader):
-        pass
-
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return object_pairs_hook(loader.construct_pairs(node))
-
-    OrderedLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
-    )
-    stream = open(file, "r") if file else text
-    return Config(yaml.load(stream, OrderedLoader))
+        return yaml_load(config)
 
 
 def parse_albu(configs: List[dict]):

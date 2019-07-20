@@ -20,10 +20,10 @@
 <mat-form-field style="width: 150px">
     <mat-label>Layout</mat-label>
     <mat-select
-            [(ngModel)]="data.project">
+            [(ngModel)]="data.layout">
         <mat-option
                 *ngFor="let layout of data.layouts"
-                [value]="layout.id">
+                [value]="layout.name">
             {{layout.name}}
         </mat-option>
     </mat-select>

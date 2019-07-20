@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from typing import List
 from copy import deepcopy
 
@@ -10,7 +9,7 @@ from mlcomp.db.report_info.series import ReportLayoutSeries
 
 
 class ReportLayoutInfo:
-    def __init__(self, data: OrderedDict):
+    def __init__(self, data: dict):
         assert 'items' in data, 'no items in report'
         assert 'metric' in data, 'no metric in report'
 
@@ -95,8 +94,13 @@ class ReportLayoutInfo:
         return ReportLayoutMetric.from_dict(self.data['metric'])
 
     @classmethod
-    def union_layouts(cls, name: str, layouts: dict, return_dict: bool = True):
+    def union_layouts(cls,
+                      name: str,
+                      layouts: dict,
+                      return_dict: bool = True
+                      ):
         assert name in layouts, f'Layout {name} is not in the collection'
+
         l = deepcopy(layouts[name])
         r = dict()
         if l.get('extend'):

@@ -21,7 +21,6 @@ export class ComputerComponent extends Paginator<Computer>
 
     @ViewChild('table') table;
     last_time = {};
-    plotted: boolean;
     public pressed: string = 'min15';
     intervals = {
         min15: 15 * 60,
@@ -34,7 +33,6 @@ export class ComputerComponent extends Paginator<Computer>
 
     pressed_changed(event) {
         this.last_time = {};
-        this.plotted = false;
         this.pressed = event.value;
         this.change.emit();
     };
@@ -71,7 +69,8 @@ export class ComputerComponent extends Paginator<Computer>
                         let rendered = true;
                         for (let computer of data) {
                             let id = 'usage_history_' + computer.name;
-                            if (!document.getElementById(id)) {
+                            let element = document.getElementById(id);
+                            if (!element) {
                                 rendered = false;
                                 break
                             }
@@ -103,7 +102,7 @@ export class ComputerComponent extends Paginator<Computer>
                             }
 
                             if (series.length > 0){
-                                if (self.plotted) {
+                                if (element.childNodes.length>0) {
                                     let keys = Array(series.length).keys();
                                     let indices = Array.from(keys);
                                     let y = {'y': [], 'x': []};
@@ -118,7 +117,6 @@ export class ComputerComponent extends Paginator<Computer>
                                 } else {
                                     window['Plotly'].newPlot(id, series, {},
                                         {showSendToCloud: true});
-                                    self.plotted = true;
                                 }
                             }
 

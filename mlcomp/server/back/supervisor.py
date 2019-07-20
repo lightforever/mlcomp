@@ -6,6 +6,7 @@ from sqlalchemy.exc import ProgrammingError
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import logger
+from mlcomp.utils.misc import now
 from mlcomp.worker.tasks import execute
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule

@@ -16,7 +16,7 @@ export class ReportAddDialogComponent {
             data.project = data.projects[0].id;
         }
         if(data.layouts.length>0){
-            data.layout = data.layouts[0].id;
+            data.layout = data.layouts[0].name;
         }
     }
 

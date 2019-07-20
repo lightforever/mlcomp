@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, ReportImg, Task
 from mlcomp.db.providers import BaseDataProvider
+from mlcomp.utils.misc import yaml_load
 
 
 class ReportImgProvider(BaseDataProvider):
@@ -72,7 +73,7 @@ class ReportImgProvider(BaseDataProvider):
 
         project = self.query(Project).join(Dag).join(Task).filter(
             Task.id == filter['task']).first()
-        class_names = pickle.loads(project.class_names)
+        class_names = yaml_load(project.class_names)
 
         res['total'] = query.count()
         if 'default' in class_names:
@@ -94,3 +95,6 @@ class ReportImgProvider(BaseDataProvider):
             })
 
         return res
+
+
+__all__ = ['ReportImgProvider']

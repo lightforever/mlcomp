@@ -4,11 +4,27 @@ from datetime import datetime
 import re
 from typing import List
 import os
+import yaml
+
+yaml.warnings({'YAMLLoadWarning': False})
 
 import numpy as np
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
+
+
+def yaml_load(text: str = None, file: str = None):
+    stream = text
+    if file is not None:
+        stream = open(file).read()
+    return yaml.load(stream, Loader=yaml.FullLoader) or {}
+
+
+def yaml_dump(data):
+    return yaml.dump(data,
+                     default_flow_style=False,
+                     sort_keys=False)
 
 
 def dict_func(objcts: List, func=np.mean):
@@ -115,6 +131,15 @@ def adapt_db_types(d: dict):
 
 def memory():
     return map(int, os.popen('free -t -m').readlines()[1].split()[1:4])
+
+
+def disk(folder: str):
+    filesystem, total, used, available, use, mounded_point \
+        = os.popen(f'df {folder}').readlines()[1].split()
+    total = int(int(total) / 10 ** 6)
+    available = int(int(available) / 10 ** 6)
+    use = int(use[:-1])
+    return total, use, available
 
 
 if __name__ == '__main__':

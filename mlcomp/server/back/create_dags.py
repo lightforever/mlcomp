@@ -1,7 +1,5 @@
 from collections import OrderedDict
 import os
-import yaml
-import json
 
 from sqlalchemy.orm import joinedload
 
@@ -9,6 +7,7 @@ from mlcomp.db.providers import *
 from mlcomp.db.enums import TaskType, DagType
 from mlcomp.db.models import *
 from mlcomp.utils.config import Config
+from mlcomp.utils.misc import yaml_dump, now, yaml_load
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
 
@@ -32,7 +31,7 @@ def dag_standard(config: dict,
     dag_provider = DagProvider()
 
     project = ProjectProvider().by_name(info['project']).id
-    default_config_text = yaml.dump(config, default_flow_style=False)
+    default_config_text = yaml_dump(config)
 
     dag_report_id = None
     if report_name:
@@ -40,7 +39,7 @@ def dag_standard(config: dict,
             raise Exception(f'Unknown report = {report_name}')
 
         report = Report(
-            config=json.dumps(layouts[report_name]),
+            config=yaml_dump(layouts[report_name]),
             name=info['name'],
             project=project)
         report_provider.add(report)
@@ -100,9 +99,9 @@ def dag_standard(config: dict,
 
                     report_config = layouts[report_name]
                     additional_info = {'report_config': report_config}
-                    task.additional_info = pickle.dumps(additional_info)
+                    task.additional_info = yaml_dump(additional_info)
                     provider.add(task)
-                    report = Report(config=json.dumps(report_config),
+                    report = Report(config=yaml_dump(report_config),
                                     name=task.name,
                                     project=project)
                     report_provider.add(report)
@@ -157,7 +156,7 @@ def dag_model_add(data: dict):
     task = task_provider.by_id(data['task'], options=joinedload(Task.dag_rel))
     project = ProjectProvider().by_id(task.dag_rel.project)
     interface_params = data.get('interface_params', '')
-    interface_params = yaml.load(interface_params) or {}
+    interface_params = yaml_load(interface_params)
     config = {
         'info': {
             'name': 'model_add',
@@ -189,7 +188,7 @@ def dag_model_start(data: dict):
     for k, v in pipe.items():
         if v.get('slot') != data['slot']:
             continue
-        params = yaml.load(data['interface_params'])
+        params = yaml_load(data['interface_params'])
         slot = {
             'interface': data['interface'],
             'interface_params': params,

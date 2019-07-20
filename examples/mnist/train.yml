@@ -1,7 +1,7 @@
 info:
   name: mnist_train
   project: examples
-  report: catalyst
+  report: classify
 executors:
   train:
     type: catalyst

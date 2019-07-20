@@ -2,7 +2,6 @@ import shutil
 import socket
 import traceback
 import sys
-import pickle
 from os.path import join
 
 from sqlalchemy.orm import joinedload
@@ -14,6 +13,7 @@ from mlcomp.db.providers import TaskProvider, \
     StepProvider, \
     DockerProvider
 from mlcomp.utils.logging import create_logger
+from mlcomp.utils.misc import yaml_load
 from mlcomp.worker.app import app
 from mlcomp.db.models import *
 from mlcomp.worker.storage import Storage
@@ -88,7 +88,7 @@ def execute_by_id(id: int, repeat_count=1):
         assert Executor.is_registered(executor_type), \
             f'Executor {executor_type} was not found'
 
-        additional_info = pickle.loads(task.additional_info) \
+        additional_info = yaml_load(task.additional_info) \
             if task.additional_info else dict()
         executor = Executor.from_config(task.executor, config, additional_info)
 

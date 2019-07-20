@@ -24,7 +24,9 @@ class F1Callback(BaseCallback):
         outputs = np.vstack(self.data['valid']['output'])
         img = self.info.plot(targets, outputs.argmax(1))
         content = {'img': img}
-        obj = ReportImg(group=self.info.name, epoch=state.epoch, task=self.task.id,
+        obj = ReportImg(group=self.info.name,
+                        epoch=state.epoch,
+                        task=self.task.id,
                         img=pickle.dumps(content),
                         project=self.dag.project,
                         dag=self.task.dag,
@@ -32,6 +34,8 @@ class F1Callback(BaseCallback):
                         )
 
         self.img_provider.add(obj)
-        self.img_provider.remove_lower(self.task.id, self.info.name, state.epoch)
+        self.img_provider.remove_lower(self.task.id,
+                                       self.info.name,
+                                       state.epoch)
 
         super(self.__class__, self).on_epoch_end(state)

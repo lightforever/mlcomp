@@ -14,7 +14,11 @@ computer = Table(
     Column('ip', String(100), nullable=False),
     Column('port', Integer, nullable=False),
     Column('user', String, nullable=False),
-    Column('last_synced', TIMESTAMP)
+    Column('last_synced', TIMESTAMP),
+    Column('last_online', TIMESTAMP),
+    Column('disk', Integer, nullable=False),
+    Column('syncing_computer', String(100))
+
 )
 
 computer_usage = Table(
@@ -84,7 +88,8 @@ project = Table(
     'project', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', String(180), nullable=False),
-    Column('class_names', LargeBinary, nullable=False)
+    Column('class_names', String(8000), nullable=False),
+    Column('ignore_folders', String(8000), nullable=False)
 )
 
 report = Table(
@@ -172,7 +177,7 @@ task = Table(
     Column('debug', Boolean, nullable=False, default=False),
     Column('pid', Integer),
     Column('worker_index', Integer),
-    Column('additional_info', LargeBinary),
+    Column('additional_info', String(16000)),
     Column('docker_assigned', String(100)),
     Column('type', Integer, nullable=False),
     Column('score', Float),
@@ -235,8 +240,13 @@ def upgrade(migrate_engine):
         docker.create()
         model.create()
 
-        ForeignKeyConstraint([computer_usage.c.computer], [computer.c.name],
+        ForeignKeyConstraint([computer_usage.c.computer],
+                             [computer.c.name],
                              ondelete='CASCADE').create()
+        ForeignKeyConstraint([computer.c.syncing_computer],
+                             [computer.c.name],
+                             ondelete='CASCADE').create()
+
         Index('computer_name_idx', computer.c.name).create()
 
         Index('computer_usage_time_idx', computer_usage.c.time.desc()).create()

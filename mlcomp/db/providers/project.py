@@ -1,17 +1,16 @@
-import pickle
-
 from sqlalchemy import func
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, Task
 from mlcomp.db.providers.base import *
+from mlcomp.utils.misc import yaml_dump
 
 
 class ProjectProvider(BaseDataProvider):
     model = Project
 
     def add(self, name: str, class_names: dict):
-        project = Project(name=name, class_names=pickle.dumps(class_names))
+        project = Project(name=name, class_names=yaml_dump(class_names))
         self.session.add(project)
 
     def get(self, filter: dict = None, options: PaginatorOptions = None):
