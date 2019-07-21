@@ -81,24 +81,28 @@ class StepWrap:
     def debug(self, message: str):
         self.logger.debug(message,
                           ComponentType.Worker,
+                          self.task.computer_assigned,
                           self.task.id,
                           self.step.id)
 
     def info(self, message: str):
         self.logger.info(message,
                          ComponentType.Worker,
+                         self.task.computer_assigned,
                          self.task.id,
                          self.step.id)
 
     def warning(self, message: str):
         self.logger.warning(message,
                             ComponentType.Worker,
+                            self.task.computer_assigned,
                             self.task.id,
                             self.step.id)
 
     def error(self, message: str):
         self.logger.error(message,
                           ComponentType.Worker,
+                          self.task.computer_assigned,
                           self.task.id,
                           self.step.id)
 

@@ -17,7 +17,7 @@ from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
 from mlcomp.utils.misc import memory
-from mlcomp.worker.sync import sync
+from mlcomp.worker.sync import FileSync
 
 
 @click.group()
@@ -80,8 +80,9 @@ def supervisor():
     _create_computer()
     _create_docker()
     if os.getenv('DOCKER_MAIN', 'True') == 'True':
+        syncer = FileSync()
         start_schedule([(worker_usage, 0)])
-        start_schedule([(sync, 1)])
+        start_schedule([(syncer.sync, 1)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [

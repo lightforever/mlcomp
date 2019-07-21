@@ -16,6 +16,7 @@ class Log(Base):
     module = sa.Column(sa.String)
     line = sa.Column(sa.Integer)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
+    computer = sa.Column(sa.String, ForeignKey('computer.name'))
 
 
 __all__ = ['Log']

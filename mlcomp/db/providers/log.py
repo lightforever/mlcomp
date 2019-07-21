@@ -9,12 +9,9 @@ class LogProvider(BaseDataProvider):
     model = Log
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Log, Step, Task, Computer). \
+        query = self.query(Log, Step, Task). \
             join(Step, Step.id == Log.step, isouter=True). \
-            join(Task, Task.id == Log.task, isouter=True). \
-            join(Computer,
-                 Computer.name == Task.computer_assigned,
-                 isouter=True)
+            join(Task, Task.id == Log.task, isouter=True)
 
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
@@ -41,7 +38,7 @@ class LogProvider(BaseDataProvider):
 
         total = query.count()
         data = []
-        for log, step, task, computer in self.paginator(query, options):
+        for log, step, task in self.paginator(query, options):
             item = {
                 'id': log.id,
                 'message': log.message.split('\n'),
@@ -50,7 +47,7 @@ class LogProvider(BaseDataProvider):
                 'time': self.serializer.serialize_datetime(log.time),
                 'level': log_name(log.level),
                 'component': to_snake(ComponentType(log.component).name),
-                'computer': self.to_dict(computer) if computer else None,
+                'computer': log.computer,
                 'step': self.to_dict(step) if step else None,
                 'task': self.to_dict(task, rules=('-additional_info',))
                     if task else None

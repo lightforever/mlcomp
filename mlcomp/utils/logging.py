@@ -64,18 +64,19 @@ class DbHandler(logging.Handler):
 
             assert 1 <= len(record.args), \
                 'Args weer not been provided for logging'
-            assert len(record.args) <= 3, 'Too many args for logging'
+            assert len(record.args) <= 4, 'Too many args for logging'
 
             step = None
             task = None
 
             if len(record.args) == 1:
-                component =\
-                    record.args[0]
+                component = record.args[0]
             elif len(record.args) == 2:
-                component, task = record.args
+                component, computer = record.args
+            elif len(record.args) == 3:
+                component, computer, task = record.args
             else:
-                component, task, step = record.args
+                component, computer, task, step = record.args
 
             if not isinstance(component, int):
                 component = component.value
@@ -91,7 +92,8 @@ class DbHandler(logging.Handler):
                       component=component,
                       line=record.lineno,
                       module=module,
-                      task=task
+                      task=task,
+                      computer = computer
                       )
             self.provider.add(log)
         except Exception:

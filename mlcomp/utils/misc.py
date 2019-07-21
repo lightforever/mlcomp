@@ -18,7 +18,10 @@ def yaml_load(text: str = None, file: str = None):
     stream = text
     if file is not None:
         stream = open(file).read()
-    return yaml.load(stream, Loader=yaml.FullLoader) or {}
+    res = yaml.load(stream, Loader=yaml.FullLoader)
+    if res is None:
+        return {}
+    return res
 
 
 def yaml_dump(data):

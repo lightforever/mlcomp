@@ -142,7 +142,24 @@ def project_add():
     data = request_data()
 
     provider = ProjectProvider()
-    res = provider.add(data['name'], dict())
+    res = provider.add_project(data['name'],
+                               yaml_load(data['class_names']),
+                               yaml_load(data['ignore_folders'])
+                               )
+    return res
+
+
+@app.route('/api/project/edit', methods=['POST'])
+@requires_auth
+@error_handler
+def project_edit():
+    data = request_data()
+
+    provider = ProjectProvider()
+    res = provider.edit_project(data['name'],
+                               yaml_load(data['class_names']),
+                               yaml_load(data['ignore_folders'])
+                               )
     return res
 
 
@@ -534,13 +551,13 @@ def shutdown():
 
 
 @app.errorhandler(Exception)
-def all_exception_handler(error):
-    if type(error) == ProgrammingError:
+def all_exception_handler(e):
+    if type(e) == ProgrammingError:
         Session.cleanup()
 
     logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
                  ComponentType.API)
-    return str(error), 500
+    return str(e), 500
 
 
 def start_server():

@@ -20,6 +20,8 @@ class Task(Base):
     executor = sa.Column(sa.String)
     status = sa.Column(sa.Integer, default=TaskStatus.NotRan.value)
     computer_assigned = sa.Column(sa.String, ForeignKey('computer.name'))
+    computer_assigned_rel = relationship('Computer', lazy='noload')
+
     memory = sa.Column(sa.Float, default=0.1)
     steps = sa.Column(sa.Integer, default=1)
     current_step = sa.Column(sa.Integer)
@@ -29,7 +31,7 @@ class Task(Base):
     debug = sa.Column(sa.Boolean, default=False)
     pid = sa.Column(sa.Integer)
     worker_index = sa.Column(sa.Integer)
-    additional_info = deferred(sa.Column(sa.LargeBinary))
+    additional_info = deferred(sa.Column(sa.String))
     docker_assigned = sa.Column(sa.String)
     type = sa.Column(sa.Integer)
     score = sa.Column(sa.Float)

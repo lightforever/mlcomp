@@ -5,7 +5,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
 from mlcomp.worker.tasks import execute
 from mlcomp.db.providers import *
@@ -16,6 +16,7 @@ def supervisor():
     provider = TaskProvider()
     computer_provider = ComputerProvider()
     docker_provider = DockerProvider()
+    logger = create_logger()
     try:
         queues = [f'{d.computer}_{d.name}'
                   for d in docker_provider.all()
@@ -74,10 +75,10 @@ def supervisor():
                 break
 
     except Exception as error:
-        logger.error(traceback.format_exc(), ComponentType.Supervisor)
-
         if type(error) == ProgrammingError:
             Session.cleanup()
+
+        logger.error(traceback.format_exc(), ComponentType.Supervisor)
 
 
 def register_supervisor():

@@ -39,7 +39,15 @@ export class ProjectService extends BaseService {
     add(data: ProjectAddData) {
         let message = `${this.constructor.name}.add`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
-        return this.http.post<BaseResult>(url, {'name': data.name}).pipe(
+        return this.http.post<BaseResult>(url, data).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    edit(data: ProjectAddData) {
+        let message = `${this.constructor.name}.edit`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/edit';
+        return this.http.post<BaseResult>(url, data).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

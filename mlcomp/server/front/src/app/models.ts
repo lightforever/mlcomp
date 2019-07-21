@@ -82,6 +82,8 @@ export class Computer {
     memory: number;
     usage: Usage;
     dockers: any[];
+    sync_status: string;
+    sync_date: Date;
 }
 
 export class Step {
@@ -289,6 +291,8 @@ export class ModelFilter {
 
 export interface ProjectAddData {
     name: string;
+    class_names: string;
+    ignore_folders: string;
 }
 
 export interface ReportAddData {

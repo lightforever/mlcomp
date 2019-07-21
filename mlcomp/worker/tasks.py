@@ -4,9 +4,11 @@ import traceback
 import sys
 from os.path import join
 
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 
+from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.db.providers import TaskProvider, \
     DagLibraryProvider, \
@@ -31,6 +33,7 @@ def execute_by_id(id: int, repeat_count=1):
     task = provider.by_id(id, joinedload(Task.dag_rel))
     dag = task.dag_rel
     executor = None
+    hostname = socket.gethostname()
     try:
         assert dag is not None, 'You must fetch task with dag_rel'
 
@@ -41,7 +44,6 @@ def execute_by_id(id: int, repeat_count=1):
                            ComponentType.Worker)
             return
 
-        hostname = socket.gethostname()
         docker_img = os.getenv('DOCKER_IMG', 'default')
         worker_index = int(os.getenv("WORKER_INDEX", -1))
 
@@ -53,7 +55,11 @@ def execute_by_id(id: int, repeat_count=1):
                 step = step_provider.last_for_task(t.id)
                 msg = f'Task Id = {t.id} was in InProgress state ' \
                     f'when another tasks arrived to the same worker'
-                logger.error(msg, ComponentType.Worker, step)
+                logger.error(msg,
+                             ComponentType.Worker,
+                             t.coputer_assigned,
+                             t.id,
+                             step)
                 provider.change_status(t, TaskStatus.Failed)
 
         task.computer_assigned = hostname
@@ -96,8 +102,15 @@ def execute_by_id(id: int, repeat_count=1):
 
         provider.change_status(task, TaskStatus.Success)
     except Exception as e:
+        if type(e) == ProgrammingError:
+            Session.cleanup()
+
         step = executor.step.id if (executor and executor.step) else None
-        logger.error(traceback.format_exc(), ComponentType.Worker, id, step)
+        logger.error(traceback.format_exc(),
+                     ComponentType.Worker,
+                     hostname,
+                     id,
+                     step)
         provider.change_status(task, TaskStatus.Failed)
         raise e
     finally:
@@ -162,7 +175,9 @@ def stop(task: Task):
 
     try:
         app.control.revoke(task.celery_id, terminate=True)
-    except Exception:
+    except Exception as e:
+        if type(e) == ProgrammingError:
+            Session.cleanup()
         logger.error(traceback.format_exc(), ComponentType.API)
     finally:
         if task.pid:

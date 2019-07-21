@@ -31,6 +31,21 @@ class ComputerProvider(BaseDataProvider):
                 'memory': 0,
                 'gpu': [{'memory': 0, 'load': 0} for i in range(item['gpu'])]
             }
+            sync_status = 'Not synced'
+            sync_date = None
+            if c.last_synced:
+                sync_date = self.serialize_datetime_long(c.last_synced)
+                sync_status = f'Last synced'
+
+            if c.syncing_computer:
+                sync_status = f'Syncing with {c.syncing_computer}'
+                if c.last_synced:
+                    sync_status += f' from '
+                sync_date = self.serialize_datetime_long(c.last_synced)
+
+            item['sync_status'] = sync_status
+            item['sync_date'] = sync_date
+
             item['usage'] = json.loads(item['usage']) \
                 if item['usage'] else default_usage
             item['memory'] = int(item['memory'] / 1000)

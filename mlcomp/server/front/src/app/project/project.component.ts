@@ -27,6 +27,7 @@ export class ProjectComponent extends Paginator<Project> {
         'file_size',
         'links'];
     name: string;
+    selected: Project;
 
     constructor(protected service: ProjectService,
                 protected location: Location,
@@ -88,13 +89,30 @@ export class ProjectComponent extends Paginator<Project> {
 
     add() {
         const dialogRef = this.dialog.open(ProjectAddDialogComponent, {
-            width: '600px', height: '300px',
+            width: '600px', height: '500px',
             data: {'name': ''}
         });
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.service.add(result).subscribe(_ => {
+                    this.change.emit();
+                });
+
+            }
+        });
+    }
+
+
+    edit() {
+        const dialogRef = this.dialog.open(ProjectAddDialogComponent, {
+            width: '600px', height: '500px',
+            data: this.selected
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.edit(result).subscribe(_ => {
                     this.change.emit();
                 });
 

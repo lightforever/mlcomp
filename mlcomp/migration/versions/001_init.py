@@ -81,7 +81,8 @@ log = Table(
     Column('component', Integer, nullable=False),
     Column('module', String(200), nullable=False),
     Column('line', Integer, nullable=False),
-    Column('task', Integer)
+    Column('task', Integer),
+    Column('computer', String(100))
 )
 
 project = Table(
@@ -282,6 +283,8 @@ def upgrade(migrate_engine):
         ForeignKeyConstraint([log.c.task], [task.c.id],
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([log.c.step], [step.c.id],
+                             ondelete='CASCADE').create()
+        ForeignKeyConstraint([log.c.computer], [computer.c.name],
                              ondelete='CASCADE').create()
 
         Index('log_step_idx', log.c.step.desc()).create()

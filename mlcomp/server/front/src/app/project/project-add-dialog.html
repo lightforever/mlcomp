@@ -4,6 +4,31 @@
     <input matInput [(ngModel)]="data.name">
   </mat-form-field>
 </div>
+
+<div mat-dialog-content>
+  <mat-form-field style="width: 450px">
+    <mat-label>Class names</mat-label>
+      <textarea
+              matInput
+              [(ngModel)]="data.class_names"
+              style="height:120px">
+
+      </textarea>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field style="width: 450px">
+    <mat-label>Ignore folders</mat-label>
+      <textarea
+              matInput
+              [(ngModel)]="data.ignore_folders"
+              style="height:120px">
+
+      </textarea>
+  </mat-form-field>
+</div>
+
 <div mat-dialog-actions>
   <button mat-button (click)="onNoClick()">Cancel</button>
   <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>

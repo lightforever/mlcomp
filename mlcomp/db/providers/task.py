@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from sqlalchemy.orm import joinedload
@@ -130,6 +131,21 @@ class TaskProvider(BaseDataProvider):
                 'dags_model': dags_model_dict
                 }
 
+    def last_tasks(self,
+                   min_time: datetime,
+                   status: int,
+                   joined_load=None
+                   ):
+        res = self.query(Task).filter(
+            Task.finished >= min_time).\
+            filter(Task.status == status)
+
+        if joined_load is not None:
+            for n in joined_load:
+                res = res.options(joinedload(n))
+
+        return res.all()
+
     def add_dependency(self, task_id: int, depend_id: int) -> None:
         self.add(TaskDependence(task_id=task_id, depend_id=depend_id))
 
@@ -150,7 +166,8 @@ class TaskProvider(BaseDataProvider):
         task.status = status.value
         self.update()
 
-    def by_status(self, status: TaskStatus, docker_img: str = None,
+    def by_status(self, status: TaskStatus,
+                  docker_img: str = None,
                   worker_index: int = None):
         query = self.query(Task).filter(Task.status == status.value). \
             options(joinedload(Task.dag_rel))

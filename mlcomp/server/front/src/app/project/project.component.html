@@ -1,6 +1,14 @@
-<button mat-raised-button style="margin-top: 15px"
+<button mat-raised-button
+        style="margin-top: 15px"
         (click)="add()">
     Add
+</button>
+
+<button mat-raised-button
+        style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="edit()">
+    Edit
 </button>
 
 <mat-form-field>
@@ -91,7 +99,11 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+        <tr mat-row
+            *matRowDef="let row; columns: displayed_columns;"
+            (click)="selected=row"
+            [style.background]="selected==row ? 'lightblue' : ''"
+        ></tr>
     </table>
 
     <mat-paginator [pageSizeOptions]="[15, 30, 50, 100]"

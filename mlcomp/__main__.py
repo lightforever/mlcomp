@@ -1,3 +1,5 @@
+from os.path import join
+
 import click
 import os
 import socket
@@ -10,7 +12,7 @@ from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import *
 from multiprocessing import cpu_count
 
-from mlcomp.utils.settings import ROOT_FOLDER
+from mlcomp.utils.settings import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
 from mlcomp.worker.sync import sync_directed
 from mlcomp.worker.tasks import execute_by_id
 from mlcomp.utils.misc import memory, yaml_load, disk
@@ -75,7 +77,10 @@ def execute(config: str, debug: bool):
         logger.error(
             f'Task Id = {t.id} was in InProgress state '
             f'when another tasks arrived to the same worker',
-            ComponentType.Worker, step)
+            ComponentType.Worker,
+            t.coputer_assigned,
+            t.id,
+            step)
         provider.change_status(t, TaskStatus.Failed)
 
     # Create dag
@@ -103,16 +108,39 @@ def execute(config: str, debug: bool):
 
 @main.command()
 @click.option('--computer', help='sync computer with all the others')
-def sync(computer: str):
+@click.option('--only_from',
+              is_flag=True,
+              help='only copy files from the computer to all the others')
+@click.option('--only_to',
+              is_flag=True,
+              help='only copy files from all the others to the computer')
+def sync(computer: str, only_from: bool, only_to: bool):
     computer = computer or socket.gethostname()
     provider = ComputerProvider()
+    projects = ProjectProvider().all_last_activity()
     computer = provider.by_name(computer)
     computers = provider.all()
+    folders_excluded = []
+    for p in projects:
+        if computer.last_synced is not None and \
+                (p.last_activity is None or
+                 p.last_activity < computer.last_synced):
+            continue
+
+        ignore = yaml_load(p.ignore_folders)
+        excluded = []
+        for f in ignore:
+            excluded.append(str(f))
+
+        folders_excluded.append([join(DATA_FOLDER, p.name), excluded])
+        folders_excluded.append([join(MODEL_FOLDER, p.name), []])
 
     for c in computers:
         if c.name != computer.name:
-            sync_directed(computer, c)
-            sync_directed(c, computer)
+            if not only_to:
+                sync_directed(computer, c, folders_excluded)
+            if not only_from:
+                sync_directed(c, computer, folders_excluded)
 
 
 if __name__ == '__main__':

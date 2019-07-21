@@ -38,6 +38,7 @@ export class LogComponent extends Paginator<Log>{
     private api: boolean = true;
     private supervisor: boolean = true;
     private worker: boolean = true;
+    private worker_supervisor: boolean = true;
 
     private task_name: string = '';
     private step_name: string = '';
@@ -88,6 +89,10 @@ export class LogComponent extends Paginator<Log>{
         }
         if (this.worker) {
             components.push(2);
+        }
+
+        if(this.worker_supervisor){
+            components.push(3);
         }
 
         return components;
