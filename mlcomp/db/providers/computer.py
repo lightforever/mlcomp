@@ -38,10 +38,12 @@ class ComputerProvider(BaseDataProvider):
                 sync_status = f'Last synced'
 
             if c.syncing_computer:
-                sync_status = f'Syncing with {c.syncing_computer}'
-                if c.last_synced:
-                    sync_status += f' from '
-                sync_date = self.serialize_datetime_long(c.last_synced)
+                if c.last_synced is None or \
+                        (now()-c.last_synced).total_seconds()>=5:
+                    sync_status = f'Syncing with {c.syncing_computer}'
+                    if c.last_synced:
+                        sync_status += f' from '
+                    sync_date = self.serialize_datetime_long(c.last_synced)
 
             item['sync_status'] = sync_status
             item['sync_date'] = sync_date

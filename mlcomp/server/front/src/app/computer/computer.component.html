@@ -5,7 +5,8 @@
             <th mat-header-cell *matHeaderCellDef class="name">
                 Current stats
             </th>
-            <td mat-cell *matCellDef="let element" class="name" style="vertical-align: top">
+            <td mat-cell *matCellDef="let element" class="name"
+                style="vertical-align: top">
                 <mat-grid-list rowHeight="50px" cols="8">
                     <mat-grid-tile
                             [colspan]="1"
@@ -25,6 +26,8 @@
                             <div class="flex-wrapper">
                                 <div class="single-chart">
                                     <svg
+                                            [matTooltip]=
+                                                    "element.usage.cpu+'%'"
                                             viewBox="0 0 36 36"
                                             [attr.class]="'circular-chart '+
                                             color(element.usage.cpu)">
@@ -68,6 +71,8 @@
                             <div class="flex-wrapper">
                                 <div class="single-chart">
                                     <svg
+                                            [matTooltip]=
+                                                    "element.usage.memory+'%'"
                                             viewBox="0 0 36 36"
                                             [attr.class]="'circular-chart '+
                                             color(element.usage.memory)">
@@ -107,6 +112,8 @@
                             <div class="flex-wrapper">
                                 <div class="single-chart">
                                     <svg
+                                            [matTooltip]=
+                                                    "element.usage.disk+'%'"
                                             viewBox="0 0 36 36"
                                             [attr.class]="'circular-chart '+
                                             color(element.usage.disk)">
@@ -164,7 +171,7 @@
                                     </text>
                                 </svg>
                             </div>
-                            <div class="single-chart" matTooltip="memory" >
+                            <div class="single-chart" matTooltip="memory">
                                 <svg viewBox="0 0 36 36"
                                      [attr.class]="'circular-chart '+
                                      color(gpu.memory)">
@@ -198,11 +205,12 @@
                 <table>
                     <th></th>
                     <th></th>
-                    <th  style="width: 70px;min-width: 70px"></th>
-                    <th  style="width: 70px;min-width: 70px"></th>
+                    <th style="width: 70px;min-width: 70px"></th>
+                    <th style="width: 70px;min-width: 70px"></th>
                     <tr *ngFor="let docker of element.dockers">
                         <td>
-                            <span style="vertical-align: middle">{{docker.name}} &nbsp;</span>
+                            <span style="vertical-align: middle">{{docker.name}}
+                                &nbsp;</span>
                             <span
                                     [matTooltip]="docker_status_tip(docker)"
                                     [className]="docker_status(docker)">
@@ -211,7 +219,8 @@
                         </td>
                         <td>{{long_date_format(docker.last_activity)}}</td>
                         <td style="width: 70px;min-width: 70px">
-                            <span style="vertical-align: middle">{{docker.in_progress}} &nbsp;</span>
+                            <span style="vertical-align: middle">{{docker.in_progress}}
+                                &nbsp;</span>
                             <span
                                     matTooltip="in_progress"
                                     [className]="'circle-green'">
@@ -219,7 +228,8 @@
                             </span>
                         </td>
                         <td style="width: 70px;min-width: 70px">
-                            <span style="vertical-align: middle">{{docker.free}} &nbsp;</span>
+                            <span style="vertical-align: middle">{{docker.free}}
+                                &nbsp;</span>
                             <span
                                     matTooltip="free"
                                     [className]="'circle-gray'">

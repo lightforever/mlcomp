@@ -34,6 +34,10 @@ export class ComputerComponent extends Paginator<Computer>
     pressed_changed(event) {
         this.last_time = {};
         this.pressed = event.value;
+        for(let c of this.dataSource.data){
+            let id = 'usage_history_' + c.name;
+            window['Plotly'].purge(id);
+        }
         this.change.emit();
     };
 
@@ -88,7 +92,9 @@ export class ComputerComponent extends Paginator<Computer>
                                     x: x,
                                     y: item.value,
                                     type: 'scatter',
-                                    name: item.name
+                                    name: item.name,
+                                    visible: item.name=='disk'?
+                                        'legendonly': true
                                 });
 
                             }
