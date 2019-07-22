@@ -2,7 +2,8 @@ from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import ReportLayout
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutInfo
-from mlcomp.utils.misc import now, yaml_dump, yaml_load
+from mlcomp.utils.misc import now
+from mlcomp.utils.io import yaml_load, yaml_dump
 
 
 class ReportLayoutProvider(BaseDataProvider):

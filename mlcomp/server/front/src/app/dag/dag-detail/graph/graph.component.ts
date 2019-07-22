@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnDestroy, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnDestroy} from '@angular/core';
 import {MessageService} from "../../../message.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {DagDetailService} from "../dag-detail/dag-detail.service";
@@ -16,7 +16,8 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
     interval: number;
     data;
 
-    constructor(private message_service: MessageService, private route: ActivatedRoute,
+    constructor(private message_service: MessageService,
+                private route: ActivatedRoute,
                 private service: DagDetailService,
                 private resource_service: DynamicresourceService,
                 private router: Router
@@ -25,16 +26,20 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit() {
         this.load_network();
-        this.interval = setInterval(() => this.load_network(), 3000);
+        this.interval = setInterval(() =>
+            this.load_network(), 3000);
     }
 
     private load_network() {
         let self = this;
-        this.resource_service.load('vis.min.js', 'vis.min.css').then(res => {
+        this.resource_service.load('vis.min.js', 'vis.min.css').
+        then(res => {
             this.service.get_graph(this.dag).subscribe(res => {
-                res.nodes.forEach(obj => obj.color = AppSettings.status_colors[obj.status]);
-                // res.nodes.forEach(obj => obj.color = 'green');
-                res.edges.forEach(obj => obj.color = AppSettings.status_colors[obj.status]);
+                res.nodes.forEach(obj =>
+                    obj.color = AppSettings.status_colors[obj.status]);
+
+                res.edges.forEach(obj =>
+                    obj.color = AppSettings.status_colors[obj.status]);
 
                 let vis = window['vis'];
                 let nodes = new vis.DataSet(res.nodes);
@@ -64,11 +69,17 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
                         }
                     };
 
-                    let network = new vis.Network(container, this.data, options);
+                    let network = new vis.Network(container,
+                        this.data,
+                        options);
+
                     network.on('doubleClick', function (properties) {
                         var ids = properties.nodes;
                         var clickedNodes = nodes.get(ids);
-                        self.router.navigate(['/tasks/task-detail/' + clickedNodes[0].id + '/logs']);
+                        self.router.navigate(
+                            ['/tasks/task-detail/' +
+                            clickedNodes[0].id +
+                            '/logs']);
                     });
                     return;
                 }

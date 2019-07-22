@@ -14,8 +14,7 @@ export class DagService extends BaseService {
     stop(id: number) {
         let message = `${this.constructor.name}.stop`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/stop';
-        return this.http.post<DagStopResult>(url, {'id': id}).
-        pipe(
+        return this.http.post<DagStopResult>(url, {'id': id}).pipe(
             catchError(this.handleError<DagStopResult>(message,
                 new DagStopResult()))
         );
@@ -40,8 +39,7 @@ export class DagService extends BaseService {
     remove(id: number) {
         let message = `${this.constructor.name}.remove`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/remove';
-        return this.http.post<DagStopResult>(url, {'id': id}).
-        pipe(
+        return this.http.post<DagStopResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
@@ -49,8 +47,7 @@ export class DagService extends BaseService {
     remove_imgs(id: number) {
         let message = `${this.constructor.name}.remove_imgs`;
         let url = AppSettings.API_ENDPOINT + 'remove_imgs';
-        return this.http.post<DagStopResult>(url, {'dag': id}).
-        pipe(
+        return this.http.post<DagStopResult>(url, {'dag': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
@@ -58,8 +55,15 @@ export class DagService extends BaseService {
     remove_files(id: number) {
         let message = `${this.constructor.name}.remove_files`;
         let url = AppSettings.API_ENDPOINT + 'remove_files';
-        return this.http.post<DagStopResult>(url, {'dag': id}).
-        pipe(
+        return this.http.post<DagStopResult>(url, {'dag': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    start(id: number) {
+        let message = `${this.constructor.name}.start`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
+        return this.http.post<DagStopResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

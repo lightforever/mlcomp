@@ -24,7 +24,7 @@ class DagProvider(BaseDataProvider):
             func.count(Task.id).label('task_count'),
             last_activity,
             func.min(Task.started).label('started'),
-            func.min(Task.finished).label('finished')
+            func.max(Task.finished).label('finished')
         ]
 
         query = self.query(Dag, Project.name, *funcs, *task_status)
@@ -86,7 +86,7 @@ class DagProvider(BaseDataProvider):
                      TaskStatus.InProgress.value:]) == 0 or not started:
                 delta = 0
             else:
-                delta = (finished - started).total_seconds()
+                delta = (last_activity - started).total_seconds()
 
             r['duration'] = duration_format(delta)
             res.append(r)

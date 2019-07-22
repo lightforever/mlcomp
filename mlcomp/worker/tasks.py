@@ -10,111 +10,132 @@ from celery.signals import celeryd_after_setup
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
+from mlcomp.db.models import Task
 from mlcomp.db.providers import TaskProvider, \
     DagLibraryProvider, \
-    StepProvider, \
     DockerProvider
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.misc import yaml_load
+from mlcomp.utils.io import yaml_load
 from mlcomp.worker.app import app
-from mlcomp.db.models import *
 from mlcomp.worker.storage import Storage
 from mlcomp.worker.executors import *
 from mlcomp.utils.config import Config
 from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 
 
-def execute_by_id(id: int, repeat_count=1):
-    logger = create_logger()
-    provider = TaskProvider()
-    library_provider = DagLibraryProvider()
-    step_provider = StepProvider()
-    storage = Storage()
-    task = provider.by_id(id, joinedload(Task.dag_rel))
-    dag = task.dag_rel
-    executor = None
-    hostname = socket.gethostname()
-    try:
-        assert dag is not None, 'You must fetch task with dag_rel'
+# noinspection PyAttributeOutsideInit
+class ExecuteBuilder:
+    def __init__(self, id: int, repeat_count: int = 1):
+        self.id = id
+        self.repeat_count = repeat_count
+        self.logger = create_logger()
 
-        if task.status >= TaskStatus.InProgress.value and repeat_count >= 1:
-            msg = f'Task = {task.id}. Status = {task.status}, ' \
+    def create_base(self):
+        self.provider = TaskProvider()
+        self.library_provider = DagLibraryProvider()
+        self.storage = Storage()
+
+        self.task = self.provider.by_id(self.id, joinedload(Task.dag_rel))
+        self.dag = self.task.dag_rel
+        self.executor = None
+        self.hostname = socket.gethostname()
+
+        self.docker_img = os.getenv('DOCKER_IMG', 'default')
+        self.worker_index = int(os.getenv("WORKER_INDEX", -1))
+
+    def check_status(self):
+        assert self.dag is not None, 'You must fetch task with dag_rel'
+
+        if self.task.status >= TaskStatus.InProgress.value \
+                and self.repeat_count >= 1:
+            msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
                 f'before the execute_by_id invocation'
-            logger.warning(msg,
-                           ComponentType.Worker)
+            self.logger.error(msg,
+                              ComponentType.Worker)
             return
 
-        docker_img = os.getenv('DOCKER_IMG', 'default')
-        worker_index = int(os.getenv("WORKER_INDEX", -1))
+    def change_status(self):
+        self.task.computer_assigned = self.hostname
+        self.task.pid = os.getpid()
+        self.task.worker_index = self.worker_index
+        self.provider.change_status(self.task, TaskStatus.InProgress)
 
-        # Fail all InProgress Tasks assigned to this worker except that task
-        for t in provider.by_status(TaskStatus.InProgress,
-                                    docker_img=docker_img,
-                                    worker_index=worker_index):
-            if t.id != id:
-                step = step_provider.last_for_task(t.id)
-                msg = f'Task Id = {t.id} was in InProgress state ' \
-                    f'when another tasks arrived to the same worker'
-                logger.error(msg,
-                             ComponentType.Worker,
-                             t.coputer_assigned,
-                             t.id,
-                             step)
-                provider.change_status(t, TaskStatus.Failed)
-
-        task.computer_assigned = hostname
-        task.pid = os.getpid()
-        task.worker_index = worker_index
-        provider.change_status(task, TaskStatus.InProgress)
-
-        if not task.debug:
-            folder = storage.download(task=id)
+    def download(self):
+        if not self.task.debug:
+            folder = self.storage.download(task=self.id)
         else:
             folder = os.getcwd()
 
-        libraries = library_provider.dag(task.dag)
-        was_installation = storage.import_folder(folder, libraries)
-        if was_installation and not task.debug:
-            if repeat_count > 0:
+        libraries = self.library_provider.dag(self.task.dag)
+        was_installation = self.storage.import_folder(folder, libraries)
+        if was_installation and not self.task.debug:
+            if self.repeat_count > 0:
                 try:
-                    queue = f'{hostname}_{docker_img}_' \
+                    queue = f'{self.hostname}_{self.docker_img}_' \
                         f'{os.getenv("WORKER_INDEX")}'
-                    logger.warning(traceback.format_exc(),
-                                   ComponentType.Worker)
-                    execute.apply_async((id, repeat_count - 1), queue=queue)
+                    self.logger.warning(traceback.format_exc(),
+                                        ComponentType.Worker)
+                    execute.apply_async((self.id, self.repeat_count - 1),
+                                        queue=queue)
                 except Exception:
                     pass
                 finally:
                     sys.exit()
         os.chdir(folder)
 
-        config = Config.from_yaml(dag.config)
-        executor_type = config['executors'][task.executor]['type']
+    def create_executor(self):
+        config = Config.from_yaml(self.dag.config)
+        executor_type = config['executors'][self.task.executor]['type']
 
         assert Executor.is_registered(executor_type), \
             f'Executor {executor_type} was not found'
 
-        additional_info = yaml_load(task.additional_info) \
-            if task.additional_info else dict()
-        executor = Executor.from_config(task.executor, config, additional_info)
+        additional_info = yaml_load(self.task.additional_info) \
+            if self.task.additional_info else dict()
+        self.executor = Executor.from_config(self.task.executor,
+                                             config,
+                                             additional_info)
 
-        executor(task, dag)
+    def execute(self):
+        self.executor(self.task, self.dag)
 
-        provider.change_status(task, TaskStatus.Success)
-    except Exception as e:
-        if type(e) == ProgrammingError:
-            Session.cleanup()
+        self.provider.change_status(self.task, TaskStatus.Success)
 
-        step = executor.step.id if (executor and executor.step) else None
-        logger.error(traceback.format_exc(),
-                     ComponentType.Worker,
-                     hostname,
-                     id,
-                     step)
-        provider.change_status(task, TaskStatus.Failed)
-        raise e
-    finally:
-        sys.exit()
+    def build(self):
+        try:
+            self.create_base()
+
+            self.check_status()
+
+            self.change_status()
+
+            self.download()
+
+            self.create_executor()
+
+            self.execute()
+
+        except Exception as e:
+            if type(e) == ProgrammingError:
+                Session.cleanup()
+
+            step = self.executor.step.id if \
+                (self.executor and self.executor.step) else None
+
+            self.logger.error(traceback.format_exc(),
+                              ComponentType.Worker,
+                              self.hostname,
+                              self.id,
+                              step)
+            self.provider.change_status(self.task, TaskStatus.Failed)
+            raise e
+        finally:
+            sys.exit()
+
+
+def execute_by_id(id: int, repeat_count=1):
+    ex = ExecuteBuilder(id, repeat_count)
+    ex.build()
 
 
 @celeryd_after_setup.connect

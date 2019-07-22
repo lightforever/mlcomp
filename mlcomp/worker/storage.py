@@ -157,6 +157,8 @@ class Storage:
         return was_installation
 
 
+__all__ = ['Storage']
+
 if __name__ == '__main__':
     storage = Storage()
     storage.download(77)

@@ -90,6 +90,9 @@ export class DagsComponent extends Paginator<Dag> {
         iconRegistry.addSvgIcon('remove',
             sanitizer.bypassSecurityTrustResourceUrl(
                 'assets/img/trash.svg'));
+        iconRegistry.addSvgIcon('start',
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/play-button.svg'));
     }
 
     get_filter(): any {
@@ -144,14 +147,37 @@ export class DagsComponent extends Paginator<Dag> {
             {queryParams: {status: status.name}});
     }
 
+    start(element: any){
+        if(!this.can_start(element)){
+            return;
+        }
+        this.service.start(element.id).subscribe(data =>{
+            this.change.emit();
+        });
+    }
+
     stop(element: any) {
         if (element.success) {
+            return;
+        }
+        if(!this.has_unfinished(element))
+        {
             return;
         }
         this.service.stop(element.id).subscribe(data =>
             element.task_statuses = data.dag.task_statuses);
     }
 
+
+    can_start(element: Dag) {
+        if(this.has_unfinished(element)){
+            return false;
+        }
+
+        return element.task_statuses[3].count +
+            element.task_statuses[4].count +
+            element.task_statuses[5].count > 0
+    }
 
     has_unfinished(element: Dag) {
         return element.task_statuses[0].count +

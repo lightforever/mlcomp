@@ -114,7 +114,7 @@
             </th>
 
             <td mat-cell *matCellDef="let element" style="min-width: 120px">
-                 <mat-icon
+                <mat-icon
                         svgIcon="remove"
                         matTooltip="Remove"
                         (click)="remove_files(element)"
@@ -186,6 +186,13 @@
                           matTooltip="Graph"
                           routerLink="/dags/dag-detail/{{element.id}}/graph">
 
+                </mat-icon>
+
+                <mat-icon svgIcon="start"
+                          matTooltip="Start"
+                          (click)="start(element)"
+                          [class.transparent]=
+                                  "!can_start(element)">
                 </mat-icon>
 
                 <mat-icon svgIcon="stop" matTooltip="Stop"

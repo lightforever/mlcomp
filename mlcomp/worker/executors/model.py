@@ -11,9 +11,9 @@ from mlcomp.utils.settings import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model, Dag
 from mlcomp.worker.executors.base import *
 from mlcomp.db.providers import TaskProvider, ModelProvider, DagProvider
-from mlcomp.utils.misc import now, yaml_dump, yaml_load
+from mlcomp.utils.misc import now
 from mlcomp.utils.config import Config
-
+from mlcomp.utils.io import yaml_load, yaml_dump
 
 @Executor.register
 class ModelAdd(Executor):

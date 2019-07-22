@@ -4,30 +4,10 @@ from datetime import datetime
 import re
 from typing import List
 import os
-import yaml
-
-yaml.warnings({'YAMLLoadWarning': False})
-
 import numpy as np
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
-
-
-def yaml_load(text: str = None, file: str = None):
-    stream = text
-    if file is not None:
-        stream = open(file).read()
-    res = yaml.load(stream, Loader=yaml.FullLoader)
-    if res is None:
-        return {}
-    return res
-
-
-def yaml_dump(data):
-    return yaml.dump(data,
-                     default_flow_style=False,
-                     sort_keys=False)
 
 
 def dict_func(objcts: List, func=np.mean):
@@ -132,6 +112,31 @@ def adapt_db_types(d: dict):
             d[k] = float(d[k])
 
 
+def dict_flatten(d, parent_key='', sep='/'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(dict_flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def dict_unflatten(d: dict, sep='/'):
+    res = dict()
+    for key, value in d.items():
+        parts = key.split(sep)
+        c = res
+        for part in parts[:-1]:
+            if part not in c:
+                c[part] = dict()
+            c = c[part]
+        c[parts[-1]] = value
+
+    return res
+
+
 def memory():
     return map(int, os.popen('free -t -m').readlines()[1].split()[1:4])
 
@@ -146,9 +151,4 @@ def disk(folder: str):
 
 
 if __name__ == '__main__':
-    print(dict_func([
-        {'cpu': 10,
-         'gpu': [{'memory': 20, 'load': 30}, {'memory': 0, 'load': 0}]},
-        {'cpu': 50,
-         'gpu': [{'memory': 100, 'load': 100}, {'memory': 0, 'load': 0}]},
-    ]))
+    print(dict_unflatten({'a/b': 10, 'a/e': 20, 'a/c/d': 40}))

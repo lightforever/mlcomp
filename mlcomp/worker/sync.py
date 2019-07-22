@@ -11,8 +11,9 @@ from mlcomp.db.enums import ComponentType
 from mlcomp.db.models import Computer
 from mlcomp.db.providers import ComputerProvider, ProjectProvider
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.misc import yaml_load, now
+from mlcomp.utils.misc import now
 from mlcomp.utils.settings import MODEL_FOLDER, DATA_FOLDER
+from mlcomp.utils.io import yaml_load
 
 
 def sync_directed(source: Computer,

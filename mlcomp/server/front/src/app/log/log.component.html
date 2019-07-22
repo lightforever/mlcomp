@@ -149,7 +149,9 @@
                 Task
             </th>
 
-            <td mat-cell *matCellDef="let element">
+            <td mat-cell
+                style="max-width: 500px"
+                *matCellDef="let element">
                 <a
                         [routerLink]=
                                 "'/tasks/task-detail/'+

@@ -19,8 +19,9 @@ from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
-from mlcomp.utils.misc import to_snake, yaml_dump, now, yaml_load
+from mlcomp.utils.misc import to_snake, now
 from mlcomp.db.models import Model, Report, ReportLayout, Task
+from mlcomp.utils.io import yaml_load, yaml_dump
 
 HOST = os.getenv('WEB_HOST', '0.0.0.0')
 PORT = int(os.getenv('WEB_PORT', '4201'))
@@ -396,6 +397,36 @@ def dag_stop():
     return {
         'dag': provider.get({'id': id})['data'][0]
     }
+
+
+@app.route('/api/dag/start', methods=['POST'])
+@requires_auth
+@error_handler
+def dag_start():
+    data = request_data()
+    provider = DagProvider()
+    id = int(data['id'])
+    dag = provider.by_id(id, joined_load=['tasks'])
+    can_start_statuses = [TaskStatus.Failed.value,
+                          TaskStatus.Skipped.value,
+                          TaskStatus.Stopped.value]
+
+    for t in dag.tasks:
+        if t.status not in can_start_statuses:
+            continue
+        t.status = TaskStatus.NotRan.value
+        t.pid = None
+        t.started = None
+        t.finished = None
+        t.current_step = None
+        t.computer_assigned = None
+        t.current_step = None
+        t.celery_id = None
+        t.worker_index = None
+        t.docker_assigned = None
+        t.score = None
+
+    provider.commit()
 
 
 @app.route('/api/dag/toogle_report', methods=['POST'])

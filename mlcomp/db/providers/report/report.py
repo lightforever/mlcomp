@@ -12,7 +12,7 @@ from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, ReportImg
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
-from mlcomp.utils.misc import yaml_load
+from mlcomp.utils.io import yaml_load
 
 
 class ReportProvider(BaseDataProvider):

@@ -8,6 +8,7 @@ import GPUtil
 
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
+from mlcomp.utils.io import yaml_load
 from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import *
 from multiprocessing import cpu_count
@@ -15,7 +16,7 @@ from multiprocessing import cpu_count
 from mlcomp.utils.settings import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
 from mlcomp.worker.sync import sync_directed
 from mlcomp.worker.tasks import execute_by_id
-from mlcomp.utils.misc import memory, yaml_load, disk
+from mlcomp.utils.misc import memory, disk
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 
@@ -85,25 +86,9 @@ def execute(config: str, debug: bool):
 
     # Create dag
     created_dag = _dag(config, debug)
-
-    config = yaml_load(file=config)
-    executors = config['executors']
-
-    # Execute
-    created = set()
-    while len(created) < len(executors):
-        for k, v in executors.items():
-            valid = True
-            if 'depends' in k:
-                for d in v['depends']:
-                    if d not in executors:
-                        raise Exception(
-                            f'Executor {k} depend on {d} which does not exist')
-
-                    valid = valid and d in created
-            if valid:
-                execute_by_id(created_dag[k])
-                created.add(k)
+    for ids in created_dag.values():
+        for id in ids:
+            execute_by_id(id)
 
 
 @main.command()

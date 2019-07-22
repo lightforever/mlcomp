@@ -1,10 +1,12 @@
+from collections import defaultdict
 from typing import List
 import os
 import json
 
 import albumentations as A
 
-from mlcomp.utils.misc import yaml_load
+from mlcomp.utils.io import yaml_load
+from mlcomp.utils.misc import dict_flatten, dict_unflatten
 from mlcomp.utils.settings import DATA_FOLDER
 
 
@@ -22,6 +24,23 @@ class Config(dict):
         return yaml_load(config)
 
 
+def merge_dicts_smart(target: dict, source: dict, sep='/'):
+    target_flatten = dict_flatten(target)
+    mapping = defaultdict(list)
+    for k, v in target_flatten.items():
+        parts = k.split(sep)
+        for i in range(len(parts)-1, -1, -1):
+            key = sep.join(parts[i:])
+            mapping[key].append(k)
+
+    for k, v in source.items():
+        assert len(mapping[k]) == 1, f'ambiguous mapping for {k}'
+        key = mapping[k][0]
+        target_flatten[key] = v
+
+    return dict_unflatten(target_flatten)
+
+
 def parse_albu(configs: List[dict]):
     res = []
     for config in configs:
@@ -35,3 +54,6 @@ def parse_albu(configs: List[dict]):
             aug = getattr(A, name)(**config)
         res.append(aug)
     return res
+
+
+__all__ = ['Config', 'merge_dicts_smart', 'parse_albu']

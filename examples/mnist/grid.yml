@@ -1,0 +1,15 @@
+info:
+  name: mnist_train
+  project: examples
+  report: classify
+executors:
+  train:
+    type: catalyst
+    args:
+      config: catalyst.yml
+    grid:
+      - batch_size: [20, 40, 80]
+      - - num_workers: 2
+          lr: 0.01
+        - num_workers: 3
+          lr: 0.1

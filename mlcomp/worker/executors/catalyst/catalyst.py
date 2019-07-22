@@ -5,10 +5,11 @@ from catalyst.dl.callbacks import VerboseLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_config
 
+from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
 from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
-from mlcomp.utils.config import Config
+from mlcomp.utils.config import Config, merge_dicts_smart
 from mlcomp.worker.executors.base import Executor
 from mlcomp.db.report_info import *
 from mlcomp.worker.executors.catalyst.precision_recall import \
@@ -41,13 +42,16 @@ class Args:
 class Catalyst(Executor, Callback):
     __syn__ = 'catalyst'
 
-    def __init__(self, args: Args, report: ReportLayoutInfo):
+    def __init__(self, args: Args,
+                 report: ReportLayoutInfo,
+                 grid_config: dict):
         self.args = args
         self.report = report
         self.experiment = None
         self.runner = None
         self.series_provider = ReportSeriesProvider()
         self.task_provider = TaskProvider()
+        self.grid_config = grid_config
 
     def callbacks(self):
         result = [self]
@@ -111,13 +115,28 @@ class Catalyst(Executor, Callback):
 
             setattr(args, k, v)
 
-        report = ReportLayoutInfo(additional_info.get('report_config', dict()))
+        report_config = additional_info.get('report_config', dict())
+        grid_cell = additional_info.get('grid_cell')
+        report = ReportLayoutInfo(report_config)
         if len(args.configs) == 0:
             args.configs = [args.config]
-        return cls(args=args, report=report)
+
+        grid_config = {}
+        if grid_cell is not None:
+            grid_config = grid_cells(executor['grid'])[grid_cell][0]
+
+        return cls(args=args,
+                   report=report,
+                   grid_config=grid_config
+                   )
+
+    def parse_args_uargs(self):
+        args, config = parse_args_uargs(self.args, [])
+        config = merge_dicts_smart(config, self.grid_config)
+        return args, config
 
     def work(self):
-        args, config = parse_args_uargs(self.args, [])
+        args, config = self.parse_args_uargs()
         # set_global_seed(args.seed)
 
         Experiment, R = import_experiment_and_runner(Path(args.expdir))
