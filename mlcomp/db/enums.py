@@ -56,6 +56,7 @@ class TaskStatus(OrderedEnum):
 class TaskType(OrderedEnum):
     User = 0
     Train = 1
+    Service = 2
 
 
 class StepStatus(OrderedEnum):

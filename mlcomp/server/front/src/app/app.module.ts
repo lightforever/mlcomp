@@ -21,6 +21,7 @@ import {ModelAddDialogComponent} from "./model/model-add-dialog.component";
 import {ProjectAddDialogComponent} from "./project/project-add-dialog";
 import {ReportAddDialogComponent} from "./report/reports/report-add-dialog";
 import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
+import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
 
 
 @NgModule({
@@ -41,7 +42,8 @@ import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
         MessagesComponent,
         ComputerComponent,
         ModelComponent,
-        LoginComponent
+        LoginComponent,
+        AuxiliaryComponent
     ],
     entryComponents: [
         ProjectAddDialogComponent,

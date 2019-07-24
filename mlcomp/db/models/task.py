@@ -37,6 +37,9 @@ class Task(Base):
     score = sa.Column(sa.Float)
     report = sa.Column(sa.Integer, ForeignKey('report.id'))
     report_rel = relationship('Report', lazy='noload')
+    gpu_assigned = sa.Column(sa.Integer)
+    parent = sa.Column(sa.Integer, ForeignKey('task.id'))
+    parent_rel = relationship('Task', lazy='noload')
 
 
 class TaskDependence(Base):

@@ -3,6 +3,7 @@ import sqlalchemy.orm.session as session
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from mlcomp.db.conf import *
+from mlcomp.utils.misc import adapt_db_types
 
 __all__ = ['Session']
 
@@ -53,6 +54,8 @@ class Session(session.Session):
 
     def add_all(self, objs, commit=True):
         try:
+            for obj in objs:
+                adapt_db_types(obj)
             super().add_all(objs)
         except Exception as e:
             raise e
@@ -66,6 +69,7 @@ class Session(session.Session):
 
     def add(self, obj, commit=True, _warn=False):
         try:
+            adapt_db_types(obj)
             super().add(obj, _warn=_warn)
         except Exception as e:
             raise e

@@ -4,6 +4,12 @@ from migrate.changeset.constraint import ForeignKeyConstraint, UniqueConstraint
 
 meta = MetaData()
 
+auxiliary = Table(
+    'auxiliary', meta,
+    Column('name', String(100), primary_key=True),
+    Column('data', String(16000), nullable=False)
+)
+
 computer = Table(
     'computer', meta,
     Column('name', String(100), primary_key=True),
@@ -15,7 +21,6 @@ computer = Table(
     Column('port', Integer, nullable=False),
     Column('user', String, nullable=False),
     Column('last_synced', TIMESTAMP),
-    Column('last_online', TIMESTAMP),
     Column('disk', Integer, nullable=False),
     Column('syncing_computer', String(100))
 
@@ -182,7 +187,9 @@ task = Table(
     Column('docker_assigned', String(100)),
     Column('type', Integer, nullable=False),
     Column('score', Float),
-    Column('report', Integer)
+    Column('report', Integer),
+    Column('gpu_assigned', Integer),
+    Column('parent', Integer)
 )
 
 task_dependency = Table(
@@ -240,6 +247,7 @@ def upgrade(migrate_engine):
         report_layout.create()
         docker.create()
         model.create()
+        auxiliary.create()
 
         ForeignKeyConstraint([computer_usage.c.computer],
                              [computer.c.name],
@@ -327,6 +335,8 @@ def upgrade(migrate_engine):
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([task.c.dag], [dag.c.id],
                              ondelete='CASCADE').create()
+        ForeignKeyConstraint([task.c.parent], [task.c.id],
+                             ondelete='CASCADE').create()
         ForeignKeyConstraint(
             [task.c.docker_assigned, task.c.computer_assigned],
             [docker.c.name, docker.c.computer], ondelete='CASCADE').create()
@@ -371,6 +381,7 @@ def downgrade(migrate_engine):
     trans = conn.begin()
     meta.bind = conn
     try:
+        auxiliary.drop()
         model.drop()
         docker.drop()
         computer_usage.drop()

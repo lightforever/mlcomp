@@ -167,10 +167,11 @@ class TaskProvider(BaseDataProvider):
         task.status = status.value
         self.update()
 
-    def by_status(self, status: TaskStatus,
+    def by_status(self, *statuses: TaskStatus,
                   docker_img: str = None,
                   worker_index: int = None):
-        query = self.query(Task).filter(Task.status == status.value). \
+        statuses = [s.value for s in statuses]
+        query = self.query(Task).filter(Task.status.in_(statuses)). \
             options(joinedload(Task.dag_rel))
 
         if docker_img:

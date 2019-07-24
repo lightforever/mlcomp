@@ -79,7 +79,7 @@ def execute(config: str, debug: bool):
             f'Task Id = {t.id} was in InProgress state '
             f'when another tasks arrived to the same worker',
             ComponentType.Worker,
-            t.coputer_assigned,
+            t.computer_assigned,
             t.id,
             step)
         provider.change_status(t, TaskStatus.Failed)

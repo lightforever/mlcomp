@@ -6,7 +6,6 @@ from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
 from mlcomp.utils.misc import now
 
-
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
 
@@ -68,6 +67,7 @@ class DbHandler(logging.Handler):
 
             step = None
             task = None
+            computer = None
 
             if len(record.args) == 1:
                 component = record.args[0]
@@ -81,7 +81,7 @@ class DbHandler(logging.Handler):
             if not isinstance(component, int):
                 component = component.value
 
-            module = os.path.relpath(record.pathname, ROOT).\
+            module = os.path.relpath(record.pathname, ROOT). \
                 replace(os.sep, '.').replace('.py', '')
             if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
@@ -93,7 +93,7 @@ class DbHandler(logging.Handler):
                       line=record.lineno,
                       module=module,
                       task=task,
-                      computer = computer
+                      computer=computer
                       )
             self.provider.add(log)
         except Exception:

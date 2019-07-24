@@ -23,12 +23,22 @@ from mlcomp.utils.config import Config
 from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 
 
-# noinspection PyAttributeOutsideInit
 class ExecuteBuilder:
     def __init__(self, id: int, repeat_count: int = 1):
         self.id = id
         self.repeat_count = repeat_count
         self.logger = create_logger()
+
+        self.provider = None
+        self.library_provider = None
+        self.storage = None
+        self.task = None
+        self.dag = None
+        self.executor = None
+        self.hostname = None
+        self.docker_img = None
+        self.worker_index = None
+        self.executor = None
 
     def create_base(self):
         self.provider = TaskProvider()

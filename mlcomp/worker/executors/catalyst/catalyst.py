@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from catalyst.dl import RunnerState, Callback, Runner
@@ -44,7 +45,10 @@ class Catalyst(Executor, Callback):
 
     def __init__(self, args: Args,
                  report: ReportLayoutInfo,
+                 distr_info: dict,
                  grid_config: dict):
+
+        self.distr_info = distr_info
         self.args = args
         self.report = report
         self.experiment = None
@@ -52,6 +56,7 @@ class Catalyst(Executor, Callback):
         self.series_provider = ReportSeriesProvider()
         self.task_provider = TaskProvider()
         self.grid_config = grid_config
+        self.master = True
 
     def callbacks(self):
         result = [self]
@@ -124,15 +129,37 @@ class Catalyst(Executor, Callback):
         grid_config = {}
         if grid_cell is not None:
             grid_config = grid_cells(executor['grid'])[grid_cell][0]
+        distr_info = {}
+        if 'distr_info' in additional_info:
+            distr_info = additional_info['distr_info']
 
         return cls(args=args,
                    report=report,
-                   grid_config=grid_config
+                   grid_config=grid_config,
+                   distr_info=distr_info
                    )
+
+    def set_dist_env(self, config):
+        info = self.distr_info
+        os.environ['MASTER_ADDR'] = info['master_addr']
+        os.environ['MASTER_PORT'] = str(info['master_port'])
+        os.environ['WORLD_SIZE'] = str(self.task.gpu)
+
+        os.environ['RANK'] = str(info['rank'])
+        os.environ['LOCAL_RANK'] = str(info['local_rank'])
+        os.environ['CUDA_VISIBLE_DEVICES'] =  \
+            ','.join([str(i) for i in info['gpu_visible']])
+
+        config['distributed_params'] = {'rank': info['rank']}
+
+        if info['rank'] > 0:
+            self.master = False
 
     def parse_args_uargs(self):
         args, config = parse_args_uargs(self.args, [])
         config = merge_dicts_smart(config, self.grid_config)
+        if self.distr_info:
+            self.set_dist_env(config)
         return args, config
 
     def work(self):
@@ -150,7 +177,8 @@ class Catalyst(Executor, Callback):
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
-            return _get_callbacks(stage) + self.callbacks()
+            return _get_callbacks(stage) + \
+                   self.callbacks() if self.master else []
 
         experiment.get_callbacks = get_callbacks
 

@@ -4,9 +4,10 @@ import {RouterModule, Routes} from '@angular/router';
 import {ProjectComponent} from './project/project.component';
 import {ComputerComponent} from './computer/computer.component';
 import {LogComponent} from "./log/log.component";
-import { AuthGuard } from './_helpers/auth.gaurd';
+import {AuthGuard} from './_helpers/auth.gaurd';
 import {LoginComponent} from "./login/login.component";
 import {ModelComponent} from "./model/model.component";
+import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
 
 const routes: Routes = [
     {
@@ -16,7 +17,8 @@ const routes: Routes = [
         canActivate: [AuthGuard]
     },
     {
-        path: 'login', component: LoginComponent },
+        path: 'login', component: LoginComponent
+    },
     {
         path: 'projects',
         component: ProjectComponent,
@@ -25,7 +27,8 @@ const routes: Routes = [
     {
         path: 'computers',
         component: ComputerComponent,
-        canActivate: [AuthGuard] },
+        canActivate: [AuthGuard]
+    },
     {
         path: 'tasks',
         loadChildren: './task/task.module#TaskModule',
@@ -49,6 +52,11 @@ const routes: Routes = [
     {
         path: 'reports',
         loadChildren: './report/report.module#ReportModule',
+        canActivate: [AuthGuard]
+    },
+    {
+        path: 'auxiliary',
+        component: AuxiliaryComponent,
         canActivate: [AuthGuard]
     },
 ];

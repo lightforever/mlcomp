@@ -104,12 +104,13 @@ def duration_format(delta: float):
     return delta
 
 
-def adapt_db_types(d: dict):
-    for k in d:
-        if type(d[k]) in [np.int, np.int64]:
-            d[k] = int(d[k])
-        elif type(d[k]) in [np.float, np.float64]:
-            d[k] = float(d[k])
+def adapt_db_types(d):
+    dic = d.__dict__ if not isinstance(d, dict) else d
+    for k in dic:
+        if type(dic[k]) in [np.int64]:
+            dic[k] = int(dic[k])
+        elif type(dic[k]) in [np.float64]:
+            dic[k] = float(dic[k])
 
 
 def dict_flatten(d, parent_key='', sep='/'):

@@ -158,9 +158,9 @@ def project_edit():
 
     provider = ProjectProvider()
     res = provider.edit_project(data['name'],
-                               yaml_load(data['class_names']),
-                               yaml_load(data['ignore_folders'])
-                               )
+                                yaml_load(data['class_names']),
+                                yaml_load(data['ignore_folders'])
+                                )
     return res
 
 
@@ -427,6 +427,12 @@ def dag_start():
         t.score = None
 
     provider.commit()
+
+
+@app.route('/api/auxiliary', methods=['POST'])
+def auxiliary():
+    provider = AuxiliaryProvider()
+    return provider.get()
 
 
 @app.route('/api/dag/toogle_report', methods=['POST'])

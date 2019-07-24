@@ -11,7 +11,6 @@ from mlcomp.worker.storage import Storage
 from mlcomp.utils.io import yaml_dump
 
 
-# noinspection PyAttributeOutsideInit
 class DagStandardBuilder:
     def __init__(self,
                  config: dict,
@@ -27,6 +26,19 @@ class DagStandardBuilder:
 
         self.info = config['info']
         self.report_name = self.info.get('report')
+
+        self.provider = None
+        self.report_provider = None
+        self.report_tasks_provider = None
+        self.report_layout_provider = None
+        self.storage = None
+        self.dag_provider = None
+
+        self.project = None
+        self.layouts = None
+        self.dag = None
+        self.dag_report_id = None
+        self.created = None
 
     def create_providers(self):
         self.provider = TaskProvider()
@@ -104,18 +116,20 @@ class DagStandardBuilder:
             report_config = self.layouts[self.report_name]
             info['report_config'] = report_config
             task.additional_info = yaml_dump(info)
-            self.provider.add(task)
+            self.provider.add(task,
+                              commit=False)
             report = Report(config=yaml_dump(report_config),
                             name=task.name,
                             project=self.project)
             self.report_provider.add(report)
+            task.report = report.id
+
             self.report_tasks_provider.add(
                 ReportTasks(report=report.id, task=task.id))
 
             self.report_tasks_provider.add(
                 ReportTasks(report=self.dag_report_id, task=task.id))
 
-            task.report = report.id
             self.provider.commit()
         else:
             self.provider.add(task)
@@ -186,7 +200,6 @@ def dag_standard(config: dict,
                  config_text: str = None,
                  upload_files: bool = True,
                  copy_files_from: int = None):
-
     builder = DagStandardBuilder(config=config,
                                  debug=debug,
                                  config_text=config_text,
