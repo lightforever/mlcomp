@@ -113,6 +113,8 @@ class BaseDataProvider:
         return query
 
     def serialize_datetime_long(self, time):
+        if time is None:
+            return None
         return time.strftime(self.datetime_format_long)
 
 

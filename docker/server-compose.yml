@@ -1,28 +1,9 @@
 services:
-#  mlcomp-server:
-#    container_name: mlcomp-server
-#    restart: always
-#    build:
-#      context: ../
-#      dockerfile: docker/server
-#    env_file: .env
-  postgres:
-    container_name: postgres
+  mlcomp-server:
+    container_name: mlcomp-server
+    restart: always
+    build:
+      context: ../
+      dockerfile: docker/server
     env_file: .env
-    image: postgres:11.1
-    restart: always
-    volumes: [
-      '/opt/mlcomp/pgdata/data:/var/lib/postgresql/data/pgdata',
-      '/opt/mlcomp/pgdata/backups:/backups'
-    ]
-    shm_size: 4G
-    ports:
-      - 5432:5432
-  redis:
-    command: 'redis-server --requirepass $REDIS_PASSWORD'
-    container_name: redis
-    image: redis:5.0.4
-    restart: always
-    ports:
-      - 6379:6379
 version: '2.3'
