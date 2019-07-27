@@ -1,7 +1,8 @@
 import datetime
 from typing import List
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload, aliased
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.providers.base import BaseDataProvider, ReportTasks
@@ -49,6 +50,12 @@ class TaskProvider(BaseDataProvider):
                 Task.last_activity <= filter['last_activity_max'])
         if filter.get('report'):
             query = query.filter(Task.report != None)
+        if filter.get('parent'):
+            query = query.filter(Task.parent == filter['parent'])
+
+        types = filter.get('type', ['User', 'Train'])
+        types = [TaskType.from_name(t) for t in types]
+        query = query.filter(Task.type.in_(types))
 
         total = query.count()
         paginator = self.paginator(query, options)
@@ -138,7 +145,7 @@ class TaskProvider(BaseDataProvider):
                    joined_load=None
                    ):
         res = self.query(Task).filter(
-            Task.finished >= min_time).\
+            Task.finished >= min_time). \
             filter(Task.status == status)
 
         if joined_load is not None:
@@ -209,6 +216,39 @@ class TaskProvider(BaseDataProvider):
 
     def by_dag(self, id: int):
         return self.query(Task).filter(Task.dag == id).all()
+
+    def parent_tasks_stats(self):
+        task_parent = aliased(Task)
+        task_child = aliased(Task)
+
+        task_status = []
+        for e in TaskStatus:
+            task_status.append(
+                func.count(task_child.status).
+                    filter(task_child.status == e.value).
+                    label(e.name)
+            )
+
+        times = [func.min(task_child.started), func.max(task_child.finished)]
+
+        parent_statuses = [TaskStatus.Queued.value,
+                           TaskStatus.InProgress.value]
+
+        query = self.query(task_parent, *times, *task_status). \
+            filter(task_parent.status.in_(parent_statuses)).\
+            join(task_child, task_parent.id == task_child.parent).\
+            group_by(task_parent.id)
+
+        res = []
+        for task, started, finished, *(statuses) in query.all():
+            res.append([
+                task,
+                started,
+                finished,
+                {e: s for e, s in zip(TaskStatus, statuses)}
+            ])
+
+        return res
 
 
 __all__ = ['TaskProvider']

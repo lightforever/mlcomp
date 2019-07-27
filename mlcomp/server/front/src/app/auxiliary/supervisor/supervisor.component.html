@@ -1,0 +1,50 @@
+<h3>Supervisor</h3>
+
+Last processed: {{data.time| date:"MM.dd H:mm:ss"}}
+
+Duration: {{data.duration| number:'.2'}} seconds
+
+<h5>Queues:</h5>
+
+<ul *ngFor="let queue of data.queues">
+    <li>{{queue}}</li>
+</ul>
+
+<h5>Computers</h5>
+
+<ul *ngFor="let computer of data.computers">
+    <li>{{computer.name}}
+        <a *ngIf="!computer.expanded" (click)="computer.expanded=true">more</a>
+        <a *ngIf="computer.expanded" (click)="computer.expanded=false">less</a>
+
+        <div *ngIf="computer.expanded">
+            <div>
+                Cpu free: {{computer.cpu}} ,
+                total {{computer.cpu_total}}
+            </div>
+
+            <div>
+                Memory free: {{computer.memory}} ,
+                total {{computer.memory_total}}
+            </div>
+
+            <div>
+                Gpu:
+                  <ul *ngFor="let task_taken of computer.gpu; let i = index">
+                    <li>
+                      {{i}}
+                      <span *ngIf="!task_taken">free</span>
+                      <span *ngIf="task_taken">taken by {{task_taken}}</span>
+                    </li>
+                  </ul>
+            </div>
+
+            <div>
+              Used master ports:
+
+              {{computer.ports}}
+            </div>
+
+        </div>
+    </li>
+</ul>

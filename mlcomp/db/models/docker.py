@@ -12,6 +12,7 @@ class Docker(Base):
                          ForeignKey('computer.name'),
                          primary_key=True)
     last_activity = sa.Column(sa.DateTime, nullable=False)
+    ports = sa.Column(sa.String, nullable=False)
 
 
 __all__ = ['Docker']

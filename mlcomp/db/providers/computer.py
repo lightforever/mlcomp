@@ -15,7 +15,8 @@ class ComputerProvider(BaseDataProvider):
     model = Computer
 
     def computers(self):
-        return {c.name: {k: v for k, v in c.__dict__.items()}
+        return {c.name: {k: v for k, v in c.__dict__.items()
+                         if not k.startswith('_')}
                 for c in self.query(Computer).all()}
 
     def get(self, filter: dict, options: PaginatorOptions = None):
@@ -39,7 +40,7 @@ class ComputerProvider(BaseDataProvider):
 
             if c.syncing_computer:
                 if c.last_synced is None or \
-                        (now()-c.last_synced).total_seconds()>=5:
+                        (now() - c.last_synced).total_seconds() >= 5:
                     sync_status = f'Syncing with {c.syncing_computer}'
                     if c.last_synced:
                         sync_status += f' from '
@@ -119,6 +120,15 @@ class ComputerProvider(BaseDataProvider):
             'in_progress': r[1],
             'free': cpu - r[1]}
             for r in res]
+
+    def all_with_last_activtiy(self):
+        query = self.query(Computer, func.max(Docker.last_activity)). \
+            join(Docker, Docker.computer == Computer.name). \
+            group_by(Computer.name)
+        res = []
+        for c, a in query.all():
+            c.last_activity = a
+        return res
 
 
 __all__ = ['ComputerProvider']

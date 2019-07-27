@@ -10,6 +10,10 @@ signals_session = Session.create_session(key='signals')
 @event.listens_for(Task, 'before_update')
 def task_before_update(mapper, connection, target):
     target.last_activity = now()
+    if target.parent:
+        provider = TaskProvider(signals_session)
+        parent = provider.by_id(target.parent)
+        parent.last_activity = target.last_activity
 
 
 @event.listens_for(Step, 'after_insert')

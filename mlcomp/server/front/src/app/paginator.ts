@@ -14,7 +14,7 @@ import {Location} from '@angular/common';
 import {PaginatorFilter, PaginatorRes} from "./models";
 import {BaseService} from "./base.service";
 
-export abstract class Paginator<T> implements OnInit, OnDestroy {
+export class Paginator<T> implements OnInit, OnDestroy {
     dataSource: MatTableDataSource<T> = new MatTableDataSource();
 
     @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -22,7 +22,7 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
     change: EventEmitter<any> = new EventEmitter();
     data_updated: EventEmitter<any> = new EventEmitter();
 
-    protected abstract displayed_columns: string[];
+    protected displayed_columns: string[] = [];
     protected default_page_size: number = 15;
     isLoading_results = false;
     total: number;
@@ -32,6 +32,8 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
     protected constructor(
         protected service: BaseService,
         protected location: Location,
+        protected filter_params: object = null,
+        protected filter_key: string = null,
         protected enable_interval: boolean = true
     ) {
 
@@ -50,6 +52,14 @@ export abstract class Paginator<T> implements OnInit, OnDestroy {
             res.sort_column = this.sort.active ? this.sort.active : '';
             res.sort_descending = this.sort.direction ?
                 this.sort.direction == 'desc' : true;
+        }
+
+        if (this.filter_key) {
+            let final = {[this.filter_key]: res};
+            if (this.filter_params) {
+                final = {...final, ...this.filter_params};
+            }
+            return final;
         }
 
         return res;

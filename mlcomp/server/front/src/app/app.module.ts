@@ -22,6 +22,7 @@ import {ProjectAddDialogComponent} from "./project/project-add-dialog";
 import {ReportAddDialogComponent} from "./report/reports/report-add-dialog";
 import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
 import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
+import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.component";
 
 
 @NgModule({
@@ -43,7 +44,8 @@ import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
         ComputerComponent,
         ModelComponent,
         LoginComponent,
-        AuxiliaryComponent
+        AuxiliaryComponent,
+        AuxiliarySupervisorComponent
     ],
     entryComponents: [
         ProjectAddDialogComponent,
@@ -53,11 +55,13 @@ import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
         LayoutAddDialogComponent
     ],
     providers: [
-        { provide: HTTP_INTERCEPTORS,
+        {
+            provide: HTTP_INTERCEPTORS,
             useClass: JwtInterceptor,
             multi: true
         },
-        { provide: HTTP_INTERCEPTORS,
+        {
+            provide: HTTP_INTERCEPTORS,
             useClass: ErrorInterceptor,
             multi: true
         }

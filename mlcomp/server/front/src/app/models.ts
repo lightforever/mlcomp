@@ -331,3 +331,24 @@ export class Layout {
 export interface LayoutAddData {
     name: string;
 }
+
+export class AuxiliarySupervisorComputer {
+    name: string;
+    expanded: boolean;
+    cpu: number;
+    cpu_total: number;
+    memory: number;
+    memory_total: number;
+    gpu: number[];
+    ports: number[];
+}
+export class AuxiliarySupervisor {
+    queues: string[];
+    time: Date;
+    duration: number;
+    computers: AuxiliarySupervisorComputer[];
+}
+
+export class Auxiliary {
+    supervisor: AuxiliarySupervisor;
+}

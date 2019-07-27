@@ -27,7 +27,11 @@ export class ImgClassifyComponent extends Paginator<Img> {
                 protected location: Location,
                 protected layout_service: LayoutService,
                 protected resource_service: DynamicresourceService) {
-        super(service, location, false);
+        super(service,
+            location,
+            null,
+            null,
+            false);
     }
 
     private subscribe_data_changed() {

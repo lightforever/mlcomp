@@ -1,16 +1,10 @@
 import {Component, Input} from '@angular/core';
-import {DomSanitizer} from '@angular/platform-browser';
-import {MatDialog, MatIconRegistry} from '@angular/material';
-import {MessageService} from '../../message.service';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
-import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
-import {TaskFilter} from "../../models";
+import {Task, TaskFilter} from "../../models";
 import {Helpers} from "../../helpers";
-import {ReportService} from "../../report/report.service";
 import {TaskService} from "../task.service";
-import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
 
 @Component({
     selector: 'app-tasks',
@@ -18,23 +12,7 @@ import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
     styleUrls: ['./tasks.component.css']
 })
 export class TasksComponent extends Paginator<TasksComponent> {
-    displayed_columns: string[] = [
-        'project',
-        'dag',
-        'id',
-        'name',
-        'executor',
-        'status',
-        'created',
-        'started',
-        'last_activity',
-        'duration',
-        'computer',
-        'requirements',
-        'steps',
-        'score',
-        'links'
-    ];
+    displayed_columns: string[];
     @Input() dag: number;
     name: string;
     @Input() report: number;
@@ -63,37 +41,21 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
     dags_model: any[];
 
-
     constructor(protected service: TaskService,
                 protected location: Location,
                 protected router: Router,
-                protected  route: ActivatedRoute,
-                iconRegistry: MatIconRegistry,
-                sanitizer: DomSanitizer,
-                private message_service: MessageService,
-                private report_service: ReportService,
-                public model_add_dialog: MatDialog
+                protected  route: ActivatedRoute
     ) {
         super(service, location);
-        iconRegistry.addSvgIcon('stop',
-            sanitizer.bypassSecurityTrustResourceUrl(
-                'assets/img/stop.svg'));
-        iconRegistry.addSvgIcon('report',
-            sanitizer.bypassSecurityTrustResourceUrl(
-                'assets/img/report.svg'));
-        iconRegistry.addSvgIcon('model',
-            sanitizer.bypassSecurityTrustResourceUrl(
-                'assets/img/model.svg'));
     }
 
     protected _ngOnInit() {
         let self = this;
         this.route.queryParams.subscribe(params => {
-            if (params['dag']) parseInt(this.dag = params['dag']);
+            if (params['dag']) this.dag = parseInt(params['dag']);
             if (params['status']) {
                 this[params['status']] = true;
             }
-
             self.onchange();
         });
 
@@ -108,12 +70,8 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
             self.dags_model = res.dags_model;
         });
-    }
 
-    status_color(status: string) {
-        return AppSettings.status_colors[status];
     }
-
 
     get_filter() {
         let res = new TaskFilter();
@@ -145,19 +103,6 @@ export class TasksComponent extends Paginator<TasksComponent> {
         return res;
     }
 
-    stop(task) {
-        this.service.stop(task.id).subscribe(data => {
-            task.status = data.status;
-        });
-    }
-
-
-    unfinished(element) {
-        return [
-            'not_ran',
-            'in_progress',
-            'queued'].indexOf(element.status) != -1;
-    }
 
     onchange() {
         this.change.emit();
@@ -177,48 +122,4 @@ export class TasksComponent extends Paginator<TasksComponent> {
         this.filter_applied_text = count > 0 ? `(${count} applied)` : '';
     }
 
-    not_a_model(element) {
-        return element.type != 'train';
-    }
-
-    model(element){
-        this.model_add_dialog.open(ModelAddDialogComponent, {
-            width: '500px', height: '400px',
-            data: {
-                'dag': null,
-                'dags':this.dags_model,
-                'task': element.id
-            }
-        });
-    }
-
-     is_report_transparent(element: any) {
-        if (this.report) {
-            return false;
-        }
-
-        return !element.report;
-    }
-
-    is_report_transparent_active(element: any) {
-        if (!this.report) {
-            return false;
-        }
-
-        return !element.report_full;
-    }
-
-    report_click(element: any) {
-        let self = this;
-        if (this.report) {
-            this.service.toogle_report(
-                element.id,
-                this.report,
-                element.report_full).subscribe(data => {
-                element.report_full = data.report_full;
-                self.report_service.data_updated.emit();
-            });
-            return
-        }
-    }
 }

@@ -66,7 +66,9 @@ class FileSync:
             last_synced = computer.last_synced
             sync_start = now()
 
-            computers = provider.all()
+            computers = provider.all_with_last_activtiy()
+            computers = [c for c in computers
+                         if (now()-c.last_activity).total_seconds() < 10]
 
             excluded = []
             projects = project_provider.all_last_activity()

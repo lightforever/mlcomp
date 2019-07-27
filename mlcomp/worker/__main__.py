@@ -9,7 +9,7 @@ import GPUtil
 import psutil
 import numpy as np
 
-from mlcomp.utils.settings import ROOT_FOLDER
+from mlcomp.utils.settings import ROOT_FOLDER, MASTER_PORT_RANGE
 from mlcomp.db.providers import DockerProvider
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.utils.misc import dict_func, now, disk
@@ -103,7 +103,9 @@ def _create_docker():
     docker = Docker(
         name=os.getenv('DOCKER_IMG', 'default'),
         computer=socket.gethostname(),
-        last_activity=now())
+        ports='-'.join(list(map(str, MASTER_PORT_RANGE))),
+        last_activity=now()
+    )
     DockerProvider().create_or_update(docker, 'name', 'computer')
 
 

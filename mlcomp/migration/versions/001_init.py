@@ -203,6 +203,7 @@ docker = Table(
     Column('name', String(100), primary_key=True),
     Column('computer', String(100), primary_key=True),
     Column('last_activity', TIMESTAMP, nullable=False),
+    Column('ports', String(100), nullable=False)
 )
 
 model = Table(

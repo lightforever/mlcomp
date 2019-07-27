@@ -1,7 +1,7 @@
 from sqlalchemy import func, or_
 
 from mlcomp.db.core import PaginatorOptions
-from mlcomp.db.enums import TaskStatus
+from mlcomp.db.enums import TaskStatus, TaskType
 from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, duration_format, now
@@ -54,6 +54,9 @@ class DagProvider(BaseDataProvider):
             query = query.having(or_(*status_clauses))
 
         query = query.join(Task, isouter=True).group_by(Dag.id, Project.name)
+        # Do not include service tasks
+        query = query.filter(Task.type < TaskType.Service.value)
+
         total = query.count()
         paginator = self.paginator(query, options) if options else query
         res = []

@@ -50,6 +50,7 @@ import {DagsComponent} from './dag/dags/dags.component'
 import {TasksComponent} from './task/tasks/tasks.component'
 import {ReportsComponent} from "./report/reports/reports.component";
 import {DialogComponent} from "./dialog/dialog.component";
+import {TaskTableComponent} from "./task/task-table/task-table.component";
 
 @NgModule({
     imports: [
@@ -109,6 +110,7 @@ import {DialogComponent} from "./dialog/dialog.component";
         LogComponent,
         DagsComponent,
         TasksComponent,
+        TaskTableComponent,
         ReportsComponent,
         DialogComponent
     ],
@@ -168,6 +170,7 @@ import {DialogComponent} from "./dialog/dialog.component";
         LogComponent,
         DagsComponent,
         TasksComponent,
+        TaskTableComponent,
         ReportsComponent,
         DialogComponent
     ],

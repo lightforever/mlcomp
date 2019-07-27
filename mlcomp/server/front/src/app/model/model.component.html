@@ -40,8 +40,10 @@
         <ng-container matColumnDef="id">
             <th mat-header-cell
                 *matHeaderCellDef mat-sort-header
-                style="width: 5%"> Id
+                style="width: 5%">
+                Id
             </th>
+
             <td mat-cell
                 *matCellDef="let element"
                 style="width: 5%">
@@ -64,8 +66,10 @@
         </ng-container>
 
         <ng-container matColumnDef="score_local">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Score local
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Score local
             </th>
+
             <td mat-cell *matCellDef="let element">
                 {{element.score_local|number:'.5'}}
             </td>

@@ -23,7 +23,7 @@ class BaseDataProvider:
         self._session = session
         self.serializer = Serializer(
             date_format=self.date_format,
-            datetime_format=self.datetime_format,
+            datetime_format=self.datetime_format_long,
             time_format=self.time_format)
 
     def serialize_datetime(self, value):

@@ -11,6 +11,7 @@ class AuxiliaryProvider(BaseDataProvider):
         res = dict()
         for r in query.all():
             res[r.name] = yaml_load(r.data)
+            res[r.name] = self.serializer(res[r.name])
         return res
 
 

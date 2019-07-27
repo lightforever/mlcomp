@@ -6,20 +6,35 @@ pip install mlcomp
 
 ### Server
 
-- Run databases
-
-```bash
-git clone git@github.com:lightforever/mlcomp.git
-
-cd mlcomp
-
-docker-compose -f docker/db-compose.yml up -d
-```
-
 - Install mlcomp
 
 ```bash
 pip install mlcomp
+```
+
+- Clone project
+
+```bash
+git clone git@github.com:lightforever/mlcomp.git
+```
+
+- Fill .env file
+
+```bash
+cp docker/example.env docker/.env
+nano docker/.env
+```
+
+More about mlcomp environment variables read at:
+
+[Environment variables](/docs/env_variables.md)
+
+- Run databases
+
+```bash
+cd mlcomp
+
+docker-compose -f docker/db-compose.yml up -d
 ```
 
 - Run mlcomp server
