@@ -18,4 +18,17 @@ services:
     restart: always
     ports:
       - 6379:6379
+  flower:
+    command: [
+      "celery",
+      "flower",
+      "--broker=redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0",
+      "--port=5555"
+    ]
+    image: mher/flower
+    container_name: flower
+    restart: always
+    depends_on: [redis]
+    ports:
+      - 5555:5555
 version: '2.3'

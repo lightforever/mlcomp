@@ -173,6 +173,7 @@ export class TaskFilter {
     last_activity_min: Date;
     last_activity_max: Date;
     project: number;
+    type: string[];
 }
 
 export class ReportsFilter {
@@ -342,11 +343,37 @@ export class AuxiliarySupervisorComputer {
     gpu: number[];
     ports: number[];
 }
+
+export class AuxiliarySupervisorParentTask {
+    name: string;
+    id: number;
+    started: Date;
+    statuses;
+    expanded: boolean;
+}
+
+export class AuxiliarySupervisorNotRanTask {
+    id: number;
+    name: string;
+    dep_status: string[];
+}
+
+export class AuxiliarySupervisorProcessTask {
+    not_valid: string;
+    computers: any;
+    to_send: any;
+    id: number;
+    name: string;
+}
+
 export class AuxiliarySupervisor {
     queues: string[];
     time: Date;
     duration: number;
     computers: AuxiliarySupervisorComputer[];
+    parent_tasks_stats: AuxiliarySupervisorParentTask[];
+    not_ran_tasks: AuxiliarySupervisorNotRanTask[];
+    process_tasks: AuxiliarySupervisorProcessTask[];
 }
 
 export class Auxiliary {

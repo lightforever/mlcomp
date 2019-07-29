@@ -10,7 +10,7 @@ from celery.signals import celeryd_after_setup
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
-from mlcomp.db.models import Task
+from mlcomp.db.models import Task, Dag
 from mlcomp.db.providers import TaskProvider, \
     DagLibraryProvider, \
     DockerProvider
@@ -150,7 +150,7 @@ def execute_by_id(id: int, repeat_count=1):
 
 @celeryd_after_setup.connect
 def capture_worker_name(sender, instance, **kwargs):
-    os.environ["WORKER_INDEX"] = sender.split('@')[1]
+    os.environ["WORKER_INDEX"] = sender.split('_')[-1]
 
 
 @app.task
@@ -197,15 +197,18 @@ def remove_dag(id: int):
         remove_task(task.id)
 
 
-def stop(task: Task):
-    assert task.dag_rel, 'Dag is not in the task'
+def stop(task: Task, dag: Dag):
     logger = create_logger()
     provider = TaskProvider()
     if task.status > TaskStatus.InProgress.value:
         return task.status
 
+    status = TaskStatus.Stopped
     try:
-        app.control.revoke(task.celery_id, terminate=True)
+        if task.status != TaskStatus.NotRan.value:
+            app.control.revoke(task.celery_id, terminate=True)
+        else:
+            status = TaskStatus.Skipped
     except Exception as e:
         if type(e) == ProgrammingError:
             Session.cleanup()
@@ -213,9 +216,9 @@ def stop(task: Task):
     finally:
         if task.pid:
             queue = f'{task.computer_assigned}_' \
-                f'{task.dag_rel.docker_img or "default"}_supervisor'
+                f'{dag.docker_img or "default"}_supervisor'
             kill.apply_async((task.pid,), queue=queue)
-        provider.change_status(task, TaskStatus.Stopped)
+        provider.change_status(task, status)
 
     return task.status
 

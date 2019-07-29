@@ -59,17 +59,18 @@ def worker_usage():
 @click.argument('number', type=int)
 def worker(number):
     docker_img = os.getenv('DOCKER_IMG', 'default')
+    name = f'{socket.gethostname()}_{docker_img}'
     argv = [
         'worker',
         '--loglevel=INFO',
         '-P=solo',
-        f'-n={number}',
+        f'-n={name}_{number}',
         '-O fair',
         '-c=1',
         '--prefetch-multiplier=1',
         '-Q',
-        f'{socket.gethostname()}_{docker_img},'
-        f'{socket.gethostname()}_{docker_img}_{number}'
+        f'{name},'
+        f'{name}_{number}'
     ]
     print(argv)
     app.worker_main(argv)

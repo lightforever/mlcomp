@@ -59,14 +59,17 @@ class Catalyst(Executor, Callback):
         self.master = True
 
     def callbacks(self):
-        result = [self]
-        for items, cls in [
-            [self.report.precision_recall, PrecisionRecallCallback],
-            [self.report.f1, F1Callback],
-            [self.report.img_classify, ImgClassifyCallback],
-        ]:
-            for item in items:
-                result.append(cls(self.experiment, self.task, self.dag, item))
+        result = []
+        if self.master:
+            result = [self]
+
+        # for items, cls in [
+        #     [self.report.precision_recall, PrecisionRecallCallback],
+        #     [self.report.f1, F1Callback],
+        #     [self.report.img_classify, ImgClassifyCallback],
+        # ]:
+        #     for item in items:
+        #         result.append(cls(self.experiment, self.task, self.dag, item))
         return result
 
     def on_epoch_end(self, state: RunnerState):
@@ -143,14 +146,12 @@ class Catalyst(Executor, Callback):
         info = self.distr_info
         os.environ['MASTER_ADDR'] = info['master_addr']
         os.environ['MASTER_PORT'] = str(info['master_port'])
-        os.environ['WORLD_SIZE'] = str(self.task.gpu)
+        os.environ['WORLD_SIZE'] = str(info['world_size'])
 
         os.environ['RANK'] = str(info['rank'])
-        os.environ['LOCAL_RANK'] = str(info['local_rank'])
-        os.environ['CUDA_VISIBLE_DEVICES'] =  \
-            ','.join([str(i) for i in info['gpu_visible']])
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(info['local_rank'])
 
-        config['distributed_params'] = {'rank': info['rank']}
+        config['distributed_params'] = {'rank': 0}
 
         if info['rank'] > 0:
             self.master = False
@@ -177,8 +178,7 @@ class Catalyst(Executor, Callback):
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
-            return _get_callbacks(stage) + \
-                   self.callbacks() if self.master else []
+            return _get_callbacks(stage) + self.callbacks()
 
         experiment.get_callbacks = get_callbacks
 

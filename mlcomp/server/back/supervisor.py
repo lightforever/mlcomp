@@ -2,8 +2,9 @@ import datetime
 import traceback
 from collections import defaultdict
 
-import numpy as np
 from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm import make_transient
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus, TaskType
@@ -14,7 +15,7 @@ from mlcomp.utils.misc import now
 from mlcomp.worker.tasks import execute
 from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
-
+import mlcomp.worker.tasks as celery_tasks
 
 class SupervisorBuilder:
     def __init__(self):
@@ -54,7 +55,10 @@ class SupervisorBuilder:
             {
                 'id': t.id,
                 'name': t.name,
-                'dep_status': self.dep_status.get(t.id, [])
+                'dep_status': [
+                    TaskStatus(s).name
+                    for s in self.dep_status.get(t.id, set())
+                ]
             }
             for t in not_ran_tasks
         ]
@@ -110,19 +114,24 @@ class SupervisorBuilder:
                             task: Task,
                             gpu_assigned=None,
                             distr_info: dict = None):
-        task_dict = {k: v for k, v in task.__dict__.items() if
-                     not k.startswith('_') and v is not None}
-        new_task = Task(**task_dict)
+        new_task = Task(
+            name=task.name,
+            computer=task.computer,
+            executor=task.executor,
+            status=TaskStatus.NotRan.value,
+            type=TaskType.Service.value,
+            gpu_assigned=gpu_assigned,
+            parent=task.id,
+            report=task.report,
+            dag=task.dag
+        )
         new_task.additional_info = task.additional_info
 
-        new_task.id = None
-        new_task.type = TaskType.Service.value
-        new_task.gpu_assigned = gpu_assigned
-        new_task.parent = task.id
         if distr_info:
             additional_info = yaml_load(new_task.additional_info)
             additional_info['distr_info'] = distr_info
             new_task.additional_info = yaml_dump(additional_info)
+
         return self.provider.add(new_task)
 
     def find_port(self, c: dict, docker_name: str):
@@ -134,59 +143,64 @@ class SupervisorBuilder:
         raise Exception(f'All ports in {c["name"]} are taken')
 
     def process_task(self, task: Task):
-        auxiliary = self.auxiliary['process_tasks'][task.id]
-        auxiliary['valid_computer'] = {}
+        auxiliary = self.auxiliary['process_tasks'][-1]
+        auxiliary['computers'] = []
 
         def valid_computer(c: dict):
             if task.computer is not None and task.computer != c['name']:
-                auxiliary['valid_computer'][c['name']] = \
-                    'name set in the config!= name of this computer'
-                return False
+                return 'name set in the config!= name of this computer'
 
             if task.cpu > c['cpu']:
-                auxiliary['valid_computer'][c['name']] = \
-                    f'task cpu = {task.cpu} > computer free cpu = {c["cpu"]}'
-                return False
+                return f'task cpu = {task.cpu} > computer' \
+                       f' free cpu = {c["cpu"]}'
 
             if task.memory > c['memory']:
-                auxiliary['valid_computer'][c['name']] = \
-                    f'task cpu = {task.cpu} > computer ' \
-                    f'free memory = {c["memory"]}'
-                return False
+                return f'task cpu = {task.cpu} > computer ' \
+                       f'free memory = {c["memory"]}'
 
             queue = f'{c["name"]}_' \
                     f'{task.dag_rel.docker_img or "default"}'
             if queue not in self.queues:
-                auxiliary['valid_computer'][c['name']] = \
-                    f'required queue = {queue} not in queues'
+                return f'required queue = {queue} not in queues'
 
-                return False
-            if task.gpu > 0 and sum(c['gpu']) == 0:
-                auxiliary['valid_computer'][c['name']] = \
-                    f'task requires gpu, but there is not any free'
+            if task.gpu > 0 and not any(g == 0 for g in c['gpu']):
+                return f'task requires gpu, but there is not any free'
 
-                return False
+        computers = []
+        for c in self.computers:
+            error = valid_computer(c)
+            auxiliary['computers'].append({'name': c['name'], 'error': error})
+            if not error:
+                computers.append(c)
 
-            auxiliary['valid_computer'][c['name']] = 'valid'
-            return True
-
-        computers = [c for c in self.computers if valid_computer(c)]
-        free_gpu = sum(sum(c['gpu'] == 0) for c in computers)
+        free_gpu = sum(sum(g == 0 for g in c['gpu']) for c in computers)
         if task.gpu > free_gpu:
-            auxiliary['valid'] = f'gpu required by the task = {task.gpu},' \
-                                 f' but there are only {free_gpu} free gpus'
+            auxiliary['not_valid'] = f'gpu required by the ' \
+                                     f'task = {task.gpu},' \
+                                     f' but there are only {free_gpu} ' \
+                                     f'free gpus'
             return
 
         to_send = []
         computer_gpu_taken = defaultdict(list)
-        for computer in self.computers:
+        for computer in computers:
             queue = f'{computer["name"]}_' \
                     f'{task.dag_rel.docker_img or "default"}'
 
             if task.gpu > 0:
-                for i in list(np.where(computer['gpu'] == 0)[0]):
-                    to_send.append([computer, queue, i])
-                    computer_gpu_taken[computer['name']].append(int(i))
+                index = 0
+                for task_taken_gpu in computer['gpu']:
+                    if task_taken_gpu:
+                        continue
+                    to_send.append([computer, queue, index])
+                    computer_gpu_taken[computer['name']].append(int(index))
+                    index += 1
+
+                    if len(to_send) >= task.gpu:
+                        break
+
+                if len(to_send) >= task.gpu:
+                    break
 
             else:
                 self.process_to_celery(task, queue, computer)
@@ -197,7 +211,8 @@ class SupervisorBuilder:
         rank = 0
         master_port = None
         if len(to_send) > 0:
-            master_port = self.find_port(to_send[0][0], to_send[0][1])
+            master_port = self.find_port(to_send[0][0],
+                                         to_send[0][1].split('_')[1])
 
         for computer, queue, gpu_assigned in to_send:
             gpu_visible = computer_gpu_taken[computer['name']]
@@ -210,8 +225,8 @@ class SupervisorBuilder:
                 'master_addr': ip,
                 'rank': rank,
                 'local_rank': gpu_visible.index(gpu_assigned),
-                'gpu_visible': gpu_visible,
-                'master_port': master_port
+                'master_port': master_port,
+                'world_size': task.gpu
             }
             service_task = self.create_service_task(task,
                                                     distr_info=distr_info,
@@ -226,11 +241,11 @@ class SupervisorBuilder:
             self.provider.commit()
 
     def process_tasks(self):
-        self.auxiliary['process_tasks'] = {}
+        self.auxiliary['process_tasks'] = []
 
         for task in self.not_ran_tasks:
-            auxiliary = {}
-            self.auxiliary['process_tasks'][task.id] = auxiliary
+            auxiliary = {'id': task.id, 'name': task.name}
+            self.auxiliary['process_tasks'].append(auxiliary)
 
             if task.dag_rel is None:
                 auxiliary['not_valid'] = 'no dag_rel'
@@ -242,12 +257,19 @@ class SupervisorBuilder:
                 self.provider.change_status(task, TaskStatus.Skipped)
                 continue
 
-            status_set = set(self.dep_status[task.id])
-            if len(status_set) != 0 \
-                    and status_set != {TaskStatus.Success.value}:
+            if len(self.dep_status[task.id]) != 0 \
+                    and self.dep_status[task.id] != {TaskStatus.Success.value}:
                 auxiliary['not_valid'] = 'not all dep tasks are finished'
                 continue
             self.process_task(task)
+
+    def _stop_child_tasks(self, task: Task):
+        self.provider.commit()
+
+        children = self.provider.children(task.id, [Task.dag_rel])
+        dags = [c.dag_rel for c in children]
+        for c, d in zip(children, dags):
+            celery_tasks.stop(c, d)
 
     def process_parent_tasks(self):
         tasks = self.provider.parent_tasks_stats()
@@ -275,6 +297,9 @@ class SupervisorBuilder:
                     task.started = started
                     task.finished = finished
 
+                if status >= TaskStatus.Failed.value:
+                    self._stop_child_tasks(task)
+
         if was_change:
             self.provider.commit()
 
@@ -284,7 +309,9 @@ class SupervisorBuilder:
                 'id': task.id,
                 'started': task.started,
                 'finished': finished,
-                'statuses': statuses,
+                'statuses': [
+                    {'name': k.name, 'count': v}
+                    for k, v in statuses.items()],
             }
             for task, started, finished, statuses in tasks
         ]
@@ -314,6 +341,8 @@ class SupervisorBuilder:
 
             self.write_auxiliary()
 
+        except ObjectDeletedError:
+            pass
         except Exception as error:
             if type(error) == ProgrammingError:
                 Session.cleanup()

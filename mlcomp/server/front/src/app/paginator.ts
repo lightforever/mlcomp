@@ -13,6 +13,7 @@ import {switchMap} from 'rxjs/operators';
 import {Location} from '@angular/common';
 import {PaginatorFilter, PaginatorRes} from "./models";
 import {BaseService} from "./base.service";
+import {Helpers} from "./helpers";
 
 export class Paginator<T> implements OnInit, OnDestroy {
     dataSource: MatTableDataSource<T> = new MatTableDataSource();
@@ -32,7 +33,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
     protected constructor(
         protected service: BaseService,
         protected location: Location,
-        protected filter_params: object = null,
+        protected filter_params: CallableFunction = null,
         protected filter_key: string = null,
         protected enable_interval: boolean = true
     ) {
@@ -57,29 +58,12 @@ export class Paginator<T> implements OnInit, OnDestroy {
         if (this.filter_key) {
             let final = {[this.filter_key]: res};
             if (this.filter_params) {
-                final = {...final, ...this.filter_params};
+                final = {...final, ...this.filter_params()};
             }
             return final;
         }
 
         return res;
-    }
-
-    normalizeArray<T>(array: Array<T>) {
-        const normalizedObject: any = {};
-        for (let i = 0; i < array.length; i++) {
-            const key = 'id' + array[i][this.id_column].toString();
-            normalizedObject[key] = array[i]
-        }
-        return normalizedObject as { [key: string]: T }
-    }
-
-    static sync_objects(source, target) {
-        for (let name in source) {
-            if (JSON.stringify(source[name]) != JSON.stringify(target[name])) {
-                target[name] = source[name];
-            }
-        }
     }
 
     ngOnInit() {
@@ -125,44 +109,13 @@ export class Paginator<T> implements OnInit, OnDestroy {
             if (!res.data) {
                 return;
             }
-            if (this.dataSource.data &&
-                res.data.length == this.dataSource.data.length) {
-                let res_d = this.normalizeArray(res.data);
-                let target_d = this.normalizeArray(this.dataSource.data);
-                let names = Object.getOwnPropertyNames(res_d);
-                for (let k of names) {
-                    if (k in target_d) {
-                        Paginator.sync_objects(res_d[k], target_d[k]);
-                        delete res_d[k];
-                        delete target_d[k];
-                    }
 
-                }
+            this.dataSource.data = Helpers.update_object(
+                this.dataSource.data,
+                res.data,
+                [this.id_column]);
 
-                let data = this.dataSource.data.slice(0);
-                for (let k in target_d) {
-                    let index = data.indexOf(target_d[k]);
-                    data.splice(index, 1);
-                }
-                let res_a = [];
-                for (let k in res_d) {
-                    res_a.push(res_d[k]);
-                }
-                for (let i = 0; i < res_a.length; i++) {
-                    data.splice(i, 0, res_a[i]);
-                }
-
-                data = data.sort(
-                    (a, b) => a[this.id_column] > b[this.id_column]
-                        ? -1 : 1);
-                this.dataSource.data = data;
-
-
-            } else {
-                this.dataSource.data = res.data;
-                this.total = res.total;
-            }
-
+            this.total = res.total;
             this.data_updated.emit(res);
         });
 

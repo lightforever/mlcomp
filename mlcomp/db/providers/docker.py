@@ -11,7 +11,8 @@ class DockerProvider(BaseDataProvider):
     def get(self, computer: str, name: str):
         return self.query(Docker). \
             filter(Docker.computer == computer). \
-            filter(Docker.name == name).one()
+            filter(Docker.name == name).\
+            one()
 
     def get_online(self):
         min_activity = now() - datetime.timedelta(seconds=30)

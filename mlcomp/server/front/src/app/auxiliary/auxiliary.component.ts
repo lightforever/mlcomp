@@ -1,6 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {AuxiliaryService} from "./auxiliary.service";
 import {Auxiliary} from "../models";
+import {Helpers} from "../helpers";
 
 @Component({
     selector: 'app-auxiliary',
@@ -18,7 +19,12 @@ export class AuxiliaryComponent implements OnInit, OnDestroy {
 
     load() {
         this.service.get_obj<Auxiliary>({}).subscribe(data => {
-            this.data = data;
+            this.data = Helpers.update_object(this.data,
+                data,
+                [
+                    'supervisor.computers.name',
+                    'supervisor.parent_tasks_stats.id'
+                ]);
         })
     }
 

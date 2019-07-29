@@ -5,6 +5,6 @@ info:
 executors:
   train:
     type: catalyst
-    gpu: 1
+    gpu: 5
     args:
         config: catalyst.yml

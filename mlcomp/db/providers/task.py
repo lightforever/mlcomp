@@ -62,6 +62,9 @@ class TaskProvider(BaseDataProvider):
         res = []
 
         for p, project_name in paginator.all():
+            if p.dag_rel is None:
+                continue
+
             item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
@@ -161,7 +164,7 @@ class TaskProvider(BaseDataProvider):
         query = self.query(Task).filter(Task.id == id)
         if options:
             query = query.options(options)
-        return query.first()
+        return query.one_or_none()
 
     def change_status(self, task, status: TaskStatus):
         if status == TaskStatus.InProgress:
@@ -188,7 +191,7 @@ class TaskProvider(BaseDataProvider):
         return query.all()
 
     def dependency_status(self, tasks: List[Task]):
-        res = {t.id: [] for t in tasks}
+        res = {t.id: set() for t in tasks}
         task_ids = [task.id for task in tasks]
         items = self.query(TaskDependence, Task). \
             filter(TaskDependence.task_id.in_(task_ids)). \
@@ -235,8 +238,8 @@ class TaskProvider(BaseDataProvider):
                            TaskStatus.InProgress.value]
 
         query = self.query(task_parent, *times, *task_status). \
-            filter(task_parent.status.in_(parent_statuses)).\
-            join(task_child, task_parent.id == task_child.parent).\
+            filter(task_parent.status.in_(parent_statuses)). \
+            join(task_child, task_parent.id == task_child.parent). \
             group_by(task_parent.id)
 
         res = []
@@ -249,6 +252,16 @@ class TaskProvider(BaseDataProvider):
             ])
 
         return res
+
+    def has_id(self, id: int):
+        return self.query(Task).filter(Task.id == id).count() > 0
+
+    def children(self, id: int, joined_load=None):
+        res = self.query(Task).filter(Task.parent == id)
+        if joined_load is not None:
+            for n in joined_load:
+                res = res.options(joinedload(n))
+        return res.all()
 
 
 __all__ = ['TaskProvider']

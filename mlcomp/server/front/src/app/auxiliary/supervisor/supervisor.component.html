@@ -10,10 +10,11 @@ Duration: {{data.duration| number:'.2'}} seconds
     <li>{{queue}}</li>
 </ul>
 
-<h5>Computers</h5>
+<h5>Computers:</h5>
 
 <ul *ngFor="let computer of data.computers">
-    <li>{{computer.name}}
+    <li>
+        {{computer.name}}
         <a *ngIf="!computer.expanded" (click)="computer.expanded=true">more</a>
         <a *ngIf="computer.expanded" (click)="computer.expanded=false">less</a>
 
@@ -30,21 +31,97 @@ Duration: {{data.duration| number:'.2'}} seconds
 
             <div>
                 Gpu:
-                  <ul *ngFor="let task_taken of computer.gpu; let i = index">
+                <ul *ngFor="let task_taken of computer.gpu; let i = index">
                     <li>
-                      {{i}}
-                      <span *ngIf="!task_taken">free</span>
-                      <span *ngIf="task_taken">taken by {{task_taken}}</span>
+                        {{i}}
+                        <span *ngIf="!task_taken">free</span>
+                        <span *ngIf="task_taken">taken by
+                            <a routerLink=
+                                       "/tasks/task-detail/{{task_taken}}/logs">
+                                {{task_taken}}
+                            </a>
+                        </span>
                     </li>
-                  </ul>
+                </ul>
             </div>
 
             <div>
-              Used master ports:
+                Used master ports:
 
-              {{computer.ports}}
+                {{computer.ports}}
             </div>
 
         </div>
+    </li>
+</ul>
+
+<h5>Parent tasks:</h5>
+
+
+<ul *ngFor="let parent_task of data.parent_tasks_stats">
+    <li>
+        <a routerLink="/tasks/task-detail/{{parent_task.id}}/logs">
+            {{parent_task.id}}
+        </a>
+
+        {{parent_task.name}}
+        <a *ngIf="!parent_task.expanded" (click)="parent_task.expanded=true">more</a>
+        <a *ngIf="parent_task.expanded" (click)="parent_task.expanded=false">less</a>
+
+        <div *ngIf="parent_task.expanded">
+
+            <div>
+                Started: {{parent_task.started| date:"MM.dd H:mm:ss"}}
+            </div>
+
+            <div>
+                Statuses:
+
+                <ul *ngFor="let status of parent_task.statuses;">
+                    <li>
+                        {{status.name}} - {{status.count}}
+                    </li>
+                </ul>
+
+            </div>
+
+        </div>
+    </li>
+</ul>
+
+<h5>Not ran tasks:</h5>
+
+<ul *ngFor="let task of data.not_ran_tasks">
+    <li>
+        <a routerLink="/tasks/task-detail/{{task.id}}/logs">
+            {{task.id}}
+        </a> {{task.name}}, dep_statuses: {{task.dep_status}}
+    </li>
+</ul>
+
+<h5>Process tasks:</h5>
+
+<ul *ngFor="let task of data.process_tasks">
+    <li>
+        <a routerLink="/tasks/task-detail/{{task.id}}/logs">
+            {{task.id}}
+        </a> {{task.name}}
+
+        <div *ngIf="task.not_valid">
+            not_valid: {{task.not_valid}}
+        </div>
+
+        <ul *ngFor="let comp of task.computers" style="padding-left: 20px">
+            <li>
+                {{comp.name}}
+                <span *ngIf="comp.error">{{comp.error}}</span>
+                <span *ngIf="!comp.error">valid</span>
+            </li>
+        </ul>
+
+        <div *ngIf="task.to_send">
+            To send: {{task.to_send}}
+        </div>
+
     </li>
 </ul>
