@@ -379,3 +379,12 @@ export class AuxiliarySupervisor {
 export class Auxiliary {
     supervisor: AuxiliarySupervisor;
 }
+
+export class TaskInfo {
+    id: number;
+    pid: number;
+    worker_index: number;
+    gpu_assigned: number;
+    celery_id: string;
+    additional_info: string;
+}

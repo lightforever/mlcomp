@@ -10,13 +10,14 @@ import {TaskService} from "../task.service";
 import {ReportService} from "../../report/report.service";
 import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
 import {DomSanitizer} from "@angular/platform-browser";
+import {TaskInfoDialogComponent} from "./task-info-dialog.component";
 
 @Component({
     selector: 'app-task-table',
     templateUrl: './task-table.component.html',
     styleUrls: ['./task-table.component.css']
 })
-export class TaskTableComponent{
+export class TaskTableComponent {
     @Input() dataSource: MatTableDataSource<Task>;
     @Input() report: number;
     @Input() total: number;
@@ -45,6 +46,7 @@ export class TaskTableComponent{
     constructor(protected service: TaskService,
                 private report_service: ReportService,
                 public model_add_dialog: MatDialog,
+                public task_info_dialog: MatDialog,
                 iconRegistry: MatIconRegistry,
                 sanitizer: DomSanitizer
     ) {
@@ -57,6 +59,9 @@ export class TaskTableComponent{
         iconRegistry.addSvgIcon('model',
             sanitizer.bypassSecurityTrustResourceUrl(
                 'assets/img/model.svg'));
+        iconRegistry.addSvgIcon('info',
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/info.svg'));
     }
 
     status_color(status: string) {
@@ -123,4 +128,12 @@ export class TaskTableComponent{
         });
     }
 
+    info(element) {
+        this.task_info_dialog.open(TaskInfoDialogComponent, {
+            width: '600px', height: '700px',
+            data: {
+                'id': element.id
+            }
+        });
+    }
 }

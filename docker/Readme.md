@@ -2,7 +2,7 @@ export $(cat docker/.env | xargs)
 
 PYTHONPATH=. python mlcomp/worker/__main__.py supervisor
 
-CUDA_VISIBLE_DEVICES=1 PYTHONPATH=. python2 /usr/bin/supervisord -c docker/supervisord.conf 
+PYTHONPATH=. python2 /usr/bin/supervisord -c docker/supervisord.conf 
 
 **Test it into docker**:
 

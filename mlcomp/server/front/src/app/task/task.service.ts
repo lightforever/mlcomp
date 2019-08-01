@@ -4,7 +4,7 @@ import {AppSettings} from "../app-settings";
 import {catchError} from "rxjs/operators";
 import {
     Status,
-    StepNodeResult,
+    StepNodeResult, TaskInfo,
     ToogleReportResult
 } from "../models";
 
@@ -46,6 +46,14 @@ export class TaskService extends BaseService {
         return this.http.post<StepNodeResult>(url, id).pipe(
             catchError(this.handleError<StepNodeResult>(message,
                 new StepNodeResult()))
+        );
+    }
+
+    info(id: number) {
+        let message = `${this.constructor.name}.info`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/info';
+        return this.http.post<TaskInfo>(url, {'id': id}).pipe(
+            catchError(this.handleError<TaskInfo>(message, new TaskInfo()))
         );
     }
 }

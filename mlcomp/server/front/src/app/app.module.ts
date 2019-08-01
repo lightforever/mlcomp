@@ -23,6 +23,7 @@ import {ReportAddDialogComponent} from "./report/reports/report-add-dialog";
 import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
 import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
 import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.component";
+import {TaskInfoDialogComponent} from "./task/task-table/task-info-dialog.component";
 
 
 @NgModule({
@@ -40,6 +41,7 @@ import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.co
         LayoutAddDialogComponent,
         ModelAddDialogComponent,
         ModelStartDialogComponent,
+        TaskInfoDialogComponent,
         MessagesComponent,
         ComputerComponent,
         ModelComponent,
@@ -52,7 +54,8 @@ import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.co
         ModelAddDialogComponent,
         ModelStartDialogComponent,
         ReportAddDialogComponent,
-        LayoutAddDialogComponent
+        LayoutAddDialogComponent,
+        TaskInfoDialogComponent
     ],
     providers: [
         {

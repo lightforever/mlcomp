@@ -383,6 +383,22 @@ def task_stop():
     }
 
 
+@app.route('/api/task/info', methods=['POST'])
+@requires_auth
+@error_handler
+def task_info():
+    data = request_data()
+    task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
+    return {
+        'pid': task.pid,
+        'worker_index': task.worker_index,
+        'gpu_assigned': task.gpu_assigned,
+        'celery_id': task.celery_id,
+        'additional_info': (task.additional_info or '').strip(),
+        'id': task.id
+    }
+
+
 @app.route('/api/dag/stop', methods=['POST'])
 @requires_auth
 @error_handler
