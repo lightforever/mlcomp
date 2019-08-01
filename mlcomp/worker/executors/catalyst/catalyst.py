@@ -77,17 +77,18 @@ class Catalyst(Executor, Callback):
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
 
+            task_id = self.task.parent or self.task.id
             train = ReportSeries(part='train',
                                  name=s.key,
                                  epoch=state.epoch,
-                                 task=self.task.id,
+                                 task=task_id,
                                  value=train,
                                  time=now())
 
             val = ReportSeries(part='valid',
                                name=s.key,
                                epoch=state.epoch,
-                               task=self.task.id,
+                               task=task_id,
                                value=val,
                                time=now())
 
@@ -103,7 +104,10 @@ class Catalyst(Executor, Callback):
                     if self.task.score is None or val.value > self.task.score:
                         best = True
                 if best:
-                    self.task.score = val.value
+                    task = self.task
+                    if task.parent:
+                        task = self.task_provider.by_id(task.parent)
+                    task.score = val.value
                     self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):

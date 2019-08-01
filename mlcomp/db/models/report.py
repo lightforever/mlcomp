@@ -55,7 +55,7 @@ class Report(Base):
     time = sa.Column(sa.DateTime, default=now())
     name = sa.Column(sa.String)
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
-
+    layout = sa.Column(sa.String)
 
 class ReportTasks(Base):
     __tablename__ = 'report_task'

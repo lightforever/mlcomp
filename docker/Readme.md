@@ -1,8 +1,6 @@
-export $(cat docker/.env | xargs)
-
 PYTHONPATH=. python mlcomp/worker/__main__.py supervisor
 
-PYTHONPATH=. python2 /usr/bin/supervisord -c docker/supervisord.conf 
+PYTHONPATH=. python2 /usr/bin/supervisord -c docker/supervisord.conf -e INFO
 
 **Test it into docker**:
 

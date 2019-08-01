@@ -3,7 +3,6 @@ import traceback
 from collections import defaultdict
 
 from sqlalchemy.exc import ProgrammingError
-from sqlalchemy.orm import make_transient
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 from mlcomp.db.core import Session

@@ -104,7 +104,8 @@ report = Table(
     Column('config', String(4000), nullable=False),
     Column('time', TIMESTAMP, nullable=False, default='now()'),
     Column('name', String(100), nullable=False),
-    Column('project', Integer, nullable=False)
+    Column('project', Integer, nullable=False),
+    Column('layout', String(100), nullable=False)
 )
 
 report_img = Table(
@@ -183,7 +184,7 @@ task = Table(
     Column('debug', Boolean, nullable=False, default=False),
     Column('pid', Integer),
     Column('worker_index', Integer),
-    Column('additional_info', String(16000)),
+    Column('additional_info', String(16000), nullable=False),
     Column('docker_assigned', String(100)),
     Column('type', Integer, nullable=False),
     Column('score', Float),

@@ -1,6 +1,6 @@
 import {EventEmitter, Injectable} from '@angular/core';
 import {BaseService} from "../base.service";
-import {BaseResult, ReportAddData} from "../models";
+import {BaseResult, Report, ReportAddData, ReportUpdateData} from "../models";
 import {AppSettings} from "../app-settings";
 import {catchError} from "rxjs/operators";
 
@@ -28,4 +28,31 @@ export class ReportService extends BaseService {
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
+
+    update_layout_start(id: number) {
+        let message = `${this.constructor.name}.update_layout_start`;
+        let url = AppSettings.API_ENDPOINT +
+            this.single_part +
+            '/update_layout_start';
+
+        let data = {'id': id};
+        return this.http.post<ReportUpdateData>(url, data).pipe(
+            catchError(this.handleError<ReportUpdateData>(message,
+                new ReportUpdateData()))
+        );
+    }
+
+    update_layout_end(id: number, layout: string) {
+        let message = `${this.constructor.name}.update_layout_end`;
+        let url = AppSettings.API_ENDPOINT +
+            this.single_part +
+            '/update_layout_end';
+
+        let data = {'id': id, 'layout': layout};
+        return this.http.post<Report>(url, data).pipe(
+            catchError(this.handleError<Report>(message,
+                new Report()))
+        );
+    }
+
 }

@@ -63,7 +63,9 @@ class DagStandardBuilder:
             report = Report(
                 config=yaml_dump(self.layouts[report_name]),
                 name=self.info['name'],
-                project=self.project)
+                project=self.project,
+                layout=report_name
+            )
             self.report_provider.add(report)
             self.dag_report_id = report.id
 
@@ -108,6 +110,7 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
+        task.additional_info = ''
 
         if self.report_name and task_type == TaskType.Train.value:
             if self.report_name not in self.layouts:
@@ -120,7 +123,9 @@ class DagStandardBuilder:
                               commit=False)
             report = Report(config=yaml_dump(report_config),
                             name=task.name,
-                            project=self.project)
+                            project=self.project,
+                            layout=self.report_name
+                            )
             self.report_provider.add(report)
             task.report = report.id
 

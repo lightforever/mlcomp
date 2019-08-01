@@ -7,12 +7,13 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import PaginatorOptions, Session
-from mlcomp.db.enums import TaskStatus
-from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, ReportImg
+from mlcomp.db.enums import TaskStatus, TaskType
+from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, \
+    ReportImg, ReportLayout
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
-from mlcomp.utils.io import yaml_load
+from mlcomp.utils.io import yaml_load, yaml_dump
 
 
 class ReportProvider(BaseDataProvider):
@@ -185,9 +186,14 @@ class ReportProvider(BaseDataProvider):
         return {'data': items, 'layout': report.layout}
 
     def add_dag(self, dag: int, report: int):
-        tasks = self.query(Task.id).filter(Task.dag == dag).all()
+        tasks = self.query(Task.id). \
+            filter(Task.dag == dag). \
+            filter(Task.type <= TaskType.Train.value). \
+            all()
+
         report_tasks = self.query(ReportTasks.task).filter(
             ReportTasks.report == report).all()
+
         for t in set(t[0] for t in tasks) - set(t[0] for t in report_tasks):
             self.add(ReportTasks(report=report, task=t))
 
@@ -195,18 +201,41 @@ class ReportProvider(BaseDataProvider):
         tasks = self.query(Task.id).filter(Task.dag == dag).all()
         tasks = [t[0] for t in tasks]
         self.query(ReportTasks).filter(ReportTasks.report == report). \
-            filter(ReportTasks.task.in_(tasks)).delete(
-            synchronize_session=False)
+            filter(ReportTasks.task.in_(tasks)). \
+            delete(synchronize_session=False)
+
         self.session.commit()
 
     def remove_task(self, task: int, report: int):
         self.query(ReportTasks).filter(ReportTasks.report == report). \
-            filter(ReportTasks.task == task).delete(synchronize_session=False)
+            filter(ReportTasks.task == task). \
+            delete(synchronize_session=False)
+
         self.session.commit()
 
     def add_task(self, task: int, report: int):
         self.add(ReportTasks(task=task, report=report))
         self.session.commit()
+
+    def update_layout_start(self, id: int):
+        layouts = self.query(ReportLayout.name).all()
+        report = self.by_id(id)
+        layouts = [l[0] for l in layouts]
+        if report.layout in layouts:
+            layouts.remove(report.layout)
+            layouts.insert(0, report.layout)
+
+        return {
+            'id': id,
+            'layouts': layouts
+        }
+
+    def update_layout_end(self, id: int, layout: str, layouts: dict):
+        layout_content = yaml_dump(layouts[layout])
+        report = self.by_id(id)
+        report.config = layout_content
+        report.layout = layout
+        self.commit()
 
 
 __all__ = ['ReportProvider']

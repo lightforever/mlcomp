@@ -1,3 +1,9 @@
+<button mat-raised-button
+        style="margin-top: 15px"
+        (click)="update_layout()">
+    Update layout
+</button>
+
 <mat-accordion>
     <mat-expansion-panel (opened)="dag_panel_open = true"
                          (closed)="dag_panel_open = false">
@@ -29,7 +35,13 @@
 
 </mat-accordion>
 
-<app-layout [item]="report.layout" [data]="report.data" [report_id]="id" *ngIf="report"></app-layout>
+<app-layout
+        [item]="report.layout"
+        [data]="report.data"
+        [report_id]="id"
+        *ngIf="report">
+
+</app-layout>
 
 
 

@@ -97,7 +97,9 @@ class DagProvider(BaseDataProvider):
         if filter.get('report'):
             dag_ids = [r['id'] for r in res]
             tasks_dags = self.query(Task.id, Task.dag). \
-                filter(Task.dag.in_(dag_ids)).all()
+                filter(Task.type <= TaskType.Train.value).\
+                filter(Task.dag.in_(dag_ids)).\
+                all()
 
             tasks_within_report = self.query(ReportTasks.task). \
                 filter(ReportTasks.report == int(filter['report']))
@@ -108,8 +110,11 @@ class DagProvider(BaseDataProvider):
             for r in res:
                 r['report_full'] = r['id'] not in dags_not_full_included
 
-        projects = self.query(Project.name, Project.id).order_by(
-            Project.id.desc()).limit(20).all()
+        projects = self.query(Project.name, Project.id).\
+            order_by(Project.id.desc()).\
+            limit(20).\
+            all()
+
         projects = [{'name': name, 'id': id} for name, id in projects]
         return {'total': total, 'data': res, 'projects': projects}
 
@@ -125,7 +130,11 @@ class DagProvider(BaseDataProvider):
         return duration_format(delta)
 
     def graph(self, id: int):
-        tasks = self.query(Task).filter(Task.dag == id).all()
+        tasks = self.query(Task). \
+            filter(Task.dag == id). \
+            filter(Task.type <= TaskType.Train.value). \
+            all()
+
         task_ids = [t.id for t in tasks]
         dep = self.query(TaskDependence).filter(
             TaskDependence.task_id.in_(task_ids)).all()

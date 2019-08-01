@@ -1,0 +1,15 @@
+<mat-form-field style="width: 150px">
+    <mat-label>Layout</mat-label>
+    <mat-select
+            (ngModelChange)="data.layout=$event;"
+            [(ngModel)]="data.layout">
+        <mat-option *ngFor="let layout of data.layouts" [value]="layout">
+            {{layout}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="on_no_click()">Cancel</button>
+  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+</div>

@@ -258,6 +258,7 @@ class TaskProvider(BaseDataProvider):
 
     def children(self, id: int, joined_load=None):
         res = self.query(Task).filter(Task.parent == id)
+        res = res.order_by(Task.id)
         if joined_load is not None:
             for n in joined_load:
                 res = res.options(joinedload(n))

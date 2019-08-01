@@ -72,7 +72,11 @@ export class Paginator<T> implements OnInit, OnDestroy {
         // If the user changes the sort order, reset back to the first page.
         if (this.sort) {
             this.sort.sortChange.subscribe(
-                () => this.paginator.pageIndex = 0
+                () => {
+                    if (this.paginator) {
+                        this.paginator.pageIndex = 0;
+                    }
+                }
             );
         }
 

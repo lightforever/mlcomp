@@ -304,6 +304,12 @@ export interface ReportAddData {
     layouts: any[];
 }
 
+export class ReportUpdateData {
+    id: number;
+    layout: string;
+    layouts: string[];
+}
+
 export interface ModelAddData {
     dag: any;
     slot: string;

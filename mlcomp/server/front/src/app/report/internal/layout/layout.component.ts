@@ -11,8 +11,9 @@ import {ReportService} from "../../report.service";
     styleUrls: ['./layout.component.css']
 })
 export class LayoutComponent implements OnInit, OnDestroy {
-    @Input() item: ReportItem;
-    @Input() data;
+    _item: ReportItem;
+    _data;
+
     @Input() report_id: number;
     @Input() id: string;
     private interval: number;
@@ -24,13 +25,35 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.subscribe_report_changed();
         this.form_items_joined();
+    }
+
+    @Input()
+    set item(item: ReportItem) {
+        this._item = item;
+        this.form_items_joined();
+    }
+
+    get item() {
+        return this._item;
+    }
+
+    @Input()
+    set data(data) {
+        this._data = data;
+        this.service.data_updated.emit();
+    }
+
+    get data() {
+        return this._data;
     }
 
     form_items_joined() {
         this.items_joined = [];
-        if (!this.item.items) {
+        if (!this.item || !this.item.items) {
+            return;
+        }
+        if(!this.data){
             return;
         }
         for (let child of this.item.items) {
@@ -109,9 +132,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
                                         'key': key,
                                         'data': data.data[key]
                                     };
-                                    this.layout_service.
-                                    data_updated.
-                                    emit(value);
+                                    this.layout_service.data_updated.emit(value);
                                     // noinspection JSUnfilteredForInLoop
                                     this.data[key] = data.data[key];
                                 }

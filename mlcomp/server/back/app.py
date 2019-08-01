@@ -512,6 +512,30 @@ def report():
     return res
 
 
+@app.route('/api/report/update_layout_start', methods=['POST'])
+@requires_auth
+@error_handler
+def report_update_layout_start():
+    id = request_data()['id']
+    provider = ReportProvider()
+    res = provider.update_layout_start(id)
+    return res
+
+
+@app.route('/api/report/update_layout_end', methods=['POST'])
+@requires_auth
+@error_handler
+def report_update_layout_end():
+    data = request_data()
+    provider = ReportProvider()
+    layout_provider = ReportLayoutProvider()
+    provider.update_layout_end(data['id'],
+                               data['layout'],
+                               layout_provider.all()
+                               )
+    return provider.detail(data['id'])
+
+
 @app.route('/api/task/steps', methods=['POST'])
 @requires_auth
 @error_handler

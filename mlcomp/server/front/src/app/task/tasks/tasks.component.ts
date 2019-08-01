@@ -54,6 +54,14 @@ export class TasksComponent extends Paginator<TasksComponent> {
         this.route.queryParams.subscribe(params => {
             if (params['dag']) this.dag = parseInt(params['dag']);
             if (params['status']) {
+                this.not_ran = false;
+                this.queued = false;
+                this.in_progress = false;
+                this.failed = false;
+                this.stopped = false;
+                this.skipped = false;
+                this.success = false;
+
                 this[params['status']] = true;
             }
             self.onchange();
