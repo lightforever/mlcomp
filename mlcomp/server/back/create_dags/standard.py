@@ -98,11 +98,22 @@ class DagStandardBuilder:
                 Executor.is_trainable(v['type']):
             task_type = TaskType.Train.value
 
+        gpu = v.get('gpu', '0')
+        if '-' not in gpu:
+            gpu = int(gpu)
+            gpu_max = gpu
+        else:
+            gpu, gpu_max = map(int, gpu.split('-'))
+
+        if gpu == 0 and gpu_max > 0:
+            raise Exception(f'Executor = {k} Gpu_max can"t be>0 when gpu=0')
+
         task = Task(
             name=name,
             executor=k,
             computer=self.info.get('computer'),
-            gpu=v.get('gpu', 0),
+            gpu=gpu,
+            gpu_max=gpu_max,
             cpu=v.get('cpu', 1),
             memory=v.get('memory', 0.1),
             dag=self.dag.id,

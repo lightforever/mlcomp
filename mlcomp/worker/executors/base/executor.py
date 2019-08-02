@@ -23,7 +23,7 @@ class Executor(ABC):
     def error(self, message: str):
         self.step.error(message)
 
-    def __call__(self, task: Task, dag: Dag):
+    def __call__(self, task: Task, dag: Dag) -> dict:
         assert dag is not None, 'You must fetch task with dag_rel'
         self.task = task
         self.dag = dag
@@ -32,8 +32,9 @@ class Executor(ABC):
             use_sync = os.getenv('USE_SYNC', 'True') == 'True'
             if not task.debug and use_sync:
                 self.wait_data_sync(task.computer_assigned)
-            self.work()
+            res = self.work()
             self.step.task_provider.commit()
+            return res
 
     @staticmethod
     def kwargs_for_interface(executor: dict, config: Config, **kwargs):
@@ -44,7 +45,7 @@ class Executor(ABC):
         }
 
     @abstractmethod
-    def work(self):
+    def work(self) -> dict:
         pass
 
     @classmethod

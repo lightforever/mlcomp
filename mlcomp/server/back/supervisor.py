@@ -16,6 +16,7 @@ from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 import mlcomp.worker.tasks as celery_tasks
 
+
 class SupervisorBuilder:
     def __init__(self):
         self.logger = create_logger()
@@ -80,7 +81,8 @@ class SupervisorBuilder:
             comp_assigned['cpu'] -= task.cpu
 
             if task.gpu_assigned is not None:
-                comp_assigned['gpu'][task.gpu_assigned] = task.id
+                for g in task.gpu_assigned.split():
+                    comp_assigned['gpu'][int(g)] = task.id
             comp_assigned['memory'] -= task.memory
 
             info = yaml_load(task.additional_info)
@@ -103,7 +105,8 @@ class SupervisorBuilder:
         task.celery_id = r.id
 
         if task.gpu_assigned is not None:
-            computer['gpu'][task.gpu_assigned] = task.id
+            for g in map(int, task.gpu_assigned.split()):
+                computer['gpu'][g] = task.id
             computer['cpu'] -= task.cpu
             computer['memory'] -= task.memory
 
@@ -145,6 +148,11 @@ class SupervisorBuilder:
         auxiliary = self.auxiliary['process_tasks'][-1]
         auxiliary['computers'] = []
 
+        config = yaml_load(task.dag_rel.config)
+        executor = config['executors'][task.executor]
+        distr = executor.get('distr', True)
+        single_node = executor.get('single_node', True)
+
         def valid_computer(c: dict):
             if task.computer is not None and task.computer != c['name']:
                 return 'name set in the config!= name of this computer'
@@ -172,6 +180,11 @@ class SupervisorBuilder:
             if not error:
                 computers.append(c)
 
+        if task.gpu > 0 and single_node and len(computers) > 0:
+            computers = sorted(computers,
+                               key=lambda x: x['gpu'],
+                               reverse=True)[:1]
+
         free_gpu = sum(sum(g == 0 for g in c['gpu']) for c in computers)
         if task.gpu > free_gpu:
             auxiliary['not_valid'] = f'gpu required by the ' \
@@ -181,26 +194,33 @@ class SupervisorBuilder:
             return
 
         to_send = []
-        computer_gpu_taken = defaultdict(list)
         for computer in computers:
             queue = f'{computer["name"]}_' \
                     f'{task.dag_rel.docker_img or "default"}'
 
-            if task.gpu > 0:
-                index = 0
-                for task_taken_gpu in computer['gpu']:
+            if task.gpu_max > 1 and distr:
+                for index, task_taken_gpu in enumerate(computer['gpu']):
                     if task_taken_gpu:
                         continue
                     to_send.append([computer, queue, index])
-                    computer_gpu_taken[computer['name']].append(int(index))
-                    index += 1
 
-                    if len(to_send) >= task.gpu:
+                    if len(to_send) >= task.gpu_max:
                         break
 
-                if len(to_send) >= task.gpu:
+                if len(to_send) >= task.gpu_max:
                     break
+            elif task.gpu_max > 0:
+                cuda_devices = []
+                for index, task_taken_gpu in enumerate(computer['gpu']):
+                    if task_taken_gpu:
+                        continue
 
+                    cuda_devices.append(index)
+                    if len(cuda_devices) >= task.gpu_max:
+                        break
+
+                task.gpu_assigned = ','.join(map(str, cuda_devices))
+                self.process_to_celery(task, queue, computer)
             else:
                 self.process_to_celery(task, queue, computer)
                 break
@@ -214,7 +234,6 @@ class SupervisorBuilder:
                                          to_send[0][1].split('_')[1])
 
         for computer, queue, gpu_assigned in to_send:
-            gpu_visible = computer_gpu_taken[computer['name']]
             main_cmp = to_send[0][0]
             # noinspection PyTypeChecker
             ip = 'localhost' if computer['name'] == main_cmp['name'] \
@@ -223,9 +242,9 @@ class SupervisorBuilder:
             distr_info = {
                 'master_addr': ip,
                 'rank': rank,
-                'local_rank': gpu_visible.index(gpu_assigned),
+                'local_rank': gpu_assigned,
                 'master_port': master_port,
-                'world_size': task.gpu
+                'world_size': len(to_send)
             }
             service_task = self.create_service_task(task,
                                                     distr_info=distr_info,
@@ -288,16 +307,17 @@ class SupervisorBuilder:
                 status = TaskStatus.Success.value
 
             if status != task.status:
-                was_change = True
-                task.status = status
-                if status == TaskStatus.InProgress.value:
+                if status == TaskStatus.Success.value:
+                    task.current_step = task.steps
+                elif status == TaskStatus.InProgress.value:
                     task.started = started
                 elif status >= TaskStatus.Failed.value:
                     task.started = started
                     task.finished = finished
-
-                if status >= TaskStatus.Failed.value:
                     self._stop_child_tasks(task)
+
+                was_change = True
+                task.status = status
 
         if was_change:
             self.provider.commit()

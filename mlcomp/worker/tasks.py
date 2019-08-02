@@ -15,7 +15,7 @@ from mlcomp.db.providers import TaskProvider, \
     DagLibraryProvider, \
     DockerProvider
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.io import yaml_load
+from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.worker.app import app
 from mlcomp.worker.storage import Storage
 from mlcomp.worker.executors import *
@@ -39,6 +39,7 @@ class ExecuteBuilder:
         self.docker_img = None
         self.worker_index = None
         self.executor = None
+        self.queue_personal = None
 
     def create_base(self):
         self.provider = TaskProvider()
@@ -53,13 +54,16 @@ class ExecuteBuilder:
         self.docker_img = os.getenv('DOCKER_IMG', 'default')
         self.worker_index = int(os.getenv("WORKER_INDEX", -1))
 
+        self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
+                              f'{os.getenv("WORKER_INDEX")}'
+
     def check_status(self):
         assert self.dag is not None, 'You must fetch task with dag_rel'
 
-        if self.task.status >= TaskStatus.InProgress.value \
-                and self.repeat_count >= 1:
+        if self.task.status > TaskStatus.InProgress.value:
+
             msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
-                f'before the execute_by_id invocation'
+                  f'before the execute_by_id invocation'
             self.logger.error(msg,
                               ComponentType.Worker)
             return
@@ -81,12 +85,10 @@ class ExecuteBuilder:
         if was_installation and not self.task.debug:
             if self.repeat_count > 0:
                 try:
-                    queue = f'{self.hostname}_{self.docker_img}_' \
-                        f'{os.getenv("WORKER_INDEX")}'
                     self.logger.warning(traceback.format_exc(),
                                         ComponentType.Worker)
                     execute.apply_async((self.id, self.repeat_count - 1),
-                                        queue=queue)
+                                        queue=self.queue_personal)
                 except Exception:
                     pass
                 finally:
@@ -107,7 +109,25 @@ class ExecuteBuilder:
                                              additional_info)
 
     def execute(self):
-        self.executor(self.task, self.dag)
+        res = self.executor(self.task, self.dag)
+        res = res or {}
+        self.task.result = yaml_dump(res)
+        self.provider.commit()
+
+        if 'stage' in res and 'stages' in res:
+            index = res['stages'].index(res['stage'])
+            if index < len(res['stages']) - 1:
+                self.executor.info(f'stage = {res["stage"]} done. '
+                                   f'Go to the stage = '
+                                   f'{res["stages"][index + 1]}')
+
+                time.sleep(5)
+                execute.apply_async((self.id, self.repeat_count),
+                                    queue=self.queue_personal)
+                return
+
+        if self.task.current_step is None:
+            self.task.current_step = self.task.steps
 
         self.provider.change_status(self.task, TaskStatus.Success)
 
@@ -216,7 +236,7 @@ def stop(task: Task, dag: Dag):
     finally:
         if task.pid:
             queue = f'{task.computer_assigned}_' \
-                f'{dag.docker_img or "default"}_supervisor'
+                    f'{dag.docker_img or "default"}_supervisor'
             kill.apply_async((task.pid,), queue=queue)
         provider.change_status(task, status)
 

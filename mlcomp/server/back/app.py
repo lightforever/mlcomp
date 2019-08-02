@@ -394,7 +394,8 @@ def task_info():
         'worker_index': task.worker_index,
         'gpu_assigned': task.gpu_assigned,
         'celery_id': task.celery_id,
-        'additional_info': (task.additional_info or '').strip(),
+        'additional_info': task.additional_info or '',
+        'result': task.result or '',
         'id': task.id
     }
 

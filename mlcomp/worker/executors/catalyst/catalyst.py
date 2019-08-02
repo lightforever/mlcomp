@@ -1,13 +1,15 @@
 import os
 from pathlib import Path
 
-from catalyst.dl import RunnerState, Callback, Runner
+from catalyst.utils import set_global_seed
+from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
 from catalyst.dl.callbacks import VerboseLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_config
 
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
+from mlcomp.utils.io import yaml_load
 from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
@@ -43,10 +45,13 @@ class Args:
 class Catalyst(Executor, Callback):
     __syn__ = 'catalyst'
 
-    def __init__(self, args: Args,
+    def __init__(self,
+                 args: Args,
                  report: ReportLayoutInfo,
+                 cuda_devices: list,
                  distr_info: dict,
-                 grid_config: dict):
+                 grid_config: dict,
+                 ):
 
         self.distr_info = distr_info
         self.args = args
@@ -57,6 +62,7 @@ class Catalyst(Executor, Callback):
         self.task_provider = TaskProvider()
         self.grid_config = grid_config
         self.master = True
+        self.cuda_devices = cuda_devices
 
     def callbacks(self):
         result = []
@@ -136,14 +142,15 @@ class Catalyst(Executor, Callback):
         grid_config = {}
         if grid_cell is not None:
             grid_config = grid_cells(executor['grid'])[grid_cell][0]
-        distr_info = {}
-        if 'distr_info' in additional_info:
-            distr_info = additional_info['distr_info']
+
+        distr_info = additional_info.get('distr_info', {})
+        cuda_devices = additional_info.get('cuda_devices')
 
         return cls(args=args,
                    report=report,
                    grid_config=grid_config,
-                   distr_info=distr_info
+                   distr_info=distr_info,
+                   cuda_devices=cuda_devices
                    )
 
     def set_dist_env(self, config):
@@ -163,13 +170,18 @@ class Catalyst(Executor, Callback):
     def parse_args_uargs(self):
         args, config = parse_args_uargs(self.args, [])
         config = merge_dicts_smart(config, self.grid_config)
+
+        if self.cuda_devices is not None:
+            os.environ['CUDA_VISIBLE_DEVICES'] = \
+                ','.join(map(str, self.cuda_devices))
+
         if self.distr_info:
             self.set_dist_env(config)
         return args, config
 
     def work(self):
         args, config = self.parse_args_uargs()
-        # set_global_seed(args.seed)
+        set_global_seed(args.seed)
 
         Experiment, R = import_experiment_and_runner(Path(args.expdir))
 
@@ -179,10 +191,38 @@ class Catalyst(Executor, Callback):
         self.experiment = experiment
         self.runner = runner
 
+        stages = experiment.stages[:]
+        if self.distr_info:
+            result = self.task.result
+            if result:
+                result = yaml_load(result)
+                index = stages.index(result['stage']) + 1 \
+                    if 'stage' in result else 0
+            else:
+                index = 0
+
+            self.task.current_step = index + 1
+            self.task.steps = len(stages)
+            self.task_provider.commit()
+
+            experiment.stages_config = {k: v for k, v in
+                                        experiment.stages_config.items() if
+                                        k == stages[index]}
+
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
-            return _get_callbacks(stage) + self.callbacks()
+            res = _get_callbacks(stage) + self.callbacks()
+
+            path = os.path.join(experiment.logdir,
+                                'checkpoints',
+                                'best.pth')
+
+            if self.distr_info and os.path.exists(path):
+                for c in res:
+                    if isinstance(c, CheckpointCallback):
+                        c.resume = path
+            return res
 
         experiment.get_callbacks = get_callbacks
 
@@ -193,3 +233,5 @@ class Catalyst(Executor, Callback):
             experiment,
             check=args.check
         )
+
+        return {'stage': experiment.stages[-1], 'stages': stages}

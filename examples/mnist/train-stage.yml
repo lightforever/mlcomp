@@ -1,12 +1,12 @@
 info:
-  name: mnist_train
+  name: mnist_train_stage
   project: examples
   report: classify
 executors:
   train:
     type: catalyst
-    gpu: 5-6
+    gpu: 3-4
     distr: True
     single_node: True
     args:
-        config: catalyst.yml
+        config: catalyst-stage.yml

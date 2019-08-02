@@ -16,6 +16,7 @@ class Task(Base):
     last_activity = sa.Column(sa.DateTime)
     computer = sa.Column(sa.String)
     gpu = sa.Column(sa.Integer, default=0)
+    gpu_max = sa.Column(sa.Integer, default=0)
     cpu = sa.Column(sa.Integer, default=1)
     executor = sa.Column(sa.String)
     status = sa.Column(sa.Integer, default=TaskStatus.NotRan.value)
@@ -31,15 +32,17 @@ class Task(Base):
     debug = sa.Column(sa.Boolean, default=False)
     pid = sa.Column(sa.Integer)
     worker_index = sa.Column(sa.Integer)
-    additional_info = deferred(sa.Column(sa.String))
     docker_assigned = sa.Column(sa.String)
     type = sa.Column(sa.Integer)
     score = sa.Column(sa.Float)
     report = sa.Column(sa.Integer, ForeignKey('report.id'))
     report_rel = relationship('Report', lazy='noload')
-    gpu_assigned = sa.Column(sa.Integer)
+    gpu_assigned = sa.Column(sa.String)
     parent = sa.Column(sa.Integer, ForeignKey('task.id'))
     parent_rel = relationship('Task', lazy='noload')
+
+    result = deferred(sa.Column(sa.String))
+    additional_info = deferred(sa.Column(sa.String))
 
 
 class TaskDependence(Base):

@@ -393,4 +393,5 @@ export class TaskInfo {
     gpu_assigned: number;
     celery_id: string;
     additional_info: string;
+    result: string;
 }

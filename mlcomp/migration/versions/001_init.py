@@ -172,6 +172,7 @@ task = Table(
     Column('finished', TIMESTAMP),
     Column('computer', String(100)),
     Column('gpu', Integer, nullable=False, default=0),
+    Column('gpu_max', Integer, nullable=False, default=0),
     Column('cpu', Integer, nullable=False, default=1),
     Column('executor', String(100), nullable=False),
     Column('computer_assigned', String(100)),
@@ -189,8 +190,9 @@ task = Table(
     Column('type', Integer, nullable=False),
     Column('score', Float),
     Column('report', Integer),
-    Column('gpu_assigned', Integer),
-    Column('parent', Integer)
+    Column('gpu_assigned', String(200)),
+    Column('parent', Integer),
+    Column('result', String(16000)),
 )
 
 task_dependency = Table(
