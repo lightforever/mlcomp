@@ -5,7 +5,7 @@ from sqlalchemy import and_
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, ReportImg, Task
-from mlcomp.db.providers import BaseDataProvider
+from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.io import yaml_load
 
 

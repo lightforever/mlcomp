@@ -10,7 +10,7 @@ from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.enums import TaskStatus, TaskType
 from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, \
     ReportImg, ReportLayout
-from mlcomp.db.providers import BaseDataProvider
+from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
 from mlcomp.utils.io import yaml_load, yaml_dump

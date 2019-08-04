@@ -1,5 +1,5 @@
 from mlcomp.db.models import ReportTasks
-from mlcomp.db.providers import BaseDataProvider
+from mlcomp.db.providers.base import BaseDataProvider
 
 
 class ReportTasksProvider(BaseDataProvider):
