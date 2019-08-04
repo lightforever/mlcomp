@@ -639,7 +639,7 @@ def all_exception_handler(e):
 
 
 def start_server():
-    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
         logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
         register_supervisor()
     app.run(

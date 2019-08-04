@@ -54,7 +54,7 @@ class ExecuteBuilder:
         self.hostname = socket.gethostname()
 
         self.docker_img = os.getenv('DOCKER_IMG', 'default')
-        self.worker_index = int(os.getenv("WORKER_INDEX", -1))
+        self.worker_index = int(os.getenv('WORKER_INDEX', -1))
 
         self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
                               f'{os.getenv("WORKER_INDEX")}'
@@ -172,7 +172,7 @@ def execute_by_id(id: int, repeat_count=1):
 
 @celeryd_after_setup.connect
 def capture_worker_name(sender, instance, **kwargs):
-    os.environ["WORKER_INDEX"] = sender.split('_')[-1]
+    os.environ['WORKER_INDEX'] = sender.split('_')[-1]
 
 
 @app.task

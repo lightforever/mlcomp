@@ -30,12 +30,12 @@ class Formatter(logging.Formatter):
             if not record.exc_text:
                 record.exc_text = self.formatException(record.exc_info)
         if record.exc_text:
-            if s[-1:] != "\n":
-                s = s + "\n"
+            if s[-1:] != '\n':
+                s = s + '\n'
             s = s + record.exc_text
         if record.stack_info:
-            if s[-1:] != "\n":
-                s = s + "\n"
+            if s[-1:] != '\n':
+                s = s + '\n'
             s = s + self.formatStack(record.stack_info)
         return s
 

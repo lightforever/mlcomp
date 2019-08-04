@@ -35,33 +35,31 @@ def binary_to_img(b: bytes):
     return im
 
 
-def show_values(pc, fmt="%.2f", **kw):
-    '''
+def show_values(pc, fmt='%.2f', **kw):
+    """
     Heatmap with text in each cell with matplotlib's pyplot
     Source: https://stackoverflow.com/a/25074150/395857
     By HYRY
-    '''
+    """
     pc.update_scalarmappable()
     ax = pc.axes
     for p, color, value in zip(
-            pc.get_paths(),
-            pc.get_facecolors(),
-            pc.get_array()
+        pc.get_paths(), pc.get_facecolors(), pc.get_array()
     ):
         x, y = p.vertices[:-2, :].mean(0)
         if np.all(color[:3] > 0.5):
             color = (0.0, 0.0, 0.0)
         else:
             color = (1.0, 1.0, 1.0)
-        ax.text(x, y, fmt % value, ha="center", va="center", color=color, **kw)
+        ax.text(x, y, fmt % value, ha='center', va='center', color=color, **kw)
 
 
 def cm2inch(*tupl):
-    '''
+    """
     Specify figure size in centimeter in matplotlib
     Source: https://stackoverflow.com/a/22787457/395857
     By gns-ank
-    '''
+    """
     inch = 2.54
     if type(tupl[0]) == tuple:
         return tuple(i / inch for i in tupl[0])
@@ -70,30 +68,26 @@ def cm2inch(*tupl):
 
 
 def heatmap(
-        AUC,
-        xlabel,
-        ylabel,
-        xticklabels,
-        yticklabels,
-        figure_width=40,
-        figure_height=20,
-        correct_orientation=False,
-        cmap='RdBu'
+    AUC,
+    xlabel,
+    ylabel,
+    xticklabels,
+    yticklabels,
+    figure_width=40,
+    figure_height=20,
+    correct_orientation=False,
+    cmap='RdBu'
 ):
-    '''
+    """
     Inspired by:
     - https://stackoverflow.com/a/16124677/395857
     - https://stackoverflow.com/a/25074150/395857
-    '''
+    """
 
     # Plot it out
     fig, ax = plt.subplots()
     c = ax.pcolor(
-        AUC,
-        edgecolors='k',
-        linestyle='dashed',
-        linewidths=0.2,
-        cmap=cmap
+        AUC, edgecolors='k', linestyle='dashed', linewidths=0.2, cmap=cmap
     )
 
     # put the major ticks at the middle of each cell
@@ -137,10 +131,10 @@ def heatmap(
 
 
 def plot_classification_report(classification_report, cmap='RdBu'):
-    '''
+    """
     Plot scikit-learn classification report.
     Extension based on https://stackoverflow.com/a/31689645/395857
-    '''
+    """
     lines = classification_report.split('\n')
 
     classes = []
@@ -163,9 +157,8 @@ def plot_classification_report(classification_report, cmap='RdBu'):
     ylabel = 'Classes'
     xticklabels = ['Precision', 'Recall', 'F1-score']
     yticklabels = [
-        '{0} ({1})'.format(class_names[idx],
-                           sup) for idx,
-        sup in enumerate(support)
+        '{0} ({1})'.format(class_names[idx], sup)
+        for idx, sup in enumerate(support)
     ]
     figure_width = 25
     figure_height = len(class_names) + 7

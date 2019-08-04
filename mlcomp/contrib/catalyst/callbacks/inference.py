@@ -13,7 +13,7 @@ class InferBestCallback(Callback):
         self.out_prefix = out_prefix
         self.predictions = defaultdict(lambda: [])
         self.best_only = best_only
-        self._keys_from_state = ["out_dir", "out_prefix"]
+        self._keys_from_state = ['out_dir', 'out_prefix']
 
     def on_stage_start(self, state: RunnerState):
         for key in self._keys_from_state:
@@ -22,7 +22,7 @@ class InferBestCallback(Callback):
                 setattr(self, key, value)
         # assert self.out_prefix is not None
         if self.out_dir is not None:
-            self.out_prefix = str(self.out_dir) + "/" + str(self.out_prefix)
+            self.out_prefix = str(self.out_dir) + '/' + str(self.out_prefix)
         if self.out_prefix is not None:
             os.makedirs(os.path.dirname(self.out_prefix), exist_ok=True)
 
@@ -45,5 +45,5 @@ class InferBestCallback(Callback):
         }
         if self.out_prefix is not None:
             for key, value in self.predictions.items():
-                suffix = ".".join([state.loader_name, key])
-                np.save(f"{self.out_prefix}/{suffix}.npy", value)
+                suffix = '.'.join([state.loader_name, key])
+                np.save(f'{self.out_prefix}/{suffix}.npy', value)

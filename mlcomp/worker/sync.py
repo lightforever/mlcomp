@@ -24,7 +24,7 @@ def sync_directed(source: Computer, target: Computer, folders_excluded: List):
             excluded = excluded[:]
             for i in range(len(excluded)):
                 excluded[i] = f'--exclude {excluded[i]}'
-            end += " " + " ".join(excluded)
+            end += ' ' + ' '.join(excluded)
 
         if current_computer == source.name:
             command = f'rsync -vhru -e ' \
@@ -42,8 +42,8 @@ def sync_directed(source: Computer, target: Computer, folders_excluded: List):
                 f' {folder}/ {target.user}@{target.ip}:{folder}/ ' \
                 f'{end}'
 
-            command = f"ssh -p {source.port} " \
-                f"{source.user}@{source.ip} '{command}'"
+            command = f'ssh -p {source.port} ' \
+                f'{source.user}@{source.ip} "{command}"'
 
         print(command)
         subprocess.check_output(command, shell=True)

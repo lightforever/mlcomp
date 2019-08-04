@@ -33,16 +33,16 @@ class Experiment(ConfigExperiment):
             root='./data',
             train=True,
             download=True,
-            transform=Experiment.get_transforms(stage=stage, mode="train")
+            transform=Experiment.get_transforms(stage=stage, mode='train')
         )
         testset = torchvision.datasets.CIFAR10(
             root='./data',
             train=False,
             download=True,
-            transform=Experiment.get_transforms(stage=stage, mode="valid")
+            transform=Experiment.get_transforms(stage=stage, mode='valid')
         )
 
-        datasets["train"] = trainset
-        datasets["valid"] = testset
+        datasets['train'] = trainset
+        datasets['valid'] = testset
 
         return datasets

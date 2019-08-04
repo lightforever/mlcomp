@@ -25,10 +25,10 @@ from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 
 def _dag(config: str, debug: bool = False):
-    config_text = open(config, "r").read()
+    config_text = open(config, 'r').read()
     config_parsed = yaml_load(config_text)
 
-    type_name = config_parsed['info'].get('type', "standard")
+    type_name = config_parsed['info'].get('type', 'standard')
     if type_name == DagType.Standard.name.lower():
         return dag_standard(
             config_parsed, debug=debug, config_text=config_text
@@ -72,7 +72,7 @@ def execute(config: str, debug: bool):
 
     # Fail all InProgress Tasks
     logger = create_logger()
-    worker_index = int(os.getenv("WORKER_INDEX", -1))
+    worker_index = int(os.getenv('WORKER_INDEX', -1))
 
     provider = TaskProvider()
     step_provider = StepProvider()

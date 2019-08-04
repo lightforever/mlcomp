@@ -17,7 +17,7 @@ class Experiment(ConfigExperiment):
                              is_test=True
                              )
 
-        datasets["train"] = train
-        datasets["valid"] = valid
+        datasets['train'] = train
+        datasets['valid'] = valid
 
         return datasets

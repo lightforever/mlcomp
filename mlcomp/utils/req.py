@@ -39,7 +39,7 @@ def find_imports(
         if spec.match_file(file_rel):
             continue
 
-        with open(file, "r", encoding=encoding) as f:
+        with open(file, 'r', encoding=encoding) as f:
             content = f.read()
             try:
                 tree = ast.parse(content)
@@ -50,7 +50,7 @@ def find_imports(
                     elif isinstance(node, ast.ImportFrom):
                         raw_imports.append((node.module, file_rel))
             except Exception as exc:
-                logger.error("Failed on file: %s" % file_rel)
+                logger.error('Failed on file: %s' % file_rel)
                 raise exc
 
     for lib, file in raw_imports:

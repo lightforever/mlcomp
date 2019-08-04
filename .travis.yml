@@ -28,7 +28,7 @@ jobs:
           --max-complexity=16
           --inline-quotes "single"
           --multiline-quotes "single"
-          --docstring-quotes "single"
+          --docstring-quotes "double"
           --show-source --statistics
         # test to make sure the code is yapf compliant
         #- ./yapf.sh --all

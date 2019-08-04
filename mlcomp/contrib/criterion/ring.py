@@ -6,10 +6,7 @@ from torch.nn.modules.loss import CrossEntropyLoss
 
 
 class RingLoss(nn.Module):
-    def __init__(self,
-                 type='auto',
-                 loss_weight=1.0,
-                 softmax_loss_weight=1.0):
+    def __init__(self, type='auto', loss_weight=1.0, softmax_loss_weight=1.0):
         """
         :param type: type of loss ('l1', 'l2', 'auto')
         :param loss_weight: weight of loss, for 'l1' and 'l2', try with 0.01.
