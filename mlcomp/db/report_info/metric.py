@@ -11,5 +11,8 @@ class ReportLayoutMetric:
             f'report.metric={data.popitem()}'
         return ReportLayoutMetric(name, minimize)
 
+    def serialize(self):
+        return {'minimize': self.minimize, 'name': self.name}
+
 
 __all__ = ['ReportLayoutMetric']

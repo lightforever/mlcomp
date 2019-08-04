@@ -5,7 +5,7 @@ info:
 executors:
   train:
     type: catalyst
-    gpu: 5-6
+    gpu: 3-4
     distr: True
     single_node: True
     args:

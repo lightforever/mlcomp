@@ -1,5 +1,5 @@
 <div class="mat-elevation-z8">
-    <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="paginator.dataSource" matSort>
 
         <ng-container matColumnDef="project">
             <th mat-header-cell
@@ -201,8 +201,7 @@
                                     "is_report_transparent(element)"
                             [class.transparent-active]=
                                     "is_report_transparent_active(element)"
-                            routerLink=
-                                    "/reports/report-detail/{{element.report}}"
+                            [routerLink]="router_link(element)"
                             (click)="report_click(element)">
                     </mat-icon>
 
@@ -239,11 +238,10 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
+
     <mat-paginator
-            [pageSizeOptions]="[15, 30, 100]"
-            [length]="total"
-            [pageSize]="15">
+        [pageSizeOptions]="[15, 30, 100]"
+        [length]="paginator.total"
+        [pageSize]="15">
     </mat-paginator>
-
-
 </div>

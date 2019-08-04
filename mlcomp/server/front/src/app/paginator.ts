@@ -35,7 +35,8 @@ export class Paginator<T> implements OnInit, OnDestroy {
         protected location: Location,
         protected filter_params: CallableFunction = null,
         protected filter_key: string = null,
-        protected enable_interval: boolean = true
+        protected enable_interval: boolean = true,
+        public init: boolean = true
     ) {
 
     }
@@ -48,7 +49,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
         let res = new PaginatorFilter();
         res.page_number = this.paginator ? this.paginator.pageIndex : 0;
         res.page_size = this.paginator ?
-            this.paginator.pageSize || this.default_page_size : 10;
+            this.paginator.pageSize || this.default_page_size : 15;
         if (this.sort) {
             res.sort_column = this.sort.active ? this.sort.active : '';
             res.sort_descending = this.sort.direction ?
@@ -67,6 +68,10 @@ export class Paginator<T> implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        if(!this.init){
+            return;
+        }
+
         this._ngOnInit();
 
         // If the user changes the sort order, reset back to the first page.

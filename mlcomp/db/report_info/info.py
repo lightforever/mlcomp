@@ -23,8 +23,14 @@ class ReportLayoutInfo:
         self._check_layout(self.layout)
 
     def _check_layout(self, item):
-        types = ['root', 'panel', 'blank', 'series', 'img_classify',
-                 'img']
+        types = ['root',
+                 'panel',
+                 'blank',
+                 'series',
+                 'table',
+                 'img_classify',
+                 'img'
+                 ]
         assert item.get('type') in types, f'Unknown item type = {item["type"]}'
 
         fields = {
@@ -49,11 +55,19 @@ class ReportLayoutInfo:
                 'source',
                 ('cols', False),
                 ('rows', False)],
-            **{k: [
+            'table': [
+                'source',
+                ('cols', False),
+                ('rows', False),
+            ],
+            'img_classify': [
+                'source',
+                ('cols', False),
+                ('rows', False)],
+            'img': [
                 'source',
                 ('cols', False),
                 ('rows', False)]
-                for k in types[4:]}
         }
         keys = set(item.keys()) - {'type'}
         for f in fields[item['type']]:
@@ -106,7 +120,7 @@ class ReportLayoutInfo:
         if l.get('extend'):
             assert l['extend'] in layouts, \
                 f'Layout for extending = {l["extend"]}' \
-                    f' is not in the collection'
+                f' is not in the collection'
             r = cls.union_layouts(l['extend'], layouts)
 
         if 'metric' in l:

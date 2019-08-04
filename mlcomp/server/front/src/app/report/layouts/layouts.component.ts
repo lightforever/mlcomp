@@ -1,10 +1,11 @@
-import {Component} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {Paginator} from "../../paginator";
 import {Layout} from "../../models";
 import {Location} from "@angular/common";
 import {LayoutsService} from "./layouts.service";
 import {MatDialog} from "@angular/material";
 import {LayoutAddDialogComponent} from "./layout-add-dialog";
+import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'app-layouts',
@@ -20,10 +21,11 @@ export class LayoutsComponent extends Paginator<Layout> {
     id_column = 'name';
     selected: Layout;
     error: string;
-    secetion_start: number;
+    @ViewChild('textarea') textarea;
 
     row_select(element: Layout) {
         this.selected = element;
+        this.textarea.nativeElement.value = element.content;
     };
 
     constructor(
@@ -31,7 +33,10 @@ export class LayoutsComponent extends Paginator<Layout> {
         protected location: Location,
         public dialog: MatDialog
     ) {
-        super(service, location);
+        super(service, location,
+            null,
+            null,
+            false);
     }
 
     get_filter(): any {
@@ -69,8 +74,7 @@ export class LayoutsComponent extends Paginator<Layout> {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.service.edit(name, null, result.name).
-                subscribe(res => {
+                this.service.edit(name, null, result.name).subscribe(res => {
                     this.change.emit();
                     this.error = res.error;
                 });
@@ -103,24 +107,36 @@ export class LayoutsComponent extends Paginator<Layout> {
     }
 
     key_down(event) {
+        if (!this.selected) {
+            return;
+        }
+
+        let element = this.textarea.nativeElement;
         let content = event.target.value;
+        let start = event.target.selectionStart;
 
-        if (event.key == 'Tab') {
+        if (event.key == 'Tab' && !event.ctrlKey && !event.shiftKey) {
             event.preventDefault();
-
-            let start = event.target.selectionStart;
-            this.selected.content = content.substring(0, start) +
+            content = content.substring(0, start) +
                 "  " + content.substring(event.target.selectionEnd);
-            this.secetion_start = start + 2;
+            start = start + 2;
+
+            this.selected.content = content;
+            element.value = content;
+
+            element.selectionStart = start;
+            element.selectionEnd = start;
+
         }
 
     }
 
-    key_up(event) {
-        if (event.key == 'Tab') {
-            event.target.setSelectionRange(this.secetion_start,
-                this.secetion_start);
-        }
-    }
+     key_up(event) {
+         if (!this.selected) {
+             return;
+         }
+
+         this.selected.content = event.target.value;
+     }
 
 }

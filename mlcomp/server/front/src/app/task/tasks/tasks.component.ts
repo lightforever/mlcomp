@@ -2,7 +2,7 @@ import {Component, Input} from '@angular/core';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Paginator} from "../../paginator";
-import {Task, TaskFilter} from "../../models";
+import {TaskFilter} from "../../models";
 import {Helpers} from "../../helpers";
 import {TaskService} from "../task.service";
 
@@ -46,7 +46,12 @@ export class TasksComponent extends Paginator<TasksComponent> {
                 protected router: Router,
                 protected  route: ActivatedRoute
     ) {
-        super(service, location);
+        super(service,
+            location,
+            null,
+            null,
+            true,
+            false);
     }
 
     protected _ngOnInit() {

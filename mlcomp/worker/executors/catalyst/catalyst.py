@@ -63,6 +63,7 @@ class Catalyst(Executor, Callback):
         self.grid_config = grid_config
         self.master = True
         self.cuda_devices = cuda_devices
+        self.checkpoint_resume = False
 
     def callbacks(self):
         result = []
@@ -118,6 +119,8 @@ class Catalyst(Executor, Callback):
 
     def on_stage_start(self, state: RunnerState):
         state.loggers = [VerboseLogger()]
+        if self.checkpoint_resume:
+            state.epoch += 1
 
     @classmethod
     def _from_config(cls,
@@ -222,6 +225,10 @@ class Catalyst(Executor, Callback):
                 for c in res:
                     if isinstance(c, CheckpointCallback):
                         c.resume = path
+
+            for c in res:
+                if isinstance(c, CheckpointCallback) and c.resume:
+                    self.checkpoint_resume = True
             return res
 
         experiment.get_callbacks = get_callbacks

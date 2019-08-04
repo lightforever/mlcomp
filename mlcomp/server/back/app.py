@@ -14,6 +14,7 @@ import mlcomp.worker.tasks as celery_tasks
 from mlcomp.db.enums import TaskStatus, ComponentType
 from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions, Session
+from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.server.back import conf
 from mlcomp.utils.logging import logger
@@ -224,7 +225,8 @@ def report_layout_edit():
     layout = provider.by_name(data['name'])
     layout.last_modified = now()
     if 'content' in data and data['content'] is not None:
-        yaml_load(data['content'])
+        data_loaded = yaml_load(data['content'])
+        ReportLayoutInfo(data_loaded)
         layout.content = data['content']
     if 'new_name' in data and data['new_name'] is not None:
         layout.name = data['new_name']

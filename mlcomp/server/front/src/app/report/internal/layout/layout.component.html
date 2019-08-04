@@ -3,6 +3,7 @@
         <app-layout
                 [data]="data"
                 [item]="child"
+                [metric]="metric"
                 *ngFor="let child of items_joined">
 
         </app-layout>
@@ -30,6 +31,7 @@
                                 [rowspan]="child.rows!=null?child.rows:1">
                             <app-layout
                                     [item]="child"
+                                    [metric]="metric"
                                     [data]="items_joined_data[i]">
 
                             </app-layout>
@@ -47,6 +49,7 @@
                         [style.width]="td_width(child)">
                     <app-layout
                             [item]="child"
+                            [metric]="metric"
                             [data]="items_joined_data[i]">
 
                     </app-layout>
@@ -56,6 +59,7 @@
             <div *ngIf="item.row_height==null&&!item.table">
                 <app-layout [item]="child"
                             [data]="items_joined_data[i]"
+                            [metric]="metric"
                             *ngFor="let child of items_joined; index as i">
 
                 </app-layout>
@@ -64,16 +68,38 @@
 
     </mat-expansion-panel>
 
+    <div *ngIf="item.type=='table'">
+        <app-table
+                [item]="item"
+                [data]="data"
+                [metric]="metric">
+
+        </app-table>
+    </div>
+
     <div *ngIf="item.type=='series'">
-        <app-series [item]="item" [data]="data"></app-series>
+        <app-series
+                [item]="item"
+                [data]="data">
+
+        </app-series>
+
     </div>
 
     <div *ngIf="item.type=='img'">
-        <app-img [item]="item" [data]="data"></app-img>
+        <app-img
+                [item]="item"
+                [data]="data">
+
+        </app-img>
     </div>
 
     <div *ngIf="item.type=='img_classify'">
-        <app-img-classify [item]="item" [data]="data"></app-img-classify>
+        <app-img-classify
+                [item]="item"
+                [data]="data">
+
+        </app-img-classify>
     </div>
 
 

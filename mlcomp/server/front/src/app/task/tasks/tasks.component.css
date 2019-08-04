@@ -1,5 +1,5 @@
 table {
-  width: 70%;
+  width: 100%;
   min-width: 1580px;
 }
 
@@ -37,3 +37,4 @@ mat-icon{
 .checkbox-margin {
   margin: 0 10px;
 }
+

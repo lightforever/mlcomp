@@ -1,5 +1,5 @@
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
-import {Report, ReportItem} from "../../../models";
+import {Metric, Report, ReportItem} from "../../../models";
 import {LayoutService} from "./layout.service";
 import {SeriesComponent} from "../series/series.component";
 import {Helpers} from "../../../helpers";
@@ -16,6 +16,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     @Input() report_id: number;
     @Input() id: string;
+    @Input() metric: Metric;
+
     private interval: number;
     items_joined: ReportItem[] = [];
     items_joined_data: any[] = [];
@@ -26,6 +28,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         this.form_items_joined();
+        this.subscribe_report_changed();
     }
 
     @Input()
@@ -41,7 +44,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
     @Input()
     set data(data) {
         this._data = data;
-        this.service.data_updated.emit();
     }
 
     get data() {
@@ -53,7 +55,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
         if (!this.item || !this.item.items) {
             return;
         }
-        if(!this.data){
+        if (!this.data) {
             return;
         }
         for (let child of this.item.items) {
@@ -77,6 +79,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
                     this.items_joined_data.push(d);
                     i++;
                 }
+            } else if (child.type == 'table') {
+                this.items_joined.push(child);
+                this.items_joined_data.push(this.data);
             } else {
                 this.items_joined.push(child);
                 this.items_joined_data.push(this.data);
@@ -111,8 +116,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
                     if (JSON.stringify(this.item) !=
                         JSON.stringify(data.layout)
                     ) {
-                        this.data = data.data;
-                        this.item = data.layout;
+                        this._data = data.data;
+                        this._item = data.layout;
                         this.form_items_joined();
                     } else {
                         for (let key in data.data) {
@@ -122,8 +127,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
                                 if (data.data[key].length !=
                                     this.data[key].length
                                 ) {
-                                    this.data = data.data;
-                                    this.item = data.layout;
+                                    this._data = data.data;
+                                    this._item = data.layout;
                                     this.form_items_joined();
                                     break;
                                 } else {
@@ -132,7 +137,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
                                         'key': key,
                                         'data': data.data[key]
                                     };
-                                    this.layout_service.data_updated.emit(value);
+                                    this.layout_service.data_updated.emit(
+                                        value
+                                    );
                                     // noinspection JSUnfilteredForInLoop
                                     this.data[key] = data.data[key];
                                 }
@@ -141,11 +148,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
                         }
                     }
                 } else {
-                    this.data = data.data;
-                    this.item = data.layout;
+                    this._data = data.data;
+                    this._item = data.layout;
                     this.form_items_joined();
                 }
 
+                this.layout_service.full_updated.emit(this.data);
             });
     }
 

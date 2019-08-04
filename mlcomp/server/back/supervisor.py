@@ -232,6 +232,9 @@ class SupervisorBuilder:
         if len(to_send) > 0:
             master_port = self.find_port(to_send[0][0],
                                          to_send[0][1].split('_')[1])
+            computer_names = {c['name'] for c, _, __ in to_send}
+            if len(computer_names) == 1:
+                task.computer_assigned = list(computer_names)[0]
 
         for computer, queue, gpu_assigned in to_send:
             main_cmp = to_send[0][0]

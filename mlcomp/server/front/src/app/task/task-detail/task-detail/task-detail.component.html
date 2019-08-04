@@ -1,20 +1,18 @@
 <h4>Task detail</h4>
 
 <app-task-table
-        [dataSource]="dataSource"
+        [paginator]="this"
         [report]="report"
-        [dags_model]="dags_model"
-        [total]="total">
+        [dags_model]="dags_model">
 
 </app-task-table>
 
-<div *ngIf="child_paginator.total>0">
+<div *ngIf="child_paginator.total==null||child_paginator.total>0">
     <h4>Child tasks</h4>
 
     <app-task-table
-            [dataSource]="child_paginator.dataSource"
-            [show_links]="false"
-            [total]="child_paginator.total">
+            [paginator]="child_paginator"
+            [show_links]="false">
     </app-task-table>
 </div>
 

@@ -14,7 +14,9 @@ export class SeriesComponent implements OnInit {
     @Input() data: SeriesItem;
     private id = 'series_' + Math.random().toString();
 
-    constructor(protected layout_service: LayoutService) {
+    constructor(
+        protected layout_service: LayoutService
+    ) {
     }
 
     ngOnInit() {
@@ -80,13 +82,13 @@ export class SeriesComponent implements OnInit {
             let was_change = false;
             for (let i = 0; i < this.data.series.length; i++) {
                 let d = this.data.series[i];
-                for (let serie of event.data) {
-                    if (serie.task_id == d.task_id &&
-                        serie.group == d.group && serie.source == d.source) {
-                        if (serie.x.length > this.data.series[i].x.length) {
-                            this.data.series[i].x = serie.x;
-                            this.data.series[i].y = serie.y;
-                            this.data.series[i].time = serie.time;
+                for (let series of event.data) {
+                    if (series.task_id == d.task_id &&
+                        series.group == d.group && series.source == d.source) {
+                        if (series.x.length > this.data.series[i].x.length) {
+                            this.data.series[i].x = series.x;
+                            this.data.series[i].y = series.y;
+                            this.data.series[i].time = series.time;
 
                             was_change = true;
                             break

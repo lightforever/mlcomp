@@ -43,7 +43,9 @@ export class TaskDetailComponent extends TasksComponent {
             this.service,
             this.location,
             this.filter_params_get,
-            'paginator'
+            'paginator',
+            true,
+            false
         );
 
         this.child_paginator.ngOnInit();

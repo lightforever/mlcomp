@@ -1,0 +1,26 @@
+<table>
+    <thead>
+    <th
+            [class.up]="sort_desc"
+            [class.down]="!sort_desc"
+            (click)="sort_desc=!sort_desc;sort_column=h;sort()"
+            *ngFor="let h of header">
+        <span style="display: inline-block">{{h}}</span>
+    </th>
+
+    </thead>
+
+    <tbody>
+    <tr *ngFor="let r of rows">
+        <td *ngFor="let c of r" align="center">
+                <span *ngIf="is_number(c)">
+                     {{c| number: '.0-4'}}
+                </span>
+            <span *ngIf="!is_number(c)">
+                   {{c}}
+               </span>
+        </td>
+    </tr>
+    </tbody>
+
+</table>

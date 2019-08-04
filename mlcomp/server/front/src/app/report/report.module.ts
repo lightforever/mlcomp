@@ -8,6 +8,7 @@ import {ReportComponent} from "./report/report.component";
 import {LayoutComponent} from "./internal/layout/layout.component";
 import {ReportDetailComponent} from "./report-detail/report-detail.component";
 import { LayoutsComponent } from './layouts/layouts.component';
+import {TableComponent} from "./internal/table/table.component";
 
 @NgModule({
     imports: [
@@ -21,7 +22,8 @@ import { LayoutsComponent } from './layouts/layouts.component';
         ReportComponent,
         LayoutComponent,
         ReportDetailComponent,
-        LayoutsComponent
+        LayoutsComponent,
+        TableComponent
     ]
 })
 export class ReportModule {

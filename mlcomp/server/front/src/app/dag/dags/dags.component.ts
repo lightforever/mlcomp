@@ -266,4 +266,12 @@ export class DagsComponent extends Paginator<Dag> {
             return
         }
     }
+
+    report_link(element: any) {
+        if(this.report){
+            return null;
+        }
+
+        return `/reports/report-detail/${element.report}`;
+    }
 }

@@ -207,7 +207,7 @@ export class ReportItem {
     cols: number;
     rows: number;
     row_height: number;
-    source: string;
+    source;
     expanded: boolean;
     multi: boolean;
     group: string[];
@@ -218,9 +218,15 @@ export class ReportItem {
     index: number;
 }
 
+export class Metric{
+    name: string;
+    minimize: boolean;
+}
+
 export class Report {
     layout;
     data;
+    metric: Metric;
 }
 
 export class StepNode {

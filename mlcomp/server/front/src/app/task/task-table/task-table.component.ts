@@ -1,29 +1,33 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, Input, OnInit, ViewChild} from "@angular/core";
 import {
     MatDialog,
     MatIconRegistry,
-    MatTableDataSource
+    MatPaginator,
+    MatSort
 } from "@angular/material";
-import {Task} from "../../models";
 import {AppSettings} from "../../app-settings";
 import {TaskService} from "../task.service";
 import {ReportService} from "../../report/report.service";
 import {ModelAddDialogComponent} from "../../model/model-add-dialog.component";
 import {DomSanitizer} from "@angular/platform-browser";
 import {TaskInfoDialogComponent} from "./task-info-dialog.component";
+import {Paginator} from "../../paginator";
 
 @Component({
     selector: 'app-task-table',
     templateUrl: './task-table.component.html',
     styleUrls: ['./task-table.component.css']
 })
-export class TaskTableComponent {
-    @Input() dataSource: MatTableDataSource<Task>;
+export class TaskTableComponent implements OnInit{
+    @Input() paginator: Paginator<any>;
     @Input() report: number;
-    @Input() total: number;
     @Input() show_links: boolean = true;
 
     @Input() dags_model: any[];
+
+    @ViewChild(MatPaginator) paginator_view: MatPaginator;
+    @ViewChild(MatSort) sort_view: MatSort;
+
 
     displayed_columns: string[] = [
         'project',
@@ -136,4 +140,19 @@ export class TaskTableComponent {
             }
         });
     }
+
+    router_link(element) {
+        if(this.report){
+            return null;
+        }
+        return `/reports/report-detail/${element.report}`
+    }
+
+    ngOnInit(): void {
+        this.paginator.paginator = this.paginator_view;
+        this.paginator.sort = this.sort_view;
+        this.paginator.init = true;
+        this.paginator.ngOnInit();
+    }
+
 }

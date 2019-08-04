@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.enums import TaskStatus, TaskType
 from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, \
-    ReportImg, ReportLayout
+    ReportImg, ReportLayout, Dag
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
@@ -53,7 +53,8 @@ class ReportProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def _detail_series(self, series: List[ReportSeries],
+    def _detail_series(self,
+                       series: List[ReportSeries],
                        r: ReportLayoutSeries):
         series = [s for s in series if s.name == r.name]
         res = []
@@ -74,7 +75,8 @@ class ReportProvider(BaseDataProvider):
                     'group': key,
                     'task_name': group_task[0].task_rel.name,
                     'task_id': task_key,
-                    'source': r.name
+                    'source': r.key,
+                    'name': r.name
                 })
 
         return res
@@ -104,8 +106,10 @@ class ReportProvider(BaseDataProvider):
 
         return best_task_epoch[0] if best_task_epoch else (None, None)
 
-    def _detail_single_img(self, report: ReportLayoutInfo,
-                           series: List[ReportSeries], item: ReportLayoutItem):
+    def _detail_single_img(self,
+                           report: ReportLayoutInfo,
+                           series: List[ReportSeries],
+                           item: ReportLayoutItem):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -172,9 +176,11 @@ class ReportProvider(BaseDataProvider):
         items = dict()
         for s in report.series:
             items[s.name] = self._detail_series(series, s)
+
         # print('series', time()-start)
         for element in report.precision_recall + report.f1:
-            items[element.name] = self._detail_single_img(report, series,
+            items[element.name] = self._detail_single_img(report,
+                                                          series,
                                                           element)
         # print('single image', time() - start)
         for element in report.img_classify:
@@ -183,7 +189,10 @@ class ReportProvider(BaseDataProvider):
                                                                  element)
 
         # print('img_classify', time() - start)
-        return {'data': items, 'layout': report.layout}
+        return {'data': items,
+                'layout': report.layout,
+                'metric': report.metric.serialize()
+                }
 
     def add_dag(self, dag: int, report: int):
         tasks = self.query(Task.id). \
