@@ -5,6 +5,7 @@ cache: pip
 branches:
   only:
   - master
+  - gh-pages
 
 python:
   - '3.6'
