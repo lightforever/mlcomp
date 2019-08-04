@@ -11,20 +11,16 @@ from mlcomp.worker.interfaces.base import Interface
 class TorchInterface(Interface):
     __syn__ = 'torch'
 
-    def __init__(self,
-                 file: str,
-                 batch_size: int,
-                 *args,
-                 **kwargs):
+    def __init__(self, file: str, batch_size: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.model = load(file)
         self.batch_size = batch_size
 
     def __call__(self, x: dict) -> dict:
-        loader = DataLoader(x['dataset'],
-                            batch_size=self.batch_size,
-                            shuffle=False)
+        loader = DataLoader(
+            x['dataset'], batch_size=self.batch_size, shuffle=False
+        )
         pred = []
         for batch in loader:
             logits = self.model(batch['features'])

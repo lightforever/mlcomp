@@ -8,7 +8,7 @@ DATABASE = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),
     'port': int(os.getenv('POSTGRES_PORT', 5432)),
 }
-if DB_DRIVER=='sqlite':
+if DB_DRIVER == 'sqlite':
     f = os.path.dirname(__file__)
     f = os.path.join(f, '../migration')
     f = os.path.abspath(f)
@@ -18,6 +18,4 @@ else:
         f"{DATABASE['password']}@{DATABASE['host']}:" \
         f"{DATABASE['port']}/{DATABASE['dbname']}"
 
-__all__ = [
-    'SA_CONNECTION_STRING'
-]
+__all__ = ['SA_CONNECTION_STRING']

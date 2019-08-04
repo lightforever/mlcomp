@@ -8,11 +8,13 @@ from mlcomp.db.models import Task, Dag
 
 
 class BaseCallback(Callback):
-    def __init__(self,
-                 experiment: Experiment,
-                 task: Task,
-                 dag: Dag,
-                 info: ReportLayoutItem):
+    def __init__(
+        self,
+        experiment: Experiment,
+        task: Task,
+        dag: Dag,
+        info: ReportLayoutItem
+    ):
         self.info = info
         self.task = task
         self.dag = dag

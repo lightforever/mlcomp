@@ -1,7 +1,7 @@
 from sqlalchemy.orm import joinedload
 
-from mlcomp.db.providers import *
-from mlcomp.db.models import *
+from mlcomp.db.models import Task
+from mlcomp.db.providers import TaskProvider, ProjectProvider
 from mlcomp.server.back.create_dags.standard import dag_standard
 from mlcomp.utils.io import yaml_load
 

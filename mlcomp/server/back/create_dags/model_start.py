@@ -1,5 +1,5 @@
-from mlcomp.db.providers import *
-from mlcomp.db.models import *
+from mlcomp.db.models import Dag
+from mlcomp.db.providers import ModelProvider, DagProvider
 from mlcomp.server.back.create_dags.standard import dag_standard
 from mlcomp.utils.config import Config
 from mlcomp.utils.io import yaml_load
@@ -33,11 +33,9 @@ def dag_model_start(data: dict):
         'executors': pipe
     }
 
-    dag_standard(config,
-                 debug=False,
-                 upload_files=False,
-                 copy_files_from=data['dag']
-                 )
+    dag_standard(
+        config, debug=False, upload_files=False, copy_files_from=data['dag']
+    )
 
     model.dag = data['dag']
     model.interface = data['interface']

@@ -2,9 +2,14 @@ from collections import OrderedDict
 import os
 
 from mlcomp.contrib.search.grid import grid_cells
-from mlcomp.db.providers import *
 from mlcomp.db.enums import TaskType, DagType
-from mlcomp.db.models import *
+from mlcomp.db.models import Report, Task, Dag, ReportTasks
+from mlcomp.db.providers import TaskProvider, \
+    ReportProvider, \
+    ReportTasksProvider, \
+    ReportLayoutProvider, \
+    DagProvider, \
+    ProjectProvider
 from mlcomp.utils.misc import now
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
@@ -12,12 +17,14 @@ from mlcomp.utils.io import yaml_dump
 
 
 class DagStandardBuilder:
-    def __init__(self,
-                 config: dict,
-                 debug: bool,
-                 config_text: str = None,
-                 upload_files: bool = True,
-                 copy_files_from: int = None):
+    def __init__(
+        self,
+        config: dict,
+        debug: bool,
+        config_text: str = None,
+        upload_files: bool = True,
+        copy_files_from: int = None
+    ):
         self.config = config
         self.debug = debug
         self.config_text = config_text
@@ -70,14 +77,15 @@ class DagStandardBuilder:
             self.dag_report_id = report.id
 
     def create_dag(self):
-        dag = Dag(config=self.config_text or yaml_dump(self.config),
-                  project=self.project,
-                  name=self.info['name'],
-                  docker_img=self.info.get('docker_img'),
-                  type=DagType.Standard.value,
-                  created=now(),
-                  report=self.dag_report_id
-                  )
+        dag = Dag(
+            config=self.config_text or yaml_dump(self.config),
+            project=self.project,
+            name=self.info['name'],
+            docker_img=self.info.get('docker_img'),
+            type=DagType.Standard.value,
+            created=now(),
+            report=self.dag_report_id
+        )
 
         self.dag = self.dag_provider.add(dag)
 
@@ -88,11 +96,7 @@ class DagStandardBuilder:
         elif self.copy_files_from:
             self.storage.copy_from(self.copy_files_from, self.dag)
 
-    def create_task(self,
-                    k: str,
-                    v: dict,
-                    name: str,
-                    info: dict):
+    def create_task(self, k: str, v: dict, name: str, info: dict):
         task_type = TaskType.User.value
         if v.get('task_type') == 'train' or \
                 Executor.is_trainable(v['type']):
@@ -130,21 +134,23 @@ class DagStandardBuilder:
             report_config = self.layouts[self.report_name]
             info['report_config'] = report_config
             task.additional_info = yaml_dump(info)
-            self.provider.add(task,
-                              commit=False)
-            report = Report(config=yaml_dump(report_config),
-                            name=task.name,
-                            project=self.project,
-                            layout=self.report_name
-                            )
+            self.provider.add(task, commit=False)
+            report = Report(
+                config=yaml_dump(report_config),
+                name=task.name,
+                project=self.project,
+                layout=self.report_name
+            )
             self.report_provider.add(report)
             task.report = report.id
 
             self.report_tasks_provider.add(
-                ReportTasks(report=report.id, task=task.id))
+                ReportTasks(report=report.id, task=task.id)
+            )
 
             self.report_tasks_provider.add(
-                ReportTasks(report=self.dag_report_id, task=task.id))
+                ReportTasks(report=self.dag_report_id, task=task.id)
+            )
 
             self.provider.commit()
         else:
@@ -164,7 +170,8 @@ class DagStandardBuilder:
                         if d not in executors:
                             raise Exception(
                                 f'Executor {k} depend on {d} '
-                                f'which does not exist')
+                                f'which does not exist'
+                            )
 
                         valid = valid and d in created
                 if valid:
@@ -176,9 +183,7 @@ class DagStandardBuilder:
                         for i, (cell, cell_name) in enumerate(cells):
                             name = f'{k} {cell_name}'
                             names.append(name)
-                            infos.append({
-                                'grid_cell': i
-                            })
+                            infos.append({'grid_cell': i})
                     else:
                         names.append(k)
                         infos.append({})
@@ -211,17 +216,20 @@ class DagStandardBuilder:
         return self.created
 
 
-def dag_standard(config: dict,
-                 debug: bool,
-                 config_text: str = None,
-                 upload_files: bool = True,
-                 copy_files_from: int = None):
-    builder = DagStandardBuilder(config=config,
-                                 debug=debug,
-                                 config_text=config_text,
-                                 upload_files=upload_files,
-                                 copy_files_from=copy_files_from
-                                 )
+def dag_standard(
+    config: dict,
+    debug: bool,
+    config_text: str = None,
+    upload_files: bool = True,
+    copy_files_from: int = None
+):
+    builder = DagStandardBuilder(
+        config=config,
+        debug=debug,
+        config_text=config_text,
+        upload_files=upload_files,
+        copy_files_from=copy_files_from
+    )
     return builder.build()
 
 

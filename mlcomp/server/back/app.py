@@ -12,8 +12,11 @@ from sqlalchemy.orm import joinedload
 
 import mlcomp.worker.tasks as celery_tasks
 from mlcomp.db.enums import TaskStatus, ComponentType
-from mlcomp.db.providers import *
 from mlcomp.db.core import PaginatorOptions, Session
+from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
+    ReportLayoutProvider, ReportProvider, ModelProvider, ReportImgProvider, \
+    DagProvider, DagStorageProvider, TaskProvider, LogProvider, StepProvider, \
+    FileProvider, AuxiliaryProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.server.back import conf
@@ -67,7 +70,8 @@ def authenticate():
     return Response(
         'Could not verify your access level for that URL.\n'
         'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'xBasic'})
+        {'WWW-Authenticate': 'xBasic'}
+    )
 
 
 def requires_auth(f):
@@ -95,7 +99,8 @@ def error_handler(f):
 
             logger.error(
                 f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
-                ComponentType.API)
+                ComponentType.API
+            )
 
             error = traceback.format_exc()
             success = False
@@ -106,9 +111,7 @@ def error_handler(f):
         res['success'] = success
         res['error'] = error
 
-        return Response(
-            json.dumps(res),
-            status=status)
+        return Response(json.dumps(res), status=status)
 
     return decorated
 
@@ -144,10 +147,10 @@ def project_add():
     data = request_data()
 
     provider = ProjectProvider()
-    res = provider.add_project(data['name'],
-                               yaml_load(data['class_names']),
-                               yaml_load(data['ignore_folders'])
-                               )
+    res = provider.add_project(
+        data['name'], yaml_load(data['class_names']),
+        yaml_load(data['ignore_folders'])
+    )
     return res
 
 
@@ -158,10 +161,10 @@ def project_edit():
     data = request_data()
 
     provider = ProjectProvider()
-    res = provider.edit_project(data['name'],
-                                yaml_load(data['class_names']),
-                                yaml_load(data['ignore_folders'])
-                                )
+    res = provider.edit_project(
+        data['name'], yaml_load(data['class_names']),
+        yaml_load(data['ignore_folders'])
+    )
     return res
 
 
@@ -185,9 +188,7 @@ def report_add_end():
     layouts = ReportLayoutProvider().all()
     layout = layouts[data['layout']]
     report = Report(
-        name=data['name'],
-        project=data['project'],
-        config=yaml_dump(layout)
+        name=data['name'], project=data['project'], config=yaml_dump(layout)
     )
     provider.add(report)
 
@@ -380,9 +381,7 @@ def task_stop():
     data = request_data()
     task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
     status = celery_tasks.stop(task, task.dag_rel)
-    return {
-        'status': to_snake(TaskStatus(status).name)
-    }
+    return {'status': to_snake(TaskStatus(status).name)}
 
 
 @app.route('/api/task/info', methods=['POST'])
@@ -412,9 +411,7 @@ def dag_stop():
     dag = provider.by_id(id, joined_load=['tasks'])
     for t in dag.tasks:
         celery_tasks.stop(t, dag)
-    return {
-        'dag': provider.get({'id': id})['data'][0]
-    }
+    return {'dag': provider.get({'id': id})['data'][0]}
 
 
 @app.route('/api/dag/start', methods=['POST'])
@@ -425,9 +422,10 @@ def dag_start():
     provider = DagProvider()
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
-    can_start_statuses = [TaskStatus.Failed.value,
-                          TaskStatus.Skipped.value,
-                          TaskStatus.Stopped.value]
+    can_start_statuses = [
+        TaskStatus.Failed.value, TaskStatus.Skipped.value,
+        TaskStatus.Stopped.value
+    ]
 
     for t in dag.tasks:
         if t.status not in can_start_statuses:
@@ -463,9 +461,7 @@ def dag_toogle_report():
         provider.remove_dag(int(data['id']), int(data['report']))
     else:
         provider.add_dag(int(data['id']), int(data['report']))
-    return {
-        'report_full': not data.get('remove')
-    }
+    return {'report_full': not data.get('remove')}
 
 
 @app.route('/api/task/toogle_report', methods=['POST'])
@@ -478,9 +474,7 @@ def task_toogle_report():
         provider.remove_task(int(data['id']), int(data['report']))
     else:
         provider.add_task(int(data['id']), int(data['report']))
-    return {
-        'report_full': not data.get('remove')
-    }
+    return {'report_full': not data.get('remove')}
 
 
 @app.route('/api/logs', methods=['POST'])
@@ -532,10 +526,9 @@ def report_update_layout_end():
     data = request_data()
     provider = ReportProvider()
     layout_provider = ReportLayoutProvider()
-    provider.update_layout_end(data['id'],
-                               data['layout'],
-                               layout_provider.all()
-                               )
+    provider.update_layout_end(
+        data['id'], data['layout'], layout_provider.all()
+    )
     return provider.detail(data['id'])
 
 
@@ -554,8 +547,12 @@ def token():
     data = request_data()
     if str(data['token']).strip() != conf.TOKEN:
         return Response(
-            json.dumps({'success': False, 'reason': 'invalid token'}),
-            status=401)
+            json.dumps({
+                'success': False,
+                'reason': 'invalid token'
+            }),
+            status=401
+        )
     return json.dumps({'success': True})
 
 
@@ -634,8 +631,10 @@ def all_exception_handler(e):
     if type(e) == ProgrammingError:
         Session.cleanup()
 
-    logger.error(f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
-                 ComponentType.API)
+    logger.error(
+        f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
+        ComponentType.API
+    )
     return str(e), 500
 
 
@@ -643,10 +642,13 @@ def start_server():
     if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
         register_supervisor()
-    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=PORT,
-            host=HOST)
+    app.run(
+        debug=os.getenv('FLASK_ENV') == 'development', port=PORT, host=HOST
+    )
 
 
 def stop_server():
-    requests.post(f'http://localhost:{PORT}/api/shutdown',
-                  headers={'Authorization': conf.TOKEN})
+    requests.post(
+        f'http://localhost:{PORT}/api/shutdown',
+        headers={'Authorization': conf.TOKEN}
+    )

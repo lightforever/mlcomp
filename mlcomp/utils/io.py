@@ -23,9 +23,7 @@ def yaml_load(text: str = None, file: str = None):
 
 
 def yaml_dump(data):
-    return yaml.dump(data,
-                     default_flow_style=False,
-                     sort_keys=False)
+    return yaml.dump(data, default_flow_style=False, sort_keys=False)
 
 
 __all__ = ['read_lines', 'from_module_path', 'yaml_load', 'yaml_dump']

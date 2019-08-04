@@ -51,12 +51,13 @@ class StepWrap:
                 for _ in range(abs(diff) + 1):
                     self._finish()
 
-        step = Step(level=level,
-                    name=name,
-                    started=now(),
-                    status=StepStatus.InProgress.value,
-                    task=self.task.id
-                    )
+        step = Step(
+            level=level,
+            name=name,
+            started=now(),
+            status=StepStatus.InProgress.value,
+            task=self.task.id
+        )
         self.step_provider.add(step)
         self.children.append(step)
         self.step = step
@@ -79,32 +80,28 @@ class StepWrap:
                 self._finish(None, failed=failed)
 
     def debug(self, message: str):
-        self.logger.debug(message,
-                          ComponentType.Worker,
-                          self.task.computer_assigned,
-                          self.task.id,
-                          self.step.id)
+        self.logger.debug(
+            message, ComponentType.Worker, self.task.computer_assigned,
+            self.task.id, self.step.id
+        )
 
     def info(self, message: str):
-        self.logger.info(message,
-                         ComponentType.Worker,
-                         self.task.computer_assigned,
-                         self.task.id,
-                         self.step.id)
+        self.logger.info(
+            message, ComponentType.Worker, self.task.computer_assigned,
+            self.task.id, self.step.id
+        )
 
     def warning(self, message: str):
-        self.logger.warning(message,
-                            ComponentType.Worker,
-                            self.task.computer_assigned,
-                            self.task.id,
-                            self.step.id)
+        self.logger.warning(
+            message, ComponentType.Worker, self.task.computer_assigned,
+            self.task.id, self.step.id
+        )
 
     def error(self, message: str):
-        self.logger.error(message,
-                          ComponentType.Worker,
-                          self.task.computer_assigned,
-                          self.task.id,
-                          self.step.id)
+        self.logger.error(
+            message, ComponentType.Worker, self.task.computer_assigned,
+            self.task.id, self.step.id
+        )
 
 
 __all__ = ['StepWrap']

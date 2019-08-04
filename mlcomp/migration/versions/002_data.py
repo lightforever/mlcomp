@@ -1,7 +1,8 @@
 from glob import glob
 import os
-import pickle
-from mlcomp.db.providers import ReportLayoutProvider, ReportLayout
+
+from mlcomp.db.models import ReportLayout
+from mlcomp.db.providers import ReportLayoutProvider
 from mlcomp.utils.misc import now
 
 
@@ -13,14 +14,15 @@ def upgrade(migrate_engine):
         for path in glob(files):
             name = os.path.basename(path).split('.')[0]
             text = open(path).read()
-            provider.add(ReportLayout(
-                name=name,
-                content=pickle.dumps(text),
-                last_modified=now()),
-                commit=False)
+            provider.add(
+                ReportLayout(
+                    name=name, content=text, last_modified=now()
+                ),
+                commit=False
+            )
 
         provider.commit()
-    except:
+    except Exception:
         provider.rollback()
         raise
 

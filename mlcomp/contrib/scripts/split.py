@@ -5,12 +5,14 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 
-def file_group_kfold(n_splits: int,
-                     output: str,
-                     get_group=None,
-                     sort=False,
-                     must_equal = (),
-                     **files):
+def file_group_kfold(
+    n_splits: int,
+    output: str,
+    get_group=None,
+    sort=False,
+    must_equal=(),
+    **files
+):
     assert len(files) > 0, 'at lease 1 type of files is required'
     fold = GroupKFold(n_splits)
     keys = sorted(list(files))
@@ -38,16 +40,18 @@ def file_group_kfold(n_splits: int,
             names_equal = get_name(v[i]) == get_name(file_first[i])
             assert names_equal, \
                 f'file name in {k} does not equal to {keys[0]}, ' \
-                    f'file name = {basename(v[i])}'
+                f'file name = {basename(v[i])}'
 
     df = pd.DataFrame(files)[keys]
     df['fold'] = 0
 
-    groups = [i if not get_group else get_group(file) for i, file in
-              enumerate(file_first)]
+    groups = [
+        i if not get_group else get_group(file)
+        for i, file in enumerate(file_first)
+    ]
 
-    for i, (train_index, test_index) in enumerate(
-            fold.split(groups, groups=groups)):
+    for i, (train_index,
+            test_index) in enumerate(fold.split(groups, groups=groups)):
         df.loc[test_index, 'fold'] = i
 
     df = df.sample(frac=1)

@@ -5,12 +5,13 @@ from torch.utils.data import Dataset
 
 
 class MnistDataset(Dataset):
-    def __init__(self,
-                 file: str,
-                 fold_csv: str = None,
-                 fold_number: int = 0,
-                 is_test: bool = False
-                 ):
+    def __init__(
+        self,
+        file: str,
+        fold_csv: str = None,
+        fold_number: int = 0,
+        is_test: bool = False
+    ):
         df = pd.read_csv(file)
         if fold_csv is not None:
             fold = pd.read_csv(fold_csv)
@@ -29,7 +30,7 @@ class MnistDataset(Dataset):
 
     def __len__(self):
         return len(self.x)
-    
+
     def __getitem__(self, index):
         res = {'features': self.x[index] / 255}
         if self.y is not None:

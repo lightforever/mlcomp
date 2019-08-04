@@ -16,10 +16,7 @@ from mlcomp.utils.settings import MODEL_FOLDER, DATA_FOLDER
 from mlcomp.utils.io import yaml_load
 
 
-def sync_directed(source: Computer,
-                  target: Computer,
-                  folders_excluded: List
-                  ):
+def sync_directed(source: Computer, target: Computer, folders_excluded: List):
     current_computer = socket.gethostname()
     end = ' --perms  --chmod=777'
     for folder, excluded in folders_excluded:
@@ -67,8 +64,10 @@ class FileSync:
             sync_start = now()
 
             computers = provider.all_with_last_activtiy()
-            computers = [c for c in computers
-                         if (now()-c.last_activity).total_seconds() < 10]
+            computers = [
+                c for c in computers
+                if (now() - c.last_activity).total_seconds() < 10
+            ]
 
             excluded = []
             projects = project_provider.all_last_activity()
@@ -76,7 +75,7 @@ class FileSync:
             for p in projects:
                 if last_synced is not None and \
                         (p.last_activity is None or
-                        p.last_activity < last_synced):
+                         p.last_activity < last_synced):
                     continue
 
                 ignore = yaml_load(p.ignore_folders)
@@ -99,7 +98,7 @@ class FileSync:
         except Exception as e:
             if type(e) == ProgrammingError:
                 Session.cleanup()
-            logger.error(traceback.format_exc(),
-                         ComponentType.WorkerSupervisor,
-                         hostname
-                         )
+            logger.error(
+                traceback.format_exc(), ComponentType.WorkerSupervisor,
+                hostname
+            )

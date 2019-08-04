@@ -1,7 +1,7 @@
 from mlcomp.db.models import Log, Step, Task, Computer
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import ComponentType
-from mlcomp.db.providers.base import *
+from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import log_name, to_snake
 
 
@@ -49,8 +49,8 @@ class LogProvider(BaseDataProvider):
                 'component': to_snake(ComponentType(log.component).name),
                 'computer': log.computer,
                 'step': self.to_dict(step) if step else None,
-                'task': self.to_dict(task, rules=('-additional_info',))
-                    if task else None
+                'task': self.to_dict(task, rules=('-additional_info', ))
+                if task else None
             }
             data.append(item)
 

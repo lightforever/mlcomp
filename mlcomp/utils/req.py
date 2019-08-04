@@ -15,10 +15,12 @@ _mapping = {
 }
 
 
-def find_imports(path: str,
-                 files: List[str] = None,
-                 exclude_patterns: List[str] = None,
-                 encoding='utf-8'):
+def find_imports(
+    path: str,
+    files: List[str] = None,
+    exclude_patterns: List[str] = None,
+    encoding='utf-8'
+):
     res = []
     raw_imports = []
     files = files if files is not None \
@@ -26,8 +28,9 @@ def find_imports(path: str,
 
     exclude_patterns = exclude_patterns \
         if exclude_patterns is not None else []
-    spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
-                                        exclude_patterns)
+    spec = pathspec.PathSpec.from_lines(
+        pathspec.patterns.GitWildMatchPattern, exclude_patterns
+    )
 
     for file in files:
         if not file.endswith('.py'):
@@ -58,7 +61,7 @@ def find_imports(path: str,
 
             version = pkg_resources.get_distribution(name).version
             res.append((name, version))
-        except Exception as exc:
+        except Exception:
             pass
 
     return res
@@ -66,18 +69,18 @@ def find_imports(path: str,
 
 def _read_requirements(file: str):
     res = []
-    for l in read_lines(file):
-        if l == '':
+    for line in read_lines(file):
+        if line == '':
             continue
         name, rel, ver = None, None, None
-        if '>=' in l:
+        if '>=' in line:
             rel = '>='
-        elif '==' in l:
+        elif '==' in line:
             rel = '=='
 
-        name = l.split(rel)[0].strip()
+        name = line.split(rel)[0].strip()
         if rel:
-            ver = l.split(rel)[1].strip()
+            ver = line.split(rel)[1].strip()
 
         res.append([name, rel, ver])
 
@@ -86,15 +89,16 @@ def _read_requirements(file: str):
 
 def _write_requirements(file: str, reqs: List):
     with open(file, 'w') as f:
-        text = '\n'.join([f'{name}{rel}{ver}'
-                          if rel else name for name, rel, ver in reqs])
+        text = '\n'.join(
+            [f'{name}{rel}{ver}' if rel else name for name, rel, ver in reqs]
+        )
 
         f.write(text)
 
 
-def control_requirements(path: str,
-                         files: List[str] = None,
-                         exclude_patterns: List[str] = None):
+def control_requirements(
+    path: str, files: List[str] = None, exclude_patterns: List[str] = None
+):
     req_file = os.path.join(path, 'requirements.txt')
     if not os.path.exists(req_file):
         with open(req_file, 'w') as f:

@@ -57,6 +57,7 @@ class Report(Base):
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
     layout = sa.Column(sa.String)
 
+
 class ReportTasks(Base):
     __tablename__ = 'report_task'
 
@@ -73,8 +74,6 @@ class ReportLayout(Base):
     last_modified = sa.Column(sa.TIMESTAMP)
 
 
-__all__ = ['ReportSeries',
-           'ReportImg',
-           'ReportTasks',
-           'Report',
-           'ReportLayout']
+__all__ = [
+    'ReportSeries', 'ReportImg', 'ReportTasks', 'Report', 'ReportLayout'
+]

@@ -1,5 +1,7 @@
+import os
 import shutil
 import socket
+import time
 import traceback
 import sys
 from os.path import join
@@ -17,8 +19,8 @@ from mlcomp.db.providers import TaskProvider, \
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.worker.app import app
+from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
-from mlcomp.worker.executors import *
 from mlcomp.utils.config import Config
 from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 

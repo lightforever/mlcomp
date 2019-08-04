@@ -5,8 +5,8 @@ from sqlalchemy import desc
 from sqlalchemy_serializer import Serializer
 from sqlalchemy.orm import joinedload
 
-from mlcomp.db.core import *
-from mlcomp.db.models import *
+from mlcomp.db.core import Session, PaginatorOptions
+from mlcomp.db.models.base import Base
 
 
 class BaseDataProvider:
@@ -24,7 +24,8 @@ class BaseDataProvider:
         self.serializer = Serializer(
             date_format=self.date_format,
             datetime_format=self.datetime_format_long,
-            time_format=self.time_format)
+            time_format=self.time_format
+        )
 
     def serialize_datetime(self, value):
         return self.serializer.serialize_datetime(value)
@@ -58,10 +59,12 @@ class BaseDataProvider:
 
     def to_dict(self, item, rules=(), datetime_format=None):
         datetime_format = datetime_format or self.datetime_format
-        return item.to_dict(date_format=self.date_format,
-                            datetime_format=datetime_format,
-                            time_format=self.time_format,
-                            rules=rules)
+        return item.to_dict(
+            date_format=self.date_format,
+            datetime_format=datetime_format,
+            time_format=self.time_format,
+            rules=rules
+        )
 
     def create_or_update(self, obj: Base, *fields):
         query = self.session.query(obj.__class__)

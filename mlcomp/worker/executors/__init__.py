@@ -1,7 +1,9 @@
-from .base import *
+from .base import StepWrap, Executor
 import os
+
 if not os.getenv('SERVER'):
-    from .kaggle import *
-    from .catalyst import *
-    from .model import *
-    from .split import *
+    # flake8: noqa
+    from .kaggle import Download, Submit
+    from .catalyst import Catalyst
+    from .model import ModelAdd
+    from .split import Split

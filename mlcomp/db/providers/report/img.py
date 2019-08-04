@@ -26,8 +26,8 @@ class ReportImgProvider(BaseDataProvider):
             query.filter(Dag.id == filter['dag']).update({'img_size': 0})
 
         if filter.get('project'):
-            query.filter(Dag.project == filter['project']).update(
-                {'img_size': 0})
+            query.filter(Dag.project == filter['project']
+                         ).update({'img_size': 0})
 
         self.session.commit()
 
@@ -38,8 +38,9 @@ class ReportImgProvider(BaseDataProvider):
             delete(synchronize_session=False)
         self.session.commit()
 
-    def detail_img_classify(self, filter: dict,
-                            options: PaginatorOptions = None):
+    def detail_img_classify(
+        self, filter: dict, options: PaginatorOptions = None
+    ):
         res = {'data': []}
         confusion = self.query(ReportImg.img). \
             filter(ReportImg.task == filter['task']). \
@@ -60,19 +61,24 @@ class ReportImgProvider(BaseDataProvider):
 
         if filter.get('y') is not None and filter.get('y_pred') is not None:
             query = query.filter(
-                and_(ReportImg.y == filter['y'],
-                     ReportImg.y_pred == filter['y_pred'])
+                and_(
+                    ReportImg.y == filter['y'],
+                    ReportImg.y_pred == filter['y_pred']
+                )
             )
 
         if filter.get('metric_diff_min') is not None:
             query = query.filter(
-                ReportImg.metric_diff >= filter['metric_diff_min'])
+                ReportImg.metric_diff >= filter['metric_diff_min']
+            )
         if filter.get('metric_diff_max') is not None:
             query = query.filter(
-                ReportImg.metric_diff <= filter['metric_diff_max'])
+                ReportImg.metric_diff <= filter['metric_diff_max']
+            )
 
         project = self.query(Project).join(Dag).join(Task).filter(
-            Task.id == filter['task']).first()
+            Task.id == filter['task']
+        ).first()
         class_names = yaml_load(project.class_names)
 
         res['total'] = query.count()
@@ -86,13 +92,15 @@ class ReportImgProvider(BaseDataProvider):
         for img_obj in img_objs:
             img = pickle.loads(img_obj.img)
             # noinspection PyTypeChecker
-            res['data'].append({
-                'content': base64.b64encode(img['img']).decode('utf-8'),
-                'id': img_obj.id,
-                'y_pred': img_obj.y_pred,
-                'y': img_obj.y,
-                'metric_diff': round(img_obj.metric_diff, 2)
-            })
+            res['data'].append(
+                {
+                    'content': base64.b64encode(img['img']).decode('utf-8'),
+                    'id': img_obj.id,
+                    'y_pred': img_obj.y_pred,
+                    'y': img_obj.y,
+                    'metric_diff': round(img_obj.metric_diff, 2)
+                }
+            )
 
         return res
 

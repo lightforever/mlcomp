@@ -23,51 +23,30 @@ class ReportLayoutInfo:
         self._check_layout(self.layout)
 
     def _check_layout(self, item):
-        types = ['root',
-                 'panel',
-                 'blank',
-                 'series',
-                 'table',
-                 'img_classify',
-                 'img'
-                 ]
+        types = [
+            'root', 'panel', 'blank', 'series', 'table', 'img_classify', 'img'
+        ]
         assert item.get('type') in types, f'Unknown item type = {item["type"]}'
 
         fields = {
             'root': [('items', False)],
             'panel': [
-                'title',
-                ('parent_cols', False),
-                ('cols', False),
-                ('row_height', False),
-                ('rows', False),
-                ('items', False),
-                ('expanded', False),
-                ('table', False)
+                'title', ('parent_cols', False), ('cols', False),
+                ('row_height', False), ('rows', False), ('items', False),
+                ('expanded', False), ('table', False)
             ],
-            'blank': [
-                ('cols', False),
+            'blank': [('cols', False), ('rows', False)],
+            'series': [
+                ('multi', False), ('group', False), 'source', ('cols', False),
                 ('rows', False)
             ],
-            'series': [
-                ('multi', False),
-                ('group', False),
-                'source',
-                ('cols', False),
-                ('rows', False)],
             'table': [
                 'source',
                 ('cols', False),
                 ('rows', False),
             ],
-            'img_classify': [
-                'source',
-                ('cols', False),
-                ('rows', False)],
-            'img': [
-                'source',
-                ('cols', False),
-                ('rows', False)]
+            'img_classify': ['source', ('cols', False), ('rows', False)],
+            'img': ['source', ('cols', False), ('rows', False)]
         }
         keys = set(item.keys()) - {'type'}
         for f in fields[item['type']]:
@@ -89,8 +68,10 @@ class ReportLayoutInfo:
         return len(self.precision_recall) > 0
 
     def _by_type(self, t: str, c):
-        return [c.from_dict(k, v)
-                for k, v in self.data['items'].items() if v.get('type') == t]
+        return [
+            c.from_dict(k, v) for k, v in self.data['items'].items()
+            if v.get('type') == t
+        ]
 
     def _get_img_classify(self) -> List[ReportLayoutImgClassify]:
         return self._by_type('img_classify', ReportLayoutImgClassify)
@@ -108,30 +89,26 @@ class ReportLayoutInfo:
         return ReportLayoutMetric.from_dict(self.data['metric'])
 
     @classmethod
-    def union_layouts(cls,
-                      name: str,
-                      layouts: dict,
-                      return_dict: bool = True
-                      ):
+    def union_layouts(cls, name: str, layouts: dict, return_dict: bool = True):
         assert name in layouts, f'Layout {name} is not in the collection'
 
-        l = deepcopy(layouts[name])
+        layout = deepcopy(layouts[name])
         r = dict()
-        if l.get('extend'):
-            assert l['extend'] in layouts, \
-                f'Layout for extending = {l["extend"]}' \
+        if layout.get('extend'):
+            assert layout['extend'] in layouts, \
+                f'Layout for extending = {layout["extend"]}' \
                 f' is not in the collection'
-            r = cls.union_layouts(l['extend'], layouts)
+            r = cls.union_layouts(layout['extend'], layouts)
 
-        if 'metric' in l:
-            r['metric'] = l['metric']
+        if 'metric' in layout:
+            r['metric'] = layout['metric']
 
-        if 'items' in l:
+        if 'items' in layout:
             r['items'] = r.get('items', dict())
-            r['items'].update(l['items'])
+            r['items'].update(layout['items'])
 
-        if 'layout' in l:
-            r['layout'] = r.get('layout', []) + l['layout']
+        if 'layout' in layout:
+            r['layout'] = r.get('layout', []) + layout['layout']
 
         if return_dict:
             return r

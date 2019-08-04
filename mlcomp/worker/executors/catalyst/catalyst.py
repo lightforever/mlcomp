@@ -9,16 +9,12 @@ from catalyst.utils.config import parse_args_uargs, dump_config
 
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
+from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.utils.io import yaml_load
 from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
 from mlcomp.worker.executors.base import Executor
-from mlcomp.db.report_info import *
-from mlcomp.worker.executors.catalyst.precision_recall import \
-    PrecisionRecallCallback
-from mlcomp.worker.executors.catalyst.f1 import F1Callback
-from mlcomp.worker.executors.catalyst.img_classify import ImgClassifyCallback
 
 
 class Args:
@@ -36,8 +32,9 @@ class Args:
     verbose = True
 
     def _get_kwargs(self):
-        return [(k, v) for k, v in self.__dict__.items() if
-                not k.startswith('_')]
+        return [
+            (k, v) for k, v in self.__dict__.items() if not k.startswith('_')
+        ]
 
 
 # noinspection PyTypeChecker
@@ -45,13 +42,14 @@ class Args:
 class Catalyst(Executor, Callback):
     __syn__ = 'catalyst'
 
-    def __init__(self,
-                 args: Args,
-                 report: ReportLayoutInfo,
-                 cuda_devices: list,
-                 distr_info: dict,
-                 grid_config: dict,
-                 ):
+    def __init__(
+        self,
+        args: Args,
+        report: ReportLayoutInfo,
+        cuda_devices: list,
+        distr_info: dict,
+        grid_config: dict,
+    ):
 
         self.distr_info = distr_info
         self.args = args
@@ -70,13 +68,13 @@ class Catalyst(Executor, Callback):
         if self.master:
             result = [self]
 
-        # for items, cls in [
-        #     [self.report.precision_recall, PrecisionRecallCallback],
-        #     [self.report.f1, F1Callback],
-        #     [self.report.img_classify, ImgClassifyCallback],
-        # ]:
-        #     for item in items:
-        #         result.append(cls(self.experiment, self.task, self.dag, item))
+    # for items, cls in [
+    #     [self.report.precision_recall, PrecisionRecallCallback],
+    #     [self.report.f1, F1Callback],
+    #     [self.report.img_classify, ImgClassifyCallback],
+    # ]:
+    #     for item in items:
+    #         result.append(cls(self.experiment, self.task, self.dag, item))
         return result
 
     def on_epoch_end(self, state: RunnerState):
@@ -85,19 +83,23 @@ class Catalyst(Executor, Callback):
             val = state.metrics.epoch_values['valid'][s.key]
 
             task_id = self.task.parent or self.task.id
-            train = ReportSeries(part='train',
-                                 name=s.key,
-                                 epoch=state.epoch,
-                                 task=task_id,
-                                 value=train,
-                                 time=now())
+            train = ReportSeries(
+                part='train',
+                name=s.key,
+                epoch=state.epoch,
+                task=task_id,
+                value=train,
+                time=now()
+            )
 
-            val = ReportSeries(part='valid',
-                               name=s.key,
-                               epoch=state.epoch,
-                               task=task_id,
-                               value=val,
-                               time=now())
+            val = ReportSeries(
+                part='valid',
+                name=s.key,
+                epoch=state.epoch,
+                task=task_id,
+                value=val,
+                time=now()
+            )
 
             self.series_provider.add(train)
             self.series_provider.add(val)
@@ -123,10 +125,9 @@ class Catalyst(Executor, Callback):
             state.epoch += 1
 
     @classmethod
-    def _from_config(cls,
-                     executor: dict,
-                     config: Config,
-                     additional_info: dict):
+    def _from_config(
+        cls, executor: dict, config: Config, additional_info: dict
+    ):
         args = Args()
         for k, v in executor['args'].items():
             if v in ['False', 'True']:
@@ -149,12 +150,13 @@ class Catalyst(Executor, Callback):
         distr_info = additional_info.get('distr_info', {})
         cuda_devices = additional_info.get('cuda_devices')
 
-        return cls(args=args,
-                   report=report,
-                   grid_config=grid_config,
-                   distr_info=distr_info,
-                   cuda_devices=cuda_devices
-                   )
+        return cls(
+            args=args,
+            report=report,
+            grid_config=grid_config,
+            distr_info=distr_info,
+            cuda_devices=cuda_devices
+        )
 
     def set_dist_env(self, config):
         info = self.distr_info
@@ -208,18 +210,18 @@ class Catalyst(Executor, Callback):
             self.task.steps = len(stages)
             self.task_provider.commit()
 
-            experiment.stages_config = {k: v for k, v in
-                                        experiment.stages_config.items() if
-                                        k == stages[index]}
+            experiment.stages_config = {
+                k: v
+                for k, v in experiment.stages_config.items()
+                if k == stages[index]
+            }
 
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
             res = _get_callbacks(stage) + self.callbacks()
 
-            path = os.path.join(experiment.logdir,
-                                'checkpoints',
-                                'best.pth')
+            path = os.path.join(experiment.logdir, 'checkpoints', 'best.pth')
 
             if self.distr_info and os.path.exists(path):
                 for c in res:
@@ -236,9 +238,9 @@ class Catalyst(Executor, Callback):
         if experiment.logdir is not None:
             dump_config(config, experiment.logdir, args.configs)
 
-        runner.run_experiment(
-            experiment,
-            check=args.check
-        )
+        runner.run_experiment(experiment, check=args.check)
 
         return {'stage': experiment.stages[-1], 'stages': stages}
+
+
+__all__ = ['Catalyst']

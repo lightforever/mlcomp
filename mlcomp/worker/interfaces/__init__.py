@@ -1,3 +1,5 @@
 from .base import Interface
 from .torch import TorchInterface
 from .equation import EquationInterface
+
+__all__ = ['Interface', 'TorchInterface', 'EquationInterface']

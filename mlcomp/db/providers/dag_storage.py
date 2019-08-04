@@ -1,5 +1,5 @@
 from mlcomp.db.models import DagStorage, File, DagLibrary
-from mlcomp.db.providers.base import *
+from mlcomp.db.providers.base import BaseDataProvider
 
 
 class DagStorageProvider(BaseDataProvider):

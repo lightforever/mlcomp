@@ -15,9 +15,13 @@ class ComputerProvider(BaseDataProvider):
     model = Computer
 
     def computers(self):
-        return {c.name: {k: v for k, v in c.__dict__.items()
-                         if not k.startswith('_')}
-                for c in self.query(Computer).all()}
+        return {
+            c.name: {
+                k: v
+                for k, v in c.__dict__.items() if not k.startswith('_')
+            }
+            for c in self.query(Computer).all()
+        }
 
     def get(self, filter: dict, options: PaginatorOptions = None):
         query = self.query(Computer)
@@ -30,7 +34,10 @@ class ComputerProvider(BaseDataProvider):
             default_usage = {
                 'cpu': 0,
                 'memory': 0,
-                'gpu': [{'memory': 0, 'load': 0} for i in range(item['gpu'])]
+                'gpu': [{
+                    'memory': 0,
+                    'load': 0
+                } for i in range(item['gpu'])]
             }
             sync_status = 'Not synced'
             sync_date = None
@@ -59,8 +66,8 @@ class ComputerProvider(BaseDataProvider):
                 gpu['load'] = int(gpu['load'] * 100)
 
             item['usage_history'] = self.usage_history(
-                c.name,
-                filter.get('usage_min_time'))
+                c.name, filter.get('usage_min_time')
+            )
             item['dockers'] = self.dockers(c.name, c.cpu)
             res.append(item)
 
@@ -69,8 +76,10 @@ class ComputerProvider(BaseDataProvider):
     def usage_history(self, computer: str, min_time: datetime = None):
         min_time = min_time or (now() - datetime.timedelta(days=1))
         query = self.query(ComputerUsage).filter(
-            ComputerUsage.time >= min_time).filter(
-            ComputerUsage.computer == computer).order_by(ComputerUsage.time)
+            ComputerUsage.time >= min_time
+        ).filter(ComputerUsage.computer == computer).order_by(
+            ComputerUsage.time
+        )
         res = {'time': [], 'mean': []}
         mean = defaultdict(list)
         for c in query.all():
@@ -114,12 +123,16 @@ class ComputerProvider(BaseDataProvider):
             filter(Docker.computer == computer). \
             group_by(Docker.name, Docker.computer). \
             all()
-        return [{
-            'name': r[0].name,
-            'last_activity': self.serialize_datetime_long(r[0].last_activity),
-            'in_progress': r[1],
-            'free': cpu - r[1]}
-            for r in res]
+        return [
+            {
+                'name': r[0].name,
+                'last_activity': self.serialize_datetime_long(
+                    r[0].last_activity
+                ),
+                'in_progress': r[1],
+                'free': cpu - r[1]
+            } for r in res
+        ]
 
     def all_with_last_activtiy(self):
         query = self.query(Computer, func.max(Docker.last_activity)). \

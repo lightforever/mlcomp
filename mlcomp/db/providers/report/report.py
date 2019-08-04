@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.enums import TaskStatus, TaskType
 from mlcomp.db.models import Report, ReportTasks, Task, ReportSeries, \
-    ReportImg, ReportLayout, Dag
+    ReportImg, ReportLayout
 from mlcomp.db.providers import BaseDataProvider
 from mlcomp.db.report_info import ReportLayoutSeries, ReportLayoutInfo
 from mlcomp.db.report_info.item import ReportLayoutItem
@@ -40,8 +40,9 @@ class ReportProvider(BaseDataProvider):
 
         total = query.count()
         data = []
-        for report, task_count, tasks_not_finished in self.paginator(query,
-                                                                     options):
+        for report, task_count, tasks_not_finished in self.paginator(
+            query, options
+        ):
             item = {
                 'id': report.id,
                 'time': self.serialize_datetime(report.time),
@@ -53,9 +54,9 @@ class ReportProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def _detail_series(self,
-                       series: List[ReportSeries],
-                       r: ReportLayoutSeries):
+    def _detail_series(
+        self, series: List[ReportSeries], r: ReportLayoutSeries
+    ):
         series = [s for s in series if s.name == r.name]
         res = []
 
@@ -66,24 +67,29 @@ class ReportProvider(BaseDataProvider):
             group = sorted(group, key=lambda x: x.task)
             for task_key, group_task in groupby(group, key=lambda x: x.task):
                 group_task = list(group_task)
-                res.append({
-                    'x': [item.epoch for item in group_task],
-                    'y': [item.value for item in group_task],
-                    'color': 'orange' if key == 'valid' else 'blue',
-                    'time': [self.serialize_datetime_long(item.time) for item
-                             in group_task],
-                    'group': key,
-                    'task_name': group_task[0].task_rel.name,
-                    'task_id': task_key,
-                    'source': r.key,
-                    'name': r.name
-                })
+                res.append(
+                    {
+                        'x': [item.epoch for item in group_task],
+                        'y': [item.value for item in group_task],
+                        'color': 'orange' if key == 'valid' else 'blue',
+                        'time': [
+                            self.serialize_datetime_long(item.time)
+                            for item in group_task
+                        ],
+                        'group': key,
+                        'task_name': group_task[0].task_rel.name,
+                        'task_id': task_key,
+                        'source': r.key,
+                        'name': r.name
+                    }
+                )
 
         return res
 
-    def _best_task_epoch(self, report: ReportLayoutInfo,
-                         series: List[ReportSeries],
-                         item: ReportLayoutItem):
+    def _best_task_epoch(
+        self, report: ReportLayoutInfo, series: List[ReportSeries],
+        item: ReportLayoutItem
+    ):
         tasks = [s.task for s in series]
         tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch). \
             filter(ReportImg.task.in_(tasks)). \
@@ -99,17 +105,18 @@ class ReportProvider(BaseDataProvider):
 
             if s.name == report.metric.name:
                 if best_task_epoch is None or \
-                        (best_task_epoch[
-                             1] < s.value if report.metric.minimize else
-                        best_task_epoch[1] > s.value):
+                        (best_task_epoch[1] < s.value
+                            if report.metric.minimize else
+                            best_task_epoch[1] > s.value
+                         ):
                     best_task_epoch = [(s.task, s.epoch), s.value]
 
         return best_task_epoch[0] if best_task_epoch else (None, None)
 
-    def _detail_single_img(self,
-                           report: ReportLayoutInfo,
-                           series: List[ReportSeries],
-                           item: ReportLayoutItem):
+    def _detail_single_img(
+        self, report: ReportLayoutInfo, series: List[ReportSeries],
+        item: ReportLayoutItem
+    ):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -121,16 +128,18 @@ class ReportProvider(BaseDataProvider):
 
         for img_obj in img_objs:
             img_decoded = pickle.loads(img_obj.img)
-            item = {'name': f'{img_obj.group} - {img_obj.part}',
-                    'data': base64.b64encode(img_decoded['img']).decode(
-                        'utf-8')}
+            item = {
+                'name': f'{img_obj.group} - {img_obj.part}',
+                'data': base64.b64encode(img_decoded['img']).decode('utf-8')
+            }
             res.append(item)
 
         return res
 
-    def detail_img_classify_descr(self, report: ReportLayoutInfo,
-                                  series: List[ReportSeries],
-                                  item: ReportLayoutItem):
+    def detail_img_classify_descr(
+        self, report: ReportLayoutInfo, series: List[ReportSeries],
+        item: ReportLayoutItem
+    ):
         res = []
         best_task, best_epoch = self._best_task_epoch(report, series, item)
         if best_task is None:
@@ -142,26 +151,29 @@ class ReportProvider(BaseDataProvider):
             order_by(ReportImg.part).all()
         for part in parts:
             part = part[0]
-            res.append({
-                'name': part,
-                'source': item.name,
-                'epochs': [e[0] for e in
-                           self.query(ReportImg.epoch.distinct()). \
-                               filter(ReportImg.task == best_task). \
-                               filter(ReportImg.group == item.name). \
-                               filter(ReportImg.part == part). \
-                               order_by(ReportImg.epoch).all()],
-                'task': best_task,
-                'group': item.name,
-                'part': part
-
-            })
+            res.append(
+                {
+                    'name': part,
+                    'source': item.name,
+                    'epochs': [
+                        e[0]
+                        for e in self.query(ReportImg.epoch.distinct()).filter(
+                            ReportImg.task == best_task
+                        ).filter(ReportImg.group == item.name).filter(
+                            ReportImg.part == part
+                        ).order_by(ReportImg.epoch).all()
+                    ],
+                    'task': best_task,
+                    'group': item.name,
+                    'part': part
+                }
+            )
         return res
 
     def detail(self, id: int):
         report_obj = self.by_id(id)
-        tasks = self.query(ReportTasks.task).filter(
-            ReportTasks.report == id).all()
+        tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id
+                                                    ).all()
         tasks = [t[0] for t in tasks]
         config = yaml_load(report_obj.config)
         report = ReportLayoutInfo(config)
@@ -179,20 +191,19 @@ class ReportProvider(BaseDataProvider):
 
         # print('series', time()-start)
         for element in report.precision_recall + report.f1:
-            items[element.name] = self._detail_single_img(report,
-                                                          series,
-                                                          element)
+            items[element.name
+                  ] = self._detail_single_img(report, series, element)
         # print('single image', time() - start)
         for element in report.img_classify:
-            items[element.name] = self.detail_img_classify_descr(report,
-                                                                 series,
-                                                                 element)
+            items[element.name
+                  ] = self.detail_img_classify_descr(report, series, element)
 
         # print('img_classify', time() - start)
-        return {'data': items,
-                'layout': report.layout,
-                'metric': report.metric.serialize()
-                }
+        return {
+            'data': items,
+            'layout': report.layout,
+            'metric': report.metric.serialize()
+        }
 
     def add_dag(self, dag: int, report: int):
         tasks = self.query(Task.id). \
@@ -200,8 +211,8 @@ class ReportProvider(BaseDataProvider):
             filter(Task.type <= TaskType.Train.value). \
             all()
 
-        report_tasks = self.query(ReportTasks.task).filter(
-            ReportTasks.report == report).all()
+        report_tasks = self.query(ReportTasks.task
+                                  ).filter(ReportTasks.report == report).all()
 
         for t in set(t[0] for t in tasks) - set(t[0] for t in report_tasks):
             self.add(ReportTasks(report=report, task=t))
@@ -234,10 +245,7 @@ class ReportProvider(BaseDataProvider):
             layouts.remove(report.layout)
             layouts.insert(0, report.layout)
 
-        return {
-            'id': id,
-            'layouts': layouts
-        }
+        return {'id': id, 'layouts': layouts}
 
     def update_layout_end(self, id: int, layout: str, layouts: dict):
         layout_content = yaml_dump(layouts[layout])

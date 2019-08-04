@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import DagType
 from mlcomp.db.models import Model, Dag, Project
-from mlcomp.db.providers.base import *
+from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.config import Config
 
 

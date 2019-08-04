@@ -45,7 +45,6 @@ class DbHandler(logging.Handler):
     A handler class which writes logging records, appropriately formatted,
     to the database.
     """
-
     def __init__(self):
         """
         Initialize the handler.
@@ -85,16 +84,17 @@ class DbHandler(logging.Handler):
                 replace(os.sep, '.').replace('.py', '')
             if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
-            log = Log(message=record.msg[:4000],
-                      time=now(),
-                      level=record.levelno,
-                      step=step,
-                      component=component,
-                      line=record.lineno,
-                      module=module,
-                      task=task,
-                      computer=computer
-                      )
+            log = Log(
+                message=record.msg[:4000],
+                time=now(),
+                level=record.levelno,
+                step=step,
+                component=component,
+                line=record.lineno,
+                module=module,
+                task=task,
+                computer=computer
+            )
             self.provider.add(log)
         except Exception:
             self.handleError(record)
@@ -106,13 +106,11 @@ DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-
     'formatters': {
         'simple': {
             'format': '[%(asctime)s][%(threadName)s] %(funcName)s: %(message)s'
         },
     },
-
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
@@ -121,12 +119,9 @@ LOGGING = {
             'stream': 'ext://sys.stdout'
         },
     },
-
     'loggers': {
         '': {
-            'handlers': [
-                'console'
-            ],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False
         }

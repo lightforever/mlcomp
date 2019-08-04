@@ -2,10 +2,8 @@ import sqlalchemy as sa
 import sqlalchemy.orm.session as session
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from mlcomp.db.conf import *
+from mlcomp.db.conf import SA_CONNECTION_STRING
 from mlcomp.utils.misc import adapt_db_types
-
-__all__ = ['Session']
 
 
 class Session(session.Session):
@@ -23,19 +21,20 @@ class Session(session.Session):
             return Session.__session[key][0]
 
         session_factory = scoped_session(sessionmaker(class_=Session, key=key))
-        engine = sa.create_engine(connection_string or SA_CONNECTION_STRING,
-                                  echo=False)
+        engine = sa.create_engine(
+            connection_string or SA_CONNECTION_STRING, echo=False
+        )
         session_factory.configure(bind=engine)
-        session = session_factory()
+        s = session_factory()
 
-        Session.__session[key] = [session, engine]
-        return session
+        Session.__session[key] = [s, engine]
+        return s
 
     @classmethod
     def cleanup(cls):
-        for k, (session, engine) in cls.__session.items():
+        for k, (s, engine) in cls.__session.items():
             try:
-                session.close()
+                s.close()
             except Exception:
                 pass
             try:
@@ -94,3 +93,6 @@ class Session(session.Session):
         except Exception as e:
             self.rollback()
             raise e
+
+
+__all__ = ['Session']

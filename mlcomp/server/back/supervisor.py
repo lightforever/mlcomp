@@ -1,6 +1,6 @@
 import datetime
 import traceback
-from collections import defaultdict
+from typing import List
 
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.exc import ObjectDeletedError
@@ -8,11 +8,15 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus, TaskType
 from mlcomp.db.models import Task, Auxiliary
+from mlcomp.db.providers import \
+    ComputerProvider, \
+    TaskProvider, \
+    DockerProvider, \
+    AuxiliaryProvider
 from mlcomp.utils.io import yaml_dump, yaml_load
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
 from mlcomp.worker.tasks import execute
-from mlcomp.db.providers import *
 from mlcomp.utils.schedule import start_schedule
 import mlcomp.worker.tasks as celery_tasks
 
@@ -36,18 +40,20 @@ class SupervisorBuilder:
         self.docker_provider = DockerProvider()
         self.auxiliary_provider = AuxiliaryProvider()
 
-        self.queues = [f'{d.computer}_{d.name}'
-                       for d in self.docker_provider.all()
-                       if d.last_activity >=
-                       now() - datetime.timedelta(seconds=10)]
+        self.queues = [
+            f'{d.computer}_{d.name}' for d in self.docker_provider.all()
+            if d.last_activity >= now() - datetime.timedelta(seconds=10)
+        ]
 
         self.auxiliary['queues'] = self.queues
 
     def load_tasks(self):
         not_ran_tasks = self.provider.by_status(TaskStatus.NotRan)
         self.not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
-        self.logger.debug(f'Found {len(not_ran_tasks)} not ran tasks',
-                          ComponentType.Supervisor)
+        self.logger.debug(
+            f'Found {len(not_ran_tasks)} not ran tasks',
+            ComponentType.Supervisor
+        )
 
         self.dep_status = self.provider.dependency_status(self.not_ran_tasks)
 
@@ -59,8 +65,7 @@ class SupervisorBuilder:
                     TaskStatus(s).name
                     for s in self.dep_status.get(t.id, set())
                 ]
-            }
-            for t in not_ran_tasks
+            } for t in not_ran_tasks
         ]
 
     def load_computers(self):
@@ -72,8 +77,9 @@ class SupervisorBuilder:
             computer['memory_total'] = computer['memory']
             computer['gpu_total'] = len(computer['gpu'])
 
-        for task in self.provider.by_status(TaskStatus.Queued,
-                                            TaskStatus.InProgress):
+        for task in self.provider.by_status(
+            TaskStatus.Queued, TaskStatus.InProgress
+        ):
             if task.computer_assigned is None:
                 continue
             assigned = task.computer_assigned
@@ -92,14 +98,15 @@ class SupervisorBuilder:
                     comp_assigned['ports'].add(dist_info['master_port'])
 
         self.computers = [
-            {**value, 'name': name}
-            for name, value in computers.items()
+            {
+                **value, 'name': name
+            } for name, value in computers.items()
         ]
 
         self.auxiliary['computers'] = self.computers
 
     def process_to_celery(self, task: Task, queue: str, computer: dict):
-        r = execute.apply_async((task.id,), queue=queue)
+        r = execute.apply_async((task.id, ), queue=queue)
         task.status = TaskStatus.Queued.value
         task.computer_assigned = computer['name']
         task.celery_id = r.id
@@ -112,10 +119,9 @@ class SupervisorBuilder:
 
         self.provider.update()
 
-    def create_service_task(self,
-                            task: Task,
-                            gpu_assigned=None,
-                            distr_info: dict = None):
+    def create_service_task(
+        self, task: Task, gpu_assigned=None, distr_info: dict = None
+    ):
         new_task = Task(
             name=task.name,
             computer=task.computer,
@@ -144,46 +150,42 @@ class SupervisorBuilder:
                 return p
         raise Exception(f'All ports in {c["name"]} are taken')
 
-    def process_task(self, task: Task):
-        auxiliary = self.auxiliary['process_tasks'][-1]
-        auxiliary['computers'] = []
+    def _process_task_valid_computer(self, task: Task, c: dict):
+        if task.computer is not None and task.computer != c['name']:
+            return 'name set in the config!= name of this computer'
 
-        config = yaml_load(task.dag_rel.config)
-        executor = config['executors'][task.executor]
-        distr = executor.get('distr', True)
+        if task.cpu > c['cpu']:
+            return f'task cpu = {task.cpu} > computer' \
+                   f' free cpu = {c["cpu"]}'
+
+        if task.memory > c['memory']:
+            return f'task cpu = {task.cpu} > computer ' \
+                   f'free memory = {c["memory"]}'
+
+        queue = f'{c["name"]}_' \
+                f'{task.dag_rel.docker_img or "default"}'
+        if queue not in self.queues:
+            return f'required queue = {queue} not in queues'
+
+        if task.gpu > 0 and not any(g == 0 for g in c['gpu']):
+            return f'task requires gpu, but there is not any free'
+
+    def _process_task_get_computers(
+        self, executor: dict, task: Task, auxiliary: dict
+    ):
         single_node = executor.get('single_node', True)
-
-        def valid_computer(c: dict):
-            if task.computer is not None and task.computer != c['name']:
-                return 'name set in the config!= name of this computer'
-
-            if task.cpu > c['cpu']:
-                return f'task cpu = {task.cpu} > computer' \
-                       f' free cpu = {c["cpu"]}'
-
-            if task.memory > c['memory']:
-                return f'task cpu = {task.cpu} > computer ' \
-                       f'free memory = {c["memory"]}'
-
-            queue = f'{c["name"]}_' \
-                    f'{task.dag_rel.docker_img or "default"}'
-            if queue not in self.queues:
-                return f'required queue = {queue} not in queues'
-
-            if task.gpu > 0 and not any(g == 0 for g in c['gpu']):
-                return f'task requires gpu, but there is not any free'
 
         computers = []
         for c in self.computers:
-            error = valid_computer(c)
+            error = self._process_task_valid_computer(task, c)
             auxiliary['computers'].append({'name': c['name'], 'error': error})
             if not error:
                 computers.append(c)
 
         if task.gpu > 0 and single_node and len(computers) > 0:
-            computers = sorted(computers,
-                               key=lambda x: x['gpu'],
-                               reverse=True)[:1]
+            computers = sorted(
+                computers, key=lambda x: x['gpu'], reverse=True
+            )[:1]
 
         free_gpu = sum(sum(g == 0 for g in c['gpu']) for c in computers)
         if task.gpu > free_gpu:
@@ -191,8 +193,13 @@ class SupervisorBuilder:
                                      f'task = {task.gpu},' \
                                      f' but there are only {free_gpu} ' \
                                      f'free gpus'
-            return
+            return []
+        return computers
 
+    def _process_task_to_send(
+        self, executor: dict, task: Task, computers: List[dict]
+    ):
+        distr = executor.get('distr', True)
         to_send = []
         for computer in computers:
             queue = f'{computer["name"]}_' \
@@ -224,14 +231,28 @@ class SupervisorBuilder:
             else:
                 self.process_to_celery(task, queue, computer)
                 break
+        return to_send
 
+    def process_task(self, task: Task):
+        auxiliary = self.auxiliary['process_tasks'][-1]
+        auxiliary['computers'] = []
+
+        config = yaml_load(task.dag_rel.config)
+        executor = config['executors'][task.executor]
+
+        computers = self._process_task_get_computers(executor, task, auxiliary)
+        if len(computers) == 0:
+            return
+
+        to_send = self._process_task_to_send(executor, task, computers)
         auxiliary['to_send'] = to_send
 
         rank = 0
         master_port = None
         if len(to_send) > 0:
-            master_port = self.find_port(to_send[0][0],
-                                         to_send[0][1].split('_')[1])
+            master_port = self.find_port(
+                to_send[0][0], to_send[0][1].split('_')[1]
+            )
             computer_names = {c['name'] for c, _, __ in to_send}
             if len(computer_names) == 1:
                 task.computer_assigned = list(computer_names)[0]
@@ -249,12 +270,10 @@ class SupervisorBuilder:
                 'master_port': master_port,
                 'world_size': len(to_send)
             }
-            service_task = self.create_service_task(task,
-                                                    distr_info=distr_info,
-                                                    gpu_assigned=gpu_assigned)
-            self.process_to_celery(service_task,
-                                   queue,
-                                   computer)
+            service_task = self.create_service_task(
+                task, distr_info=distr_info, gpu_assigned=gpu_assigned
+            )
+            self.process_to_celery(service_task, queue, computer)
             rank += 1
 
         if len(to_send) > 0:
@@ -332,19 +351,21 @@ class SupervisorBuilder:
                 'started': task.started,
                 'finished': finished,
                 'statuses': [
-                    {'name': k.name, 'count': v}
-                    for k, v in statuses.items()],
-            }
-            for task, started, finished, statuses in tasks
+                    {
+                        'name': k.name,
+                        'count': v
+                    } for k, v in statuses.items()
+                ],
+            } for task, started, finished, statuses in tasks
         ]
 
     def write_auxiliary(self):
         self.auxiliary['duration'] = (now() - self.auxiliary['time']). \
             total_seconds()
 
-        auxiliary = Auxiliary(name='supervisor',
-                              data=yaml_dump(self.auxiliary)
-                              )
+        auxiliary = Auxiliary(
+            name='supervisor', data=yaml_dump(self.auxiliary)
+        )
         self.auxiliary_provider.create_or_update(auxiliary, 'name')
 
     def build(self):
@@ -369,8 +390,7 @@ class SupervisorBuilder:
             if type(error) == ProgrammingError:
                 Session.cleanup()
 
-            self.logger.error(traceback.format_exc(),
-                              ComponentType.Supervisor)
+            self.logger.error(traceback.format_exc(), ComponentType.Supervisor)
 
 
 def register_supervisor():

@@ -373,7 +373,7 @@ def upgrade(migrate_engine):
                              ondelete='CASCADE').create()
         UniqueConstraint(model.c.project, model.c.name,
                          name='model_project_name_unique').create()
-    except:
+    except Exception:
         trans.rollback()
         raise
     else:
@@ -404,7 +404,7 @@ def downgrade(migrate_engine):
         dag.drop()
         computer.drop()
         project.drop()
-    except:
+    except Exception:
         trans.rollback()
         raise
     else:

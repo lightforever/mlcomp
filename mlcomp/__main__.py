@@ -8,9 +8,13 @@ import GPUtil
 
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
+from mlcomp.db.providers import \
+    ComputerProvider, \
+    TaskProvider, \
+    StepProvider, \
+    ProjectProvider
 from mlcomp.utils.io import yaml_load
 from mlcomp.utils.logging import create_logger
-from mlcomp.db.providers import *
 from multiprocessing import cpu_count
 
 from mlcomp.utils.settings import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
@@ -26,25 +30,26 @@ def _dag(config: str, debug: bool = False):
 
     type_name = config_parsed['info'].get('type', "standard")
     if type_name == DagType.Standard.name.lower():
-        return dag_standard(config_parsed,
-                            debug=debug,
-                            config_text=config_text)
+        return dag_standard(
+            config_parsed, debug=debug, config_text=config_text
+        )
 
-    return dag_pipe(config_parsed,
-                    config_text=config_text)
+    return dag_pipe(config_parsed, config_text=config_text)
 
 
 def _create_computer():
     tot_m, used_m, free_m = memory()
     tot_d, used_d, free_d = disk(ROOT_FOLDER)
-    computer = Computer(name=socket.gethostname(),
-                        gpu=len(GPUtil.getGPUs()),
-                        cpu=cpu_count(), memory=tot_m,
-                        ip=os.getenv('IP'),
-                        port=int(os.getenv('PORT')),
-                        user=os.getenv('USER'),
-                        disk=tot_d
-                        )
+    computer = Computer(
+        name=socket.gethostname(),
+        gpu=len(GPUtil.getGPUs()),
+        cpu=cpu_count(),
+        memory=tot_m,
+        ip=os.getenv('IP'),
+        port=int(os.getenv('PORT')),
+        user=os.getenv('USER'),
+        disk=tot_d
+    )
     ComputerProvider().create_or_update(computer, 'name')
 
 
@@ -72,16 +77,15 @@ def execute(config: str, debug: bool):
     provider = TaskProvider()
     step_provider = StepProvider()
 
-    for t in provider.by_status(TaskStatus.InProgress,
-                                worker_index=worker_index):
+    for t in provider.by_status(
+        TaskStatus.InProgress, worker_index=worker_index
+    ):
         step = step_provider.last_for_task(t.id)
         logger.error(
             f'Task Id = {t.id} was in InProgress state '
             f'when another tasks arrived to the same worker',
-            ComponentType.Worker,
-            t.computer_assigned,
-            t.id,
-            step)
+            ComponentType.Worker, t.computer_assigned, t.id, step
+        )
         provider.change_status(t, TaskStatus.Failed)
 
     # Create dag
@@ -93,12 +97,16 @@ def execute(config: str, debug: bool):
 
 @main.command()
 @click.option('--computer', help='sync computer with all the others')
-@click.option('--only_from',
-              is_flag=True,
-              help='only copy files from the computer to all the others')
-@click.option('--only_to',
-              is_flag=True,
-              help='only copy files from all the others to the computer')
+@click.option(
+    '--only_from',
+    is_flag=True,
+    help='only copy files from the computer to all the others'
+)
+@click.option(
+    '--only_to',
+    is_flag=True,
+    help='only copy files from all the others to the computer'
+)
 def sync(computer: str, only_from: bool, only_to: bool):
     computer = computer or socket.gethostname()
     provider = ComputerProvider()

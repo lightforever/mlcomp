@@ -13,26 +13,21 @@ from catalyst.dl.utils.scripts import import_experiment_and_runner
 
 from mlcomp.utils.settings import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model, Dag
-from mlcomp.worker.executors.base import *
 from mlcomp.db.providers import TaskProvider, ModelProvider, DagProvider
 from mlcomp.utils.misc import now
 from mlcomp.utils.config import Config
 from mlcomp.utils.io import yaml_load, yaml_dump
+from mlcomp.worker.executors import Executor
 
 
 @Executor.register
 class ModelAdd(Executor):
     __syn__ = 'model_add'
 
-    def __init__(self,
-                 name: str,
-                 dag_pipe: int,
-                 slot: str,
-                 interface: str,
-                 interface_params: dict,
-                 train_task: int,
-                 child_task: int
-                 ):
+    def __init__(
+        self, name: str, dag_pipe: int, slot: str, interface: str,
+        interface_params: dict, train_task: int, child_task: int
+    ):
         self.dag_pipe = dag_pipe
         self.slot = slot
         self.interface = interface
@@ -117,10 +112,9 @@ class ModelAdd(Executor):
             raise e
 
     @classmethod
-    def _from_config(cls,
-                     executor: dict,
-                     config: Config,
-                     additional_info: dict):
+    def _from_config(
+        cls, executor: dict, config: Config, additional_info: dict
+    ):
         return ModelAdd(
             name=executor['name'],
             dag_pipe=executor['dag'],

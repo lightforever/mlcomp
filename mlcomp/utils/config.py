@@ -29,7 +29,7 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
     mapping = defaultdict(list)
     for k, v in target_flatten.items():
         parts = k.split(sep)
-        for i in range(len(parts)-1, -1, -1):
+        for i in range(len(parts) - 1, -1, -1):
             key = sep.join(parts[i:])
             mapping[key].append(k)
 

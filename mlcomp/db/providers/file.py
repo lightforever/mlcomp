@@ -1,5 +1,5 @@
 from mlcomp.db.models import File, Dag
-from mlcomp.db.providers.base import *
+from mlcomp.db.providers.base import BaseDataProvider
 
 
 class FileProvider(BaseDataProvider):
@@ -7,8 +7,9 @@ class FileProvider(BaseDataProvider):
 
     def hashs(self, project: int):
         return {
-            obj[0]: obj[1] for obj in self.query(File.md5, File.id).
-                filter(File.project == project).all()
+            obj[0]: obj[1]
+            for obj in self.query(File.md5, File.id
+                                  ).filter(File.project == project).all()
         }
 
     def remove(self, filter: dict):

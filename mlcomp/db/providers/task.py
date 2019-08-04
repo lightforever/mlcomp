@@ -5,21 +5,18 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload, aliased
 
 from mlcomp.db.core import PaginatorOptions
-from mlcomp.db.providers.base import BaseDataProvider, ReportTasks
+from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.db.enums import TaskType, DagType, TaskStatus
 from mlcomp.utils.io import yaml_dump
 from mlcomp.utils.misc import to_snake, duration_format, now
 from mlcomp.utils.config import Config
-from mlcomp.db.models import Task, Project, Dag, TaskDependence
+from mlcomp.db.models import Task, Project, Dag, TaskDependence, ReportTasks
 
 
 class TaskProvider(BaseDataProvider):
     model = Task
 
-    def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Task, Project.name). \
-            options(joinedload(Task.dag_rel))
-
+    def _get_filter(self, query, filter: dict):
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
 
@@ -27,8 +24,10 @@ class TaskProvider(BaseDataProvider):
             query = query.filter(Task.name.like(f'%{filter["name"]}%'))
 
         if filter.get('status'):
-            status = [TaskStatus.from_name(k) for k, v in
-                      filter['status'].items() if v]
+            status = [
+                TaskStatus.from_name(k) for k, v in filter['status'].items()
+                if v
+            ]
             if len(status) > 0:
                 query = query.filter(Task.status.in_(status))
 
@@ -44,18 +43,28 @@ class TaskProvider(BaseDataProvider):
             query = query.filter(Dag.created <= filter['created_max'])
         if filter.get('last_activity_min'):
             query = query.filter(
-                Task.last_activity >= filter['last_activity_min'])
+                Task.last_activity >= filter['last_activity_min']
+            )
         if filter.get('last_activity_max'):
             query = query.filter(
-                Task.last_activity <= filter['last_activity_max'])
+                Task.last_activity <= filter['last_activity_max']
+            )
         if filter.get('report'):
-            query = query.filter(Task.report != None)
+            query = query.filter(Task.report is not None)
         if filter.get('parent'):
             query = query.filter(Task.parent == filter['parent'])
 
         types = filter.get('type', ['User', 'Train'])
         types = [TaskType.from_name(t) for t in types]
         query = query.filter(Task.type.in_(types))
+
+        return query
+
+    def get(self, filter: dict, options: PaginatorOptions):
+        query = self.query(Task, Project.name). \
+            options(joinedload(Task.dag_rel))
+
+        query = self._get_filter(query, filter)
 
         total = query.count()
         paginator = self.paginator(query, options)
@@ -65,7 +74,7 @@ class TaskProvider(BaseDataProvider):
             if p.dag_rel is None:
                 continue
 
-            item = {**self.to_dict(p, rules=('-additional_info',))}
+            item = {**self.to_dict(p, rules=('-additional_info', ))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
             item['dag_rel']['project'] = {
@@ -84,8 +93,9 @@ class TaskProvider(BaseDataProvider):
                 res.append(item)
 
         if filter.get('report'):
-            tasks_within_report = self.query(ReportTasks.task).filter(
-                ReportTasks.report == int(filter['report']))
+            tasks_within_report = self.query(
+                ReportTasks.task
+            ).filter(ReportTasks.report == int(filter['report']))
             tasks_within_report = {t[0] for t in tasks_within_report}
             for r in res:
                 r['report_full'] = r['id'] in tasks_within_report
@@ -122,31 +132,29 @@ class TaskProvider(BaseDataProvider):
                     elif 'slots' in v:
                         slots.extend(v['slots'])
 
-            dag = {'name': name,
-                   'id': id,
-                   'slots': slots,
-                   'interfaces': [
-                       {
-                           'name': k,
-                           'params': yaml_dump(v)
-                       } for k, v in config['interfaces'].items()
-                   ]
-                   }
+            dag = {
+                'name': name,
+                'id': id,
+                'slots': slots,
+                'interfaces': [
+                    {
+                        'name': k,
+                        'params': yaml_dump(v)
+                    } for k, v in config['interfaces'].items()
+                ]
+            }
             dags_model_dict.append(dag)
             used_dag_names.add(name)
 
-        return {'total': total,
-                'data': res,
-                'projects': projects,
-                'dags': dags,
-                'dags_model': dags_model_dict
-                }
+        return {
+            'total': total,
+            'data': res,
+            'projects': projects,
+            'dags': dags,
+            'dags_model': dags_model_dict
+        }
 
-    def last_tasks(self,
-                   min_time: datetime,
-                   status: int,
-                   joined_load=None
-                   ):
+    def last_tasks(self, min_time: datetime, status: int, joined_load=None):
         res = self.query(Task).filter(
             Task.finished >= min_time). \
             filter(Task.status == status)
@@ -169,17 +177,20 @@ class TaskProvider(BaseDataProvider):
     def change_status(self, task, status: TaskStatus):
         if status == TaskStatus.InProgress:
             task.started = now()
-        elif status in [TaskStatus.Failed,
-                        TaskStatus.Stopped,
-                        TaskStatus.Success]:
+        elif status in [
+            TaskStatus.Failed, TaskStatus.Stopped, TaskStatus.Success
+        ]:
             task.finished = now()
 
         task.status = status.value
         self.update()
 
-    def by_status(self, *statuses: TaskStatus,
-                  docker_img: str = None,
-                  worker_index: int = None):
+    def by_status(
+        self,
+        *statuses: TaskStatus,
+        docker_img: str = None,
+        worker_index: int = None
+    ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
             options(joinedload(Task.dag_rel))
@@ -202,8 +213,8 @@ class TaskProvider(BaseDataProvider):
         return res
 
     def update_last_activity(self, task: int):
-        self.query(Task).filter(Task.id == task).update(
-            {'last_activity': now()})
+        self.query(Task).filter(Task.id == task
+                                ).update({'last_activity': now()})
         self.session.commit()
 
     def stop(self, id: int):
@@ -227,15 +238,16 @@ class TaskProvider(BaseDataProvider):
         task_status = []
         for e in TaskStatus:
             task_status.append(
-                func.count(task_child.status).
-                    filter(task_child.status == e.value).
-                    label(e.name)
+                func.count(task_child.status
+                           ).filter(task_child.status == e.value
+                                    ).label(e.name)
             )
 
         times = [func.min(task_child.started), func.max(task_child.finished)]
 
-        parent_statuses = [TaskStatus.Queued.value,
-                           TaskStatus.InProgress.value]
+        parent_statuses = [
+            TaskStatus.Queued.value, TaskStatus.InProgress.value
+        ]
 
         query = self.query(task_parent, *times, *task_status). \
             filter(task_parent.status.in_(parent_statuses)). \
@@ -244,12 +256,13 @@ class TaskProvider(BaseDataProvider):
 
         res = []
         for task, started, finished, *(statuses) in query.all():
-            res.append([
-                task,
-                started,
-                finished,
-                {e: s for e, s in zip(TaskStatus, statuses)}
-            ])
+            res.append(
+                [
+                    task, started, finished,
+                    {e: s
+                     for e, s in zip(TaskStatus, statuses)}
+                ]
+            )
 
         return res
 
