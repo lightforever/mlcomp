@@ -57,7 +57,10 @@ class DagStandardBuilder:
         self.dag_provider = DagProvider()
 
     def load_base(self):
-        self.project = ProjectProvider().by_name(self.info['project']).id
+        project = ProjectProvider().by_name(self.info['project'])
+        assert project, f'No project with name = {self.info["project"]}'
+
+        self.project = project.id
         self.layouts = self.report_layout_provider.all()
 
     def create_report(self):
@@ -102,7 +105,7 @@ class DagStandardBuilder:
                 Executor.is_trainable(v['type']):
             task_type = TaskType.Train.value
 
-        gpu = v.get('gpu', '0')
+        gpu = str(v.get('gpu', '0'))
         if '-' not in gpu:
             gpu = int(gpu)
             gpu_max = gpu

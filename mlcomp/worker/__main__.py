@@ -2,13 +2,18 @@ import time
 import socket
 import json
 import os
+import traceback
 from multiprocessing import cpu_count
 
 import click
 import GPUtil
 import psutil
 import numpy as np
+from sqlalchemy.exc import ProgrammingError
 
+from mlcomp.db.core import Session
+from mlcomp.db.enums import ComponentType
+from mlcomp.utils.logging import create_logger
 from mlcomp.utils.settings import ROOT_FOLDER, MASTER_PORT_RANGE
 from mlcomp.db.providers import DockerProvider
 from mlcomp.utils.schedule import start_schedule
@@ -26,33 +31,48 @@ def main():
 
 
 def worker_usage():
-    provider = ComputerProvider()
-    docker_provider = DockerProvider()
+    logger = create_logger()
+    hostname = socket.gethostname()
+    try:
+        provider = ComputerProvider()
+        docker_provider = DockerProvider()
 
-    computer = socket.gethostname()
-    docker = docker_provider.get(computer, os.getenv('DOCKER_IMG', 'default'))
-    usages = []
+        computer = socket.gethostname()
+        docker = docker_provider.get(
+            computer, os.getenv('DOCKER_IMG', 'default')
+        )
+        usages = []
 
-    for _ in range(10):
-        memory = dict(psutil.virtual_memory()._asdict())
+        for _ in range(10):
+            memory = dict(psutil.virtual_memory()._asdict())
 
-        usage = {
-            'cpu': psutil.cpu_percent(),
-            'disk': disk(ROOT_FOLDER)[1],
-            'memory': memory['percent'],
-            'gpu': [{'memory': g.memoryUtil, 'load': g.load}
-                    for g in GPUtil.getGPUs()]
-        }
+            usage = {
+                'cpu': psutil.cpu_percent(),
+                'disk': disk(ROOT_FOLDER)[1],
+                'memory': memory['percent'],
+                'gpu': [
+                    {
+                        'memory': g.memoryUtil,
+                        'load': g.load
+                    } for g in GPUtil.getGPUs()
+                ]
+            }
 
-        provider.current_usage(computer, usage)
-        usages.append(usage)
-        docker.last_activity = now()
-        docker_provider.update()
+            provider.current_usage(computer, usage)
+            usages.append(usage)
+            docker.last_activity = now()
+            docker_provider.update()
 
-        time.sleep(1)
+            time.sleep(1)
 
-    usage = json.dumps({'mean': dict_func(usages, np.mean)})
-    provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
+        usage = json.dumps({'mean': dict_func(usages, np.mean)})
+        provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
+    except Exception as e:
+        if type(e) == ProgrammingError:
+            Session.cleanup()
+        logger.error(
+            traceback.format_exc(), ComponentType.WorkerSupervisor, hostname
+        )
 
 
 @main.command()
@@ -61,15 +81,8 @@ def worker(number):
     docker_img = os.getenv('DOCKER_IMG', 'default')
     name = f'{socket.gethostname()}_{docker_img}'
     argv = [
-        'worker',
-        '--loglevel=INFO',
-        '-P=solo',
-        f'-n={name}_{number}',
-        '-O fair',
-        '-c=1',
-        '--prefetch-multiplier=1',
-        '-Q',
-        f'{name},'
+        'worker', '--loglevel=INFO', '-P=solo', f'-n={name}_{number}',
+        '-O fair', '-c=1', '--prefetch-multiplier=1', '-Q', f'{name},'
         f'{name}_{number}'
     ]
     print(argv)
@@ -87,14 +100,8 @@ def supervisor():
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     argv = [
-        'worker',
-        '--loglevel=INFO',
-        '-P=solo',
-        f'-n=1',
-        '-O fair',
-        '-c=1',
-        '--prefetch-multiplier=1',
-        '-Q',
+        'worker', '--loglevel=INFO', '-P=solo', f'-n=1', '-O fair', '-c=1',
+        '--prefetch-multiplier=1', '-Q',
         f'{socket.gethostname()}_{docker_img}_supervisor'
     ]
     app.worker_main(argv)
@@ -113,14 +120,16 @@ def _create_docker():
 def _create_computer():
     tot_m, used_m, free_m = memory()
     tot_d, used_d, free_d = disk(ROOT_FOLDER)
-    computer = Computer(name=socket.gethostname(),
-                        gpu=len(GPUtil.getGPUs()),
-                        cpu=cpu_count(), memory=tot_m,
-                        ip=os.getenv('IP'),
-                        port=int(os.getenv('PORT')),
-                        user=os.getenv('USER'),
-                        disk=tot_d
-                        )
+    computer = Computer(
+        name=socket.gethostname(),
+        gpu=len(GPUtil.getGPUs()),
+        cpu=cpu_count(),
+        memory=tot_m,
+        ip=os.getenv('IP'),
+        port=int(os.getenv('PORT')),
+        user=os.getenv('USER'),
+        disk=tot_d
+    )
     ComputerProvider().create_or_update(computer, 'name')
 
 

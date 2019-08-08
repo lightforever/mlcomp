@@ -1,3 +1,3 @@
-from .frame import split_frame
+from .frame import stratified_group_k_fold, stratified_k_fold
 
-__all__ = ['split_frame']
+__all__ = ['stratified_group_k_fold', 'stratified_k_fold']

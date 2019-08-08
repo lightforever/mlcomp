@@ -1,4 +1,4 @@
-catalyst==19.6.3
+catalyst==19.8.1
 PyYAML>=5.1
 setuptools>=41.0.1
 click>=7.0

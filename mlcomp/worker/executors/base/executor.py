@@ -70,6 +70,7 @@ class Executor(ABC):
     @staticmethod
     def register(cls):
         Executor._child[cls.__name__] = cls
+        Executor._child[cls.__name__.lower()] = cls
         if hasattr(cls, '__syn__'):
             Executor._child[cls.__syn__] = cls
         return cls

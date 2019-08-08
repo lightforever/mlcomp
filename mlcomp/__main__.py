@@ -130,9 +130,9 @@ def sync(computer: str, only_from: bool, only_to: bool):
 
     for c in computers:
         if c.name != computer.name:
-            if not only_to:
-                sync_directed(computer, c, folders_excluded)
             if not only_from:
+                sync_directed(computer, c, folders_excluded)
+            if not only_to:
                 sync_directed(c, computer, folders_excluded)
 
 

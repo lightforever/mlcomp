@@ -12,3 +12,6 @@ class ChannelTranspose(ImageOnlyTransform):
 
     def apply(self, img, **params):
         return np.transpose(img, self.axes)
+
+
+__all__ = ['ChannelTranspose']

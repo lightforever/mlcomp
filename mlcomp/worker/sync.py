@@ -19,6 +19,7 @@ from mlcomp.utils.io import yaml_load
 def sync_directed(source: Computer, target: Computer, folders_excluded: List):
     current_computer = socket.gethostname()
     end = ' --perms  --chmod=777'
+    logger = create_logger()
     for folder, excluded in folders_excluded:
         if len(excluded) > 0:
             excluded = excluded[:]
@@ -45,7 +46,7 @@ def sync_directed(source: Computer, target: Computer, folders_excluded: List):
             command = f'ssh -p {source.port} ' \
                 f'{source.user}@{source.ip} "{command}"'
 
-        print(command)
+        logger.info(command)
         subprocess.check_output(command, shell=True)
 
 

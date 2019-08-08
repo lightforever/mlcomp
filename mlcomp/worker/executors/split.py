@@ -1,7 +1,9 @@
 from os.path import join
 
+import pandas as pd
+
 from mlcomp.utils.config import Config
-from mlcomp.contrib.split import split_frame
+from mlcomp.contrib.split import stratified_k_fold
 from mlcomp.worker.executors import Executor
 
 
@@ -25,9 +27,10 @@ class Split(Executor):
 
     def work(self):
         if self.variant == 'frame':
-            df = split_frame(
-                self.file, n_splits=self.n_splits, label=self.label
+            fold = stratified_k_fold(
+                file=self.file, n_splits=self.n_splits, label=self.label
             )
+            df = pd.DataFrame({'fold': fold})
             df.to_csv(self.out, index=False)
 
     @classmethod

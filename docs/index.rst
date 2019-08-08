@@ -2,7 +2,7 @@ MLComp
 ======================================
 
 .. image:: https://travis-ci.org/lightforever/mlcomp.svg?branch=master
-    :target: https://travis-ci.com/lightforever/mlcomp
+    :target: https://travis-ci.org/lightforever/mlcomp
     :alt: Build Status
 
 .. image:: https://img.shields.io/github/license/lightforever/mlcomp.svg
@@ -13,7 +13,7 @@ MLComp
     :alt: Pypi version
 
 .. image:: https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v
-    :target: https://catalyst-team.github.io/mlcomp/index.html
+    :target: https://lightforever.github.io/mlcomp/
     :alt: Docs
 
 

@@ -55,8 +55,7 @@ class Storage:
         self.provider.add_all(s_news)
         self.library_provider.add_all(l_news)
 
-    def upload(self, folder: str, dag: Dag):
-        hashs = self.file_provider.hashs(dag.project)
+    def _build_spec(self, folder: str):
         ignore_file = os.path.join(folder, 'file.ignore.txt')
         if not os.path.exists(ignore_file):
             with open(ignore_file, 'w') as f:
@@ -65,10 +64,15 @@ class Storage:
         ignore_patterns = read_lines(ignore_file)
         ignore_patterns.extend(['log', 'data', '__pycache__'])
 
-        files = []
-        spec = pathspec.PathSpec.from_lines(
+        return pathspec.PathSpec.from_lines(
             pathspec.patterns.GitWildMatchPattern, ignore_patterns
         )
+
+    def upload(self, folder: str, dag: Dag):
+        hashs = self.file_provider.hashs(dag.project)
+
+        files = []
+        spec = self._build_spec(folder)
 
         for o in glob(os.path.join(folder, '**'), recursive=True):
             path = os.path.relpath(o, folder)
@@ -131,10 +135,12 @@ class Storage:
         return folder
 
     def import_folder(self, folder: str, libraries: List[Tuple] = None):
+        spec = self._build_spec(folder)
         was_installation = False
+
         folders = [
             p for p in glob(f'{folder}/*', recursive=True)
-            if os.path.isdir(p) and '__pycache__' not in p
+            if os.path.isdir(p) and not spec.match_file(p)
         ]
         folders += [folder]
         library_names = set(n for n, v in (libraries or []))

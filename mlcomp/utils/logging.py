@@ -5,6 +5,7 @@ from logging.config import dictConfig
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
 from mlcomp.utils.misc import now
+from mlcomp.utils.settings import LOG_FOLDER
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
@@ -102,6 +103,7 @@ class DbHandler(logging.Handler):
 
 CONSOLE_LOG_LEVEL = os.getenv('CONSOLE_LOG_LEVEL', 'DEBUG')
 DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
+FILE_LOG_LEVEL = os.getenv('FILE_LOG_LEVEL', 'INFO')
 
 LOGGING = {
     'version': 1,
@@ -114,14 +116,22 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'level': CONSOLE_LOG_LEVEL,
+            'level': 'DEBUG',
             'formatter': 'simple',
             'stream': 'ext://sys.stdout'
         },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': FILE_LOG_LEVEL,
+            'filename': os.path.join(LOG_FOLDER, 'log.txt'),
+            'mode': 'a',
+            'maxBytes': 10485760,
+            'backupCount': 1,
+        }
     },
     'loggers': {
         '': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False
         }

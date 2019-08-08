@@ -3,7 +3,7 @@ from pathlib import Path
 
 from catalyst.utils import set_global_seed
 from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
-from catalyst.dl.callbacks import VerboseLogger
+from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_config
 
@@ -15,6 +15,7 @@ from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
 from mlcomp.worker.executors.base import Executor
+from mlcomp.contrib.catalyst.register import register
 
 
 class Args:
@@ -64,17 +65,10 @@ class Catalyst(Executor, Callback):
         self.checkpoint_resume = False
 
     def callbacks(self):
-        result = []
+        result = dict()
         if self.master:
-            result = [self]
+            result['catalyst'] = self
 
-    # for items, cls in [
-    #     [self.report.precision_recall, PrecisionRecallCallback],
-    #     [self.report.f1, F1Callback],
-    #     [self.report.img_classify, ImgClassifyCallback],
-    # ]:
-    #     for item in items:
-    #         result.append(cls(self.experiment, self.task, self.dag, item))
         return result
 
     def on_epoch_end(self, state: RunnerState):
@@ -120,7 +114,7 @@ class Catalyst(Executor, Callback):
                     self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):
-        state.loggers = [VerboseLogger()]
+        state.loggers = [VerboseLogger(), RaiseExceptionLogger()]
         if self.checkpoint_resume:
             state.epoch += 1
 
@@ -184,6 +178,24 @@ class Catalyst(Executor, Callback):
             self.set_dist_env(config)
         return args, config
 
+    def _checkpoint_fix(self, callbacks: dict, logdir: str):
+        path = os.path.join(logdir, 'checkpoints', 'best.pth')
+
+        def mock(state):
+            pass
+
+        for c in callbacks.values():
+            if isinstance(c, CheckpointCallback):
+                if c.resume is None and os.path.exists(path):
+                    c.resume = path
+
+                if c.resume:
+                    self.checkpoint_resume = True
+
+                if not self.master:
+                    c.on_epoch_end = mock
+                    c.on_stage_end = mock
+
     def work(self):
         args, config = self.parse_args_uargs()
         set_global_seed(args.seed)
@@ -192,6 +204,8 @@ class Catalyst(Executor, Callback):
 
         experiment = Experiment(config)
         runner: Runner = R()
+
+        register()
 
         self.experiment = experiment
         self.runner = runner
@@ -219,18 +233,11 @@ class Catalyst(Executor, Callback):
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
-            res = _get_callbacks(stage) + self.callbacks()
+            res = _get_callbacks(stage)
+            for k, v in self.callbacks().items():
+                res[k] = v
+            self._checkpoint_fix(res, experiment.logdir)
 
-            path = os.path.join(experiment.logdir, 'checkpoints', 'best.pth')
-
-            if self.distr_info and os.path.exists(path):
-                for c in res:
-                    if isinstance(c, CheckpointCallback):
-                        c.resume = path
-
-            for c in res:
-                if isinstance(c, CheckpointCallback) and c.resume:
-                    self.checkpoint_resume = True
             return res
 
         experiment.get_callbacks = get_callbacks

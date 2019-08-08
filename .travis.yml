@@ -38,8 +38,6 @@ jobs:
       name: 'Docs'
       if: branch = master
       install:
-        - *requirements
-        - pip install -r docs/requirements.txt
         - pip install travis-sphinx
         # for correct changelog on github pages
         - pip install git+https://github.com/bitprophet/releases/#egg=releases
