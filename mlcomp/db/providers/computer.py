@@ -62,8 +62,8 @@ class ComputerProvider(BaseDataProvider):
             item['usage']['cpu'] = int(item['usage']['cpu'])
             item['usage']['memory'] = int(item['usage']['memory'])
             for gpu in item['usage']['gpu']:
-                gpu['memory'] = int(gpu['memory'] * 100)
-                gpu['load'] = int(gpu['load'] * 100)
+                gpu['memory'] = int(gpu['memory'])
+                gpu['load'] = int(gpu['load'])
 
             item['usage_history'] = self.usage_history(
                 c.name, filter.get('usage_min_time')

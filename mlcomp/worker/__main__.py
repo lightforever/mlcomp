@@ -12,10 +12,10 @@ import numpy as np
 from sqlalchemy.exc import ProgrammingError
 
 from mlcomp.db.core import Session
-from mlcomp.db.enums import ComponentType
+from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.settings import ROOT_FOLDER, MASTER_PORT_RANGE
-from mlcomp.db.providers import DockerProvider
+from mlcomp.utils.settings import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER
+from mlcomp.db.providers import DockerProvider, TaskProvider
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.utils.misc import dict_func, now, disk
 from mlcomp.worker.app import app
@@ -30,49 +30,73 @@ def main():
     pass
 
 
-def worker_usage():
-    logger = create_logger()
+def error_handler(f):
+    def wrapper():
+        logger = create_logger()
+        hostname = socket.gethostname()
+        try:
+            f()
+        except Exception as e:
+            if type(e) == ProgrammingError:
+                Session.cleanup()
+            logger.error(
+                traceback.format_exc(), ComponentType.WorkerSupervisor,
+                hostname
+            )
+
+    return wrapper
+
+
+@error_handler
+def stop_processes_not_exist():
+    provider = TaskProvider()
+    docker_img = os.getenv('DOCKER_IMG', 'default')
     hostname = socket.gethostname()
-    try:
-        provider = ComputerProvider()
-        docker_provider = DockerProvider()
+    tasks = provider.by_status(
+        TaskStatus.InProgress,
+        task_docker_assigned=docker_img,
+        computer_assigned=hostname
+    )
+    for t in tasks:
+        if not psutil.pid_exists(t.pid):
+            os.system(f'kill -9 {t.pid}')
+            t.status = TaskStatus.Failed.value
+            provider.commit()
 
-        computer = socket.gethostname()
-        docker = docker_provider.get(
-            computer, os.getenv('DOCKER_IMG', 'default')
-        )
-        usages = []
 
-        for _ in range(10):
-            memory = dict(psutil.virtual_memory()._asdict())
+@error_handler
+def worker_usage():
+    provider = ComputerProvider()
+    docker_provider = DockerProvider()
 
-            usage = {
-                'cpu': psutil.cpu_percent(),
-                'disk': disk(ROOT_FOLDER)[1],
-                'memory': memory['percent'],
-                'gpu': [
-                    {
-                        'memory': g.memoryUtil,
-                        'load': g.load
-                    } for g in GPUtil.getGPUs()
-                ]
-            }
+    computer = socket.gethostname()
+    docker = docker_provider.get(computer, os.getenv('DOCKER_IMG', 'default'))
+    usages = []
 
-            provider.current_usage(computer, usage)
-            usages.append(usage)
-            docker.last_activity = now()
-            docker_provider.update()
+    for _ in range(10):
+        memory = dict(psutil.virtual_memory()._asdict())
 
-            time.sleep(1)
+        usage = {
+            'cpu': psutil.cpu_percent(),
+            'disk': disk(ROOT_FOLDER)[1],
+            'memory': memory['percent'],
+            'gpu': [
+                {
+                    'memory': g.memoryUtil * 100,
+                    'load': g.load * 100
+                } for g in GPUtil.getGPUs()
+            ]
+        }
 
-        usage = json.dumps({'mean': dict_func(usages, np.mean)})
-        provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
-    except Exception as e:
-        if type(e) == ProgrammingError:
-            Session.cleanup()
-        logger.error(
-            traceback.format_exc(), ComponentType.WorkerSupervisor, hostname
-        )
+        provider.current_usage(computer, usage)
+        usages.append(usage)
+        docker.last_activity = now()
+        docker_provider.update()
+
+        time.sleep(1)
+
+    usage = json.dumps({'mean': dict_func(usages, np.mean)})
+    provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
 
 
 @main.command()
@@ -85,14 +109,16 @@ def worker(number):
         '-O fair', '-c=1', '--prefetch-multiplier=1', '-Q', f'{name},'
         f'{name}_{number}'
     ]
-    print(argv)
     app.worker_main(argv)
 
 
 @main.command()
-def supervisor():
+def worker_supervisor():
     _create_computer()
     _create_docker()
+
+    start_schedule([(stop_processes_not_exist, 2)])
+
     if os.getenv('DOCKER_MAIN', 'True') == 'True':
         syncer = FileSync()
         start_schedule([(worker_usage, 0)])
@@ -105,6 +131,46 @@ def supervisor():
         f'{socket.gethostname()}_{docker_img}_supervisor'
     ]
     app.worker_main(argv)
+
+
+@main.command()
+@click.option('--debug', type=bool, default=False)
+@click.option('--workers', type=int, default=None)
+def supervisor(debug: bool, workers: int = cpu_count()):
+    # exporting environment variables
+    with open(os.path.join(CONFIG_FOLDER, '.env')) as f:
+        for l in f.readlines():
+            k, v = l.strip().split('=')
+            os.environ[k] = v
+    # for debugging
+    os.environ['PYTHONPATH'] = '.'
+
+    # creating supervisord config
+    supervisor_command = 'mlcomp-worker worker-supervisor'
+    worker_command = 'mlcomp-worker worker'
+
+    if debug:
+        supervisor_command = 'python mlcomp/worker/__main__.py ' \
+                             'worker-supervisor'
+        worker_command = 'python mlcomp/worker/__main__.py worker'
+
+    text = [
+        '[supervisord]', 'nodaemon=true', '', '[program:supervisor]',
+        f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
+        ''
+    ]
+    for p in range(workers):
+        text.append(f'[program:worker{p}]')
+        text.append(f'command={worker_command} {p}')
+        text.append('autostart=true')
+        text.append('autorestart=true')
+        text.append('')
+
+    conf = os.path.join(CONFIG_FOLDER, 'supervisord.conf')
+    with open(conf, 'w') as f:
+        f.writelines('\n'.join(text))
+
+    os.system('python2 /usr/bin/supervisord ' f'-c {conf} -e DEBUG')
 
 
 def _create_docker():

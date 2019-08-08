@@ -154,6 +154,7 @@ class Storage:
                 need_install = True
 
             if need_install:
+                #raise Exception(f'Library version = {library_versions[n]} Current version = {version}')
                 os.system(f'pip install {n}=={library_versions[n]}')
                 was_installation = True
 

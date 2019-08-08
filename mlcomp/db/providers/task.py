@@ -188,17 +188,20 @@ class TaskProvider(BaseDataProvider):
     def by_status(
         self,
         *statuses: TaskStatus,
-        docker_img: str = None,
-        worker_index: int = None
+        task_docker_assigned: str = None,
+        worker_index: int = None,
+        computer_assigned: str = None
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
             options(joinedload(Task.dag_rel))
 
-        if docker_img:
-            query = query.join(Dag).filter(Dag.docker_img == docker_img)
+        if task_docker_assigned:
+            query = query.filter(Task.docker_assigned == task_docker_assigned)
         if worker_index is not None:
             query = query.filter(Task.worker_index == worker_index)
+        if computer_assigned is not None:
+            query = query.filter(Task.computer_assigned == computer_assigned)
         return query.all()
 
     def dependency_status(self, tasks: List[Task]):

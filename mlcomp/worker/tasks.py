@@ -66,14 +66,14 @@ class ExecuteBuilder:
 
             msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
                   f'before the execute_by_id invocation'
-            self.logger.error(msg,
-                              ComponentType.Worker)
+            self.logger.error(msg, ComponentType.Worker)
             return
 
     def change_status(self):
         self.task.computer_assigned = self.hostname
         self.task.pid = os.getpid()
         self.task.worker_index = self.worker_index
+        self.task.docker_assigned = self.docker_img
         self.provider.change_status(self.task, TaskStatus.InProgress)
 
     def download(self):
@@ -87,10 +87,13 @@ class ExecuteBuilder:
         if was_installation and not self.task.debug:
             if self.repeat_count > 0:
                 try:
-                    self.logger.warning(traceback.format_exc(),
-                                        ComponentType.Worker)
-                    execute.apply_async((self.id, self.repeat_count - 1),
-                                        queue=self.queue_personal)
+                    self.logger.warning(
+                        traceback.format_exc(), ComponentType.Worker
+                    )
+                    execute.apply_async(
+                        (self.id, self.repeat_count - 1),
+                        queue=self.queue_personal
+                    )
                 except Exception:
                     pass
                 finally:
@@ -106,9 +109,9 @@ class ExecuteBuilder:
 
         additional_info = yaml_load(self.task.additional_info) \
             if self.task.additional_info else dict()
-        self.executor = Executor.from_config(self.task.executor,
-                                             config,
-                                             additional_info)
+        self.executor = Executor.from_config(
+            self.task.executor, config, additional_info
+        )
 
     def execute(self):
         res = self.executor(self.task, self.dag)
@@ -119,13 +122,16 @@ class ExecuteBuilder:
         if 'stage' in res and 'stages' in res:
             index = res['stages'].index(res['stage'])
             if index < len(res['stages']) - 1:
-                self.executor.info(f'stage = {res["stage"]} done. '
-                                   f'Go to the stage = '
-                                   f'{res["stages"][index + 1]}')
+                self.executor.info(
+                    f'stage = {res["stage"]} done. '
+                    f'Go to the stage = '
+                    f'{res["stages"][index + 1]}'
+                )
 
                 time.sleep(5)
-                execute.apply_async((self.id, self.repeat_count),
-                                    queue=self.queue_personal)
+                execute.apply_async(
+                    (self.id, self.repeat_count), queue=self.queue_personal
+                )
                 return
 
         if self.task.current_step is None:
@@ -154,11 +160,10 @@ class ExecuteBuilder:
             step = self.executor.step.id if \
                 (self.executor and self.executor.step) else None
 
-            self.logger.error(traceback.format_exc(),
-                              ComponentType.Worker,
-                              self.hostname,
-                              self.id,
-                              step)
+            self.logger.error(
+                traceback.format_exc(), ComponentType.Worker, self.hostname,
+                self.id, step
+            )
             self.provider.change_status(self.task, TaskStatus.Failed)
             raise e
         finally:
@@ -200,7 +205,7 @@ def remove_from_all(path: str):
     dockers = provider.get_online()
     for docker in dockers:
         queue = f'{docker.computer}_{docker.name or "default"}_supervisor'
-        remove.apply((path,), queue=queue)
+        remove.apply((path, ), queue=queue)
 
 
 def remove_model(project_name: str, model_name: str):
@@ -239,7 +244,7 @@ def stop(task: Task, dag: Dag):
         if task.pid:
             queue = f'{task.computer_assigned}_' \
                     f'{dag.docker_img or "default"}_supervisor'
-            kill.apply_async((task.pid,), queue=queue)
+            kill.apply_async((task.pid, ), queue=queue)
         provider.change_status(task, status)
 
     return task.status
