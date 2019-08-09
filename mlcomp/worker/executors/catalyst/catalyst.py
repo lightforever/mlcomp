@@ -57,8 +57,8 @@ class Catalyst(Executor, Callback):
         self.report = report
         self.experiment = None
         self.runner = None
-        self.series_provider = ReportSeriesProvider()
-        self.task_provider = TaskProvider()
+        self.series_provider = ReportSeriesProvider(self.session)
+        self.task_provider = TaskProvider(self.session)
         self.grid_config = grid_config
         self.master = True
         self.cuda_devices = cuda_devices

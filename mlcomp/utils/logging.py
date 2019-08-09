@@ -2,6 +2,7 @@ import os
 import logging
 from logging.config import dictConfig
 
+from mlcomp.db.core import Session
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
 from mlcomp.utils.misc import now
@@ -46,12 +47,12 @@ class DbHandler(logging.Handler):
     A handler class which writes logging records, appropriately formatted,
     to the database.
     """
-    def __init__(self):
+    def __init__(self, session: Session):
         """
         Initialize the handler.
         """
         logging.Handler.__init__(self)
-        self.provider = LogProvider()
+        self.provider = LogProvider(session)
 
     def emit(self, record):
         """
@@ -139,18 +140,21 @@ LOGGING = {
 }
 
 
-def create_logger():
+def create_logger(session: Session):
     dictConfig(LOGGING)
     logger = logging.getLogger()
-    handler = DbHandler()
+    handler = DbHandler(session)
     handler.setLevel(DB_LOG_LEVEL)
     logger.handlers.append(handler)
 
     for h in logger.handlers:
-        h.formatter = Formatter()
+        fmt = '%(asctime)s.%(msecs)03d %(levelname)s' \
+              ' %(module)s - %(funcName)s: %(message)s'
+        datefmt = '%Y-%m-%d %H:%M:%S'
+        if isinstance(h, DbHandler):
+            fmt, datefmt = None, None
+        h.formatter = Formatter(fmt=fmt, datefmt=datefmt)
     return logger
 
 
-logger = create_logger()
-
-__all__ = ['create_logger', 'logger']
+__all__ = ['create_logger']

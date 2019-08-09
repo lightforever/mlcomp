@@ -5,7 +5,8 @@ from glob import glob
 import pathspec
 import pkg_resources
 
-from mlcomp.utils.logging import logger
+from mlcomp.db.core import Session
+from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import read_lines
 
 _mapping = {
@@ -50,6 +51,7 @@ def find_imports(
                     elif isinstance(node, ast.ImportFrom):
                         raw_imports.append((node.module, file_rel))
             except Exception as exc:
+                logger = create_logger(Session.create_session())
                 logger.error('Failed on file: %s' % file_rel)
                 raise exc
 

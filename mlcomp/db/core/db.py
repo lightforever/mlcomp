@@ -31,18 +31,33 @@ class Session(session.Session):
         return s
 
     @classmethod
-    def cleanup(cls):
-        for k, (s, engine) in cls.__session.items():
-            try:
-                s.close()
-            except Exception:
-                pass
-            try:
-                engine.dispose()
-            except Exception:
-                pass
+    def cleanup(cls, key: str = None):
+        if key:
+            if key in cls.__session:
+                s, engine = cls.__session[key]
+                try:
+                    s.close()
+                except Exception:
+                    pass
 
-        cls.__session = dict()
+                try:
+                    engine.dispose()
+                except Exception:
+                    pass
+
+                del cls.__session[key]
+        else:
+            for k, (s, engine) in cls.__session.items():
+                try:
+                    s.close()
+                except Exception:
+                    pass
+                try:
+                    engine.dispose()
+                except Exception:
+                    pass
+
+            cls.__session = dict()
 
     def query(self, *entities, **kwargs):
         try:

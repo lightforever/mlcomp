@@ -6,6 +6,7 @@ import socket
 
 import GPUtil
 
+from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
 from mlcomp.db.providers import \
@@ -23,6 +24,8 @@ from mlcomp.worker.tasks import execute_by_id
 from mlcomp.utils.misc import memory, disk
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
+_session = Session.create_session(key=__name__)
+
 
 def _dag(config: str, debug: bool = False):
     config_text = open(config, 'r').read()
@@ -31,10 +34,15 @@ def _dag(config: str, debug: bool = False):
     type_name = config_parsed['info'].get('type', 'standard')
     if type_name == DagType.Standard.name.lower():
         return dag_standard(
-            config_parsed, debug=debug, config_text=config_text
+            session=_session,
+            config=config_parsed,
+            debug=debug,
+            config_text=config_text
         )
 
-    return dag_pipe(config_parsed, config_text=config_text)
+    return dag_pipe(
+        session=_session, config=config_parsed, config_text=config_text
+    )
 
 
 def _create_computer():
@@ -50,7 +58,7 @@ def _create_computer():
         user=os.getenv('USER'),
         disk=tot_d
     )
-    ComputerProvider().create_or_update(computer, 'name')
+    ComputerProvider(_session).create_or_update(computer, 'name')
 
 
 @click.group()
@@ -71,11 +79,11 @@ def execute(config: str, debug: bool):
     _create_computer()
 
     # Fail all InProgress Tasks
-    logger = create_logger()
+    logger = create_logger(_session)
     worker_index = int(os.getenv('WORKER_INDEX', -1))
 
-    provider = TaskProvider()
-    step_provider = StepProvider()
+    provider = TaskProvider(_session)
+    step_provider = StepProvider(_session)
 
     for t in provider.by_status(
         TaskStatus.InProgress, worker_index=worker_index
@@ -109,8 +117,8 @@ def execute(config: str, debug: bool):
 )
 def sync(computer: str, only_from: bool, only_to: bool):
     computer = computer or socket.gethostname()
-    provider = ComputerProvider()
-    projects = ProjectProvider().all_last_activity()
+    provider = ComputerProvider(_session)
+    projects = ProjectProvider(_session).all_last_activity()
     computer = provider.by_name(computer)
     computers = provider.all()
     folders_excluded = []

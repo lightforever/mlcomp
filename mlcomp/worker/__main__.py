@@ -24,6 +24,8 @@ from mlcomp.db.models import ComputerUsage, Computer, Docker
 from mlcomp.utils.misc import memory
 from mlcomp.worker.sync import FileSync
 
+_session = Session.create_session(key='worker')
+
 
 @click.group()
 def main():
@@ -31,15 +33,25 @@ def main():
 
 
 def error_handler(f):
+    name = f.__name__
+    wrapper_vars = {
+        'session': Session.create_session(key=name)
+    }
+    wrapper_vars['logger'] = create_logger(wrapper_vars['session'])
+
+    hostname = socket.gethostname()
+
     def wrapper():
-        logger = create_logger()
-        hostname = socket.gethostname()
         try:
-            f()
+            f(wrapper_vars['session'])
         except Exception as e:
             if type(e) == ProgrammingError:
-                Session.cleanup()
-            logger.error(
+                Session.cleanup(name)
+
+                wrapper_vars['session'] = Session.create_session(key=name)
+                wrapper_vars['logger'] = create_logger(wrapper_vars['session'])
+
+            wrapper_vars['logger'].error(
                 traceback.format_exc(), ComponentType.WorkerSupervisor,
                 hostname
             )
@@ -48,8 +60,8 @@ def error_handler(f):
 
 
 @error_handler
-def stop_processes_not_exist():
-    provider = TaskProvider()
+def stop_processes_not_exist(session: Session):
+    provider = TaskProvider(session)
     docker_img = os.getenv('DOCKER_IMG', 'default')
     hostname = socket.gethostname()
     tasks = provider.by_status(
@@ -65,9 +77,9 @@ def stop_processes_not_exist():
 
 
 @error_handler
-def worker_usage():
-    provider = ComputerProvider()
-    docker_provider = DockerProvider()
+def worker_usage(session: Session):
+    provider = ComputerProvider(session)
+    docker_provider = DockerProvider(session)
 
     computer = socket.gethostname()
     docker = docker_provider.get(computer, os.getenv('DOCKER_IMG', 'default'))
@@ -180,7 +192,7 @@ def _create_docker():
         ports='-'.join(list(map(str, MASTER_PORT_RANGE))),
         last_activity=now()
     )
-    DockerProvider().create_or_update(docker, 'name', 'computer')
+    DockerProvider(_session).create_or_update(docker, 'name', 'computer')
 
 
 def _create_computer():
@@ -196,7 +208,7 @@ def _create_computer():
         user=os.getenv('USER'),
         disk=tot_d
     )
-    ComputerProvider().create_or_update(computer, 'name')
+    ComputerProvider(_session).create_or_update(computer, 'name')
 
 
 if __name__ == '__main__':

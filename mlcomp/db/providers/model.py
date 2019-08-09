@@ -14,8 +14,8 @@ class ModelProvider(BaseDataProvider):
 
     def get(self, filter, options: PaginatorOptions):
         query = self.query(Model). \
-            options(joinedload(Model.dag_rel)). \
-            options(joinedload(Model.project_rel))
+            options(joinedload(Model.dag_rel, innerjoin=True)). \
+            options(joinedload(Model.project_rel, innerjoin=True))
 
         if filter.get('project'):
             query = query.filter(Model.project == filter['project'])

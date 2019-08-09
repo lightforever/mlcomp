@@ -61,8 +61,10 @@ class TaskProvider(BaseDataProvider):
         return query
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Task, Project.name). \
-            options(joinedload(Task.dag_rel))
+        query = self.query(Task, Project.name).\
+            join(Dag, Dag.id == Task.dag).\
+            join(Project, Project.id == Dag.project).\
+            options(joinedload(Task.dag_rel, innerjoin=True))
 
         query = self._get_filter(query, filter)
 
@@ -161,7 +163,7 @@ class TaskProvider(BaseDataProvider):
 
         if joined_load is not None:
             for n in joined_load:
-                res = res.options(joinedload(n))
+                res = res.options(joinedload(n, innerjoin=True))
 
         return res.all()
 
@@ -194,7 +196,7 @@ class TaskProvider(BaseDataProvider):
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
-            options(joinedload(Task.dag_rel))
+            options(joinedload(Task.dag_rel, innerjoin=True))
 
         if task_docker_assigned:
             query = query.filter(Task.docker_assigned == task_docker_assigned)
@@ -277,7 +279,7 @@ class TaskProvider(BaseDataProvider):
         res = res.order_by(Task.id)
         if joined_load is not None:
             for n in joined_load:
-                res = res.options(joinedload(n))
+                res = res.options(joinedload(n, innerjoin=True))
         return res.all()
 
 

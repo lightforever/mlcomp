@@ -2,13 +2,15 @@ from enum import Enum
 import os
 import time
 
+from mlcomp.db.core import Session
 from mlcomp.worker.executors.base.executor import Executor
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import create_logger
 from mlcomp.utils.config import Config
 
 try:
     from kaggle import api
 except OSError:
+    logger = create_logger(Session.create_session())
     logger.warning(
         'Could not find kaggle.json. '
         'Kaggle executors can not be used'

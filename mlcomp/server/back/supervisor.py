@@ -23,7 +23,8 @@ import mlcomp.worker.tasks as celery_tasks
 
 class SupervisorBuilder:
     def __init__(self):
-        self.logger = create_logger()
+        self.session = Session.create_session(key='SupervisorBuilder')
+        self.logger = create_logger(self.session)
         self.provider = None
         self.computer_provider = None
         self.docker_provider = None
@@ -35,10 +36,10 @@ class SupervisorBuilder:
         self.auxiliary = {}
 
     def create_base(self):
-        self.provider = TaskProvider()
-        self.computer_provider = ComputerProvider()
-        self.docker_provider = DockerProvider()
-        self.auxiliary_provider = AuxiliaryProvider()
+        self.provider = TaskProvider(self.session)
+        self.computer_provider = ComputerProvider(self.session)
+        self.docker_provider = DockerProvider(self.session)
+        self.auxiliary_provider = AuxiliaryProvider(self.session)
 
         self.queues = [
             f'{d.computer}_{d.name}' for d in self.docker_provider.all()
@@ -309,7 +310,7 @@ class SupervisorBuilder:
         children = self.provider.children(task.id, [Task.dag_rel])
         dags = [c.dag_rel for c in children]
         for c, d in zip(children, dags):
-            celery_tasks.stop(c, d)
+            celery_tasks.stop(self.session, c, d)
 
     def process_parent_tasks(self):
         tasks = self.provider.parent_tasks_stats()

@@ -2,6 +2,7 @@ from collections import OrderedDict
 import os
 
 from mlcomp.contrib.search.grid import grid_cells
+from mlcomp.db.core import Session
 from mlcomp.db.enums import TaskType, DagType
 from mlcomp.db.models import Report, Task, Dag, ReportTasks
 from mlcomp.db.providers import TaskProvider, \
@@ -19,12 +20,14 @@ from mlcomp.utils.io import yaml_dump
 class DagStandardBuilder:
     def __init__(
         self,
+        session: Session,
         config: dict,
         debug: bool,
         config_text: str = None,
         upload_files: bool = True,
         copy_files_from: int = None
     ):
+        self.session = session
         self.config = config
         self.debug = debug
         self.config_text = config_text
@@ -46,18 +49,20 @@ class DagStandardBuilder:
         self.dag = None
         self.dag_report_id = None
         self.created = None
+        self.project_provider = None
 
     def create_providers(self):
-        self.provider = TaskProvider()
-        self.report_provider = ReportProvider()
-        self.report_tasks_provider = ReportTasksProvider()
-        self.report_layout_provider = ReportLayoutProvider()
+        self.provider = TaskProvider(self.session)
+        self.report_provider = ReportProvider(self.session)
+        self.report_tasks_provider = ReportTasksProvider(self.session)
+        self.report_layout_provider = ReportLayoutProvider(self.session)
+        self.project_provider = ProjectProvider(self.session)
 
-        self.storage = Storage()
-        self.dag_provider = DagProvider()
+        self.storage = Storage(self.session)
+        self.dag_provider = DagProvider(self.session)
 
     def load_base(self):
-        project = ProjectProvider().by_name(self.info['project'])
+        project = self.project_provider.by_name(self.info['project'])
         assert project, f'No project with name = {self.info["project"]}'
 
         self.project = project.id
@@ -220,6 +225,7 @@ class DagStandardBuilder:
 
 
 def dag_standard(
+    session: Session,
     config: dict,
     debug: bool,
     config_text: str = None,
@@ -227,6 +233,7 @@ def dag_standard(
     copy_files_from: int = None
 ):
     builder = DagStandardBuilder(
+        session=session,
         config=config,
         debug=debug,
         config_text=config_text,

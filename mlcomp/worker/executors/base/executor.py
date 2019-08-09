@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import time
 import os
 
+from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
 from mlcomp.utils.config import Config
 from mlcomp.db.providers import TaskProvider, ComputerProvider
@@ -10,6 +11,8 @@ from mlcomp.worker.executors.base.step import StepWrap
 
 class Executor(ABC):
     _child = dict()
+
+    session = Session.create_session(key='Executor')
 
     def debug(self, message: str):
         self.step.debug(message)
@@ -27,7 +30,7 @@ class Executor(ABC):
         assert dag is not None, 'You must fetch task with dag_rel'
         self.task = task
         self.dag = dag
-        self.step = StepWrap(task)
+        self.step = StepWrap(self.session, task)
         with self.step:
             use_sync = os.getenv('USE_SYNC', 'True') == 'True'
             if not task.debug and use_sync:
@@ -81,8 +84,8 @@ class Executor(ABC):
 
     def wait_data_sync(self, computer_assigned: str):
         self.step.info(f'Start data sync')
-        provider = ComputerProvider()
-        last_task_time = TaskProvider().last_succeed_time()
+        provider = ComputerProvider(self.session)
+        last_task_time = TaskProvider(self.session).last_succeed_time()
         while True:
             computer = provider.by_name(computer_assigned)
             if not last_task_time or computer.last_synced > last_task_time:

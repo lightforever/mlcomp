@@ -48,7 +48,8 @@ class DagProvider(BaseDataProvider):
             func.max(Task.finished).label('finished')
         ]
 
-        query = self.query(Dag, Project.name, *funcs, *task_status)
+        query = self.query(Dag, Project.name, *funcs,
+                           *task_status).join(Project)
         query = self._get_filter(query, filter, last_activity)
 
         status_clauses = []

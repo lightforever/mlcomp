@@ -67,9 +67,12 @@ class ModelAdd(Executor):
         return traced
 
     def work(self):
-        task_provider = TaskProvider()
+        task_provider = TaskProvider(self.session)
         task = task_provider.by_id(self.train_task)
-        dag = DagProvider().by_id(self.dag_pipe, joined_load=[Dag.project_rel])
+        dag = DagProvider(
+            self.session
+        ).by_id(self.dag_pipe, joined_load=[Dag.project_rel])
+
         task_dir = join(TASK_FOLDER, str(self.child_task or task.id))
         src_log = f'{task_dir}/log'
         src_code = f'{src_log}/code'
@@ -94,7 +97,7 @@ class ModelAdd(Executor):
             project=dag.project,
             interface_params=yaml_dump(self.interface_params)
         )
-        provider = ModelProvider()
+        provider = ModelProvider(self.session)
         provider.add(model, commit=False)
         try:
             model_path = f'{models_dir}/{model.name}.pth'

@@ -33,7 +33,7 @@ class SubmitMnist(Submit):
         }).to_csv(self.out_file, index=False)
 
         score = super().work()
-        provider = ModelProvider()
+        provider = ModelProvider(self.session)
         model = provider.by_id(self.model_id)
         model.score_public = score
         provider.commit()

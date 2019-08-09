@@ -1,5 +1,6 @@
 import json
 
+from mlcomp.db.core import Session
 from mlcomp.db.enums import StepStatus, ComponentType
 from mlcomp.db.models import Task, Step
 from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
@@ -8,14 +9,14 @@ from mlcomp.utils.misc import now
 
 
 class StepWrap:
-    def __init__(self, task: Task):
-        self.log_provider = LogProvider()
-        self.step_provider = StepProvider()
-        self.task_provider = TaskProvider()
+    def __init__(self, session: Session, task: Task):
+        self.log_provider = LogProvider(session)
+        self.step_provider = StepProvider(session)
+        self.task_provider = TaskProvider(session)
         self.task = task
         self.children = []
         self.step = None
-        self.logger = create_logger()
+        self.logger = create_logger(session)
 
     @property
     def id(self):

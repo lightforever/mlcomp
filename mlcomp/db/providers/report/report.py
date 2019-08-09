@@ -181,7 +181,7 @@ class ReportProvider(BaseDataProvider):
         series = self.query(ReportSeries). \
             filter(ReportSeries.task.in_(tasks)). \
             order_by(ReportSeries.epoch). \
-            options(joinedload(ReportSeries.task_rel)).all()
+            options(joinedload(ReportSeries.task_rel, innerjoin=True)).all()
 
         # from time import time
         # start = time()

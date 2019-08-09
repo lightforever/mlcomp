@@ -54,7 +54,7 @@ class BaseDataProvider:
         res = self.query(self.model).filter(getattr(self.model, 'id') == id)
         if joined_load is not None:
             for n in joined_load:
-                res = res.options(joinedload(n))
+                res = res.options(joinedload(n, innerjoin=True))
         return res.first()
 
     def to_dict(self, item, rules=(), datetime_format=None):

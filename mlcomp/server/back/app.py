@@ -20,7 +20,7 @@ from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.server.back import conf
-from mlcomp.utils.logging import logger
+from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake, now
@@ -32,6 +32,11 @@ PORT = int(os.getenv('WEB_PORT', '4201'))
 
 app = Flask(__name__)
 CORS(app)
+
+_read_session = Session.create_session(key='server.read')
+_write_session = Session.create_session(key='server.write')
+
+logger = create_logger(_write_session)
 
 
 @app.route('/', defaults={'path': ''}, methods=['GET'])
@@ -88,14 +93,22 @@ def requires_auth(f):
 def error_handler(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        global _read_session, _write_session, logger
+
         success = True
         status = 200
         error = ''
+
         try:
             res = f(*args, **kwargs)
         except Exception as e:
             if type(e) == ProgrammingError:
                 Session.cleanup()
+
+                _read_session = Session.create_session(key='server.read')
+                _write_session = Session.create_session(key='server.write')
+
+                logger = create_logger(_write_session)
 
             logger.error(
                 f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
@@ -124,7 +137,7 @@ def computers():
     options = PaginatorOptions(**data['paginator'])
     options.sort_column = 'name'
 
-    provider = ComputerProvider()
+    provider = ComputerProvider(_read_session)
     return provider.get(data, options)
 
 
@@ -135,7 +148,7 @@ def projects():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
 
-    provider = ProjectProvider()
+    provider = ProjectProvider(_read_session)
     res = provider.get(data, options)
     return res
 
@@ -146,7 +159,7 @@ def projects():
 def project_add():
     data = request_data()
 
-    provider = ProjectProvider()
+    provider = ProjectProvider(_write_session)
     res = provider.add_project(
         data['name'], yaml_load(data['class_names']),
         yaml_load(data['ignore_folders'])
@@ -160,7 +173,7 @@ def project_add():
 def project_edit():
     data = request_data()
 
-    provider = ProjectProvider()
+    provider = ProjectProvider(_write_session)
     res = provider.edit_project(
         data['name'], yaml_load(data['class_names']),
         yaml_load(data['ignore_folders'])
@@ -173,8 +186,8 @@ def project_edit():
 @error_handler
 def report_add_start():
     return {
-        'projects': ProjectProvider().get()['data'],
-        'layouts': ReportLayoutProvider().get()['data']
+        'projects': ProjectProvider(_read_session).get()['data'],
+        'layouts': ReportLayoutProvider(_read_session).get()['data']
     }
 
 
@@ -184,8 +197,8 @@ def report_add_start():
 def report_add_end():
     data = request_data()
 
-    provider = ReportProvider()
-    layouts = ReportLayoutProvider().all()
+    provider = ReportProvider(_write_session)
+    layouts = ReportLayoutProvider(_write_session).all()
     layout = layouts[data['layout']]
     report = Report(
         name=data['name'], project=data['project'], config=yaml_dump(layout)
@@ -199,7 +212,7 @@ def report_add_end():
 def report_layouts():
     data = request_data()
 
-    provider = ReportLayoutProvider()
+    provider = ReportLayoutProvider(_read_session)
     options = PaginatorOptions(**data['paginator'])
     res = provider.get(data, options)
     return res
@@ -211,7 +224,7 @@ def report_layouts():
 def report_layout_add():
     data = request_data()
 
-    provider = ReportLayoutProvider()
+    provider = ReportLayoutProvider(_write_session)
     layout = ReportLayout(name=data['name'], content='', last_modified=now())
     provider.add(layout)
 
@@ -222,7 +235,7 @@ def report_layout_add():
 def report_layout_edit():
     data = request_data()
 
-    provider = ReportLayoutProvider()
+    provider = ReportLayoutProvider(_write_session)
     layout = provider.by_name(data['name'])
     layout.last_modified = now()
     if 'content' in data and data['content'] is not None:
@@ -241,7 +254,7 @@ def report_layout_edit():
 def report_layout_remove():
     data = request_data()
 
-    provider = ReportLayoutProvider()
+    provider = ReportLayoutProvider(_write_session)
     provider.remove(data['name'], key_column='name')
 
 
@@ -250,7 +263,7 @@ def report_layout_remove():
 @error_handler
 def model_add():
     data = request_data()
-    dag_model_add(data)
+    dag_model_add(_write_session, data)
 
 
 @app.route('/api/model/remove', methods=['POST'])
@@ -258,9 +271,11 @@ def model_add():
 @error_handler
 def model_remove():
     data = request_data()
-    provider = ModelProvider()
+    provider = ModelProvider(_write_session)
     model = provider.by_id(data['id'], joined_load=[Model.project_rel])
-    celery_tasks.remove_model(model.project_rel.name, model.name)
+    celery_tasks.remove_model(
+        _write_session, model.project_rel.name, model.name
+    )
     provider.remove(model.id)
 
 
@@ -269,7 +284,7 @@ def model_remove():
 @error_handler
 def model_start():
     data = request_data()
-    dag_model_start(data)
+    dag_model_start(_write_session, data)
 
 
 @app.route('/api/img_classify', methods=['POST'])
@@ -278,7 +293,7 @@ def model_start():
 def img_classify():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
-    res = ReportImgProvider().detail_img_classify(data, options)
+    res = ReportImgProvider(_read_session).detail_img_classify(data, options)
     return res
 
 
@@ -287,7 +302,7 @@ def img_classify():
 @error_handler
 def config():
     id = request_data()
-    res = DagProvider().config(id)
+    res = DagProvider(_read_session).config(id)
     return {'data': res}
 
 
@@ -296,7 +311,7 @@ def config():
 @error_handler
 def graph():
     id = request_data()
-    res = DagProvider().graph(id)
+    res = DagProvider(_read_session).graph(id)
     return res
 
 
@@ -306,7 +321,7 @@ def graph():
 def dags():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
-    provider = DagProvider()
+    provider = DagProvider(_read_session)
     res = provider.get(data, options)
     return res
 
@@ -318,7 +333,7 @@ def code():
     id = request_data()
     res = OrderedDict()
     parents = dict()
-    for s, f in DagStorageProvider().by_dag(id):
+    for s, f in DagStorageProvider(_read_session).by_dag(id):
         s.path = s.path.strip()
         parent = os.path.dirname(s.path)
         name = os.path.basename(s.path)
@@ -331,6 +346,7 @@ def code():
                 res[name] = node
                 parents[s.path] = res[name]
             else:
+                # noinspection PyUnresolvedReferences
                 parents[parent]['children'].append(node)
         else:
             node = {'name': name}
@@ -342,6 +358,7 @@ def code():
             if not parent:
                 res[name] = node
             else:
+                # noinspection PyUnresolvedReferences
                 parents[parent]['children'].append(node)
 
     def sort_key(x):
@@ -369,7 +386,7 @@ def code():
 def tasks():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
-    provider = TaskProvider()
+    provider = TaskProvider(_read_session)
     res = provider.get(data, options)
     return res
 
@@ -379,8 +396,10 @@ def tasks():
 @error_handler
 def task_stop():
     data = request_data()
-    task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
-    status = celery_tasks.stop(task, task.dag_rel)
+    task = TaskProvider(_write_session).by_id(
+        data['id'], joinedload(Task.dag_rel, innerjoin=True)
+    )
+    status = celery_tasks.stop(_write_session, task, task.dag_rel)
     return {'status': to_snake(TaskStatus(status).name)}
 
 
@@ -389,7 +408,9 @@ def task_stop():
 @error_handler
 def task_info():
     data = request_data()
-    task = TaskProvider().by_id(data['id'], joinedload(Task.dag_rel))
+    task = TaskProvider(_read_session).by_id(
+        data['id'], joinedload(Task.dag_rel, innerjoin=True)
+    )
     return {
         'pid': task.pid,
         'worker_index': task.worker_index,
@@ -406,11 +427,11 @@ def task_info():
 @error_handler
 def dag_stop():
     data = request_data()
-    provider = DagProvider()
+    provider = DagProvider(_write_session)
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     for t in dag.tasks:
-        celery_tasks.stop(t, dag)
+        celery_tasks.stop(_write_session, t, dag)
     return {'dag': provider.get({'id': id})['data'][0]}
 
 
@@ -419,7 +440,7 @@ def dag_stop():
 @error_handler
 def dag_start():
     data = request_data()
-    provider = DagProvider()
+    provider = DagProvider(_write_session)
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     can_start_statuses = [
@@ -427,9 +448,33 @@ def dag_start():
         TaskStatus.Stopped.value
     ]
 
-    for t in dag.tasks:
+    tasks = list(dag.tasks)
+
+    def find_resume(task, info):
+        if 'distr_info' in info:
+            for t in tasks:
+                if t.parent == task.parent:
+                    t_info = yaml_load(t.additional_info)
+                    if t_info['rank'] == 0:
+                        return {
+                            'computer_assigned': t.computer_assigned,
+                            'task_id': t.id
+                        }
+            raise Exception('Master task not found')
+        else:
+            return {
+                'computer_assigned': task.computer_assigned,
+                'task_id': task.id
+            }
+
+    for t in tasks:
         if t.status not in can_start_statuses:
             continue
+
+        info = yaml_load(t.additional_info)
+        info['resume'] = find_resume(t, info)
+        t.additional_info = yaml_dump(info)
+
         t.status = TaskStatus.NotRan.value
         t.pid = None
         t.started = None
@@ -447,7 +492,7 @@ def dag_start():
 
 @app.route('/api/auxiliary', methods=['POST'])
 def auxiliary():
-    provider = AuxiliaryProvider()
+    provider = AuxiliaryProvider(_read_session)
     return provider.get()
 
 
@@ -456,7 +501,7 @@ def auxiliary():
 @error_handler
 def dag_toogle_report():
     data = request_data()
-    provider = ReportProvider()
+    provider = ReportProvider(_write_session)
     if data.get('remove'):
         provider.remove_dag(int(data['id']), int(data['report']))
     else:
@@ -469,7 +514,7 @@ def dag_toogle_report():
 @error_handler
 def task_toogle_report():
     data = request_data()
-    provider = ReportProvider()
+    provider = ReportProvider(_write_session)
     if data.get('remove'):
         provider.remove_task(int(data['id']), int(data['report']))
     else:
@@ -481,7 +526,7 @@ def task_toogle_report():
 @requires_auth
 @error_handler
 def logs():
-    provider = LogProvider()
+    provider = LogProvider(_read_session)
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
     res = provider.get(data, options)
@@ -494,7 +539,7 @@ def logs():
 def reports():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
-    provider = ReportProvider()
+    provider = ReportProvider(_read_session)
     res = provider.get(data, options)
     return res
 
@@ -504,7 +549,7 @@ def reports():
 @error_handler
 def report():
     id = request_data()
-    provider = ReportProvider()
+    provider = ReportProvider(_read_session)
     res = provider.detail(id)
     return res
 
@@ -514,7 +559,7 @@ def report():
 @error_handler
 def report_update_layout_start():
     id = request_data()['id']
-    provider = ReportProvider()
+    provider = ReportProvider(_write_session)
     res = provider.update_layout_start(id)
     return res
 
@@ -524,8 +569,8 @@ def report_update_layout_start():
 @error_handler
 def report_update_layout_end():
     data = request_data()
-    provider = ReportProvider()
-    layout_provider = ReportLayoutProvider()
+    provider = ReportProvider(_write_session)
+    layout_provider = ReportLayoutProvider(_write_session)
     provider.update_layout_end(
         data['id'], data['layout'], layout_provider.all()
     )
@@ -537,7 +582,7 @@ def report_update_layout_end():
 @error_handler
 def steps():
     id = request_data()
-    provider = StepProvider()
+    provider = StepProvider(_read_session)
     res = provider.get(id)
     return res
 
@@ -561,7 +606,7 @@ def token():
 @error_handler
 def project_remove():
     id = request_data()['id']
-    ProjectProvider().remove(id)
+    ProjectProvider(_write_session).remove(id)
 
 
 @app.route('/api/remove_imgs', methods=['POST'])
@@ -569,7 +614,7 @@ def project_remove():
 @error_handler
 def remove_imgs():
     data = request_data()
-    provider = ReportImgProvider()
+    provider = ReportImgProvider(_write_session)
     res = provider.remove(data)
     return res
 
@@ -579,7 +624,7 @@ def remove_imgs():
 @error_handler
 def remove_files():
     data = request_data()
-    provider = FileProvider()
+    provider = FileProvider(_write_session)
     res = provider.remove(data)
     return res
 
@@ -589,8 +634,8 @@ def remove_files():
 @error_handler
 def dag_remove():
     id = request_data()['id']
-    celery_tasks.remove_dag(id)
-    DagProvider().remove(id)
+    celery_tasks.remove_dag(_write_session, id)
+    DagProvider(_read_session).remove(id)
 
 
 @app.route('/api/models', methods=['POST'])
@@ -599,7 +644,7 @@ def dag_remove():
 def models():
     data = request_data()
     options = PaginatorOptions(**data['paginator'])
-    provider = ModelProvider()
+    provider = ModelProvider(_read_session)
     res = provider.get(data, options)
     return res
 
@@ -628,8 +673,15 @@ def shutdown():
 
 @app.errorhandler(Exception)
 def all_exception_handler(e):
+    global _read_session, _write_session, logger
+
     if type(e) == ProgrammingError:
         Session.cleanup()
+
+        _read_session = Session.create_session(key='server.read')
+        _write_session = Session.create_session(key='server.write')
+
+        logger = create_logger(_write_session)
 
     logger.error(
         f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
@@ -642,6 +694,7 @@ def start_server():
     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
         logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
         register_supervisor()
+
     app.run(
         debug=os.getenv('FLASK_ENV') == 'development', port=PORT, host=HOST
     )

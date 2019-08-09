@@ -26,10 +26,10 @@ from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 
 
 class ExecuteBuilder:
-    def __init__(self, id: int, repeat_count: int = 1):
+    def __init__(self, session: Session, id: int, repeat_count: int = 1):
         self.id = id
         self.repeat_count = repeat_count
-        self.logger = create_logger()
+        self.logger = create_logger(session)
 
         self.provider = None
         self.library_provider = None
@@ -42,13 +42,16 @@ class ExecuteBuilder:
         self.worker_index = None
         self.executor = None
         self.queue_personal = None
+        self.session = session
 
     def create_base(self):
-        self.provider = TaskProvider()
-        self.library_provider = DagLibraryProvider()
-        self.storage = Storage()
+        self.provider = TaskProvider(self.session)
+        self.library_provider = DagLibraryProvider(self.session)
+        self.storage = Storage(self.session)
 
-        self.task = self.provider.by_id(self.id, joinedload(Task.dag_rel))
+        self.task = self.provider.by_id(
+            self.id, joinedload(Task.dag_rel, innerjoin=True)
+        )
         self.dag = self.task.dag_rel
         self.executor = None
         self.hostname = socket.gethostname()
@@ -171,7 +174,8 @@ class ExecuteBuilder:
 
 
 def execute_by_id(id: int, repeat_count=1):
-    ex = ExecuteBuilder(id, repeat_count)
+    session = Session.create_session(key='tasks.execute_by_id')
+    ex = ExecuteBuilder(session, id, repeat_count)
     ex.build()
 
 
@@ -200,33 +204,33 @@ def remove(path: str):
         os.remove(path)
 
 
-def remove_from_all(path: str):
-    provider = DockerProvider()
+def remove_from_all(session: Session, path: str):
+    provider = DockerProvider(session)
     dockers = provider.get_online()
     for docker in dockers:
         queue = f'{docker.computer}_{docker.name or "default"}_supervisor'
         remove.apply((path, ), queue=queue)
 
 
-def remove_model(project_name: str, model_name: str):
+def remove_model(session: Session, project_name: str, model_name: str):
     path = join(MODEL_FOLDER, project_name, model_name + '.pth')
-    remove_from_all(path)
+    remove_from_all(session, path)
 
 
-def remove_task(id: int):
+def remove_task(session: Session, id: int):
     path = join(TASK_FOLDER, str(id))
-    remove_from_all(path)
+    remove_from_all(session, path)
 
 
-def remove_dag(id: int):
-    tasks = TaskProvider().by_dag(id)
+def remove_dag(session: Session, id: int):
+    tasks = TaskProvider(session).by_dag(id)
     for task in tasks:
-        remove_task(task.id)
+        remove_task(session, task.id)
 
 
-def stop(task: Task, dag: Dag):
-    logger = create_logger()
-    provider = TaskProvider()
+def stop(session: Session, task: Task, dag: Dag):
+    logger = create_logger(session)
+    provider = TaskProvider(session)
     if task.status > TaskStatus.InProgress.value:
         return task.status
 

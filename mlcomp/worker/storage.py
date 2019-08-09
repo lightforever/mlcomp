@@ -11,6 +11,7 @@ import pkg_resources
 
 from sqlalchemy.orm import joinedload
 
+from mlcomp.db.core import Session
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
 from mlcomp.utils.settings import TASK_FOLDER, DATA_FOLDER
 from mlcomp.db.providers import FileProvider, \
@@ -25,11 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 class Storage:
-    def __init__(self):
-        self.file_provider = FileProvider()
-        self.provider = DagStorageProvider()
-        self.task_provider = TaskProvider()
-        self.library_provider = DagLibraryProvider()
+    def __init__(self, session: Session):
+        self.file_provider = FileProvider(session)
+        self.provider = DagStorageProvider(session)
+        self.task_provider = TaskProvider(session)
+        self.library_provider = DagLibraryProvider(session)
 
     def copy_from(self, src: int, dag: Dag):
         storages = self.provider.query(DagStorage). \
@@ -108,7 +109,9 @@ class Storage:
             )
 
     def download(self, task: int):
-        task = self.task_provider.by_id(task, joinedload(Task.dag_rel))
+        task = self.task_provider.by_id(
+            task, joinedload(Task.dag_rel, innerjoin=True)
+        )
         folder = join(TASK_FOLDER, str(task.id))
         os.makedirs(folder, exist_ok=True)
         items = self.provider.by_dag(task.dag)
@@ -166,7 +169,3 @@ class Storage:
 
 
 __all__ = ['Storage']
-
-if __name__ == '__main__':
-    storage = Storage()
-    storage.download(77)

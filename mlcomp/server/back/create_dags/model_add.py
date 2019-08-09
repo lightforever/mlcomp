@@ -1,14 +1,17 @@
 from sqlalchemy.orm import joinedload
 
+from mlcomp.db.core import Session
 from mlcomp.db.models import Task
 from mlcomp.db.providers import TaskProvider, ProjectProvider
 from mlcomp.server.back.create_dags.standard import dag_standard
 from mlcomp.utils.io import yaml_load
 
 
-def dag_model_add(data: dict):
-    task_provider = TaskProvider()
-    task = task_provider.by_id(data['task'], options=joinedload(Task.dag_rel))
+def dag_model_add(session: Session, data: dict):
+    task_provider = TaskProvider(session)
+    task = task_provider.by_id(
+        data['task'], options=joinedload(Task.dag_rel, innerjoin=True)
+    )
     child_tasks = task_provider.children(task.id)
     computer = task.computer_assigned
     child_task = None
@@ -16,7 +19,7 @@ def dag_model_add(data: dict):
         child_task = child_tasks[0].id
         computer = child_tasks[0].computer_assigned
 
-    project = ProjectProvider().by_id(task.dag_rel.project)
+    project = ProjectProvider(session).by_id(task.dag_rel.project)
     interface_params = data.get('interface_params', '')
     interface_params = yaml_load(interface_params)
     config = {
@@ -39,7 +42,9 @@ def dag_model_add(data: dict):
         }
     }
 
-    dag_standard(config, debug=False, upload_files=False)
+    dag_standard(
+        session=session, config=config, debug=False, upload_files=False
+    )
 
 
 __all__ = ['dag_model_add']

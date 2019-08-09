@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from catalyst.dl import Callback, Experiment, RunnerState
+from mlcomp.db.core import Session
 
 from mlcomp.db.providers import ReportImgProvider
 from mlcomp.db.report_info import ReportLayoutItem
@@ -10,6 +11,7 @@ from mlcomp.db.models import Task, Dag
 class BaseCallback(Callback):
     def __init__(
         self,
+        session: Session,
         experiment: Experiment,
         task: Task,
         dag: Dag,
@@ -18,7 +20,8 @@ class BaseCallback(Callback):
         self.info = info
         self.task = task
         self.dag = dag
-        self.img_provider = ReportImgProvider()
+        self.session = session
+        self.img_provider = ReportImgProvider(self.session)
         self.experiment = experiment
         self.is_best = False
         self.data = defaultdict(lambda: defaultdict(list))

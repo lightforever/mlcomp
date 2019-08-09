@@ -16,10 +16,13 @@ from mlcomp.utils.settings import MODEL_FOLDER, DATA_FOLDER
 from mlcomp.utils.io import yaml_load
 
 
-def sync_directed(source: Computer, target: Computer, folders_excluded: List):
+def sync_directed(
+    session: Session, source: Computer, target: Computer,
+    folders_excluded: List
+):
     current_computer = socket.gethostname()
     end = ' --perms  --chmod=777'
-    logger = create_logger()
+    logger = create_logger(session)
     for folder, excluded in folders_excluded:
         if len(excluded) > 0:
             excluded = excluded[:]
@@ -51,14 +54,14 @@ def sync_directed(source: Computer, target: Computer, folders_excluded: List):
 
 
 class FileSync:
+    session = Session.create_session(key='FileSync')
+    logger = create_logger(session)
+
     def sync(self):
-        logger = create_logger()
         hostname = socket.gethostname()
         try:
-            session = Session.create_session(key='FileSync')
-
-            provider = ComputerProvider(session)
-            project_provider = ProjectProvider(session)
+            provider = ComputerProvider(self.session)
+            project_provider = ProjectProvider(self.session)
 
             computer = provider.by_name(hostname)
             last_synced = computer.last_synced
@@ -91,15 +94,18 @@ class FileSync:
                     computer.syncing_computer = c.name
                     provider.update()
 
-                    sync_directed(c, computer, folders_excluded)
+                    sync_directed(self.session, c, computer, folders_excluded)
 
             computer.last_synced = sync_start
             computer.syncing_computer = None
             provider.update()
         except Exception as e:
             if type(e) == ProgrammingError:
-                Session.cleanup()
-            logger.error(
+                Session.cleanup('FileSync')
+                self.session = Session.create_session('FileSync')
+                self.logger = create_logger(self.session)
+
+            self.logger.error(
                 traceback.format_exc(), ComponentType.WorkerSupervisor,
                 hostname
             )

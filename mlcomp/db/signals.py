@@ -9,7 +9,7 @@ from mlcomp.utils.misc import now
 from mlcomp.db.core import Session
 from sqlalchemy import event
 
-signals_session = Session.create_session(key='signals')
+_session = Session.create_session(key=__name__)
 
 
 def error_handler(f):
@@ -30,7 +30,7 @@ def error_handler(f):
 def task_before_update(mapper, connection, target):
     target.last_activity = now()
     if target.parent:
-        provider = TaskProvider(signals_session)
+        provider = TaskProvider(_session)
         parent = provider.by_id(target.parent)
         if parent is None:
             return
@@ -47,7 +47,7 @@ def task_before_update(mapper, connection, target):
 @event.listens_for(Step, 'before_update')
 @error_handler
 def step_after_insert_update(mapper, connection, target):
-    TaskProvider(signals_session).update_last_activity(target.task)
+    TaskProvider(_session).update_last_activity(target.task)
 
 
 @event.listens_for(Log, 'after_insert')
@@ -55,13 +55,13 @@ def step_after_insert_update(mapper, connection, target):
 def log_after_insert(mapper, connection, target):
     if target.step is None:
         return
-    step = StepProvider().by_id(target.step)
-    TaskProvider(signals_session).update_last_activity(step.task)
+    step = StepProvider(_session).by_id(target.step)
+    TaskProvider(_session).update_last_activity(step.task)
 
 
 @event.listens_for(ReportImg, 'after_insert')
 def dag_after_create(mapper, connection, target):
-    provider = DagProvider(signals_session)
+    provider = DagProvider(_session)
     dag = provider.by_id(target.dag)
     dag.img_size += target.size
     provider.session.commit()
@@ -70,7 +70,7 @@ def dag_after_create(mapper, connection, target):
 @event.listens_for(File, 'after_insert')
 @error_handler
 def file_after_create(mapper, connection, target):
-    provider = DagProvider(signals_session)
+    provider = DagProvider(_session)
     dag = provider.by_id(target.dag)
     dag.file_size += target.size
     provider.session.commit()
