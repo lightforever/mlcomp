@@ -1,7 +1,10 @@
 import os
+import socket
+from collections import OrderedDict
 from pathlib import Path
+from os.path import join
 
-from catalyst.utils import set_global_seed
+from catalyst.utils import set_global_seed, load_checkpoint
 from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
 from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
@@ -10,12 +13,14 @@ from catalyst.utils.config import parse_args_uargs, dump_config
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
 from mlcomp.db.report_info import ReportLayoutInfo
-from mlcomp.utils.io import yaml_load
+from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
+from mlcomp.utils.settings import TASK_FOLDER
 from mlcomp.worker.executors.base import Executor
 from mlcomp.contrib.catalyst.register import register
+from mlcomp.worker.sync import copy_remote
 
 
 class Args:
@@ -49,29 +54,48 @@ class Catalyst(Executor, Callback):
         report: ReportLayoutInfo,
         cuda_devices: list,
         distr_info: dict,
+        resume: dict,
         grid_config: dict,
     ):
 
+        self.resume = resume
         self.distr_info = distr_info
         self.args = args
         self.report = report
         self.experiment = None
         self.runner = None
         self.series_provider = ReportSeriesProvider(self.session)
-        self.task_provider = TaskProvider(self.session)
         self.grid_config = grid_config
         self.master = True
         self.cuda_devices = cuda_devices
         self.checkpoint_resume = False
+        self.checkpoint_stage_epoch = 0
 
     def callbacks(self):
-        result = dict()
+        result = OrderedDict()
         if self.master:
             result['catalyst'] = self
 
         return result
 
+    def on_epoch_start(self, state: RunnerState):
+        if self.checkpoint_resume and state.stage_epoch == 0:
+            state.epoch += 1
+
+        state.stage_epoch = state.stage_epoch + self.checkpoint_stage_epoch
+        state.checkpoint_data = {'stage_epoch': state.stage_epoch}
+        if self.master:
+            if state.stage_epoch == 0:
+                self.step.start(1, name=state.stage)
+
+            self.step.start(
+                2, name=f'epoch {state.stage_epoch}', index=state.stage_epoch
+            )
+
     def on_epoch_end(self, state: RunnerState):
+        if self.master:
+            self.step.end(2)
+
         for s in self.report.series:
             train = state.metrics.epoch_values['train'][s.key]
             val = state.metrics.epoch_values['valid'][s.key]
@@ -83,7 +107,8 @@ class Catalyst(Executor, Callback):
                 epoch=state.epoch,
                 task=task_id,
                 value=train,
-                time=now()
+                time=now(),
+                stage=state.stage
             )
 
             val = ReportSeries(
@@ -92,7 +117,8 @@ class Catalyst(Executor, Callback):
                 epoch=state.epoch,
                 task=task_id,
                 value=val,
-                time=now()
+                time=now(),
+                stage=state.stage
             )
 
             self.series_provider.add(train)
@@ -115,8 +141,12 @@ class Catalyst(Executor, Callback):
 
     def on_stage_start(self, state: RunnerState):
         state.loggers = [VerboseLogger(), RaiseExceptionLogger()]
-        if self.checkpoint_resume:
-            state.epoch += 1
+
+    def on_stage_end(self, state: RunnerState):
+        self.checkpoint_resume = False
+        self.checkpoint_stage_epoch = 0
+        if self.master:
+            self.step.end(1)
 
     @classmethod
     def _from_config(
@@ -143,13 +173,15 @@ class Catalyst(Executor, Callback):
 
         distr_info = additional_info.get('distr_info', {})
         cuda_devices = additional_info.get('cuda_devices')
+        resume = additional_info.get('resume')
 
         return cls(
             args=args,
             report=report,
             grid_config=grid_config,
             distr_info=distr_info,
-            cuda_devices=cuda_devices
+            cuda_devices=cuda_devices,
+            resume=resume
         )
 
     def set_dist_env(self, config):
@@ -178,23 +210,97 @@ class Catalyst(Executor, Callback):
             self.set_dist_env(config)
         return args, config
 
-    def _checkpoint_fix(self, callbacks: dict, logdir: str):
-        path = os.path.join(logdir, 'checkpoints', 'best.pth')
+    def _checkpoint_fix_config(self, experiment):
+        resume = self.resume
+        if not resume:
+            return
 
+        checkpoint_dir = join(experiment.logdir, 'checkpoints')
+        os.makedirs(checkpoint_dir, exist_ok=True)
+
+        file = 'last.pth' if resume.get('load_last') else 'best.pth'
+
+        path = join(checkpoint_dir, file)
+        computer = socket.gethostname()
+        if computer != resume['master_computer']:
+            path_from = join(
+                TASK_FOLDER, str(resume['master_task_id']), 'log',
+                'checkpoints', file
+            )
+            self.info(
+                f'copying checkpoint from: computer = '
+                f'{resume["master_computer"]} path_from={path_from} '
+                f'path_to={path}'
+            )
+
+            success = copy_remote(
+                session=self.session,
+                computer_from=resume['master_computer'],
+                path_from=path_from,
+                path_to=path
+            )
+
+            if not success:
+                self.error(
+                    f'copying from '
+                    f'{resume["master_computer"]}/'
+                    f'{path_from} failed'
+                )
+            else:
+                self.info('checkpoint copied successfully')
+
+        elif self.task.id != resume['master_task_id']:
+            path = join(
+                TASK_FOLDER, str(resume['master_task_id']), 'log',
+                'checkpoints', file
+            )
+            self.info(
+                f'master_task_id!=task.id, using checkpoint'
+                f' from task_id = {resume["master_task_id"]}'
+            )
+
+        if not os.path.exists(path):
+            self.info(f'no checkpoint at {path}')
+            return
+
+        ckpt = load_checkpoint(path)
+        stages_config = experiment.stages_config
+        for k, v in list(stages_config.items()):
+            if k == ckpt['stage']:
+                stage_epoch = ckpt['checkpoint_data']['stage_epoch'] + 1
+
+                # if it is the last epoch in the stage
+                if stage_epoch == v['state_params']['num_epochs'] \
+                        or resume.get('load_best'):
+                    del stages_config[k]
+                    break
+
+                self.checkpoint_stage_epoch = stage_epoch
+                v['state_params']['num_epochs'] -= stage_epoch
+                break
+            del stages_config[k]
+
+        for k, v in experiment.stages_config[experiment.stages[0]
+                                             ]['callbacks_params'].items():
+            if v.get('callback') == 'CheckpointCallback':
+                v['resume'] = path
+
+        self.info(f'found checkpoint at {path}')
+
+    def _checkpoint_fix_callback(self, callbacks: dict):
         def mock(state):
             pass
 
-        for c in callbacks.values():
-            if isinstance(c, CheckpointCallback):
-                if c.resume is None and os.path.exists(path):
-                    c.resume = path
+        for k, c in callbacks.items():
+            if not isinstance(c, CheckpointCallback):
+                continue
 
-                if c.resume:
-                    self.checkpoint_resume = True
+            if c.resume:
+                self.checkpoint_resume = True
 
-                if not self.master:
-                    c.on_epoch_end = mock
-                    c.on_stage_end = mock
+            if not self.master:
+                c.on_epoch_end = mock
+                c.on_stage_end = mock
 
     def work(self):
         args, config = self.parse_args_uargs()
@@ -211,39 +317,45 @@ class Catalyst(Executor, Callback):
         self.runner = runner
 
         stages = experiment.stages[:]
-        if self.distr_info:
-            result = self.task.result
-            if result:
-                result = yaml_load(result)
-                index = stages.index(result['stage']) + 1 \
-                    if 'stage' in result else 0
-            else:
-                index = 0
 
-            self.task.current_step = index + 1
-            self.task.steps = len(stages)
+        if self.master:
+            task = self.task if not self.task.parent \
+                else self.task_provider.by_id(self.task.parent)
+            task.steps = len(stages)
             self.task_provider.commit()
 
-            experiment.stages_config = {
-                k: v
-                for k, v in experiment.stages_config.items()
-                if k == stages[index]
-            }
+        self._checkpoint_fix_config(experiment)
 
         _get_callbacks = experiment.get_callbacks
 
         def get_callbacks(stage):
-            res = _get_callbacks(stage)
-            for k, v in self.callbacks().items():
+            res = self.callbacks()
+            for k, v in _get_callbacks(stage).items():
                 res[k] = v
-            self._checkpoint_fix(res, experiment.logdir)
 
+            self._checkpoint_fix_callback(res)
             return res
 
         experiment.get_callbacks = get_callbacks
 
         if experiment.logdir is not None:
             dump_config(config, experiment.logdir, args.configs)
+
+        if self.distr_info:
+            info = yaml_load(self.task.additional_info)
+            info['resume'] = {
+                'master_computer': self.distr_info['master_computer'],
+                'master_task_id': self.task.id - self.distr_info['rank'],
+                'load_best': True
+            }
+            self.task.additional_info = yaml_dump(info)
+            self.task_provider.commit()
+
+            experiment.stages_config = {
+                k: v
+                for k, v in experiment.stages_config.items()
+                if k == experiment.stages[0]
+            }
 
         runner.run_experiment(experiment, check=args.check)
 

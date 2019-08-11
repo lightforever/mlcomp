@@ -1,7 +1,7 @@
 from sqlalchemy import func
 
-from mlcomp.db.enums import StepStatus, LogStatus
-from mlcomp.db.models import Step, Log
+from mlcomp.db.enums import LogStatus
+from mlcomp.db.models import Step, Log, Task
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, now
 
@@ -32,7 +32,6 @@ class StepProvider(BaseDataProvider):
         res = {
             'id': step.id,
             'name': step.name,
-            'status': to_snake(StepStatus(step.status).name),
             'level': step.level,
             'duration': duration.total_seconds(),
             'log_statuses': [
@@ -54,7 +53,7 @@ class StepProvider(BaseDataProvider):
 
         query = self.query(Step, *log_status).filter(Step.task == task_id
                                                      ).order_by(Step.started)
-        query = query.join(Log).group_by(Step.id)
+        query = query.join(Log, isouter=True).group_by(Step.id)
         steps = query.all()
         if len(steps) == 0:
             return []
@@ -67,6 +66,11 @@ class StepProvider(BaseDataProvider):
     def last_for_task(self, id: int):
         return self.query(Step).filter(Step.task == id
                                        ).order_by(Step.started.desc()).first()
+
+    def unfinished(self, task_id: int):
+        return self.query(Step).filter(Step.task == task_id
+                                       ).filter(Step.finished.__eq__(None)
+                                                ).order_by(Step.started).all()
 
 
 __all__ = ['StepProvider']

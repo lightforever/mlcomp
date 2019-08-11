@@ -13,9 +13,9 @@ class Step(Base):
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
     started = sa.Column(sa.DateTime)
     finished = sa.Column(sa.DateTime)
-    status = sa.Column(sa.Integer)
     name = sa.Column(sa.String)
     task_rel = relationship('Task', lazy='noload')
+    index = sa.Column(sa.Integer)
 
 
 __all__ = ['Step']

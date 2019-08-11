@@ -73,7 +73,7 @@ class DagStandardBuilder:
         report_name = self.report_name
         if report_name:
             if report_name not in self.layouts:
-                raise Exception(f'Unknown report = {report_name}')
+                raise Exception(f'Unknown layout = {report_name}')
 
             report = Report(
                 config=yaml_dump(self.layouts[report_name]),

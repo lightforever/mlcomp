@@ -16,7 +16,7 @@ class Session(session.Session):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def create_session(connection_string: str = None, key='default'):
+    def create_session(*, connection_string: str = None, key='default'):
         if key in Session.__session:
             return Session.__session[key][0]
 
@@ -31,33 +31,20 @@ class Session(session.Session):
         return s
 
     @classmethod
-    def cleanup(cls, key: str = None):
-        if key:
-            if key in cls.__session:
-                s, engine = cls.__session[key]
-                try:
-                    s.close()
-                except Exception:
-                    pass
+    def cleanup(cls, key: str):
+        if key in cls.__session:
+            s, engine = cls.__session[key]
+            try:
+                s.close()
+            except Exception:
+                pass
 
-                try:
-                    engine.dispose()
-                except Exception:
-                    pass
+            try:
+                engine.dispose()
+            except Exception:
+                pass
 
-                del cls.__session[key]
-        else:
-            for k, (s, engine) in cls.__session.items():
-                try:
-                    s.close()
-                except Exception:
-                    pass
-                try:
-                    engine.dispose()
-                except Exception:
-                    pass
-
-            cls.__session = dict()
+            del cls.__session[key]
 
     def query(self, *entities, **kwargs):
         try:
@@ -108,6 +95,11 @@ class Session(session.Session):
         except Exception as e:
             self.rollback()
             raise e
+
+    @staticmethod
+    def sqlalchemy_error(e):
+        s = str(type(e))
+        return 'sqlalchemy.' in s
 
 
 __all__ = ['Session']

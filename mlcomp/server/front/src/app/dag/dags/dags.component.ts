@@ -254,14 +254,12 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     report_click(element: any) {
-        let self = this;
         if (this.report) {
             this.service.toogle_report(
                 element.id,
                 this.report,
                 element.report_full).subscribe(data => {
                 element.report_full = data.report_full;
-                self.report_service.data_updated.emit();
             });
             return
         }

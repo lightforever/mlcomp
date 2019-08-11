@@ -31,30 +31,76 @@ export class SeriesComponent implements OnInit {
                     'title': this.data.name,
                     'height': 300,
                     'width': 600,
-                    'margin': {'b': 40, 't': 40}
+                    'margin': {'b': 40, 't': 40},
+                    'shapes': [],
+                    'annotations': []
                 };
-                for (let row of this.data.series) {
+                for (let row_idx = 0; row_idx < this.data.series.length;
+                     row_idx++) {
+                    let row = this.data.series[row_idx];
                     let text = [];
-                    for (let time of row.time) {
-                        let t = new Date(Date.parse(time));
+                    let last_stage = '';
+                    for (let i = 0; i < row.time.length; i++) {
+                        let t = new Date(Date.parse(row.time[i]));
                         text.push(Helpers.format_date_time(t));
+
+                        if (row_idx == 0 &&
+                            last_stage &&
+                            last_stage != row.stage[i]) {
+                            layout.shapes.push({
+                                type: 'line',
+                                color: 'green',
+                                yref: 'paper',
+                                x0: row.x[i] - 1,
+                                y0: 0,
+                                x1: row.x[i] - 1,
+                                y1: 1,
+                                text: 'text',
+                                line: {
+                                    color: 'green',
+                                    width: 1.5
+                                }
+                            });
+
+                            layout.annotations.push(
+                                {
+                                    x: row.x[i] - 1,
+                                    y: 0,
+                                    showarrow: false,
+                                    yref: "paper",
+                                    text: row.stage[i],
+                                })
+                        }
+                        last_stage = row.stage[i];
                     }
 
                     row.text = text;
                 }
+
+                if(this.data.layout && JSON.stringify(this.data.layout) !=
+                    JSON.stringify(layout)){
+                    for(let s of this.data.series){
+                        s.plotted = 0;
+                    }
+                }
+                this.data.layout = layout;
+
                 if (this.data.series.length > 0) {
                     if (this.data.series.map(
-                        x => x.plotted).
-                    reduce((s, c) => s + c, 0) > 0) {
+                        x => x.plotted).reduce((s, c) => s + c, 0) > 0) {
                         let keys = Array(this.data.series.length).keys();
                         let indices = Array.from(keys);
                         let y = {'y': [], 'text': []};
-                        for (let s of this.data.series) {
+                        for (let s_idx = 0; s_idx < this.data.series.length;
+                             s_idx++
+                        ) {
+                            let s = this.data.series[s_idx];
                             y['y'].push(s.y.slice(s.plotted));
                             let text = s.text.slice(s.plotted);
                             y['text'].push(text);
 
                             s.plotted += text.length;
+
                         }
                         window['Plotly'].extendTraces(this.id, y, indices);
                     } else {
@@ -89,6 +135,7 @@ export class SeriesComponent implements OnInit {
                             this.data.series[i].x = series.x;
                             this.data.series[i].y = series.y;
                             this.data.series[i].time = series.time;
+                            this.data.series[i].stage = series.stage;
 
                             was_change = true;
                             break
@@ -108,9 +155,11 @@ export class SeriesComponent implements OnInit {
 
     private static create_single_task(data) {
         let first = data[0];
-        let plot: SeriesItem = {'name': first.source +
+        let plot: SeriesItem = {
+            'name': first.source +
                 ' - ' + first.task_name,
-            'series': []
+            'series': [],
+            'layout': null
         };
 
         for (let d of data) {
@@ -127,7 +176,8 @@ export class SeriesComponent implements OnInit {
         for (let d of data) {
             d = Helpers.clone(d);
             if (!(d[key] in by_key)) {
-                by_key[d[key]] = {'name': d.source + ' - ' +
+                by_key[d[key]] = {
+                    'name': d.source + ' - ' +
                         (key == 'group' ?
                             d[key] :
                             d['task_name']), 'series': []

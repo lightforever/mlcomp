@@ -59,13 +59,6 @@ class TaskType(OrderedEnum):
     Service = 2
 
 
-class StepStatus(OrderedEnum):
-    InProgress = 0
-    Failed = 1
-    Stopped = 2
-    Successed = 3
-
-
 class ComponentType(OrderedEnum):
     API = 0
     Supervisor = 1

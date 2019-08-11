@@ -18,6 +18,7 @@ class ReportSeries(Base):
     time = sa.Column(sa.DateTime)
     task = sa.Column(sa.Integer, ForeignKey('task.id'))
     part = sa.Column(sa.String)
+    stage = sa.Column(sa.String)
 
     task_rel = relationship('Task', lazy='noload')
 

@@ -25,7 +25,7 @@ class Task(Base):
 
     memory = sa.Column(sa.Float, default=0.1)
     steps = sa.Column(sa.Integer, default=1)
-    current_step = sa.Column(sa.Integer)
+    current_step = sa.Column(sa.String)
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     celery_id = sa.Column(sa.String)
     dag_rel = relationship('Dag', lazy='noload')

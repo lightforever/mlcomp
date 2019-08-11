@@ -168,7 +168,10 @@ class DagProvider(BaseDataProvider):
             res = [t.executor]
             if t.status >= TaskStatus.InProgress.value:
                 res.append(self.duration(t))
-                res.append(f'{(t.current_step or 1)}/{t.steps}')
+                res.append(
+                    f'{t.current_step if t.current_step else ""}/'
+                    f'{t.steps if t.steps else ""}'
+                )
             return '\n'.join(res)
 
         nodes = [

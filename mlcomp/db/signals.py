@@ -1,6 +1,5 @@
 from functools import wraps
 
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.exc import StaleDataError
 
 from mlcomp.db.providers import TaskProvider, StepProvider, DagProvider
@@ -15,11 +14,13 @@ _session = Session.create_session(key=__name__)
 def error_handler(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        global _session
         try:
             f(*args, **kwargs)
         except Exception as e:
-            if type(e) == ProgrammingError:
-                Session.cleanup()
+            if Session.sqlalchemy_error(e):
+                Session.cleanup(key=__name__)
+                _session = Session.create_session(key=__name__)
             raise e
 
     return decorated

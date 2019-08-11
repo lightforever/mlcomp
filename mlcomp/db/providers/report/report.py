@@ -71,6 +71,7 @@ class ReportProvider(BaseDataProvider):
                     {
                         'x': [item.epoch for item in group_task],
                         'y': [item.value for item in group_task],
+                        'stage': [item.stage for item in group_task],
                         'color': 'orange' if key == 'valid' else 'blue',
                         'time': [
                             self.serialize_datetime_long(item.time)

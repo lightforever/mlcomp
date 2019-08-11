@@ -41,7 +41,7 @@ dag = Table(
     Column('created', TIMESTAMP, nullable=False, default='now()'),
     Column('config', String(8000), nullable=False),
     Column('project', Integer, nullable=False),
-    Column('docker_img', String(100), nullable=True),
+    Column('docker_img', String(100)),
     Column('img_size', BigInteger, nullable=False),
     Column('file_size', BigInteger, nullable=False),
     Column('type', Integer, nullable=False),
@@ -143,6 +143,7 @@ report_series = Table(
     Column('value', Float, nullable=False),
     Column('name', String(100), nullable=False),
     Column('part', String(50), nullable=False),
+    Column('stage', String(100), nullable=False)
 )
 
 report_task = Table(
@@ -159,8 +160,8 @@ step = Table(
     Column('level', Integer, nullable=False),
     Column('started', TIMESTAMP, nullable=False),
     Column('finished', TIMESTAMP),
-    Column('status', Integer, nullable=False),
-    Column('name', String(100), nullable=False)
+    Column('name', String(100), nullable=False),
+    Column('index', Integer, nullable=False)
 )
 
 task = Table(
@@ -178,7 +179,7 @@ task = Table(
     Column('computer_assigned', String(100)),
     Column('memory', Float, nullable=False, default=0.1),
     Column('steps', Integer, nullable=False, default=1),
-    Column('current_step', Integer),
+    Column('current_step', String(100)),
     Column('dag', Integer, nullable=False),
     Column('celery_id', String(50)),
     Column('last_activity', TIMESTAMP),
@@ -205,7 +206,7 @@ docker = Table(
     'docker', meta,
     Column('name', String(100), primary_key=True),
     Column('computer', String(100), primary_key=True),
-    Column('last_activity', TIMESTAMP, nullable=False),
+    Column('last_activity', TIMESTAMP, nullable=False, default='now()'),
     Column('ports', String(100), nullable=False)
 )
 
@@ -219,8 +220,6 @@ model = Table(
     Column('project', Integer, nullable=False),
     Column('created', TIMESTAMP, nullable=False),
     Column('interface', String(100), nullable=False),
-    Column('pred_file_valid', String(200)),
-    Column('pred_file_test', String(200)),
     Column('interface_params', String(4000)),
     Column('slot', String(100), nullable=False)
 )
@@ -260,10 +259,7 @@ def upgrade(migrate_engine):
                              [computer.c.name],
                              ondelete='CASCADE').create()
 
-        Index('computer_name_idx', computer.c.name).create()
-
         Index('computer_usage_time_idx', computer_usage.c.time.desc()).create()
-        Index('computer_usage_id_idx', computer_usage.c.id.desc()).create()
 
         ForeignKeyConstraint([dag.c.project], [project.c.id],
                              ondelete='CASCADE').create()
@@ -274,15 +270,13 @@ def upgrade(migrate_engine):
         Index('dag_created_idx', dag.c.created.desc()).create()
         ForeignKeyConstraint([dag_library.c.dag], [dag.c.id],
                              ondelete='CASCADE').create()
-        Index('dag_library_task_idx', dag_library.c.dag.desc()).create()
-        Index('dag_id_idx', dag.c.id.desc()).create()
+        Index('dag_library_dag_idx', dag_library.c.dag.desc()).create()
 
         ForeignKeyConstraint([dag_storage.c.dag], [dag.c.id],
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([dag_storage.c.file], [file.c.id],
                              ondelete='CASCADE').create()
         Index('dag_storage_dag_idx', dag_storage.c.dag.desc()).create()
-        Index('dag_storage_id_idx', dag_storage.c.id.desc()).create()
 
         ForeignKeyConstraint([file.c.project], [project.c.id],
                              ondelete='CASCADE').create()
@@ -290,7 +284,6 @@ def upgrade(migrate_engine):
         Index('file_project_idx', file.c.project.desc()).create()
         UniqueConstraint(file.c.md5, file.c.project,
                          name='file_md5_idx').create()
-        Index('file_id_idx', file.c.id.desc()).create()
 
         ForeignKeyConstraint([log.c.task], [task.c.id],
                              ondelete='CASCADE').create()
@@ -301,35 +294,28 @@ def upgrade(migrate_engine):
 
         Index('log_step_idx', log.c.step.desc()).create()
         Index('log_time_idx', log.c.time.desc()).create()
-        Index('log_id_idx', log.c.id.desc()).create()
 
-        Index('project_id_idx', project.c.id.desc()).create()
         UniqueConstraint(project.c.name, name='project_name').create()
 
         ForeignKeyConstraint([report.c.project], [project.c.id],
                              ondelete='CASCADE').create()
-        Index('report_id_idx', report.c.id.desc()).create()
 
         ForeignKeyConstraint([report_img.c.project], [project.c.id],
                              ondelete='CASCADE').create()
         Index('report_img_project_idx', report_img.c.project.desc()).create()
         Index('report_img_task_idx', report_img.c.task.desc()).create()
-        Index('report_img_id_idx', report_img.c.id.desc()).create()
 
         ForeignKeyConstraint([report_series.c.task], [task.c.id],
                              ondelete='CASCADE').create()
-        Index('report_series_id_idx', report_series.c.id.desc()).create()
 
         ForeignKeyConstraint([report_task.c.task], [task.c.id],
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([report_task.c.report], [report.c.id],
                              ondelete='CASCADE').create()
-        Index('report_task_id_idx', report_task.c.id.desc()).create()
 
         ForeignKeyConstraint([step.c.task], [task.c.id],
                              ondelete='CASCADE').create()
         Index('step_name_idx', step.c.name).create()
-        Index('step_id_idx', step.c.id.desc()).create()
 
         ForeignKeyConstraint([task.c.computer], [computer.c.name],
                              ondelete='CASCADE').create()
@@ -350,7 +336,6 @@ def upgrade(migrate_engine):
         Index('task_finished_idx', task.c.finished.desc()).create()
         Index('task_name_idx', task.c.name).create()
         Index('task_started_idx', task.c.started.desc()).create()
-        Index('task_id_idx', task.c.id.desc()).create()
         Index('task_docker_idx', task.c.docker_assigned,
               task.c.computer_assigned).create()
 

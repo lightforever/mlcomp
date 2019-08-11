@@ -16,8 +16,6 @@ class Model(Base):
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     created = sa.Column(sa.DateTime)
     interface = sa.Column(sa.String)
-    pred_file_valid = sa.Column(sa.String)
-    pred_file_test = sa.Column(sa.String)
     interface_params = sa.Column(sa.String)
     slot = sa.Column(sa.String)
 

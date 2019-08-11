@@ -1,7 +1,5 @@
-import json
-
 from mlcomp.db.core import Session
-from mlcomp.db.enums import StepStatus, ComponentType
+from mlcomp.db.enums import ComponentType
 from mlcomp.db.models import Task, Step
 from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
 from mlcomp.utils.logging import create_logger
@@ -9,10 +7,12 @@ from mlcomp.utils.misc import now
 
 
 class StepWrap:
-    def __init__(self, session: Session, task: Task):
+    def __init__(
+        self, session: Session, task: Task, task_provider: TaskProvider
+    ):
         self.log_provider = LogProvider(session)
         self.step_provider = StepProvider(session)
-        self.task_provider = TaskProvider(session)
+        self.task_provider = task_provider
         self.task = task
         self.children = []
         self.step = None
@@ -22,26 +22,41 @@ class StepWrap:
     def id(self):
         return self.step.id
 
-    def __enter__(self):
-        self.step = self.start(0, 'main')
+    def enter(self):
+        task = self.task if not self.task.parent else self.task_provider.by_id(
+            self.task.parent
+        )
+        self.children = self.step_provider.unfinished(task.id)
+        if len(self.children) == 0:
+            self.step = self.start(0, 'main', 0)
+        else:
+            self.step = self.children[-1]
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.end(0, failed=exc_type is Exception)
-
-    def _finish(self, metrics: dict = None, failed: bool = False):
+    def _finish(self):
         if len(self.children) == 0:
             return
         step = self.children.pop()
-        step.metrics = json.dumps(metrics) if metrics is not None else None
-        step.status = StepStatus.Failed.value \
-            if failed else StepStatus.Successed.value
         step.finished = now()
         self.step_provider.update()
-        self.step = step
+        self.step = self.children[-1] if len(self.children) > 0 else step
 
-        self.info('End of the step')
+        self.debug('End of the step')
 
-    def start(self, level: int, name: str):
+    def finish(self):
+        while len(self.children) > 0:
+            self._finish()
+
+    def start(self, level: int, name: str = None, index: int = None):
+        task = self.task if not self.task.parent else self.task_provider.by_id(
+            self.task.parent
+        )
+
+        if index is None and task.current_step:
+            index = int(task.current_step.split('.')[level - 1])
+
+        if self.step and index == self.step.index and self.step.level == level:
+            return
+
         if self.step is not None:
             diff = level - self.step.level
             assert level > 0, 'level must be positive'
@@ -54,31 +69,32 @@ class StepWrap:
 
         step = Step(
             level=level,
-            name=name,
+            name=name or '',
             started=now(),
-            status=StepStatus.InProgress.value,
-            task=self.task.id
+            task=task.id,
+            index=index or 0
         )
         self.step_provider.add(step)
         self.children.append(step)
         self.step = step
-        if level == 1:
-            self.task.current_step = self.task.current_step + 1 \
-                if self.task.current_step is not None else 1
-            self.task_provider.session.commit()
 
-        self.info('Begin of the step')
+        task.current_step = '.'.join(
+            [
+                str(c.index + (1 if c.level == 1 else 0))
+                for c in self.children[1:]
+            ]
+        )
+        self.task_provider.commit()
+
+        self.debug('Begin of the step')
 
         return step
 
-    def end(self, level: int, metrics: dict = None, failed=False):
+    def end(self, level: int):
         diff = level - self.step.level
         assert diff <= 0, 'you can end only the same step or lower'
         for i in range(abs(diff) + 1):
-            if i == 0:
-                self._finish(metrics, failed=failed)
-            else:
-                self._finish(None, failed=failed)
+            self._finish()
 
     def debug(self, message: str):
         self.logger.debug(

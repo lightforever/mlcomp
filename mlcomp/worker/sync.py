@@ -1,10 +1,9 @@
+import os
 import socket
 import traceback
 import subprocess
 from os.path import join
 from typing import List
-
-from sqlalchemy.exc import ProgrammingError
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
@@ -51,6 +50,16 @@ def sync_directed(
 
         logger.info(command)
         subprocess.check_output(command, shell=True)
+
+
+def copy_remote(
+    session: Session, computer_from: str, path_from: str, path_to: str
+):
+    provider = ComputerProvider(session)
+    src = provider.by_name(computer_from)
+    command = f'scp -P {src.port} {src.user}@{src.ip}:{path_from} {path_to}'
+    subprocess.check_output(command, shell=True)
+    return os.path.exists(path_to)
 
 
 class FileSync:
@@ -100,9 +109,9 @@ class FileSync:
             computer.syncing_computer = None
             provider.update()
         except Exception as e:
-            if type(e) == ProgrammingError:
+            if Session.sqlalchemy_error(e):
                 Session.cleanup('FileSync')
-                self.session = Session.create_session('FileSync')
+                self.session = Session.create_session(key='FileSync')
                 self.logger = create_logger(self.session)
 
             self.logger.error(

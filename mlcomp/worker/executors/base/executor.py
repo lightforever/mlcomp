@@ -13,6 +13,7 @@ class Executor(ABC):
     _child = dict()
 
     session = Session.create_session(key='Executor')
+    task_provider = None
 
     def debug(self, message: str):
         self.step.debug(message)
@@ -26,24 +27,28 @@ class Executor(ABC):
     def error(self, message: str):
         self.step.error(message)
 
-    def __call__(self, task: Task, dag: Dag) -> dict:
+    def __call__(
+        self, task: Task, task_provider: TaskProvider, dag: Dag
+    ) -> dict:
         assert dag is not None, 'You must fetch task with dag_rel'
+
+        self.task_provider = task_provider
         self.task = task
         self.dag = dag
-        self.step = StepWrap(self.session, task)
-        with self.step:
-            use_sync = os.getenv('USE_SYNC', 'True') == 'True'
-            if not task.debug and use_sync:
-                self.wait_data_sync(task.computer_assigned)
-            res = self.work()
-            self.step.task_provider.commit()
-            return res
+        self.step = StepWrap(self.session, task, task_provider)
+        self.step.enter()
+
+        use_sync = os.getenv('USE_SYNC', 'True') == 'True'
+        if not task.debug and use_sync:
+            self.wait_data_sync(task.computer_assigned)
+        res = self.work()
+        self.step.task_provider.commit()
+        return res
 
     @staticmethod
     def kwargs_for_interface(executor: dict, config: Config, **kwargs):
         return {
-            **executor['slot'],
-            'project_name': config['info']['project'],
+            **executor['slot'], 'project_name': config['info']['project'],
             **kwargs
         }
 
@@ -52,19 +57,20 @@ class Executor(ABC):
         pass
 
     @classmethod
-    def _from_config(cls,
-                     executor: dict,
-                     config: Config,
-                     additional_info: dict):
+    def _from_config(
+        cls, executor: dict, config: Config, additional_info: dict
+    ):
         return cls()
 
     @staticmethod
-    def from_config(executor: str,
-                    config: Config,
-                    additional_info: dict) -> 'Executor':
+    def from_config(
+        executor: str, config: Config, additional_info: dict
+    ) -> 'Executor':
         if executor not in config['executors']:
-            raise ModuleNotFoundError(f'Executor {executor} '
-                                      f'has not been found')
+            raise ModuleNotFoundError(
+                f'Executor {executor} '
+                f'has not been found'
+            )
         executor = config['executors'][executor]
         child_class = Executor._child[executor['type']]
         # noinspection PyProtectedMember

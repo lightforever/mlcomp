@@ -4,12 +4,12 @@ import json
 import os
 import traceback
 from multiprocessing import cpu_count
+from threading import Thread
 
 import click
 import GPUtil
 import psutil
 import numpy as np
-from sqlalchemy.exc import ProgrammingError
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
@@ -34,18 +34,16 @@ def main():
 
 def error_handler(f):
     name = f.__name__
-    wrapper_vars = {
-        'session': Session.create_session(key=name)
-    }
+    wrapper_vars = {'session': Session.create_session(key=name)}
     wrapper_vars['logger'] = create_logger(wrapper_vars['session'])
 
     hostname = socket.gethostname()
 
     def wrapper():
         try:
-            f(wrapper_vars['session'])
+            f(wrapper_vars['session'], wrapper_vars['logger'])
         except Exception as e:
-            if type(e) == ProgrammingError:
+            if Session.sqlalchemy_error(e):
                 Session.cleanup(name)
 
                 wrapper_vars['session'] = Session.create_session(key=name)
@@ -60,7 +58,7 @@ def error_handler(f):
 
 
 @error_handler
-def stop_processes_not_exist(session: Session):
+def stop_processes_not_exist(session: Session, logger):
     provider = TaskProvider(session)
     docker_img = os.getenv('DOCKER_IMG', 'default')
     hostname = socket.gethostname()
@@ -69,15 +67,29 @@ def stop_processes_not_exist(session: Session):
         task_docker_assigned=docker_img,
         computer_assigned=hostname
     )
+    hostname = socket.gethostname()
     for t in tasks:
         if not psutil.pid_exists(t.pid):
-            os.system(f'kill -9 {t.pid}')
-            t.status = TaskStatus.Failed.value
-            provider.commit()
+            # tasks can retry the execution
+            if (now() - t.last_activity).total_seconds() < 15:
+                continue
+
+            t = provider.by_id(t.id)
+
+            if not psutil.pid_exists(t.pid):
+                os.system(f'kill -9 {t.pid}')
+                t.status = TaskStatus.Failed.value
+                logger.error(
+                    f'process with pid = {t.pid} does not exist. '
+                    f'Set task to failed state',
+                    ComponentType.WorkerSupervisor, hostname, t.id
+                )
+
+                provider.commit()
 
 
 @error_handler
-def worker_usage(session: Session):
+def worker_usage(session: Session, logger):
     provider = ComputerProvider(session)
     docker_provider = DockerProvider(session)
 
@@ -86,6 +98,7 @@ def worker_usage(session: Session):
     usages = []
 
     for _ in range(10):
+        # noinspection PyProtectedMember
         memory = dict(psutil.virtual_memory()._asdict())
 
         usage = {
@@ -137,11 +150,12 @@ def worker_supervisor():
         start_schedule([(syncer.sync, 1)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
+    name = f'{socket.gethostname()}_{docker_img}_supervisor'
     argv = [
-        'worker', '--loglevel=INFO', '-P=solo', f'-n=1', '-O fair', '-c=1',
-        '--prefetch-multiplier=1', '-Q',
-        f'{socket.gethostname()}_{docker_img}_supervisor'
+        'worker', '--loglevel=INFO', '-P=solo', f'-n={name}', '-O fair',
+        '-c=1', '--prefetch-multiplier=1', '-Q', f'{name}'
     ]
+
     app.worker_main(argv)
 
 

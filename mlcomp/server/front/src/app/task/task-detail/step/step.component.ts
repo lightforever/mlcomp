@@ -82,22 +82,6 @@ export class StepComponent implements OnInit, OnDestroy {
 
     hasChild = (_: number, node: FlatNode) => node.expandable;
 
-    status_color(status: string) {
-        switch (status) {
-            case 'in_progress':
-                return 'green';
-            case 'failed':
-                return 'red';
-            case 'stopped':
-                return 'orange';
-            case 'successed':
-                return 'green';
-            default:
-                throw new TypeError("unknown status: " + status)
-        }
-
-    }
-
     color_for_log_status(name: string, count: number) {
         return count > 0 ? AppSettings.log_colors[name] : 'gainsboro'
     }

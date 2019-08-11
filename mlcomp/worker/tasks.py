@@ -6,7 +6,6 @@ import traceback
 import sys
 from os.path import join
 
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 
@@ -26,10 +25,11 @@ from mlcomp.utils.settings import MODEL_FOLDER, TASK_FOLDER
 
 
 class ExecuteBuilder:
-    def __init__(self, session: Session, id: int, repeat_count: int = 1):
+    def __init__(self, id: int, repeat_count: int = 1):
+        self.session = Session.create_session(key='ExecuteBuilder')
         self.id = id
         self.repeat_count = repeat_count
-        self.logger = create_logger(session)
+        self.logger = create_logger(self.session)
 
         self.provider = None
         self.library_provider = None
@@ -42,7 +42,6 @@ class ExecuteBuilder:
         self.worker_index = None
         self.executor = None
         self.queue_personal = None
-        self.session = session
 
     def create_base(self):
         self.provider = TaskProvider(self.session)
@@ -117,7 +116,7 @@ class ExecuteBuilder:
         )
 
     def execute(self):
-        res = self.executor(self.task, self.dag)
+        res = self.executor(self.task, self.provider, self.dag)
         res = res or {}
         self.task.result = yaml_dump(res)
         self.provider.commit()
@@ -131,15 +130,14 @@ class ExecuteBuilder:
                     f'{res["stages"][index + 1]}'
                 )
 
-                time.sleep(5)
+                time.sleep(3)
+
                 execute.apply_async(
                     (self.id, self.repeat_count), queue=self.queue_personal
                 )
                 return
 
-        if self.task.current_step is None:
-            self.task.current_step = self.task.steps
-
+        self.executor.step.finish()
         self.provider.change_status(self.task, TaskStatus.Success)
 
     def build(self):
@@ -157,8 +155,10 @@ class ExecuteBuilder:
             self.execute()
 
         except Exception as e:
-            if type(e) == ProgrammingError:
-                Session.cleanup()
+            if Session.sqlalchemy_error(e):
+                Session.cleanup(key='ExecuteBuilder')
+                self.session = Session.create_session(key='ExecuteBuilder')
+                self.logger.session = create_logger(self.session)
 
             step = self.executor.step.id if \
                 (self.executor and self.executor.step) else None
@@ -174,8 +174,7 @@ class ExecuteBuilder:
 
 
 def execute_by_id(id: int, repeat_count=1):
-    session = Session.create_session(key='tasks.execute_by_id')
-    ex = ExecuteBuilder(session, id, repeat_count)
+    ex = ExecuteBuilder(id, repeat_count)
     ex.build()
 
 
@@ -241,8 +240,12 @@ def stop(session: Session, task: Task, dag: Dag):
         else:
             status = TaskStatus.Skipped
     except Exception as e:
-        if type(e) == ProgrammingError:
-            Session.cleanup()
+        if Session.sqlalchemy_error(e):
+            try:
+                logger.error(traceback.format_exc(), ComponentType.API)
+            except Exception:
+                pass
+            raise
         logger.error(traceback.format_exc(), ComponentType.API)
     finally:
         if task.pid:

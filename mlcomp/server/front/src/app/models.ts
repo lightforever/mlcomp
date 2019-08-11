@@ -248,6 +248,7 @@ export class Series {
     y: number[];
     time: string[];
     text: string[];
+    stage: string[];
     color: string;
     name: string;
     group: string;
@@ -260,6 +261,7 @@ export class Series {
 export class SeriesItem {
     name: string;
     series: Series[];
+    layout: any;
 }
 
 export class ImgClassify {

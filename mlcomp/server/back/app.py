@@ -7,7 +7,6 @@ from functools import wraps
 
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import joinedload
 
 import mlcomp.worker.tasks as celery_tasks
@@ -27,8 +26,8 @@ from mlcomp.utils.misc import to_snake, now
 from mlcomp.db.models import Model, Report, ReportLayout, Task
 from mlcomp.utils.io import yaml_load, yaml_dump
 
-HOST = os.getenv('WEB_HOST', '0.0.0.0')
-PORT = int(os.getenv('WEB_PORT', '4201'))
+HOST = os.getenv('WEB_HOST')
+PORT = int(os.getenv('WEB_PORT'))
 
 app = Flask(__name__)
 CORS(app)
@@ -102,8 +101,9 @@ def error_handler(f):
         try:
             res = f(*args, **kwargs)
         except Exception as e:
-            if type(e) == ProgrammingError:
-                Session.cleanup()
+            if Session.sqlalchemy_error(e):
+                Session.cleanup('server.read')
+                Session.cleanup('server.write')
 
                 _read_session = Session.create_session(key='server.read')
                 _write_session = Session.create_session(key='server.write')
@@ -396,10 +396,16 @@ def tasks():
 @error_handler
 def task_stop():
     data = request_data()
-    task = TaskProvider(_write_session).by_id(
-        data['id'], joinedload(Task.dag_rel, innerjoin=True)
-    )
-    status = celery_tasks.stop(_write_session, task, task.dag_rel)
+    provider = TaskProvider(_write_session)
+    task = provider.by_id(data['id'], joinedload(Task.dag_rel, innerjoin=True))
+
+    dag = task.dag_rel
+    status = celery_tasks.stop(_write_session, task, dag)
+
+    child_tasks = provider.children(task.id)
+    for t in child_tasks:
+        celery_tasks.stop(_write_session, t, dag)
+
     return {'status': to_snake(TaskStatus(status).name)}
 
 
@@ -441,6 +447,8 @@ def dag_stop():
 def dag_start():
     data = request_data()
     provider = DagProvider(_write_session)
+    task_provider = TaskProvider(_write_session)
+
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     can_start_statuses = [
@@ -450,42 +458,52 @@ def dag_start():
 
     tasks = list(dag.tasks)
 
-    def find_resume(task, info):
-        if 'distr_info' in info:
-            for t in tasks:
-                if t.parent == task.parent:
-                    t_info = yaml_load(t.additional_info)
-                    if t_info['rank'] == 0:
-                        return {
-                            'computer_assigned': t.computer_assigned,
-                            'task_id': t.id
-                        }
+    def find_resume(task):
+        children = task_provider.children(task.id)
+        children = sorted(children, key=lambda x: x.id, reverse=True)
+
+        if len(children) > 0:
+            for c in children:
+                if c.parent != task.id:
+                    continue
+
+                info = yaml_load(c.additional_info)
+                if 'distr_info' not in info:
+                    continue
+
+                if info['distr_info']['rank'] == 0:
+                    return {
+                        'master_computer': c.computer_assigned,
+                        'master_task_id': c.id,
+                        'load_last': True
+                    }
             raise Exception('Master task not found')
         else:
             return {
-                'computer_assigned': task.computer_assigned,
-                'task_id': task.id
+                'master_computer': task.computer_assigned,
+                'master_task_id': task.id,
+                'load_last': True
             }
 
     for t in tasks:
         if t.status not in can_start_statuses:
             continue
 
+        if t.parent:
+            continue
+
         info = yaml_load(t.additional_info)
-        info['resume'] = find_resume(t, info)
+        info['resume'] = find_resume(t)
         t.additional_info = yaml_dump(info)
 
         t.status = TaskStatus.NotRan.value
         t.pid = None
         t.started = None
         t.finished = None
-        t.current_step = None
         t.computer_assigned = None
-        t.current_step = None
         t.celery_id = None
         t.worker_index = None
         t.docker_assigned = None
-        t.score = None
 
     provider.commit()
 
@@ -635,7 +653,7 @@ def remove_files():
 def dag_remove():
     id = request_data()['id']
     celery_tasks.remove_dag(_write_session, id)
-    DagProvider(_read_session).remove(id)
+    DagProvider(_write_session).remove(id)
 
 
 @app.route('/api/models', methods=['POST'])
@@ -669,25 +687,6 @@ def shutdown_server():
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'
-
-
-@app.errorhandler(Exception)
-def all_exception_handler(e):
-    global _read_session, _write_session, logger
-
-    if type(e) == ProgrammingError:
-        Session.cleanup()
-
-        _read_session = Session.create_session(key='server.read')
-        _write_session = Session.create_session(key='server.write')
-
-        logger = create_logger(_write_session)
-
-    logger.error(
-        f'Requested Url: {request.path}\n\n{traceback.format_exc()}',
-        ComponentType.API
-    )
-    return str(e), 500
 
 
 def start_server():

@@ -139,9 +139,10 @@ LOGGING = {
     }
 }
 
+dictConfig(LOGGING)
+
 
 def create_logger(session: Session):
-    dictConfig(LOGGING)
     logger = logging.getLogger()
     handler = DbHandler(session)
     handler.setLevel(DB_LOG_LEVEL)

@@ -13,5 +13,5 @@ os.makedirs(LOG_FOLDER, exist_ok=True)
 
 MASTER_PORT_RANGE = list(
     map(int,
-        os.getenv('MASTER_PORT_RANGE', '29500-29600').split('-'))
+        os.getenv('MASTER_PORT_RANGE').split('-'))
 )

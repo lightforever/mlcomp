@@ -2,7 +2,6 @@ import datetime
 import traceback
 from typing import List
 
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 from mlcomp.db.core import Session
@@ -88,7 +87,7 @@ class SupervisorBuilder:
             comp_assigned['cpu'] -= task.cpu
 
             if task.gpu_assigned is not None:
-                for g in task.gpu_assigned.split():
+                for g in task.gpu_assigned.split(','):
                     comp_assigned['gpu'][int(g)] = task.id
             comp_assigned['memory'] -= task.memory
 
@@ -113,7 +112,7 @@ class SupervisorBuilder:
         task.celery_id = r.id
 
         if task.gpu_assigned is not None:
-            for g in map(int, task.gpu_assigned.split()):
+            for g in map(int, task.gpu_assigned.split(',')):
                 computer['gpu'][g] = task.id
             computer['cpu'] -= task.cpu
             computer['memory'] -= task.memory
@@ -121,7 +120,11 @@ class SupervisorBuilder:
         self.provider.update()
 
     def create_service_task(
-        self, task: Task, gpu_assigned=None, distr_info: dict = None
+        self,
+        task: Task,
+        gpu_assigned=None,
+        distr_info: dict = None,
+        resume: dict = None
     ):
         new_task = Task(
             name=task.name,
@@ -139,6 +142,11 @@ class SupervisorBuilder:
         if distr_info:
             additional_info = yaml_load(new_task.additional_info)
             additional_info['distr_info'] = distr_info
+            new_task.additional_info = yaml_dump(additional_info)
+
+        if resume:
+            additional_info = yaml_load(new_task.additional_info)
+            additional_info['resume'] = resume
             new_task.additional_info = yaml_dump(additional_info)
 
         return self.provider.add(new_task)
@@ -247,10 +255,12 @@ class SupervisorBuilder:
 
         to_send = self._process_task_to_send(executor, task, computers)
         auxiliary['to_send'] = to_send
+        additional_info = yaml_load(task.additional_info)
 
         rank = 0
         master_port = None
         if len(to_send) > 0:
+
             master_port = self.find_port(
                 to_send[0][0], to_send[0][1].split('_')[1]
             )
@@ -269,10 +279,14 @@ class SupervisorBuilder:
                 'rank': rank,
                 'local_rank': gpu_assigned,
                 'master_port': master_port,
-                'world_size': len(to_send)
+                'world_size': len(to_send),
+                'master_computer': main_cmp['name']
             }
             service_task = self.create_service_task(
-                task, distr_info=distr_info, gpu_assigned=gpu_assigned
+                task,
+                distr_info=distr_info,
+                gpu_assigned=gpu_assigned,
+                resume=additional_info.get('resume')
             )
             self.process_to_celery(service_task, queue, computer)
             rank += 1
@@ -330,9 +344,7 @@ class SupervisorBuilder:
                 status = TaskStatus.Success.value
 
             if status != task.status:
-                if status == TaskStatus.Success.value:
-                    task.current_step = task.steps
-                elif status == TaskStatus.InProgress.value:
+                if status == TaskStatus.InProgress.value:
                     task.started = started
                 elif status >= TaskStatus.Failed.value:
                     task.started = started
@@ -387,9 +399,11 @@ class SupervisorBuilder:
 
         except ObjectDeletedError:
             pass
-        except Exception as error:
-            if type(error) == ProgrammingError:
-                Session.cleanup()
+        except Exception as e:
+            if Session.sqlalchemy_error(e):
+                Session.cleanup(key='SupervisorBuilder')
+                self.session = Session.create_session(key='SupervisorBuilder')
+                self.logger = create_logger(self.session)
 
             self.logger.error(traceback.format_exc(), ComponentType.Supervisor)
 

@@ -168,12 +168,19 @@
         </ng-container>
 
         <ng-container matColumnDef="steps">
+
             <th mat-header-cell *matHeaderCellDef style="width: 60px">
                 Steps
             </th>
+
             <td mat-cell *matCellDef="let element">
-                {{element.current_step}}<span
-                    *ngIf="element.steps>0">/{{element.steps}}</span>
+                <span *ngIf="element.current_step">
+                    {{element.current_step}}
+                </span>
+
+                <span *ngIf="element.steps>0">
+                    /{{element.steps}}
+                </span>
             </td>
         </ng-container>
 

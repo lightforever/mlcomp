@@ -12,7 +12,7 @@ def start_schedule(jobs):
     scheduler.start()
 
     # Shut down the scheduler when exiting the app
-    atexit.register(lambda: scheduler.shutdown())
+    # atexit.register(lambda: scheduler.shutdown())
 
     class NoRunningFilter(logging.Filter):
         def filter(self, record):

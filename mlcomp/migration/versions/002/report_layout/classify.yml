@@ -1,0 +1,29 @@
+extend: base
+
+metric:
+  name: accuracy01
+  minimize: False
+
+items:
+  accuracy01:
+    type: series
+    key: accuracy01
+  loss:
+    type: series
+    key: loss
+
+layout:
+  - type: panel
+    title: main
+    parent_cols: 3
+    row_height: 400
+    items:
+      - type: table
+        source: [accuracy01, loss]
+        cols: 1
+      - type: series
+        source: accuracy01
+        multi: True
+      - type: series
+        source: loss
+        multi: True
