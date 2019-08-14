@@ -94,7 +94,6 @@ class ExecuteBuilder:
             msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
                   f'before the execute_by_id invocation'
             self.error(msg)
-            app.current_task.set_status()
             raise Exception(msg)
 
     def change_status(self):

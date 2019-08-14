@@ -308,7 +308,8 @@ class SupervisorBuilder:
                 continue
 
             if TaskStatus.Stopped.value in self.dep_status[task.id] \
-                    or TaskStatus.Failed.value in self.dep_status[task.id]:
+                    or TaskStatus.Failed.value in self.dep_status[task.id] or \
+                    TaskStatus.Skipped.value in self.dep_status[task.id]:
                 auxiliary['not_valid'] = 'stopped or failed in dep_status'
                 self.provider.change_status(task, TaskStatus.Skipped)
                 continue
@@ -374,10 +375,6 @@ class SupervisorBuilder:
         ]
 
     def write_auxiliary(self):
-        if MODE_ECONOMIC:
-            self.session.commit()
-            return
-
         self.auxiliary['duration'] = (now() - self.auxiliary['time']). \
             total_seconds()
 

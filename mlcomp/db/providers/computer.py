@@ -41,7 +41,7 @@ class ComputerProvider(BaseDataProvider):
             sync_status = 'Not synced'
             sync_date = None
             if c.last_synced:
-                sync_date = self.serialize_datetime_long(c.last_synced)
+                sync_date = self.serialize_datetime(c.last_synced)
                 sync_status = f'Last synced'
 
             if c.syncing_computer:
@@ -50,7 +50,7 @@ class ComputerProvider(BaseDataProvider):
                     sync_status = f'Syncing with {c.syncing_computer}'
                     if c.last_synced:
                         sync_status += f' from '
-                    sync_date = self.serialize_datetime_long(c.last_synced)
+                    sync_date = self.serialize_datetime(c.last_synced)
 
             item['sync_status'] = sync_status
             item['sync_date'] = sync_date
@@ -132,7 +132,7 @@ class ComputerProvider(BaseDataProvider):
         return [
             {
                 'name': r[0].name,
-                'last_activity': self.serialize_datetime_long(
+                'last_activity': self.serialize_datetime(
                     r[0].last_activity
                 ),
                 'in_progress': r[1],

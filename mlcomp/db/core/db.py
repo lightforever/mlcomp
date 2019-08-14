@@ -25,7 +25,8 @@ class Session(session.Session):
         connect_args = {}
         if DB_TYPE == 'SQLITE':
             connect_args = {
-                'check_same_thread': False
+                'check_same_thread': False,
+                'timeout': 30
             }
 
         engine = sa.create_engine(

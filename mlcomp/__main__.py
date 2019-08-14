@@ -39,7 +39,8 @@ def _dag(config: str, debug: bool = False):
             session=_session,
             config=config_parsed,
             debug=debug,
-            config_text=config_text
+            config_text=config_text,
+            config_path=config
         )
 
     return dag_pipe(

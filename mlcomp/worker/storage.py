@@ -13,7 +13,7 @@ import importlib
 
 from sqlalchemy.orm import joinedload
 
-from mlcomp import TASK_FOLDER, DATA_FOLDER
+from mlcomp import TASK_FOLDER, DATA_FOLDER, MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
 from mlcomp.utils.misc import now
@@ -108,11 +108,12 @@ class Storage:
                 DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False)
             )
 
-        reqs = control_requirements(folder, files=files)
-        for name, rel, version in reqs:
-            self.library_provider.add(
-                DagLibrary(dag=dag.id, library=name, version=version)
-            )
+        if not MODE_ECONOMIC:
+            reqs = control_requirements(folder, files=files)
+            for name, rel, version in reqs:
+                self.library_provider.add(
+                    DagLibrary(dag=dag.id, library=name, version=version)
+                )
 
     def download(self, task: int):
         task = self.task_provider.by_id(
@@ -164,7 +165,7 @@ class Storage:
             except Exception:
                 need_install = True
 
-            if need_install:
+            if not MODE_ECONOMIC and need_install:
                 os.system(f'pip install {n}=={library_versions[n]}')
                 was_installation = True
 

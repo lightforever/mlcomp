@@ -25,7 +25,8 @@ class DagStandardBuilder:
         debug: bool,
         config_text: str = None,
         upload_files: bool = True,
-        copy_files_from: int = None
+        copy_files_from: int = None,
+        config_path: str = None
     ):
         self.session = session
         self.config = config
@@ -33,6 +34,7 @@ class DagStandardBuilder:
         self.config_text = config_text
         self.upload_files = upload_files
         self.copy_files_from = copy_files_from
+        self.config_path = config_path
 
         self.info = config['info']
         self.report_name = self.info.get('report')
@@ -101,6 +103,11 @@ class DagStandardBuilder:
     def upload(self):
         if self.upload_files:
             folder = os.getcwd()
+            if 'expdir' in self.config['info']:
+                path = os.path.dirname(os.path.abspath(self.config_path))
+                folder = os.path.abspath(
+                    os.path.join(path, self.config['info']['expdir'])
+                )
             self.storage.upload(folder, self.dag)
         elif self.copy_files_from:
             self.storage.copy_from(self.copy_files_from, self.dag)
@@ -180,6 +187,9 @@ class DagStandardBuilder:
                         depends = [depends]
 
                     for d in depends:
+                        if d == k:
+                            raise Exception(f'Executor {k} depends ot itself')
+
                         if d not in executors:
                             raise Exception(
                                 f'Executor {k} depend on {d} '
@@ -239,7 +249,8 @@ def dag_standard(
     debug: bool,
     config_text: str = None,
     upload_files: bool = True,
-    copy_files_from: int = None
+    copy_files_from: int = None,
+    config_path: str = None
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -247,7 +258,8 @@ def dag_standard(
         debug=debug,
         config_text=config_text,
         upload_files=upload_files,
-        copy_files_from=copy_files_from
+        copy_files_from=copy_files_from,
+        config_path=config_path
     )
     return builder.build()
 

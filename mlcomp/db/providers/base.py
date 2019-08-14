@@ -14,16 +14,15 @@ class BaseDataProvider:
 
     date_format = '%Y-%m-%d'
     datetime_format = '%Y-%m-%d %H:%M:%SZ'
-    datetime_format_long = '%Y-%m-%d %H:%M:%SZ'
     time_format = '%H:%M'
 
-    def __init__(self, session: Session=None):
+    def __init__(self, session: Session = None):
         if session is None:
             session = Session.create_session()
         self._session = session
         self.serializer = Serializer(
             date_format=self.date_format,
-            datetime_format=self.datetime_format_long,
+            datetime_format=self.datetime_format,
             time_format=self.time_format
         )
 
@@ -31,8 +30,8 @@ class BaseDataProvider:
         return self.serializer.serialize_datetime(value)
 
     def remove(self, key_value, key_column: str = 'id'):
-        self.query(self.model).\
-            filter(getattr(self.model, key_column) == key_value).\
+        self.query(self.model). \
+            filter(getattr(self.model, key_column) == key_value). \
             delete(synchronize_session=False)
         self.session.commit()
 
@@ -103,22 +102,17 @@ class BaseDataProvider:
 
         if options.sort_column:
             column = getattr(self.model, options.sort_column) if \
-                options.sort_column in self.model.__dict__  \
+                options.sort_column in self.model.__dict__ \
                 else options.sort_column
             criterion = column if not options.sort_descending else desc(column)
             query = query.order_by(criterion)
 
         if options.page_size:
-            query = query.\
-                offset(options.page_size * options.page_number).\
+            query = query. \
+                offset(options.page_size * options.page_number). \
                 limit(options.page_size)
 
         return query
-
-    def serialize_datetime_long(self, time):
-        if time is None:
-            return None
-        return time.strftime(self.datetime_format_long)
 
 
 __all__ = ['BaseDataProvider']

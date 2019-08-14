@@ -77,7 +77,7 @@ class ReportProvider(BaseDataProvider):
                         'stage': [item.stage for item in group_task],
                         'color': 'orange' if key == 'valid' else 'blue',
                         'time': [
-                            self.serialize_datetime_long(item.time)
+                            self.serialize_datetime(item.time)
                             for item in group_task
                         ],
                         'group': key,

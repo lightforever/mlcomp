@@ -88,7 +88,7 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
                     this.data.nodes.update(item)
                 }
                 for (let item of res.edges) {
-                    this.data.nodes.update(item)
+                    this.data.edges.update(item)
                 }
 
 
