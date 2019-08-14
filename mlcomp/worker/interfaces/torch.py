@@ -8,9 +8,7 @@ from mlcomp.worker.interfaces.base import Interface
 
 
 @Interface.register
-class TorchInterface(Interface):
-    __syn__ = 'torch'
-
+class Torch(Interface):
     def __init__(self, file: str, batch_size: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

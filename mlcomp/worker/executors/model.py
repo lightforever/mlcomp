@@ -11,7 +11,7 @@ from catalyst import utils
 from catalyst.dl.utils.trace import trace_model
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 
-from mlcomp.utils.settings import TASK_FOLDER, MODEL_FOLDER
+from mlcomp import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model, Dag
 from mlcomp.db.providers import TaskProvider, ModelProvider, DagProvider
 from mlcomp.utils.misc import now
@@ -22,8 +22,6 @@ from mlcomp.worker.executors import Executor
 
 @Executor.register
 class ModelAdd(Executor):
-    __syn__ = 'model_add'
-
     def __init__(
         self, name: str, dag_pipe: int, slot: str, interface: str,
         interface_params: dict, train_task: int, child_task: int

@@ -4,6 +4,7 @@ from typing import List
 
 from sqlalchemy.orm.exc import ObjectDeletedError
 
+from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus, TaskType
 from mlcomp.db.models import Task, Auxiliary
@@ -42,7 +43,7 @@ class SupervisorBuilder:
 
         self.queues = [
             f'{d.computer}_{d.name}' for d in self.docker_provider.all()
-            if d.last_activity >= now() - datetime.timedelta(seconds=10)
+            if d.last_activity >= now() - datetime.timedelta(seconds=15)
         ]
 
         self.auxiliary['queues'] = self.queues
@@ -373,6 +374,10 @@ class SupervisorBuilder:
         ]
 
     def write_auxiliary(self):
+        if MODE_ECONOMIC:
+            self.session.commit()
+            return
+
         self.auxiliary['duration'] = (now() - self.auxiliary['time']). \
             total_seconds()
 

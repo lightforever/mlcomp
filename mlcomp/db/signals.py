@@ -1,12 +1,12 @@
 from functools import wraps
 
+from sqlalchemy import event
 from sqlalchemy.orm.exc import StaleDataError
 
 from mlcomp.db.providers import TaskProvider, StepProvider, DagProvider
 from mlcomp.db.models import Task, Step, Log, ReportImg, File
 from mlcomp.utils.misc import now
 from mlcomp.db.core import Session
-from sqlalchemy import event
 
 _session = Session.create_session(key=__name__)
 
@@ -44,43 +44,41 @@ def task_before_update(mapper, connection, target):
             pass
 
 
-@event.listens_for(Step, 'after_insert')
+@event.listens_for(Step, 'before_insert')
 @event.listens_for(Step, 'before_update')
 @error_handler
-def step_after_insert_update(mapper, connection, target):
+def step_before_insert_update(mapper, connection, target):
     TaskProvider(_session).update_last_activity(target.task)
 
 
-@event.listens_for(Log, 'after_insert')
+@event.listens_for(Log, 'before_insert')
 @error_handler
-def log_after_insert(mapper, connection, target):
+def log_before_insert(mapper, connection, target):
     if target.step is None:
         return
     step = StepProvider(_session).by_id(target.step)
     TaskProvider(_session).update_last_activity(step.task)
 
 
-@event.listens_for(ReportImg, 'after_insert')
-def dag_after_create(mapper, connection, target):
+@event.listens_for(ReportImg, 'before_insert')
+def dag_before_create(mapper, connection, target):
     provider = DagProvider(_session)
     dag = provider.by_id(target.dag)
     dag.img_size += target.size
-    provider.session.commit()
+    provider.commit()
 
 
-@event.listens_for(File, 'after_insert')
+@event.listens_for(File, 'before_insert')
 @error_handler
-def file_after_create(mapper, connection, target):
+def file_before_create(mapper, connection, target):
     provider = DagProvider(_session)
+
     dag = provider.by_id(target.dag)
     dag.file_size += target.size
-    provider.session.commit()
+    provider.commit()
 
 
 __all__ = [
-    'task_before_update',
-    'step_after_insert_update',
-    'log_after_insert',
-    'dag_after_create',
-    'file_after_create'
+    'task_before_update', 'step_before_insert_update', 'log_before_insert',
+    'dag_before_create', 'file_before_create'
 ]

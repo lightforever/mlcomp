@@ -63,7 +63,8 @@ class DagStandardBuilder:
 
     def load_base(self):
         project = self.project_provider.by_name(self.info['project'])
-        assert project, f'No project with name = {self.info["project"]}'
+        if project is None:
+            project = self.project_provider.add_project(self.info['project'])
 
         self.project = project.id
         self.layouts = self.report_layout_provider.all()
@@ -174,7 +175,11 @@ class DagStandardBuilder:
             for k, v in executors.items():
                 valid = True
                 if 'depends' in v:
-                    for d in v['depends']:
+                    depends = v['depends']
+                    if not isinstance(depends, list):
+                        depends = [depends]
+
+                    for d in depends:
                         if d not in executors:
                             raise Exception(
                                 f'Executor {k} depend on {d} '
@@ -201,7 +206,11 @@ class DagStandardBuilder:
                         id = self.create_task(k, v, name=name, info=info)
                         ids.append(id)
                         if 'depends' in v:
-                            for d in v['depends']:
+                            depends = v['depends']
+                            if not isinstance(depends, list):
+                                depends = [depends]
+
+                            for d in depends:
                                 for dd in created[d]:
                                     self.provider.add_dependency(id, dd)
                     created[k] = ids

@@ -13,11 +13,11 @@ class BaseDataProvider:
     model = None
 
     date_format = '%Y-%m-%d'
-    datetime_format = '%Y-%m-%d %H:%MZ'
+    datetime_format = '%Y-%m-%d %H:%M:%SZ'
     datetime_format_long = '%Y-%m-%d %H:%M:%SZ'
     time_format = '%H:%M'
 
-    def __init__(self, session=None):
+    def __init__(self, session: Session=None):
         if session is None:
             session = Session.create_session()
         self._session = session

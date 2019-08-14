@@ -3,9 +3,11 @@ from os.path import join
 import click
 import os
 import socket
+from multiprocessing import cpu_count
 
 import GPUtil
 
+from mlcomp import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
@@ -14,20 +16,20 @@ from mlcomp.db.providers import \
     TaskProvider, \
     StepProvider, \
     ProjectProvider
+from mlcomp.migration.manage import migrate
 from mlcomp.utils.io import yaml_load
 from mlcomp.utils.logging import create_logger
-from multiprocessing import cpu_count
-
-from mlcomp.utils.settings import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
 from mlcomp.worker.sync import sync_directed
 from mlcomp.worker.tasks import execute_by_id
-from mlcomp.utils.misc import memory, disk
+from mlcomp.utils.misc import memory, disk, get_username
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 _session = Session.create_session(key=__name__)
 
 
 def _dag(config: str, debug: bool = False):
+    migrate()
+
     config_text = open(config, 'r').read()
     config_parsed = yaml_load(config_text)
 
@@ -55,7 +57,7 @@ def _create_computer():
         memory=tot_m,
         ip=os.getenv('IP'),
         port=int(os.getenv('PORT')),
-        user=os.getenv('USER'),
+        user=get_username(),
         disk=tot_d
     )
     ComputerProvider(_session).create_or_update(computer, 'name')
@@ -139,9 +141,9 @@ def sync(computer: str, only_from: bool, only_to: bool):
     for c in computers:
         if c.name != computer.name:
             if not only_from:
-                sync_directed(computer, c, folders_excluded)
+                sync_directed(_session, computer, c, folders_excluded)
             if not only_to:
-                sync_directed(c, computer, folders_excluded)
+                sync_directed(_session, c, computer, folders_excluded)
 
 
 if __name__ == '__main__':

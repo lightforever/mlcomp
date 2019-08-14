@@ -1,19 +1,22 @@
 from glob import glob
 import os
 import logging
-from os.path import isdir, join
+from os.path import isdir, join, dirname
 import hashlib
 from typing import List, Tuple
 import pkgutil
 import sys
 import pathspec
 import pkg_resources
+import pyclbr
+import importlib
 
 from sqlalchemy.orm import joinedload
 
+from mlcomp import TASK_FOLDER, DATA_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
-from mlcomp.utils.settings import TASK_FOLDER, DATA_FOLDER
+from mlcomp.utils.misc import now
 from mlcomp.db.providers import FileProvider, \
     DagStorageProvider, \
     TaskProvider, \
@@ -59,10 +62,9 @@ class Storage:
     def _build_spec(self, folder: str):
         ignore_file = os.path.join(folder, 'file.ignore.txt')
         if not os.path.exists(ignore_file):
-            with open(ignore_file, 'w') as f:
-                f.write('')
-
-        ignore_patterns = read_lines(ignore_file)
+            ignore_patterns = []
+        else:
+            ignore_patterns = read_lines(ignore_file)
         ignore_patterns.extend(['log', 'data', '__pycache__'])
 
         return pathspec.PathSpec.from_lines(
@@ -91,7 +93,11 @@ class Storage:
                 file_id = hashs[md5]
             else:
                 file = File(
-                    md5=md5, content=content, project=dag.project, dag=dag.id
+                    md5=md5,
+                    content=content,
+                    project=dag.project,
+                    dag=dag.id,
+                    created=now()
                 )
                 self.file_provider.add(file)
                 file_id = file.id
@@ -137,7 +143,9 @@ class Storage:
         sys.path.insert(0, folder)
         return folder
 
-    def import_folder(self, folder: str, libraries: List[Tuple] = None):
+    def import_executor(self, folder: str, base_folder: str,
+                               executor: str,
+                               libraries: List[Tuple] = None):
         spec = self._build_spec(folder)
         was_installation = False
 
@@ -157,15 +165,31 @@ class Storage:
                 need_install = True
 
             if need_install:
-                #raise Exception(f'Library version = {library_versions[n]} Current version = {version}')
                 os.system(f'pip install {n}=={library_versions[n]}')
                 was_installation = True
 
+        def is_valid_class(cls: pyclbr.Class):
+            if 'Executor' not in cls.super:
+                return False
+            return cls.name == executor or cls.name.lower() == executor
+
+        def relative_name(path: str):
+            rel = os.path.relpath(path, base_folder)
+            parts = [str(p).split('.')[0] for p in rel.split(os.sep)]
+            return '.'.join(parts)
+
         for (module_loader, module_name,
              ispkg) in pkgutil.iter_modules(folders):
-            module_loader.find_module(module_name).load_module(module_name)
+            module = module_loader.find_module(module_name)
+            module_folder = dirname(module.path)
+            classes = pyclbr.readmodule(module_name, path=[module_folder])
+            for k, v in classes.items():
+                if is_valid_class(v):
+                    importlib.import_module(relative_name(module.path))
 
-        return was_installation
+                    return True, was_installation
+
+        return False, was_installation
 
 
 __all__ = ['Storage']

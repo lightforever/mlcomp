@@ -4,6 +4,9 @@ from datetime import datetime
 import re
 from typing import List
 import os
+import pwd
+
+import dateutil
 import numpy as np
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
@@ -94,13 +97,13 @@ def duration_format(delta: float):
     elif delta < 3600 * 24:
         hour = int(delta / 3600)
         delta = f'{hour} {"hours" if hour > 1 else "hour"} ' \
-            f'{int((delta % 3600) / 60)} min'
+                f'{int((delta % 3600) / 60)} min'
     else:
         day = int(delta / (3600 * 24))
         hour = int((delta % (3600 * 24)) / 3600)
         delta = f'{day} {"days" if day > 1 else "day"} {hour}' \
-            f' {"hours" if hour > 1 else "hour"} ' \
-            f'{int((delta % 3600) / 60)} min'
+                f' {"hours" if hour > 1 else "hour"} ' \
+                f'{int((delta % 3600) / 60)} min'
     return delta
 
 
@@ -149,6 +152,18 @@ def disk(folder: str):
     available = int(int(available) / 10 ** 6)
     use = int(use[:-1])
     return total, use, available
+
+
+def get_username():
+    return pwd.getpwuid(os.getuid())[0]
+
+
+def parse_time(time):
+    if not time:
+        return None
+    if isinstance(time, str):
+        return dateutil.parser.parse(time)
+    return time
 
 
 if __name__ == '__main__':

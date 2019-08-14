@@ -4,7 +4,7 @@ import operator
 from os.path import join
 import numpy as np
 
-from mlcomp.utils.settings import DATA_FOLDER
+from mlcomp import DATA_FOLDER
 from mlcomp.worker.interfaces.base import Interface
 
 _OP_MAP = {
@@ -19,9 +19,7 @@ _OP_MAP = {
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic
 @Interface.register
-class EquationInterface(Interface, ast.NodeVisitor):
-    __syn__ = 'equation'
-
+class Equation(Interface, ast.NodeVisitor):
     def __init__(self,
                  project_name: str,
                  suffix: str,
@@ -63,6 +61,6 @@ class EquationInterface(Interface, ast.NodeVisitor):
 
 
 if __name__ == '__main__':
-    inf = EquationInterface('examples',
-                            'valid', 'a+(1.5*a)+a**(3/4)', name='a')
+    inf = Equation('examples',
+                   'valid', 'a+(1.5*a)+a**(3/4)', name='a')
     inf({})

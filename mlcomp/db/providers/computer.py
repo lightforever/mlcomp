@@ -2,13 +2,13 @@ import json
 import datetime
 from collections import defaultdict
 
-from sqlalchemy import func
+from sqlalchemy import func, case
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import TaskStatus
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.db.models import Computer, ComputerUsage, Task, Docker
-from mlcomp.utils.misc import now
+from mlcomp.utils.misc import now, parse_time
 
 
 class ComputerProvider(BaseDataProvider):
@@ -16,10 +16,9 @@ class ComputerProvider(BaseDataProvider):
 
     def computers(self):
         return {
-            c.name: {
-                k: v
-                for k, v in c.__dict__.items() if not k.startswith('_')
-            }
+            c.name:
+            {k: v
+             for k, v in c.__dict__.items() if not k.startswith('_')}
             for c in self.query(Computer).all()
         }
 
@@ -65,8 +64,10 @@ class ComputerProvider(BaseDataProvider):
                 gpu['memory'] = int(gpu['memory'])
                 gpu['load'] = int(gpu['load'])
 
+            min_time = parse_time(filter.get('usage_min_time'))
+
             item['usage_history'] = self.usage_history(
-                c.name, filter.get('usage_min_time')
+                c.name, min_time
             )
             item['dockers'] = self.dockers(c.name, c.cpu)
             res.append(item)
@@ -77,9 +78,8 @@ class ComputerProvider(BaseDataProvider):
         min_time = min_time or (now() - datetime.timedelta(days=1))
         query = self.query(ComputerUsage).filter(
             ComputerUsage.time >= min_time
-        ).filter(ComputerUsage.computer == computer).order_by(
-            ComputerUsage.time
-        )
+        ).filter(ComputerUsage.computer == computer
+                 ).order_by(ComputerUsage.time)
         res = {'time': [], 'mean': []}
         mean = defaultdict(list)
         for c in query.all():
@@ -117,8 +117,14 @@ class ComputerProvider(BaseDataProvider):
             all()
 
     def dockers(self, computer: str, cpu: int):
-        res = self.query(Docker, func.count(Task.computer).filter(
-            Task.status == TaskStatus.InProgress.value).label('count')). \
+        count_cond = func.sum(
+            case(
+                whens=[(Task.status == TaskStatus.InProgress.value, 1)],
+                else_=0
+            ).label('count')
+        )
+
+        res = self.query(Docker, count_cond). \
             join(Task, Task.computer_assigned == computer, isouter=True). \
             filter(Docker.computer == computer). \
             group_by(Docker.name, Docker.computer). \

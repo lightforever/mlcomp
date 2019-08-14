@@ -2,13 +2,13 @@ from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
 from mlcomp.db.models import Task, Step
 from mlcomp.db.providers import LogProvider, StepProvider, TaskProvider
-from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
 
 
 class StepWrap:
     def __init__(
-        self, session: Session, task: Task, task_provider: TaskProvider
+            self, session: Session, logger, task: Task,
+            task_provider: TaskProvider
     ):
         self.log_provider = LogProvider(session)
         self.step_provider = StepProvider(session)
@@ -16,7 +16,7 @@ class StepWrap:
         self.task = task
         self.children = []
         self.step = None
-        self.logger = create_logger(session)
+        self.logger = logger
 
     @property
     def id(self):

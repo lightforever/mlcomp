@@ -1,8 +1,9 @@
 import sqlalchemy as sa
 import sqlalchemy.orm.session as session
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy import event
 
-from mlcomp.db.conf import SA_CONNECTION_STRING
+from mlcomp.db.conf import SA_CONNECTION_STRING, DB_TYPE
 from mlcomp.utils.misc import adapt_db_types
 
 
@@ -21,9 +22,23 @@ class Session(session.Session):
             return Session.__session[key][0]
 
         session_factory = scoped_session(sessionmaker(class_=Session, key=key))
+        connect_args = {}
+        if DB_TYPE == 'SQLITE':
+            connect_args = {
+                'check_same_thread': False
+            }
+
         engine = sa.create_engine(
-            connection_string or SA_CONNECTION_STRING, echo=False
+            connection_string or SA_CONNECTION_STRING,
+            echo=False,
+            connect_args=connect_args
         )
+        if DB_TYPE == 'SQLITE':
+            def _fk_pragma_on_connect(dbapi_con, con_record):
+                dbapi_con.execute('pragma foreign_keys=ON')
+
+            event.listen(engine, 'connect', _fk_pragma_on_connect)
+
         session_factory.configure(bind=engine)
         s = session_factory()
 
@@ -81,6 +96,7 @@ class Session(session.Session):
             except Exception as e:
                 self.rollback()
                 raise e
+        return obj
 
     def commit(self):
         try:

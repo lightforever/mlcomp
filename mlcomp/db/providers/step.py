@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, case
 
 from mlcomp.db.enums import LogStatus
 from mlcomp.db.models import Step, Log, Task
@@ -47,8 +47,12 @@ class StepProvider(BaseDataProvider):
         log_status = []
         for s in LogStatus:
             log_status.append(
-                func.count(Log.level).filter(Log.level == s.value
-                                             ).label(s.name)
+                func.sum(
+                    case(
+                        whens=[(Log.level == s.value, 1)],
+                        else_=0
+                    ).label(s.name)
+                )
             )
 
         query = self.query(Step, *log_status).filter(Step.task == task_id

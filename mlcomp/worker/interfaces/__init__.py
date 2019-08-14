@@ -1,5 +1,5 @@
 from .base import Interface
-from .torch import TorchInterface
-from .equation import EquationInterface
+from .torch import Torch
+from .equation import Equation
 
-__all__ = ['Interface', 'TorchInterface', 'EquationInterface']
+__all__ = ['Interface', 'Torch', 'Equation']

@@ -2,11 +2,11 @@ import os
 import logging
 from logging.config import dictConfig
 
+from mlcomp import LOG_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
 from mlcomp.utils.misc import now
-from mlcomp.utils.settings import LOG_FOLDER
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
@@ -144,17 +144,18 @@ dictConfig(LOGGING)
 
 def create_logger(session: Session):
     logger = logging.getLogger()
-    handler = DbHandler(session)
-    handler.setLevel(DB_LOG_LEVEL)
-    logger.handlers.append(handler)
+    if len(logger.handlers) <= 2:
+        handler = DbHandler(session)
+        handler.setLevel(DB_LOG_LEVEL)
+        logger.handlers.append(handler)
 
-    for h in logger.handlers:
-        fmt = '%(asctime)s.%(msecs)03d %(levelname)s' \
-              ' %(module)s - %(funcName)s: %(message)s'
-        datefmt = '%Y-%m-%d %H:%M:%S'
-        if isinstance(h, DbHandler):
-            fmt, datefmt = None, None
-        h.formatter = Formatter(fmt=fmt, datefmt=datefmt)
+        for h in logger.handlers:
+            fmt = '%(asctime)s.%(msecs)03d %(levelname)s' \
+                  ' %(module)s - %(funcName)s: %(message)s'
+            datefmt = '%Y-%m-%d %H:%M:%S'
+            if isinstance(h, DbHandler):
+                fmt, datefmt = None, None
+            h.formatter = Formatter(fmt=fmt, datefmt=datefmt)
     return logger
 
 

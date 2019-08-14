@@ -4,20 +4,19 @@ import json
 import os
 import traceback
 from multiprocessing import cpu_count
-from threading import Thread
 
 import click
 import GPUtil
 import psutil
 import numpy as np
 
+from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.settings import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER
 from mlcomp.db.providers import DockerProvider, TaskProvider
 from mlcomp.utils.schedule import start_schedule
-from mlcomp.utils.misc import dict_func, now, disk
+from mlcomp.utils.misc import dict_func, now, disk, get_username
 from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
@@ -97,7 +96,7 @@ def worker_usage(session: Session, logger):
     docker = docker_provider.get(computer, os.getenv('DOCKER_IMG', 'default'))
     usages = []
 
-    for _ in range(10):
+    for _ in range(1 if MODE_ECONOMIC else 10):
         # noinspection PyProtectedMember
         memory = dict(psutil.virtual_memory()._asdict())
 
@@ -118,7 +117,7 @@ def worker_usage(session: Session, logger):
         docker.last_activity = now()
         docker_provider.update()
 
-        time.sleep(1)
+        time.sleep(10 if MODE_ECONOMIC else 1)
 
     usage = json.dumps({'mean': dict_func(usages, np.mean)})
     provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
@@ -132,7 +131,7 @@ def worker(number):
     argv = [
         'worker', '--loglevel=INFO', '-P=solo', f'-n={name}_{number}',
         '-O fair', '-c=1', '--prefetch-multiplier=1', '-Q', f'{name},'
-        f'{name}_{number}'
+                                                            f'{name}_{number}'
     ]
     app.worker_main(argv)
 
@@ -142,12 +141,12 @@ def worker_supervisor():
     _create_computer()
     _create_docker()
 
-    start_schedule([(stop_processes_not_exist, 2)])
+    start_schedule([(stop_processes_not_exist, 10)])
 
     if os.getenv('DOCKER_MAIN', 'True') == 'True':
         syncer = FileSync()
         start_schedule([(worker_usage, 0)])
-        start_schedule([(syncer.sync, 1)])
+        start_schedule([(syncer.sync, 10 if MODE_ECONOMIC else 1)])
 
     docker_img = os.getenv('DOCKER_IMG', 'default')
     name = f'{socket.gethostname()}_{docker_img}_supervisor'
@@ -163,14 +162,6 @@ def worker_supervisor():
 @click.option('--debug', type=bool, default=False)
 @click.option('--workers', type=int, default=None)
 def supervisor(debug: bool, workers: int = cpu_count()):
-    # exporting environment variables
-    with open(os.path.join(CONFIG_FOLDER, '.env')) as f:
-        for l in f.readlines():
-            k, v = l.strip().split('=')
-            os.environ[k] = v
-    # for debugging
-    os.environ['PYTHONPATH'] = '.'
-
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -196,7 +187,7 @@ def supervisor(debug: bool, workers: int = cpu_count()):
     with open(conf, 'w') as f:
         f.writelines('\n'.join(text))
 
-    os.system('python2 /usr/bin/supervisord ' f'-c {conf} -e DEBUG')
+    os.system(f'supervisord ' f'-c {conf} -e DEBUG')
 
 
 def _create_docker():
@@ -219,7 +210,7 @@ def _create_computer():
         memory=tot_m,
         ip=os.getenv('IP'),
         port=int(os.getenv('PORT')),
-        user=os.getenv('USER'),
+        user=get_username(),
         disk=tot_d
     )
     ComputerProvider(_session).create_or_update(computer, 'name')

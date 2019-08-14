@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import time
 import os
 
+from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
 from mlcomp.utils.config import Config
@@ -12,8 +13,10 @@ from mlcomp.worker.executors.base.step import StepWrap
 class Executor(ABC):
     _child = dict()
 
-    session = Session.create_session(key='Executor')
+    session = None
     task_provider = None
+    logger = None
+    step = None
 
     def debug(self, message: str):
         self.step.debug(message)
@@ -28,18 +31,17 @@ class Executor(ABC):
         self.step.error(message)
 
     def __call__(
-        self, task: Task, task_provider: TaskProvider, dag: Dag
+            self, *, task: Task, task_provider: TaskProvider, dag: Dag
     ) -> dict:
         assert dag is not None, 'You must fetch task with dag_rel'
 
         self.task_provider = task_provider
         self.task = task
         self.dag = dag
-        self.step = StepWrap(self.session, task, task_provider)
+        self.step = StepWrap(self.session, self.logger, task, task_provider)
         self.step.enter()
 
-        use_sync = os.getenv('USE_SYNC', 'True') == 'True'
-        if not task.debug and use_sync:
+        if not task.debug and not MODE_ECONOMIC:
             self.wait_data_sync(task.computer_assigned)
         res = self.work()
         self.step.task_provider.commit()
@@ -58,30 +60,34 @@ class Executor(ABC):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         return cls()
 
     @staticmethod
     def from_config(
-        executor: str, config: Config, additional_info: dict
+            *, executor: str, config: Config, additional_info: dict,
+            session: Session, logger
     ) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(
                 f'Executor {executor} '
                 f'has not been found'
             )
+
         executor = config['executors'][executor]
         child_class = Executor._child[executor['type']]
         # noinspection PyProtectedMember
-        return child_class._from_config(executor, config, additional_info)
+        res = child_class._from_config(executor, config,
+                                       additional_info)
+        res.session = session
+        res.logger = logger
+        return res
 
     @staticmethod
     def register(cls):
         Executor._child[cls.__name__] = cls
         Executor._child[cls.__name__.lower()] = cls
-        if hasattr(cls, '__syn__'):
-            Executor._child[cls.__syn__] = cls
         return cls
 
     @staticmethod
@@ -89,15 +95,22 @@ class Executor(ABC):
         return cls in Executor._child
 
     def wait_data_sync(self, computer_assigned: str):
-        self.step.info(f'Start data sync')
+        self.info(f'Start data sync')
         provider = ComputerProvider(self.session)
         last_task_time = TaskProvider(self.session).last_succeed_time()
+        self.info(f'Providers created')
+
         while True:
             computer = provider.by_name(computer_assigned)
-            if not last_task_time or computer.last_synced > last_task_time:
+            self.info(f'computer.last_synced = {computer.last_synced} '
+                      f'last_task_time = {last_task_time}')
+
+            if last_task_time is None or computer.last_synced > last_task_time:
                 break
+
+            provider.commit()
             time.sleep(1)
-        self.step.info(f'Finish data sync')
+        self.info(f'Finish data sync')
 
     @staticmethod
     def is_trainable(type: str):

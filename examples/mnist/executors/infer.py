@@ -9,8 +9,6 @@ from dataset import MnistDataset
 
 @Executor.register
 class Infer(Executor):
-    __syn__ = 'infer'
-
     def __init__(self,
                  model: Interface,
                  suffix: str):

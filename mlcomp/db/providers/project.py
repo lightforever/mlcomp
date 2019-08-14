@@ -1,7 +1,9 @@
+import os
 from typing import List
 
 from sqlalchemy import func
 
+from mlcomp import DATA_FOLDER, MODEL_FOLDER
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, Task
 from mlcomp.db.providers.base import BaseDataProvider
@@ -12,8 +14,11 @@ class ProjectProvider(BaseDataProvider):
     model = Project
 
     def add_project(self, name: str,
-                    class_names: dict,
-                    ignore_folders: List[str]):
+                    class_names: dict = None,
+                    ignore_folders: List[str] = None):
+        class_names = class_names or {}
+        ignore_folders = ignore_folders or []
+
         assert type(class_names) == dict, 'class_names type must be dict'
         assert isinstance(ignore_folders, list), \
             'ignore_folders type must be list'
@@ -22,7 +27,12 @@ class ProjectProvider(BaseDataProvider):
                           class_names=yaml_dump(class_names),
                           ignore_folders=yaml_dump(ignore_folders)
                           )
-        self.session.add(project)
+        project = self.session.add(project)
+
+        os.makedirs(os.path.join(DATA_FOLDER, name), exist_ok=True)
+        os.makedirs(os.path.join(MODEL_FOLDER, name), exist_ok=True)
+
+        return project
 
     def edit_project(self, name: str,
                      class_names: dict,

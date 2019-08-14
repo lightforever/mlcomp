@@ -30,8 +30,5 @@ COPY mlcomp /app/mlcomp
 COPY docker/server.sh /app/mlcomp/start.sh
 WORKDIR /app/mlcomp
 
-# Server environment
-ENV SERVER True
-
 RUN chmod 777 start.sh
 CMD ["./start.sh"]

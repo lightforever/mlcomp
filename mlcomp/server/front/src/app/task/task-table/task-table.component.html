@@ -41,7 +41,7 @@
             </th>
 
             <td mat-cell *matCellDef="let element">
-                {{element.dag_rel.created| date:"MM.dd H:mm"}}
+                {{element.dag_rel.created| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 
@@ -51,7 +51,7 @@
             </th>
 
             <td mat-cell *matCellDef="let element">
-                {{element.started| date:"MM.dd H:mm"}}
+                {{element.started| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 
@@ -60,7 +60,7 @@
                 Last activity
             </th>
             <td mat-cell *matCellDef="let element">
-                {{element.last_activity| date:"MM.dd H:mm"}}
+                {{element.last_activity| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 
@@ -190,7 +190,7 @@
             </th>
 
             <td mat-cell *matCellDef="let element">
-                {{element.score}}
+                {{element.score| number:'.5'}}
             </td>
         </ng-container>
 

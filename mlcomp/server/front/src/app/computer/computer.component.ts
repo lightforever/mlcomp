@@ -154,7 +154,7 @@ export class ComputerComponent extends Paginator<Computer>
     docker_status(docker) {
         // @ts-ignore
         if(Helpers.parse_time(docker.last_activity)>=new Date(
-            Date.now()-10000)){
+            Date.now()-15000)){
             return 'circle-green';
         }
         return 'circle-red';
@@ -162,7 +162,7 @@ export class ComputerComponent extends Paginator<Computer>
 
     docker_status_tip(docker){
         if(Helpers.parse_time(docker.last_activity)>=new Date(
-            Date.now()-10000)){
+            Date.now()-15000)){
             return 'online';
         }
 

@@ -81,13 +81,6 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 Pipfile
 
 # Spyder project settings
@@ -113,9 +106,10 @@ examples/**/log
 dist
 docker/*.conf
 *.db
-.env
 Readme.dev.md
 *ignore.txt
 sys
 re
 supervisord*
+.sqlite*
+*.rdb

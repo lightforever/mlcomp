@@ -9,8 +9,6 @@ from mlcomp.worker.executors import Executor
 
 @Executor.register
 class Split(Executor):
-    __syn__ = 'split'
-
     def __init__(
         self,
         variant: str,

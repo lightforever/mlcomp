@@ -3,7 +3,7 @@ import pickle
 from itertools import groupby
 from typing import List
 
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import PaginatorOptions, Session
@@ -23,9 +23,12 @@ class ReportProvider(BaseDataProvider):
         super(ReportProvider, self).__init__(session)
 
     def get(self, filter: dict, options: PaginatorOptions):
-        task_count_cond = func.count(ReportTasks.task). \
-            filter(Task.status <= TaskStatus.InProgress.value). \
-            label('tasks_not_finished')
+        task_count_cond = func.sum(
+            case(
+                whens=[(Task.status <= TaskStatus.InProgress.value, 1)],
+                else_=0
+            ).label('tasks_not_finished')
+        )
 
         query = self.query(Report,
                            func.count(ReportTasks.task).label('tasks_count'),

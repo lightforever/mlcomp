@@ -9,8 +9,6 @@ from dataset import MnistDataset
 
 @Executor.register
 class Valid(Executor):
-    __syn__ = 'valid'
-
     def __init__(self,
                  model: Interface):
         self.model = model

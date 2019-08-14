@@ -14,8 +14,7 @@ class Interface(ABC):
     @staticmethod
     def register(cls):
         Interface._child[cls.__name__] = cls
-        if hasattr(cls, '__syn__'):
-            Interface._child[cls.__syn__] = cls
+        Interface._child[cls.__name__.lower()] = cls
         return cls
 
     @staticmethod

@@ -7,6 +7,7 @@ from mlcomp.db.enums import DagType
 from mlcomp.db.models import Model, Dag, Project
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.config import Config
+from mlcomp.utils.misc import parse_time
 
 
 class ModelProvider(BaseDataProvider):
@@ -23,9 +24,11 @@ class ModelProvider(BaseDataProvider):
             query = query.filter(Model.name.like(f'%{filter["name"]}%'))
 
         if filter.get('created_min'):
-            query = query.filter(Model.created >= filter['created_min'])
+            created_min = parse_time(filter['created_min'])
+            query = query.filter(Model.created >= created_min)
         if filter.get('created_max'):
-            query = query.filter(Model.created <= filter['created_max'])
+            created_max = parse_time(filter['created_max'])
+            query = query.filter(Model.created <= created_max)
 
         total = query.count()
         paginator = self.paginator(query, options) if options else query

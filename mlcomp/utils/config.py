@@ -5,9 +5,9 @@ import json
 
 import albumentations as A
 
+from mlcomp import DATA_FOLDER
 from mlcomp.utils.io import yaml_load
 from mlcomp.utils.misc import dict_flatten, dict_unflatten
-from mlcomp.utils.settings import DATA_FOLDER
 
 
 class Config(dict):

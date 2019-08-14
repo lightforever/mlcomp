@@ -10,8 +10,6 @@ from mlcomp.worker.executors import Executor, Submit
 
 @Executor.register
 class SubmitMnist(Submit):
-    __syn__ = 'submit_mnist'
-
     def __init__(self, model_id: int, prob_file: str, out_file: str):
         super().__init__(
             competition='digit-recognizer',

@@ -10,14 +10,14 @@ from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_config
 
+from mlcomp import TASK_FOLDER
 from mlcomp.contrib.search.grid import grid_cells
-from mlcomp.db.providers import TaskProvider, ReportSeriesProvider
+from mlcomp.db.providers import ReportSeriesProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
-from mlcomp.utils.settings import TASK_FOLDER
 from mlcomp.worker.executors.base import Executor
 from mlcomp.contrib.catalyst.register import register
 from mlcomp.worker.sync import copy_remote
@@ -46,8 +46,6 @@ class Args:
 # noinspection PyTypeChecker
 @Executor.register
 class Catalyst(Executor, Callback):
-    __syn__ = 'catalyst'
-
     def __init__(
         self,
         args: Args,

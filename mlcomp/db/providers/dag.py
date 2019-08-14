@@ -1,19 +1,19 @@
 import datetime
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import TaskStatus, TaskType
 from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
 from mlcomp.db.providers.base import BaseDataProvider
-from mlcomp.utils.misc import to_snake, duration_format, now
+from mlcomp.utils.misc import to_snake, duration_format, now, parse_time
 
 
 class DagProvider(BaseDataProvider):
     model = Dag
 
     # noinspection PyMethodMayBeStatic
-    def _get_filter(self, query, filter: dict, last_activity: datetime):
+    def _get_filter(self, query, filter: dict, last_activity):
         if filter.get('project'):
             query = query.filter(Dag.project == filter['project'])
         if filter.get('name'):
@@ -22,13 +22,17 @@ class DagProvider(BaseDataProvider):
             query = query.filter(Dag.id == int(filter['id']))
 
         if filter.get('created_min'):
-            query = query.filter(Dag.created >= filter['created_min'])
+            created_min = parse_time(filter['created_min'])
+            query = query.filter(Dag.created >= created_min)
         if filter.get('created_max'):
-            query = query.filter(Dag.created <= filter['created_max'])
+            created_max = parse_time(filter['created_max'])
+            query = query.filter(Dag.created <= created_max)
         if filter.get('last_activity_min'):
-            query = query.having(last_activity >= filter['last_activity_min'])
+            last_activity_min = parse_time(filter['last_activity_min'])
+            query = query.having(last_activity >= last_activity_min)
         if filter.get('last_activity_max'):
-            query = query.having(last_activity <= filter['last_activity_max'])
+            last_activity_max = parse_time(filter['last_activity_max'])
+            query = query.having(last_activity <= last_activity_max)
         if filter.get('report'):
             query = query.filter(Dag.report is not None)
         return query
@@ -37,8 +41,12 @@ class DagProvider(BaseDataProvider):
         task_status = []
         for e in TaskStatus:
             task_status.append(
-                func.count(Task.status).filter(Task.status == e.value
-                                               ).label(e.name)
+                func.sum(
+                    case(
+                        whens=[(Task.status == e.value, 1)],
+                        else_=0
+                    ).label(e.name)
+                )
             )
 
         last_activity = func.max(Task.last_activity).label('last_activity')
@@ -106,7 +114,7 @@ class DagProvider(BaseDataProvider):
                 delta = (now() - started).total_seconds()
             elif sum(
                 task_status[TaskStatus.InProgress.value:]
-            ) == 0 or not started:
+            ) == 0 or not started or not last_activity:
                 delta = 0
             else:
                 delta = (last_activity - started).total_seconds()

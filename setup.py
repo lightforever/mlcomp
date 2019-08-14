@@ -9,6 +9,7 @@
 import io
 import os
 import sys
+from glob import glob
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
@@ -43,17 +44,28 @@ def load_version():
     return context['__version__']
 
 
-def package_files(directory):
-    paths = []
-    for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
-    return paths
+def files(directory):
+    objs = glob(os.path.join(directory, '**'), recursive=True)
+    folders = [o for o in objs if os.path.isdir(o)]
+    for folder in folders:
+        if '__pycache__' in folder:
+            continue
+
+        folder_files = [
+            os.path.join(folder, f) for f in os.listdir(folder)
+            if os.path.isfile(f)
+        ]
+        yield folder, folder_files
 
 
-def get_package_data():
-    res = ['utils/req_stdlib']
-    res.extend(package_files('mlcomp/server/front/dist'))
+def get_data_files():
+    res = []
+
+    res.extend(files('mlcomp/utils'))
+    res.extend(files('mlcomp/bin'))
+    res.extend(files('mlcomp/docker'))
+    res.extend(files('mlcomp/server/front/dist'))
+    res.extend(files('mlcomp/migration'))
     return res
 
 
@@ -111,7 +123,7 @@ setup(
     packages=find_packages(exclude=('tests', )),
     install_requires=load_requirements(),
     include_package_data=True,
-    package_data={'': get_package_data()},
+    data_files=get_data_files(),
     zip_safe=False,
     license='MIT',
     classifiers=[

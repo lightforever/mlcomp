@@ -1,14 +1,14 @@
 import datetime
 from typing import List
 
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import joinedload, aliased
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.db.enums import TaskType, DagType, TaskStatus
 from mlcomp.utils.io import yaml_dump
-from mlcomp.utils.misc import to_snake, duration_format, now
+from mlcomp.utils.misc import to_snake, duration_format, now, parse_time
 from mlcomp.utils.config import Config
 from mlcomp.db.models import Task, Project, Dag, TaskDependence, ReportTasks
 
@@ -38,16 +38,20 @@ class TaskProvider(BaseDataProvider):
             query = query.filter(Dag.project == filter['project'])
 
         if filter.get('created_min'):
-            query = query.filter(Dag.created >= filter['created_min'])
+            created_min = parse_time(filter['created_min'])
+            query = query.filter(Dag.created >= created_min)
         if filter.get('created_max'):
-            query = query.filter(Dag.created <= filter['created_max'])
+            created_max = parse_time(filter['created_max'])
+            query = query.filter(Dag.created <= created_max)
         if filter.get('last_activity_min'):
+            last_activity_min = parse_time(filter['last_activity_min'])
             query = query.filter(
-                Task.last_activity >= filter['last_activity_min']
+                Task.last_activity >= last_activity_min
             )
         if filter.get('last_activity_max'):
+            last_activity_max = parse_time(filter['last_activity_max'])
             query = query.filter(
-                Task.last_activity <= filter['last_activity_max']
+                Task.last_activity <= last_activity_max
             )
         if filter.get('report'):
             query = query.filter(Task.report is not None)
@@ -213,7 +217,7 @@ class TaskProvider(BaseDataProvider):
             filter(TaskDependence.task_id.in_(task_ids)). \
             join(Task, Task.id == TaskDependence.depend_id).all()
         for item, task in items:
-            res[item.task_id].append(task.status)
+            res[item.task_id].add(task.status)
 
         return res
 
@@ -243,9 +247,12 @@ class TaskProvider(BaseDataProvider):
         task_status = []
         for e in TaskStatus:
             task_status.append(
-                func.count(task_child.status
-                           ).filter(task_child.status == e.value
-                                    ).label(e.name)
+                func.sum(
+                    case(
+                        whens=[(task_child.status == e.value, 1)],
+                        else_=0
+                    ).label(e.name)
+                )
             )
 
         times = [func.min(task_child.started), func.max(task_child.finished)]

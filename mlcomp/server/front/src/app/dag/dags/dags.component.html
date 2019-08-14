@@ -118,7 +118,7 @@
                 style="min-width: 100px"> Created
             </th>
             <td mat-cell *matCellDef="let element" style="min-width: 100px">
-                {{element.created| date:"MM.dd H:mm"}}
+                {{element.created| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 
@@ -127,7 +127,7 @@
                 style="min-width: 100px"> Started
             </th>
             <td mat-cell *matCellDef="let element" style="min-width: 100px">
-                {{element.started| date:"MM.dd H:mm"}}
+                {{element.started| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 
@@ -136,7 +136,7 @@
                 style="min-width: 100px"> Last activity
             </th>
             <td mat-cell *matCellDef="let element" style="min-width: 100px">
-                {{element.last_activity| date:"MM.dd H:mm"}}
+                {{element.last_activity| date:"MM.dd H:mm:ss"}}
             </td>
         </ng-container>
 

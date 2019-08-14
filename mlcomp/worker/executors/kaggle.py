@@ -24,8 +24,6 @@ class DownloadType(Enum):
 
 @Executor.register
 class Download(Executor):
-    __syn__ = 'download'
-
     def __init__(
         self,
         output: str,
@@ -53,8 +51,6 @@ class Download(Executor):
 
 @Executor.register
 class Submit(Executor):
-    __syn__ = 'submit'
-
     def __init__(
         self,
         competition: str,
