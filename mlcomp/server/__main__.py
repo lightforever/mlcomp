@@ -3,10 +3,11 @@ from multiprocessing import cpu_count
 
 import click
 
-from mlcomp import CONFIG_FOLDER
+from mlcomp import CONFIG_FOLDER, REDIS_PORT, REDIS_PASSWORD
 from mlcomp.migration.manage import migrate
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
+from mlcomp.utils.misc import kill_child_processes
 
 
 @click.group()
@@ -26,9 +27,11 @@ def stop_site():
 
 
 @main.command()
+@click.option('--daemon', type=bool, default=True)
 @click.option('--debug', type=bool, default=False)
 @click.option('--workers', type=int, default=cpu_count())
-def start(debug: bool, workers: int):
+@click.option('--log_level', type=str, default='INFO')
+def start(daemon: bool, debug: bool, workers: int, log_level: str):
     migrate()
 
     # creating supervisord config
@@ -42,18 +45,16 @@ def start(debug: bool, workers: int):
         worker_command = 'python mlcomp/worker/__main__.py worker'
         server_command = 'python mlcomp/server/__main__.py start-site'
 
-    redis_port = os.getenv('REDIS_PORT')
-    redis_password = os.getenv('REDIS_PASSWORD')
-
     folder = os.path.dirname(os.path.dirname(__file__))
     redis_path = os.path.join(folder, 'bin/redis-server')
 
+    daemon_text = 'true' if daemon else 'false'
     text = [
-        '[supervisord]', 'nodaemon=true', '',
+        '[supervisord]', f'nodaemon={daemon_text}', '',
         '[program:supervisor]',
         f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
-        '', '[program:redis]', f'command={redis_path} --port {redis_port}'
-                               f' --requirepass {redis_password}',
+        '', '[program:redis]', f'command={redis_path} --port {REDIS_PORT}'
+                               f' --requirepass {REDIS_PASSWORD}',
         'autostart=true',
         'autorestart=true', '',
         '[program:server]',
@@ -73,7 +74,17 @@ def start(debug: bool, workers: int):
     with open(conf, 'w') as f:
         f.writelines('\n'.join(text))
 
-    os.system(f'supervisord ' f'-c {conf} -e DEBUG')
+    os.system(f'supervisord ' f'-c {conf} -e {log_level}')
+
+
+@main.command()
+def stop():
+    lines = os.popen('ps -ef | grep supervisord').readlines()
+    for line in lines:
+        if 'mlcomp/configs/supervisord.conf' not in line:
+            continue
+        pid = int(line.split()[1])
+        kill_child_processes(pid)
 
 
 if __name__ == '__main__':

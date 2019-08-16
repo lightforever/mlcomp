@@ -1,7 +1,7 @@
 from sqlalchemy import func, case
 
 from mlcomp.db.enums import LogStatus
-from mlcomp.db.models import Step, Log, Task
+from mlcomp.db.models import Step, Log
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, now
 

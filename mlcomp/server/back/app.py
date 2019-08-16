@@ -10,6 +10,7 @@ from flask_cors import CORS
 from sqlalchemy.orm import joinedload
 
 import mlcomp.worker.tasks as celery_tasks
+from mlcomp import TOKEN, WEB_PORT, WEB_HOST, FLASK_ENV
 from mlcomp.db.enums import TaskStatus, ComponentType
 from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
@@ -25,9 +26,6 @@ from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake, now
 from mlcomp.db.models import Model, Report, ReportLayout, Task
 from mlcomp.utils.io import yaml_load, yaml_dump
-
-HOST = os.getenv('WEB_HOST')
-PORT = int(os.getenv('WEB_PORT'))
 
 app = Flask(__name__)
 CORS(app)
@@ -67,7 +65,7 @@ def construct_paginator_options(args: dict, default_sort_column: str):
 
 
 def check_auth(token):
-    return str(token).strip() == conf.TOKEN
+    return str(token).strip() == TOKEN
 
 
 def authenticate():
@@ -695,12 +693,13 @@ def start_server():
         register_supervisor()
 
     app.run(
-        debug=os.getenv('FLASK_ENV') == 'development', port=PORT, host=HOST
+        debug=FLASK_ENV == 'development', port=WEB_PORT,
+        host=WEB_HOST
     )
 
 
 def stop_server():
     requests.post(
-        f'http://localhost:{PORT}/api/shutdown',
+        f'http://localhost:{WEB_PORT}/api/shutdown',
         headers={'Authorization': conf.TOKEN}
     )

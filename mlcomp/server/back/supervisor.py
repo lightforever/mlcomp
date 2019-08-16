@@ -4,7 +4,6 @@ from typing import List
 
 from sqlalchemy.orm.exc import ObjectDeletedError
 
-from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus, TaskType
 from mlcomp.db.models import Task, Auxiliary
@@ -12,7 +11,7 @@ from mlcomp.db.providers import \
     ComputerProvider, \
     TaskProvider, \
     DockerProvider, \
-    AuxiliaryProvider
+    AuxiliaryProvider, DagProvider
 from mlcomp.utils.io import yaml_dump, yaml_load
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
@@ -29,6 +28,7 @@ class SupervisorBuilder:
         self.computer_provider = None
         self.docker_provider = None
         self.auxiliary_provider = None
+        self.dag_provider = None
         self.queues = None
         self.not_ran_tasks = None
         self.dep_status = None
@@ -36,10 +36,13 @@ class SupervisorBuilder:
         self.auxiliary = {}
 
     def create_base(self):
+        self.session.commit()
+
         self.provider = TaskProvider(self.session)
         self.computer_provider = ComputerProvider(self.session)
         self.docker_provider = DockerProvider(self.session)
         self.auxiliary_provider = AuxiliaryProvider(self.session)
+        self.dag_provider = DagProvider(self.session)
 
         self.queues = [
             f'{d.computer}_{d.name}' for d in self.docker_provider.all()
@@ -90,7 +93,7 @@ class SupervisorBuilder:
             if task.gpu_assigned is not None:
                 for g in task.gpu_assigned.split(','):
                     comp_assigned['gpu'][int(g)] = task.id
-            comp_assigned['memory'] -= task.memory
+            comp_assigned['memory'] -= task.memory * 1024
 
             info = yaml_load(task.additional_info)
             if 'distr_info' in info:
@@ -116,7 +119,7 @@ class SupervisorBuilder:
             for g in map(int, task.gpu_assigned.split(',')):
                 computer['gpu'][g] = task.id
             computer['cpu'] -= task.cpu
-            computer['memory'] -= task.memory
+            computer['memory'] -= task.memory * 1024
 
         self.provider.update()
 
@@ -304,8 +307,7 @@ class SupervisorBuilder:
             self.auxiliary['process_tasks'].append(auxiliary)
 
             if task.dag_rel is None:
-                auxiliary['not_valid'] = 'no dag_rel'
-                continue
+                task.dag_rel = self.dag_provider.by_id(task.dag)
 
             if TaskStatus.Stopped.value in self.dep_status[task.id] \
                     or TaskStatus.Failed.value in self.dep_status[task.id] or \

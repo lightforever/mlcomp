@@ -3,11 +3,9 @@ from celery import Celery
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(__file__))
+from mlcomp import REDIS_PASSWORD, REDIS_HOST, REDIS_PORT
 
-REDIS_HOST = os.getenv('REDIS_HOST')
-REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
-REDIS_PORT = os.getenv('REDIS_PORT')
+sys.path.insert(0, os.path.dirname(__file__))
 
 broker = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0'
 

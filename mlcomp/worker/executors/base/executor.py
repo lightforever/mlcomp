@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import time
-import os
 
 from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session

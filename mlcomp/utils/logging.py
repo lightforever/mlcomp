@@ -2,7 +2,7 @@ import os
 import logging
 from logging.config import dictConfig
 
-from mlcomp import LOG_FOLDER
+from mlcomp import LOG_FOLDER, FILE_LOG_LEVEL, DB_LOG_LEVEL
 from mlcomp.db.core import Session
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
@@ -101,10 +101,6 @@ class DbHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-
-CONSOLE_LOG_LEVEL = os.getenv('CONSOLE_LOG_LEVEL', 'DEBUG')
-DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
-FILE_LOG_LEVEL = os.getenv('FILE_LOG_LEVEL', 'INFO')
 
 LOGGING = {
     'version': 1,

@@ -145,8 +145,8 @@ class Storage:
         return folder
 
     def import_executor(self, folder: str, base_folder: str,
-                               executor: str,
-                               libraries: List[Tuple] = None):
+                        executor: str,
+                        libraries: List[Tuple] = None):
         spec = self._build_spec(folder)
         was_installation = False
 

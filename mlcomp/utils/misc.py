@@ -8,6 +8,8 @@ import pwd
 
 import dateutil
 import numpy as np
+import signal
+import psutil
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
@@ -164,6 +166,18 @@ def parse_time(time):
     if isinstance(time, str):
         return dateutil.parser.parse(time)
     return time
+
+
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        return
+    children = parent.children(recursive=True)
+    for process in children:
+        process.send_signal(sig)
+
+    parent.send_signal(sig)
 
 
 if __name__ == '__main__':

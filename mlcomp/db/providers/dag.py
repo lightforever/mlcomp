@@ -1,5 +1,3 @@
-import datetime
-
 from sqlalchemy import func, or_, case
 
 from mlcomp.db.core import PaginatorOptions

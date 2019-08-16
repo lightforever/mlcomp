@@ -3,7 +3,7 @@ import sqlalchemy.orm.session as session
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import event
 
-from mlcomp.db.conf import SA_CONNECTION_STRING, DB_TYPE
+from mlcomp import SA_CONNECTION_STRING, DB_TYPE
 from mlcomp.utils.misc import adapt_db_types
 
 

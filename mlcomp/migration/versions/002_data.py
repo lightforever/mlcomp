@@ -6,12 +6,12 @@ from mlcomp.db.models import ReportLayout
 from mlcomp.db.providers import ReportLayoutProvider
 from mlcomp.utils.misc import now
 
-_session = Session.create_session()
-
 
 def upgrade(migrate_engine):
     folder = os.path.dirname(__file__)
-    provider = ReportLayoutProvider(_session)
+    session = Session.create_session(connection_string=migrate_engine.url)
+    provider = ReportLayoutProvider(session)
+
     try:
         files = os.path.join(folder, '002', 'report_layout', '*.yml')
         for path in glob(files):
@@ -29,6 +29,7 @@ def upgrade(migrate_engine):
 
 
 def downgrade(migrate_engine):
-    provider = ReportLayoutProvider(_session)
+    session = Session.create_session(connection_string=migrate_engine.url)
+    provider = ReportLayoutProvider(session)
     provider.session.query(ReportLayout).delete(synchronize_session=False)
     provider.session.commit()

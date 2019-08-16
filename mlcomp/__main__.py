@@ -1,13 +1,13 @@
 from os.path import join
 
 import click
-import os
 import socket
 from multiprocessing import cpu_count
 
 import GPUtil
 
-from mlcomp import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER
+from mlcomp import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER, IP, PORT, \
+    WORKER_INDEX
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
@@ -56,8 +56,8 @@ def _create_computer():
         gpu=len(GPUtil.getGPUs()),
         cpu=cpu_count(),
         memory=tot_m,
-        ip=os.getenv('IP'),
-        port=int(os.getenv('PORT')),
+        ip=IP,
+        port=PORT,
         user=get_username(),
         disk=tot_d
     )
@@ -83,13 +83,12 @@ def execute(config: str, debug: bool):
 
     # Fail all InProgress Tasks
     logger = create_logger(_session)
-    worker_index = int(os.getenv('WORKER_INDEX', -1))
 
     provider = TaskProvider(_session)
     step_provider = StepProvider(_session)
 
     for t in provider.by_status(
-        TaskStatus.InProgress, worker_index=worker_index
+            TaskStatus.InProgress, worker_index=WORKER_INDEX
     ):
         step = step_provider.last_for_task(t.id)
         logger.error(
@@ -104,6 +103,16 @@ def execute(config: str, debug: bool):
     for ids in created_dag.values():
         for id in ids:
             execute_by_id(id)
+
+
+# @main.command()
+# def describe_execution():
+#     task_provider = TaskProvider()
+#     auxiliary_provider = AuxiliaryProvider()
+#     log_provider = LogProvider()
+#
+#     tasks = task_provider.all()
+#     tasks = sorted(tasks, key=lambda x: x.id)
 
 
 @main.command()

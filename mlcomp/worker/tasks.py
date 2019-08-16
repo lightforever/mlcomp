@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 from celery import states
 
-from mlcomp import MODEL_FOLDER, TASK_FOLDER
+from mlcomp import MODEL_FOLDER, TASK_FOLDER, DOCKER_IMG, WORKER_INDEX
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.db.models import Task, Dag
@@ -75,11 +75,11 @@ class ExecuteBuilder:
         self.executor = None
         self.hostname = socket.gethostname()
 
-        self.docker_img = os.getenv('DOCKER_IMG', 'default')
-        self.worker_index = int(os.getenv('WORKER_INDEX', -1))
+        self.docker_img = DOCKER_IMG
+        self.worker_index = WORKER_INDEX
 
         self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
-                              f'{os.getenv("WORKER_INDEX")}'
+                              f'{self.worker_index}'
 
         self.config = Config.from_yaml(self.dag.config)
         self.executor_type = self.config['executors'][self.task.executor][

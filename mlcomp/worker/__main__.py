@@ -10,7 +10,8 @@ import GPUtil
 import psutil
 import numpy as np
 
-from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, MODE_ECONOMIC
+from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
+    MODE_ECONOMIC, DOCKER_IMG, DOCKER_MAIN, IP, PORT
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
@@ -59,11 +60,10 @@ def error_handler(f):
 @error_handler
 def stop_processes_not_exist(session: Session, logger):
     provider = TaskProvider(session)
-    docker_img = os.getenv('DOCKER_IMG', 'default')
     hostname = socket.gethostname()
     tasks = provider.by_status(
         TaskStatus.InProgress,
-        task_docker_assigned=docker_img,
+        task_docker_assigned=DOCKER_IMG,
         computer_assigned=hostname
     )
     hostname = socket.gethostname()
@@ -93,7 +93,7 @@ def worker_usage(session: Session, logger):
     docker_provider = DockerProvider(session)
 
     computer = socket.gethostname()
-    docker = docker_provider.get(computer, os.getenv('DOCKER_IMG', 'default'))
+    docker = docker_provider.get(computer, DOCKER_IMG)
     usages = []
 
     for _ in range(1 if MODE_ECONOMIC else 10):
@@ -126,8 +126,7 @@ def worker_usage(session: Session, logger):
 @main.command()
 @click.argument('number', type=int)
 def worker(number):
-    docker_img = os.getenv('DOCKER_IMG', 'default')
-    name = f'{socket.gethostname()}_{docker_img}'
+    name = f'{socket.gethostname()}_{DOCKER_IMG}'
     argv = [
         'worker', '--loglevel=INFO', '-P=solo', f'-n={name}_{number}',
         '-O fair', '-c=1', '--prefetch-multiplier=1', '-Q', f'{name},'
@@ -143,13 +142,12 @@ def worker_supervisor():
 
     start_schedule([(stop_processes_not_exist, 10)])
 
-    if os.getenv('DOCKER_MAIN', 'True') == 'True':
+    if DOCKER_MAIN:
         syncer = FileSync()
         start_schedule([(worker_usage, 0)])
         start_schedule([(syncer.sync, 10 if MODE_ECONOMIC else 1)])
 
-    docker_img = os.getenv('DOCKER_IMG', 'default')
-    name = f'{socket.gethostname()}_{docker_img}_supervisor'
+    name = f'{socket.gethostname()}_{DOCKER_IMG}_supervisor'
     argv = [
         'worker', '--loglevel=INFO', '-P=solo', f'-n={name}', '-O fair',
         '-c=1', '--prefetch-multiplier=1', '-Q', f'{name}'
@@ -192,7 +190,7 @@ def supervisor(debug: bool, workers: int = cpu_count()):
 
 def _create_docker():
     docker = Docker(
-        name=os.getenv('DOCKER_IMG', 'default'),
+        name=DOCKER_IMG,
         computer=socket.gethostname(),
         ports='-'.join(list(map(str, MASTER_PORT_RANGE))),
         last_activity=now()
@@ -208,8 +206,8 @@ def _create_computer():
         gpu=len(GPUtil.getGPUs()),
         cpu=cpu_count(),
         memory=tot_m,
-        ip=os.getenv('IP'),
-        port=int(os.getenv('PORT')),
+        ip=IP,
+        port=PORT,
         user=get_username(),
         disk=tot_d
     )
