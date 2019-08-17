@@ -17,21 +17,36 @@ def main():
 
 @main.command()
 def start_site():
+    """
+    Start only site
+    """
     migrate()
     _start_server()
 
 
 @main.command()
 def stop_site():
+    """
+    Stop site
+    """
     _stop_server()
 
 
 @main.command()
-@click.option('--daemon', type=bool, default=True)
-@click.option('--debug', type=bool, default=False)
-@click.option('--workers', type=int, default=cpu_count())
-@click.option('--log_level', type=str, default='INFO')
+@click.option('--daemon', type=bool, default=True,
+              help='start supervisord in a daemon mode')
+@click.option('--debug', type=bool, default=False,
+              help='use source files instead the installed library')
+@click.option('--workers', type=int, default=cpu_count(),
+              help='count of workers')
+@click.option('--log_level', type=str, default='INFO',
+              help='log level of supervisord')
 def start(daemon: bool, debug: bool, workers: int, log_level: str):
+    """
+    Start both server and worker on the same machine.
+
+    It starts: redis-server, site, worker_supervisor, workers
+    """
     migrate()
 
     # creating supervisord config
@@ -79,6 +94,9 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
 
 @main.command()
 def stop():
+    """
+    Stop supervisord started by start command
+    """
     lines = os.popen('ps -ef | grep supervisord').readlines()
     for line in lines:
         if 'mlcomp/configs/supervisord.conf' not in line:

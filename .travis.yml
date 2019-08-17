@@ -38,7 +38,7 @@ jobs:
       name: 'Docs'
       if: branch = master
       install:
-        - pip install travis-sphinx
+        - pip install travis-sphinx sphinx_rtd_theme
         # for correct changelog on github pages
         - pip install git+https://github.com/bitprophet/releases/#egg=releases
       script:

@@ -17,7 +17,8 @@ from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import DockerProvider, TaskProvider
 from mlcomp.utils.schedule import start_schedule
-from mlcomp.utils.misc import dict_func, now, disk, get_username
+from mlcomp.utils.misc import dict_func, now, disk, get_username, \
+    kill_child_processes
 from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
@@ -126,6 +127,11 @@ def worker_usage(session: Session, logger):
 @main.command()
 @click.argument('number', type=int)
 def worker(number):
+    """
+    Start worker
+
+    :param number: worker index
+    """
     name = f'{socket.gethostname()}_{DOCKER_IMG}'
     argv = [
         'worker', '--loglevel=INFO', '-P=solo', f'-n={name}_{number}',
@@ -137,6 +143,11 @@ def worker(number):
 
 @main.command()
 def worker_supervisor():
+    """
+    Start worker supervisor.
+    This program controls workers ran on the same machine.
+    Also, it writes metric of resources consumption.
+    """
     _create_computer()
     _create_docker()
 
@@ -157,9 +168,19 @@ def worker_supervisor():
 
 
 @main.command()
-@click.option('--debug', type=bool, default=False)
-@click.option('--workers', type=int, default=None)
-def supervisor(debug: bool, workers: int = cpu_count()):
+@click.option('--daemon', type=bool, default=True,
+              help='start supervisord in a daemon mode')
+@click.option('--debug', type=bool, default=False,
+              help='use source files instead the installed library')
+@click.option('--workers', type=int, default=cpu_count(),
+              help='count of workers')
+@click.option('--log_level', type=str, default='INFO',
+              help='log level of supervisord')
+def start(daemon: bool, debug: bool, workers: int, log_level: str):
+    """
+       Start worker_supervisor and workers
+    """
+
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -170,7 +191,7 @@ def supervisor(debug: bool, workers: int = cpu_count()):
         worker_command = 'python mlcomp/worker/__main__.py worker'
 
     text = [
-        '[supervisord]', 'nodaemon=true', '', '[program:supervisor]',
+        '[supervisord]', f'nodaemon={daemon}', '', '[program:supervisor]',
         f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
         ''
     ]
@@ -185,7 +206,20 @@ def supervisor(debug: bool, workers: int = cpu_count()):
     with open(conf, 'w') as f:
         f.writelines('\n'.join(text))
 
-    os.system(f'supervisord ' f'-c {conf} -e DEBUG')
+    os.system(f'supervisord ' f'-c {conf} -e {log_level}')
+
+
+@main.command()
+def stop():
+    """
+    Stop supervisord started by start command
+    """
+    lines = os.popen('ps -ef | grep supervisord').readlines()
+    for line in lines:
+        if 'mlcomp/configs/supervisord.conf' not in line:
+            continue
+        pid = int(line.split()[1])
+        kill_child_processes(pid)
 
 
 def _create_docker():

@@ -19,7 +19,6 @@ from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
     FileProvider, AuxiliaryProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.server.back.supervisor import register_supervisor
-from mlcomp.server.back import conf
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import from_module_path
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
@@ -606,7 +605,7 @@ def steps():
 @app.route('/api/token', methods=['POST'])
 def token():
     data = request_data()
-    if str(data['token']).strip() != conf.TOKEN:
+    if str(data['token']).strip() != TOKEN:
         return Response(
             json.dumps({
                 'success': False,
@@ -689,7 +688,7 @@ def shutdown():
 
 def start_server():
     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
-        logger.info(f'Server TOKEN = {conf.TOKEN}', ComponentType.API)
+        logger.info(f'Server TOKEN = {TOKEN}', ComponentType.API)
         register_supervisor()
 
     app.run(
@@ -701,5 +700,5 @@ def start_server():
 def stop_server():
     requests.post(
         f'http://localhost:{WEB_PORT}/api/shutdown',
-        headers={'Authorization': conf.TOKEN}
+        headers={'Authorization': TOKEN}
     )
