@@ -153,7 +153,7 @@ class DagProvider(BaseDataProvider):
         if not t.started:
             return duration_format(0)
         finished = (
-            t.finished if t.status > TaskStatus.InProgress.value else now()
+            t.finished if t.finished else now()
         )
         delta = (finished - t.started).total_seconds()
         return duration_format(delta)

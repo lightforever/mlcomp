@@ -1,9 +1,42 @@
 services:
+  postgres:
+    container_name: postgres
+    env_file: .env
+    image: postgres:11.1
+    restart: always
+    volumes: [
+      '$ROOT_FOLDER/db/pgdata/data:/var/lib/postgresql/data/pgdata',
+      '$ROOT_FOLDER/db/pgdata/backups:/backups'
+    ]
+    shm_size: 4G
+    ports:
+      - 5432:5432
+  redis:
+    command: 'redis-server --requirepass $REDIS_PASSWORD'
+    container_name: redis
+    image: redis:5.0.4
+    restart: always
+    ports:
+      - 6379:6379
   mlcomp-server:
     container_name: mlcomp-server
     restart: always
     build:
-      context: ../
-      dockerfile: docker/server
-    env_file: .env
+      context: .
+      dockerfile: server
+    links:
+      - postgres
+      - redis
+    #command: sleep 10000
+    environment:
+      - ROOT_FOLDER=/root/mlcomp
+      - EXTRA_ENV=REDIS_HOST=redis;POSTGRES_HOST=postgres;LOG_NAME=server
+    volumes: [
+      '$ROOT_FOLDER:/root/mlcomp'
+    ]
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - 4201:4201
 version: '2.3'

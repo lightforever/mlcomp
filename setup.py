@@ -53,7 +53,7 @@ def files(directory):
 
         folder_files = [
             os.path.join(folder, f) for f in os.listdir(folder)
-            if os.path.isfile(f)
+            if os.path.isfile(os.path.join(folder, f))
         ]
         yield folder, folder_files
 
@@ -101,11 +101,11 @@ class UploadCommand(Command):
         )
 
         self.status('Uploading the package to PyPI via Twine…')
-        os.system('python -m twine upload dist/*')
+        os.system('python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*')
 
         self.status('Pushing git tags…')
-        os.system('git tag v{0}'.format(load_version()))
-        os.system('git push --tags')
+        # os.system('git tag v{0}'.format(load_version()))
+        # os.system('git push --tags')
 
         sys.exit()
 
@@ -120,7 +120,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=find_packages(exclude=('tests', )),
+    packages=find_packages(exclude=('tests',)),
     install_requires=load_requirements(),
     include_package_data=True,
     data_files=get_data_files(),
@@ -149,3 +149,8 @@ setup(
         ],
     }
 )
+
+# noinspection PyUnresolvedReferences
+# flake8: noqa
+# Create necessary folder and default configs
+import mlcomp

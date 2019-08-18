@@ -4,7 +4,9 @@ import shutil
 
 from .__version__ import __version__  # noqa: F401
 
-ROOT_FOLDER = os.getenv('ROOT_FOLDER', os.path.expanduser('~/mlcomp'))
+ROOT_FOLDER = os.path.abspath(
+    os.path.expanduser(os.getenv('ROOT_FOLDER', '~/mlcomp')))
+
 DATA_FOLDER = join(ROOT_FOLDER, 'data')
 MODEL_FOLDER = join(ROOT_FOLDER, 'models')
 TASK_FOLDER = join(ROOT_FOLDER, 'tasks')
@@ -31,10 +33,20 @@ for name in os.listdir(docker_folder):
         shutil.copy(file, target_file)
 
 # exporting environment variables
-with open(join(CONFIG_FOLDER, '.env')) as f:
+env_file = join(CONFIG_FOLDER, '.env')
+
+with open(env_file) as f:
     for l in f.readlines():
         k, v = l.strip().split('=')
         os.environ[k] = v
+
+# extra env
+extra_env = os.getenv('EXTRA_ENV', '')
+for p in extra_env.split(';'):
+    if '=' not in p:
+        continue
+    k, v = p.strip().split('=')
+    os.environ[k] = v
 
 # for debugging
 os.environ['PYTHONPATH'] = '.'
@@ -55,6 +67,7 @@ WORKER_INDEX = os.getenv('WORKER_INDEX', -1)
 CONSOLE_LOG_LEVEL = os.getenv('CONSOLE_LOG_LEVEL', 'DEBUG')
 DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
 FILE_LOG_LEVEL = os.getenv('FILE_LOG_LEVEL', 'INFO')
+LOG_NAME = os.getenv('LOG_NAME', 'log')
 
 DB_TYPE = os.getenv('DB_TYPE')
 if DB_TYPE == 'POSTGRESQL':
@@ -86,5 +99,5 @@ __all__ = [
     'REDIS_PASSWORD', 'REDIS_PORT', 'TOKEN', 'DOCKER_IMG', 'WEB_HOST',
     'WEB_PORT', 'WORKER_INDEX', 'CONSOLE_LOG_LEVEL', 'DB_LOG_LEVEL',
     'FILE_LOG_LEVEL', 'DB_TYPE', 'SA_CONNECTION_STRING', 'FLASK_ENV',
-    'DOCKER_MAIN', 'IP', 'PORT', 'MODE_ECONOMIC'
+    'DOCKER_MAIN', 'IP', 'PORT', 'MODE_ECONOMIC', 'LOG_NAME'
 ]

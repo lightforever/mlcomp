@@ -22,7 +22,8 @@ computer = Table(
     Column('user', String, nullable=False),
     Column('last_synced', TIMESTAMP),
     Column('disk', Integer, nullable=False),
-    Column('syncing_computer', String(100))
+    Column('syncing_computer', String(100)),
+    Column('root_folder', String(100), nullable=False)
 
 )
 

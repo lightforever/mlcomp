@@ -1,9 +1,10 @@
 info:
   name: cifar
   project: examples
+  expdir: .
 executors:
   train:
     type: catalyst
-    report: catalyst
+    layout: catalyst
     args:
       config: catalyst.yml

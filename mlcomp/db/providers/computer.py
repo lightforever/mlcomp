@@ -147,6 +147,7 @@ class ComputerProvider(BaseDataProvider):
         res = []
         for c, a in query.all():
             c.last_activity = a
+            res.append(c)
         return res
 
 

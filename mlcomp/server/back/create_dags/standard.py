@@ -37,7 +37,7 @@ class DagStandardBuilder:
         self.config_path = config_path
 
         self.info = config['info']
-        self.report_name = self.info.get('report')
+        self.layout_name = self.info.get('layout')
 
         self.provider = None
         self.report_provider = None
@@ -73,16 +73,16 @@ class DagStandardBuilder:
 
     def create_report(self):
         self.dag_report_id = None
-        report_name = self.report_name
-        if report_name:
-            if report_name not in self.layouts:
-                raise Exception(f'Unknown layout = {report_name}')
+        layout_name = self.layout_name
+        if layout_name:
+            if layout_name not in self.layouts:
+                raise Exception(f'Unknown layout = {layout_name}')
 
             report = Report(
-                config=yaml_dump(self.layouts[report_name]),
+                config=yaml_dump(self.layouts[layout_name]),
                 name=self.info['name'],
                 project=self.project,
-                layout=report_name
+                layout=layout_name
             )
             self.report_provider.add(report)
             self.dag_report_id = report.id
@@ -143,11 +143,11 @@ class DagStandardBuilder:
         )
         task.additional_info = ''
 
-        if self.report_name and task_type == TaskType.Train.value:
-            if self.report_name not in self.layouts:
+        if self.layout_name and task_type == TaskType.Train.value:
+            if self.layout_name not in self.layouts:
                 raise Exception(f'Unknown report = {v["report"]}')
 
-            report_config = self.layouts[self.report_name]
+            report_config = self.layouts[self.layout_name]
             info['report_config'] = report_config
             task.additional_info = yaml_dump(info)
             self.provider.add(task, commit=False)
@@ -155,7 +155,7 @@ class DagStandardBuilder:
                 config=yaml_dump(report_config),
                 name=task.name,
                 project=self.project,
-                layout=self.report_name
+                layout=self.layout_name
             )
             self.report_provider.add(report)
             task.report = report.id

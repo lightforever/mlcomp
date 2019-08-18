@@ -1,34 +1,9 @@
 FROM python:3.6
 
-RUN pip install --no-cache-dir \
-    numpy>=1.16.3 \
-    click>=7.0 \
-    typing \
-    apscheduler>=3.6.0 \
-    sqlalchemy>=1.3.4 \
-    celery>=4.3.0 \
-    flask>=1.0.2 \
-    requests \
-    flask_cors>=3.0.6 \
-    sqlalchemy_serializer==1.1.1 \
-    psycopg2-binary>=2.8.2 \
-    matplotlib \
-    scikit-learn>=0.21.2 \
-    Pillow \
-    PyYAML \
-    pathspec>=0.5.9 \
-    sqlalchemy-migrate>=0.12.0 \
-    redis>=3.2.1 \
-    sqlalchemy-migrate>=1.3.4
+RUN pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mlcomp
 
 # Set the locale
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
-# Copy source files
-COPY mlcomp /app/mlcomp
-COPY docker/server.sh /app/mlcomp/start.sh
-WORKDIR /app/mlcomp
-
-RUN chmod 777 start.sh
-CMD ["./start.sh"]
+CMD ["mlcomp-server", "start-site"]

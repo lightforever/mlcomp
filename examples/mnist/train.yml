@@ -1,7 +1,8 @@
 info:
   name: mnist_train
   project: examples
-  report: classify
+  layout: classify
+  expdir: .
 executors:
   train:
     type: catalyst

@@ -1,14 +1,12 @@
-##Production
+#Production
 
 Mlcomp has the compiled angular files.
 
-They are integrated into flask-server. 
+They are integrated into the flask-server. 
 
 You do not have to do anything with these sources.
 
-##Development
-
-###Installation
+#Installation
 
 If you want to change the UI, your steps:
 

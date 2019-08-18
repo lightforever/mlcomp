@@ -190,8 +190,9 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
                              'worker-supervisor'
         worker_command = 'python mlcomp/worker/__main__.py worker'
 
+    daemon_text = 'false' if daemon else 'true'
     text = [
-        '[supervisord]', f'nodaemon={daemon}', '', '[program:supervisor]',
+        '[supervisord]', f'nodaemon={daemon_text}', '', '[program:supervisor]',
         f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
         ''
     ]
@@ -243,7 +244,8 @@ def _create_computer():
         ip=IP,
         port=PORT,
         user=get_username(),
-        disk=tot_d
+        disk=tot_d,
+        root_folder=ROOT_FOLDER
     )
     ComputerProvider(_session).create_or_update(computer, 'name')
 

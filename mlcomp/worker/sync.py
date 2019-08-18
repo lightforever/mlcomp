@@ -2,6 +2,7 @@ import os
 import socket
 import traceback
 import subprocess
+from datetime import timedelta
 from os.path import join
 from typing import List
 
@@ -16,8 +17,8 @@ from mlcomp.utils.io import yaml_load
 
 
 def sync_directed(
-    session: Session, source: Computer, target: Computer,
-    folders_excluded: List
+        session: Session, source: Computer, target: Computer,
+        folders_excluded: List
 ):
     current_computer = socket.gethostname()
     end = ' --perms  --chmod=777'
@@ -29,31 +30,34 @@ def sync_directed(
                 excluded[i] = f'--exclude {excluded[i]}'
             end += ' ' + ' '.join(excluded)
 
+        source_folder = join(source.root_folder, folder)
+        target_folder = join(target.root_folder, folder)
+
         if current_computer == source.name:
             command = f'rsync -vhru -e ' \
-                f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \
-                f' {folder}/ {target.user}@{target.ip}:{folder}/ ' \
-                f'{end}'
+                      f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \
+                      f'{source_folder}/ ' \
+                      f'{target.user}@{target.ip}:{target_folder} {end}'
         elif current_computer == target.name:
             command = f'rsync -vhru -e ' \
-                f'"ssh -p {source.port} -o StrictHostKeyChecking=no" ' \
-                f' {source.user}@{source.ip}:{folder}/ {folder}/' \
-                f'{end}'
+                      f'"ssh -p {source.port} -o StrictHostKeyChecking=no" ' \
+                      f'{source.user}@{source.ip}:{source_folder}/ ' \
+                      f'{target_folder} {end}'
         else:
             command = f'rsync -vhru -e ' \
-                f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \
-                f' {folder}/ {target.user}@{target.ip}:{folder}/ ' \
-                f'{end}'
+                      f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \
+                      f' {source_folder}/ ' \
+                      f'{target.user}@{target.ip}:{target_folder}/ {end}'
 
             command = f'ssh -p {source.port} ' \
-                f'{source.user}@{source.ip} "{command}"'
+                      f'{source.user}@{source.ip} "{command}"'
 
-        logger.info(command)
+        logger.info(command, ComponentType.WorkerSupervisor, source.name)
         subprocess.check_output(command, shell=True)
 
 
 def copy_remote(
-    session: Session, computer_from: str, path_from: str, path_to: str
+        session: Session, computer_from: str, path_from: str, path_to: str
 ):
     provider = ComputerProvider(session)
     src = provider.by_name(computer_from)
@@ -73,10 +77,10 @@ class FileSync:
             project_provider = ProjectProvider(self.session)
 
             computer = provider.by_name(hostname)
-            last_synced = computer.last_synced
             sync_start = now()
 
             computers = provider.all_with_last_activtiy()
+            last_synced = computer.last_synced
             computers = [
                 c for c in computers
                 if (now() - c.last_activity).total_seconds() < 10
@@ -88,15 +92,15 @@ class FileSync:
             for p in projects:
                 if last_synced is not None and \
                         (p.last_activity is None or
-                         p.last_activity < last_synced):
+                         p.last_activity < last_synced - timedelta(seconds=5)):
                     continue
 
                 ignore = yaml_load(p.ignore_folders)
                 for f in ignore:
                     excluded.append(str(f))
 
-                folders_excluded.append([join(DATA_FOLDER, p.name), excluded])
-                folders_excluded.append([join(MODEL_FOLDER, p.name), []])
+                folders_excluded.append([join('data', p.name), excluded])
+                folders_excluded.append([join('models', p.name), []])
 
             for c in computers:
                 if c.name != computer.name:

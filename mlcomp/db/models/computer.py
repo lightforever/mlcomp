@@ -19,6 +19,7 @@ class Computer(Base):
     last_synced = sa.Column(sa.DateTime)
     disk = sa.Column(sa.Integer)
     syncing_computer = sa.Column(sa.String, ForeignKey('computer.name'))
+    root_folder = sa.Column(sa.String)
 
 
 class ComputerUsage(Base):

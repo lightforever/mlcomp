@@ -6,7 +6,7 @@ from multiprocessing import cpu_count
 
 import GPUtil
 
-from mlcomp import ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER, IP, PORT, \
+from mlcomp import ROOT_FOLDER, IP, PORT, \
     WORKER_INDEX
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
@@ -59,7 +59,8 @@ def _create_computer():
         ip=IP,
         port=PORT,
         user=get_username(),
-        disk=tot_d
+        disk=tot_d,
+        root_folder=ROOT_FOLDER
     )
     ComputerProvider(_session).create_or_update(computer, 'name')
 
@@ -116,6 +117,7 @@ def execute(config: str, debug: bool):
 
 
 @main.command()
+@click.argument('project')
 @click.option('--computer', help='sync computer with all the others')
 @click.option(
     '--only_from',
@@ -127,26 +129,25 @@ def execute(config: str, debug: bool):
     is_flag=True,
     help='only copy files from all the others to the computer'
 )
-def sync(computer: str, only_from: bool, only_to: bool):
+def sync(project: str, computer: str, only_from: bool, only_to: bool):
+    _create_computer()
+
     computer = computer or socket.gethostname()
     provider = ComputerProvider(_session)
-    projects = ProjectProvider(_session).all_last_activity()
+    project_provider = ProjectProvider(_session)
     computer = provider.by_name(computer)
     computers = provider.all()
     folders_excluded = []
-    for p in projects:
-        if computer.last_synced is not None and \
-                (p.last_activity is None or
-                 p.last_activity < computer.last_synced):
-            continue
+    p = project_provider.by_name(project)
+    assert p, f'Project={project} is not found'
 
-        ignore = yaml_load(p.ignore_folders)
-        excluded = []
-        for f in ignore:
-            excluded.append(str(f))
+    ignore = yaml_load(p.ignore_folders)
+    excluded = []
+    for f in ignore:
+        excluded.append(str(f))
 
-        folders_excluded.append([join(DATA_FOLDER, p.name), excluded])
-        folders_excluded.append([join(MODEL_FOLDER, p.name), []])
+    folders_excluded.append([join('data', p.name), excluded])
+    folders_excluded.append([join('models', p.name), []])
 
     for c in computers:
         if c.name != computer.name:

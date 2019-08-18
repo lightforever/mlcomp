@@ -63,7 +63,7 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
     folder = os.path.dirname(os.path.dirname(__file__))
     redis_path = os.path.join(folder, 'bin/redis-server')
 
-    daemon_text = 'true' if daemon else 'false'
+    daemon_text = 'false' if daemon else 'true'
     text = [
         '[supervisord]', f'nodaemon={daemon_text}', '',
         '[program:supervisor]',
