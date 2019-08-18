@@ -31,19 +31,19 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
 - Experiments comparison
 - Customizing layouts
 
-Contents
+**Contents**
 
-[Screenshots](#screenshots)
+- [Screenshots](#screenshots)
 
-[Installation](#installation)
+- [Installation](#installation)
 
-[Environment variables](#environment-variables)
+- [UI](#ui)
 
-[UI](#ui)
+- [Usage](#usage)
 
-[Usage](#usage)
+- [Docs and examples](#docs-and-examples)
 
-[Docs and examples](#docs-and-examples)
+- [Environment variables](#environment-variables)
 
 # Screenshots
 
@@ -86,7 +86,7 @@ Contents
      
      to upload
      ```bash
-     rsync -vhru -e ' "ssh -p {target.port} -o StrictHostKeyChecking=no" \
+     rsync -vhru -e "ssh -p {target.port} -o StrictHostKeyChecking=no" \
      {folder}/ {target.user}@{target.ip}:{folder}/ --perms  --chmod=777
      ```
      to download
@@ -111,6 +111,34 @@ Contents
    
     e. Install [apex](https://github.com/NVIDIA/apex#quick-start) for distributed learning
     
+ # UI
+ 
+Web site is available at http://{WEB_HOST}:{WEB_PORT}
+
+By default, it is http://localhost:4201
+
+The front is built with AngularJS.
+
+In case you desire to change it, please consider [front's Readme page](mlcomp/server/front/README.md)
+ 
+ # Usage
+ 
+In your folder:
+ ```bash
+mlcomp dag PATH_TO_CONFIG.yml
+```
+
+This command copies files of the directory to the database.
+
+Then, the server schedules the dag considering free resources. 
+ 
+# Docs and examples
+ 
+API documentation and an overview of the library can be
+ found here [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://lightforever.github.io/mlcomp/index.html)
+
+In the [examples](examples/) folder of the repository, you can find advanced tutorials and MLComp best practices.
+
 # Environment variables
 
 The single file to setup your server/worker environment is located at ~/mlcomp/configs/.env
@@ -139,30 +167,3 @@ from this range. Ranges of different workers must be not overlapping.
 You can see your network interfaces with `ifconfig` command.
  Please consider [nvidia doc](https://docs.nvidia.com/deeplearning/sdk/nccl-developer-guide/docs/env.html)
  
- # UI
- 
-Web site is available at http://{WEB_HOST}:{WEB_PORT}
-
-By default, it is http://localhost:4201
-
-The front is built with AngularJS.
-
-In case you desire to change it, please consider [front's Readme page](mlcomp/server/front/README.md)
- 
- # Usage
- 
-In your folder:
- ```bash
-mlcomp dag PATH_TO_CONFIG.yml
-```
-
-This command copies files of the directory to the database.
-
-Then, the server schedules the dag considering free resources. 
- 
-# Docs and examples
- 
-API documentation and an overview of the library can be
- found here [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://lightforever.github.io/mlcomp/index.html)
-
-In the [examples](examples/) folder of the repository, you can find advanced tutorials and MLComp best practices.
