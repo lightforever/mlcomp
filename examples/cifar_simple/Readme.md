@@ -1,4 +1,4 @@
-This examples demonstrates
+This example demonstrates
 
 Run
 

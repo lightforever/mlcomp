@@ -21,7 +21,7 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
 - Distributed training
 - Supervisor that controls computational resources
 - Synchronization of both code and data
-- Resources monitoring
+- Resource monitoring
 - Full-functionally pause and continue on UI
 - Auto control of the requirements
 - Code dumping(with syntax highlight on UI)
@@ -47,13 +47,23 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
 
 # Screenshots
 
+Dags
+
 ![dags](docs/imgs/dags.png)
+
+Computers
 
 ![computers](docs/imgs/computers.png)
 
+Reports
+
 ![reports](docs/imgs/reports.png)
 
+Code
+
 ![code](docs/imgs/code.png)
+
+Graph
 
 ![graph](docs/imgs/graph.png)
 
@@ -94,18 +104,27 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
      
      rsync will perform the following commands:
      
-     to upload
-     ```bash
-     rsync -vhru -e "ssh -p {target.port} -o StrictHostKeyChecking=no" \
-     {folder}/ {target.user}@{target.ip}:{folder}/ --perms  --chmod=777
-     ```
-     to download
      
-     ```.env
-     rsync -vhru -e "ssh -p {source.port} -o StrictHostKeyChecking=no" \
-     {source.user}@{source.ip}:{folder}/ {folder}/ --perms  --chmod=777
-     ```
+         <details>
+            <summary>to upload</summary>
+            
+            ```bash
+             rsync -vhru -e "ssh -p {target.port} -o StrictHostKeyChecking=no" \
+             {folder}/ {target.user}@{target.ip}:{folder}/ --perms  --chmod=777
+            ```
+         
+         </details>
+     
+        <details>
+           <summary>to download</summary>
+           
+             ```.env
+             rsync -vhru -e "ssh -p {source.port} -o StrictHostKeyChecking=no" \
+             {source.user}@{source.ip}:{folder}/ {folder}/ --perms  --chmod=777
+             ```
+        </details>
     
+  
     c. To Run postgresql, redis-server, mlcomp-server, execute on your server-computer:
     
      ```bash

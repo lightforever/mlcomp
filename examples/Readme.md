@@ -1,7 +1,7 @@
-- [cifar](cifar/Readme.md) simple extended example of [Catalyst cifar_simple](https://github.com/catalyst-team/catalyst/tree/master/examples/cifar_simple)
-- [mnist](mnist/Readme.md) Kaggle digit recognizer competition
+- [cifar](cifar/Readme.md) simple is a example extended of [Catalyst cifar_simple](https://github.com/catalyst-team/catalyst/tree/master/examples/cifar_simple)
+- [digit-recognizer](mnist/Readme.md) Kaggle digit recognizer competition
     
-    -catalyst multistage
+    -Catalyst multistage
     
     -grid search
     
@@ -9,4 +9,4 @@
     
     -pipes
     
-- [step](step/Readme.md) Hierarchical logging
+- [hierarchical_logging](hierarchical_logging/Readme.md) Hierarchical logging
