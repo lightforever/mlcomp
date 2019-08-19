@@ -36,7 +36,7 @@ def main():
 def error_handler(f):
     name = f.__name__
     wrapper_vars = {'session': Session.create_session(key=name)}
-    wrapper_vars['logger'] = create_logger(wrapper_vars['session'])
+    wrapper_vars['logger'] = create_logger(wrapper_vars['session'], name)
 
     hostname = socket.gethostname()
 
@@ -48,7 +48,8 @@ def error_handler(f):
                 Session.cleanup(name)
 
                 wrapper_vars['session'] = Session.create_session(key=name)
-                wrapper_vars['logger'] = create_logger(wrapper_vars['session'])
+                wrapper_vars['logger'] = create_logger(wrapper_vars['session'],
+                                                       name)
 
             wrapper_vars['logger'].error(
                 traceback.format_exc(), ComponentType.WorkerSupervisor,
@@ -71,21 +72,18 @@ def stop_processes_not_exist(session: Session, logger):
     for t in tasks:
         if not psutil.pid_exists(t.pid):
             # tasks can retry the execution
-            if (now() - t.last_activity).total_seconds() < 15:
+            if (now() - t.last_activity).total_seconds() < 30:
                 continue
 
-            t = provider.by_id(t.id)
+            os.system(f'kill -9 {t.pid}')
+            t.status = TaskStatus.Failed.value
+            logger.error(
+                f'process with pid = {t.pid} does not exist. '
+                f'Set task to failed state',
+                ComponentType.WorkerSupervisor, hostname, t.id
+            )
 
-            if not psutil.pid_exists(t.pid):
-                os.system(f'kill -9 {t.pid}')
-                t.status = TaskStatus.Failed.value
-                logger.error(
-                    f'process with pid = {t.pid} does not exist. '
-                    f'Set task to failed state',
-                    ComponentType.WorkerSupervisor, hostname, t.id
-                )
-
-                provider.commit()
+            provider.commit()
 
 
 @error_handler
@@ -148,6 +146,13 @@ def worker_supervisor():
     This program controls workers ran on the same machine.
     Also, it writes metric of resources consumption.
     """
+    host = socket.gethostname()
+
+    logger = create_logger(_session, 'worker_supervisor')
+    logger.info('worker_supervisor start',
+                ComponentType.WorkerSupervisor,
+                host)
+
     _create_computer()
     _create_docker()
 
@@ -158,11 +163,15 @@ def worker_supervisor():
         start_schedule([(worker_usage, 0)])
         start_schedule([(syncer.sync, 10 if MODE_ECONOMIC else 1)])
 
-    name = f'{socket.gethostname()}_{DOCKER_IMG}_supervisor'
+    name = f'{host}_{DOCKER_IMG}_supervisor'
     argv = [
         'worker', '--loglevel=INFO', '-P=solo', f'-n={name}', '-O fair',
         '-c=1', '--prefetch-multiplier=1', '-Q', f'{name}'
     ]
+
+    logger.info('worker_supervisor run celery',
+                ComponentType.WorkerSupervisor,
+                host)
 
     app.worker_main(argv)
 

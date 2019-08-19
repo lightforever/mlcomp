@@ -83,7 +83,7 @@ def execute(config: str, debug: bool):
     _create_computer()
 
     # Fail all InProgress Tasks
-    logger = create_logger(_session)
+    logger = create_logger(_session, __name__)
 
     provider = TaskProvider(_session)
     step_provider = StepProvider(_session)

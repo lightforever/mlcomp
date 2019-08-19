@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 from celery import states
 
-from mlcomp import MODEL_FOLDER, TASK_FOLDER, DOCKER_IMG, WORKER_INDEX
+from mlcomp import MODEL_FOLDER, TASK_FOLDER, DOCKER_IMG
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.db.models import Task, Dag
@@ -30,7 +30,7 @@ class ExecuteBuilder:
         self.session = Session.create_session(key='ExecuteBuilder')
         self.id = id
         self.repeat_count = repeat_count
-        self.logger = create_logger(self.session)
+        self.logger = create_logger(self.session, 'ExecuteBuilder')
 
         self.provider = None
         self.library_provider = None
@@ -76,7 +76,7 @@ class ExecuteBuilder:
         self.hostname = socket.gethostname()
 
         self.docker_img = DOCKER_IMG
-        self.worker_index = WORKER_INDEX
+        self.worker_index = os.environ['WORKER_INDEX']
 
         self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
                               f'{self.worker_index}'
@@ -186,6 +186,9 @@ class ExecuteBuilder:
 
                 time.sleep(3)
 
+                self.executor.info(f'sending {(self.id, self.repeat_count)} '
+                                   f'to {self.queue_personal}')
+
                 execute.apply_async(
                     (self.id, self.repeat_count), queue=self.queue_personal
                 )
@@ -214,7 +217,8 @@ class ExecuteBuilder:
             if Session.sqlalchemy_error(e):
                 Session.cleanup(key='ExecuteBuilder')
                 self.session = Session.create_session(key='ExecuteBuilder')
-                self.logger.session = create_logger(self.session)
+                self.logger.session = create_logger(self.session,
+                                                    'ExecuteBuilder')
 
             step = self.executor.step.id if \
                 (self.executor and self.executor.step) else None
@@ -283,8 +287,7 @@ def remove_dag(session: Session, id: int):
         remove_task(session, task.id)
 
 
-def stop(session: Session, task: Task, dag: Dag):
-    logger = create_logger(session)
+def stop(logger, session: Session, task: Task, dag: Dag):
     provider = TaskProvider(session)
     if task.status > TaskStatus.InProgress.value:
         return task.status

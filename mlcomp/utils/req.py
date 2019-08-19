@@ -51,7 +51,7 @@ def find_imports(
                     elif isinstance(node, ast.ImportFrom):
                         raw_imports.append((node.module, file_rel))
             except Exception as exc:
-                logger = create_logger(Session.create_session())
+                logger = create_logger(Session.create_session(), __name__)
                 logger.error('Failed on file: %s' % file_rel)
                 raise exc
 

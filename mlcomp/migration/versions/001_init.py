@@ -203,6 +203,12 @@ task_dependency = Table(
     Column('depend_id', Integer, primary_key=True),
 )
 
+task_synced = Table(
+    'task_synced', meta,
+    Column('computer', String(100), primary_key=True),
+    Column('task', Integer, primary_key=True),
+)
+
 docker = Table(
     'docker', meta,
     Column('name', String(100), primary_key=True),
@@ -252,6 +258,7 @@ def upgrade(migrate_engine):
         docker.create()
         model.create()
         auxiliary.create()
+        task_synced.create()
 
         ForeignKeyConstraint([computer_usage.c.computer],
                              [computer.c.name],
@@ -359,6 +366,11 @@ def upgrade(migrate_engine):
                              ondelete='CASCADE').create()
         UniqueConstraint(model.c.project, model.c.name,
                          name='model_project_name_unique').create()
+
+        ForeignKeyConstraint([task_synced.c.computer], [computer.c.id],
+                             ondelete='CASCADE').create()
+        ForeignKeyConstraint([task_synced.c.task], [task.c.id],
+                             ondelete='CASCADE').create()
     except Exception:
         trans.rollback()
         raise

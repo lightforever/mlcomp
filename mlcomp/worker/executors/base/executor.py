@@ -5,7 +5,8 @@ from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
 from mlcomp.utils.config import Config
-from mlcomp.db.providers import TaskProvider, ComputerProvider
+from mlcomp.db.providers import TaskProvider, ComputerProvider, \
+    ProjectProvider, TaskSyncedProvider
 from mlcomp.worker.executors.base.step import StepWrap
 
 
@@ -41,7 +42,7 @@ class Executor(ABC):
         self.step.enter()
 
         if not task.debug and not MODE_ECONOMIC:
-            self.wait_data_sync(task.computer_assigned)
+            self.wait_data_sync()
         res = self.work()
         self.step.task_provider.commit()
         return res
@@ -93,22 +94,24 @@ class Executor(ABC):
     def is_registered(cls: str):
         return cls in Executor._child
 
-    def wait_data_sync(self, computer_assigned: str):
+    def wait_data_sync(self):
         self.info(f'Start data sync')
-        provider = ComputerProvider(self.session)
-        last_task_time = TaskProvider(self.session).last_succeed_time()
-        self.info(f'Providers created')
 
         while True:
-            computer = provider.by_name(computer_assigned)
-            self.info(f'computer.last_synced = {computer.last_synced} '
-                      f'last_task_time = {last_task_time}')
+            provider = TaskSyncedProvider(self.session)
+            provider.commit()
 
-            if last_task_time is None or computer.last_synced > last_task_time:
+            wait = False
+            for computer, project, tasks in provider.for_computer(
+                    self.task.computer_assigned):
+                if project.id == self.dag.project:
+                    wait = True
+
+            if wait:
+                time.sleep(1)
+            else:
                 break
 
-            provider.commit()
-            time.sleep(1)
         self.info(f'Finish data sync')
 
     @staticmethod

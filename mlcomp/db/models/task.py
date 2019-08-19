@@ -52,4 +52,12 @@ class TaskDependence(Base):
     depend_id = sa.Column(sa.Integer, primary_key=True)
 
 
-__all__ = ['Task', 'TaskDependence']
+class TaskSynced(Base):
+    __tablename__ = 'task_synced'
+
+    computer = sa.Column(sa.String, ForeignKey('computer.name'),
+                         primary_key=True)
+    task = sa.Column(sa.Integer, ForeignKey('task.id'), primary_key=True)
+
+
+__all__ = ['Task', 'TaskDependence', 'TaskSynced']

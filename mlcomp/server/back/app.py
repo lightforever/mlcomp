@@ -32,7 +32,7 @@ CORS(app)
 _read_session = Session.create_session(key='server.read')
 _write_session = Session.create_session(key='server.write')
 
-logger = create_logger(_write_session)
+logger = create_logger(_write_session, __name__)
 
 
 @app.route('/', defaults={'path': ''}, methods=['GET'])
@@ -105,7 +105,7 @@ def error_handler(f):
                 _read_session = Session.create_session(key='server.read')
                 _write_session = Session.create_session(key='server.write')
 
-                logger = create_logger(_write_session)
+                logger = create_logger(_write_session, __name__)
 
             logger.error(
                 f'Requested Url: {request.path}\n\n{traceback.format_exc()}',

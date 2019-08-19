@@ -1,5 +1,5 @@
 from .project import Project
-from .task import Task, TaskDependence
+from .task import Task, TaskDependence, TaskSynced
 from .file import File
 from .dag_storage import DagStorage, DagLibrary
 from .computer import Computer, ComputerUsage
@@ -15,5 +15,5 @@ __all__ = [
     'Project', 'Task', 'TaskDependence', 'File', 'DagStorage', 'DagLibrary',
     'Computer', 'ComputerUsage', 'Log', 'Step', 'Dag', 'ReportSeries',
     'ReportImg', 'ReportTasks', 'Report', 'ReportLayout', 'Docker', 'Model',
-    'Auxiliary'
+    'Auxiliary', 'TaskSynced'
 ]

@@ -1,8 +1,10 @@
 import os
 import logging
-from logging.config import dictConfig
+import sys
+from logging.handlers import RotatingFileHandler
 
-from mlcomp import LOG_FOLDER, LOG_NAME, FILE_LOG_LEVEL, DB_LOG_LEVEL
+from mlcomp import LOG_FOLDER, LOG_NAME, FILE_LOG_LEVEL, DB_LOG_LEVEL, \
+    CONSOLE_LOG_LEVEL
 from mlcomp.db.core import Session
 from mlcomp.db.providers import LogProvider
 from mlcomp.db.models import Log
@@ -103,48 +105,21 @@ class DbHandler(logging.Handler):
             self.handleError(record)
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'simple': {
-            'format': '[%(asctime)s][%(threadName)s] %(funcName)s: %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-            'formatter': 'simple',
-            'stream': 'ext://sys.stdout'
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'level': FILE_LOG_LEVEL,
-            'filename': os.path.join(LOG_FOLDER, f'{LOG_NAME}.txt'),
-            'mode': 'a',
-            'maxBytes': 10485760,
-            'backupCount': 1,
-        }
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False
-        }
-    }
-}
+def create_logger(session: Session, name: str, db=True):
+    logger = logging.Logger(name)
+    logger.handlers = []
 
-dictConfig(LOGGING)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(CONSOLE_LOG_LEVEL)
+    console_handler.setStream(sys.stdout)
+    logger.handlers.append(console_handler)
 
-
-def create_logger(session: Session, db=True):
-    logger = logging.getLogger()
-
-    for h in logger.handlers:
-        if isinstance(h, DbHandler):
-            logger.handlers.remove(h)
+    file_path = os.path.join(LOG_FOLDER, f'{LOG_NAME}.txt')
+    file_handler = RotatingFileHandler(file_path)
+    file_handler.setLevel(FILE_LOG_LEVEL)
+    file_handler.maxBytes = 10485760
+    file_handler.backupCount = 1
+    logger.handlers.append(file_handler)
 
     if db:
         handler = DbHandler(session)
@@ -159,7 +134,7 @@ def create_logger(session: Session, db=True):
             fmt, datefmt = None, None
         h.formatter = Formatter(fmt=fmt, datefmt=datefmt)
 
-    # ignore messages from some liraries
+    # ignore messages from some libraries
     class NoRunningFilter(logging.Filter):
         def filter(self, record):
             return 'ran tasks' not in str(record.msg)

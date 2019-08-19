@@ -2,15 +2,14 @@ import os
 import socket
 import traceback
 import subprocess
-from datetime import timedelta
 from os.path import join
 from typing import List
 
-from mlcomp import MODEL_FOLDER, DATA_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
-from mlcomp.db.models import Computer
-from mlcomp.db.providers import ComputerProvider, ProjectProvider
+from mlcomp.db.models import Computer, TaskSynced
+from mlcomp.db.providers import ComputerProvider, \
+    TaskSyncedProvider
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
 from mlcomp.utils.io import yaml_load
@@ -22,7 +21,7 @@ def sync_directed(
 ):
     current_computer = socket.gethostname()
     end = ' --perms  --chmod=777'
-    logger = create_logger(session)
+    logger = create_logger(session, __name__)
     for folder, excluded in folders_excluded:
         if len(excluded) > 0:
             excluded = excluded[:]
@@ -52,7 +51,7 @@ def sync_directed(
             command = f'ssh -p {source.port} ' \
                       f'{source.user}@{source.ip} "{command}"'
 
-        logger.info(command, ComponentType.WorkerSupervisor, source.name)
+        logger.info(command, ComponentType.WorkerSupervisor, current_computer)
         subprocess.check_output(command, shell=True)
 
 
@@ -68,46 +67,46 @@ def copy_remote(
 
 class FileSync:
     session = Session.create_session(key='FileSync')
-    logger = create_logger(session)
+    logger = create_logger(session, 'FileSync')
 
     def sync(self):
         hostname = socket.gethostname()
         try:
             provider = ComputerProvider(self.session)
-            project_provider = ProjectProvider(self.session)
+            task_synced_provider = TaskSyncedProvider(self.session)
 
             computer = provider.by_name(hostname)
             sync_start = now()
 
             computers = provider.all_with_last_activtiy()
-            last_synced = computer.last_synced
             computers = [
                 c for c in computers
                 if (now() - c.last_activity).total_seconds() < 10
             ]
+            computers_names = {c.name for c in computers}
 
-            excluded = []
-            projects = project_provider.all_last_activity()
-            folders_excluded = []
-            for p in projects:
-                if last_synced is not None and \
-                        (p.last_activity is None or
-                         p.last_activity < last_synced - timedelta(seconds=5)):
+            for c, project, tasks in task_synced_provider.for_computer(
+                    computer.name):
+                if c.name not in computers_names:
                     continue
 
-                ignore = yaml_load(p.ignore_folders)
-                for f in ignore:
-                    excluded.append(str(f))
+                if c.syncing_computer:
+                    continue
 
-                folders_excluded.append([join('data', p.name), excluded])
-                folders_excluded.append([join('models', p.name), []])
+                excluded = list(map(str, yaml_load(project.ignore_folders)))
+                folders_excluded = [
+                    [join('data', project.name), excluded],
+                    [join('models', project.name), []]
+                ]
 
-            for c in computers:
-                if c.name != computer.name:
-                    computer.syncing_computer = c.name
-                    provider.update()
+                computer.syncing_computer = c.name
+                provider.update()
+                sync_directed(self.session, c, computer, folders_excluded)
 
-                    sync_directed(self.session, c, computer, folders_excluded)
+                for t in tasks:
+                    task_synced_provider.add(
+                        TaskSynced(computer=computer.name, task=t.id)
+                    )
 
             computer.last_synced = sync_start
             computer.syncing_computer = None
@@ -116,7 +115,7 @@ class FileSync:
             if Session.sqlalchemy_error(e):
                 Session.cleanup('FileSync')
                 self.session = Session.create_session(key='FileSync')
-                self.logger = create_logger(self.session)
+                self.logger = create_logger(self.session, 'FileSync')
 
             self.logger.error(
                 traceback.format_exc(), ComponentType.WorkerSupervisor,

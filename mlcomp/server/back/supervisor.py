@@ -23,7 +23,7 @@ import mlcomp.worker.tasks as celery_tasks
 class SupervisorBuilder:
     def __init__(self):
         self.session = Session.create_session(key='SupervisorBuilder')
-        self.logger = create_logger(self.session)
+        self.logger = create_logger(self.session, 'SupervisorBuilder')
         self.provider = None
         self.computer_provider = None
         self.docker_provider = None
@@ -407,7 +407,7 @@ class SupervisorBuilder:
             if Session.sqlalchemy_error(e):
                 Session.cleanup(key='SupervisorBuilder')
                 self.session = Session.create_session(key='SupervisorBuilder')
-                self.logger = create_logger(self.session)
+                self.logger = create_logger(self.session, 'SupervisorBuilder')
 
             self.logger.error(traceback.format_exc(), ComponentType.Supervisor)
 

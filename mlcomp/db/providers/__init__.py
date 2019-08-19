@@ -15,11 +15,13 @@ from .report import \
 from .docker import DockerProvider
 from .model import ModelProvider
 from .auxiliary import AuxiliaryProvider
+from .task_synced import TaskSyncedProvider
 
 __all__ = [
     'ProjectProvider', 'TaskProvider', 'FileProvider', 'DagStorageProvider',
     'DagLibraryProvider', 'LogProvider', 'StepProvider', 'ComputerProvider',
     'DagProvider', 'ReportImgProvider', 'ReportProvider',
     'ReportLayoutProvider', 'ReportSeriesProvider', 'ReportTasksProvider',
-    'DockerProvider', 'ModelProvider', 'AuxiliaryProvider'
+    'DockerProvider', 'ModelProvider', 'AuxiliaryProvider',
+    'TaskSyncedProvider'
 ]
