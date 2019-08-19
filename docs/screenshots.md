@@ -1,27 +1,35 @@
 Projects
 
-![projects](imgs/projects.jpg)
+![projects](imgs/projects.png)
 
 Dags
 
-![dags](imgs/dags.jpg)
+![dags](imgs/dags.png)
 
 Code
 
-![code](imgs/code.jpg)
+![code](imgs/code.png)
 
 Graph
 
-![code](imgs/graph.jpg)
+![code](imgs/graph.png)
 
 Tasks
 
-![tasks](imgs/tasks.jpg)
+![tasks](imgs/tasks.png)
 
 Logs
 
-![logs](imgs/logs.jpg)
+![logs](imgs/logs.png)
+
+Hierarchical logging
+
+![hierarchical_logging](imgs/hierarchical_logging.png)
 
 Layouts
 
-![layouts](imgs/layouts.jpg)
+![layouts](imgs/layouts.png)
+
+Reports
+
+![reports](imgs/reports.png)
