@@ -25,6 +25,8 @@ class StepProvider(BaseDataProvider):
                         self._hierarchy(child, steps, current + 1, i)
                 else:
                     break
+            else:
+                current += 1
 
     def step_info(self, step):
         step, *log_status = step
@@ -56,7 +58,7 @@ class StepProvider(BaseDataProvider):
             )
 
         query = self.query(Step, *log_status).filter(Step.task == task_id
-                                                     ).order_by(Step.started)
+                                                     ).order_by(Step.id)
         query = query.join(Log, isouter=True).group_by(Step.id)
         steps = query.all()
         if len(steps) == 0:

@@ -328,7 +328,7 @@ class SupervisorBuilder:
         children = self.provider.children(task.id, [Task.dag_rel])
         dags = [c.dag_rel for c in children]
         for c, d in zip(children, dags):
-            celery_tasks.stop(self.session, c, d)
+            celery_tasks.stop(self.logger, self.session, c, d)
 
     def process_parent_tasks(self):
         tasks = self.provider.parent_tasks_stats()

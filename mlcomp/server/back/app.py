@@ -397,11 +397,11 @@ def task_stop():
     task = provider.by_id(data['id'], joinedload(Task.dag_rel, innerjoin=True))
 
     dag = task.dag_rel
-    status = celery_tasks.stop(_write_session, task, dag)
+    status = celery_tasks.stop(logger, _write_session, task, dag)
 
     child_tasks = provider.children(task.id)
     for t in child_tasks:
-        celery_tasks.stop(_write_session, t, dag)
+        celery_tasks.stop(logger, _write_session, t, dag)
 
     return {'status': to_snake(TaskStatus(status).name)}
 
@@ -434,7 +434,7 @@ def dag_stop():
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     for t in dag.tasks:
-        celery_tasks.stop(_write_session, t, dag)
+        celery_tasks.stop(logger, _write_session, t, dag)
     return {'dag': provider.get({'id': id})['data'][0]}
 
 

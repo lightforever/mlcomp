@@ -47,7 +47,7 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
 
 # Screenshots
 
-![graph](docs/imgs/graph.jpg)
+![reports](docs/imgs/reports.bmp)
 
 # Installation
 
