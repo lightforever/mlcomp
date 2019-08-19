@@ -5,8 +5,7 @@ from mlcomp import MODE_ECONOMIC
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
 from mlcomp.utils.config import Config
-from mlcomp.db.providers import TaskProvider, ComputerProvider, \
-    ProjectProvider, TaskSyncedProvider
+from mlcomp.db.providers import TaskProvider, TaskSyncedProvider
 from mlcomp.worker.executors.base.step import StepWrap
 
 

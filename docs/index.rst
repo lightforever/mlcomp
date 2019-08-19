@@ -19,4 +19,46 @@ MLComp
 
 .. image:: https://github.com/lightforever/mlcomp/raw/master/mlcomp/server/front/src/assets/img/mlcomp_logo.jpg
     :target: https://github.com/lightforever/mlcomp
-    :alt: MLComp logo
+
+MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI.
+
+The goal of MLComp is to provide tools for training, inference, creating complex pipelines
+(especially for computer vision) in a rapid, well manageable, way.
+
+MLComp is compatible with: Python 3.6+, Unix operation system.
+
+**Features**
+
+- Amazing UI
+- `Catalyst <https://github.com/catalyst-team/catalyst>`_ support
+- Distributed training
+- Supervisor that controls computational resources
+- Synchronization of both code and data
+- Resource monitoring
+- Full-functionally pause and continue on UI
+- Auto control of the requirements
+- Code dumping(with syntax highlight on UI)
+- Kaggle integration
+- Hierarchical logging
+- Grid search
+- Experiments comparison
+- Customizing layouts
+
+
+.. toctree::
+   :caption: Overview:
+   :maxdepth: 1
+
+   self
+   installation
+   usage
+   layout
+   grid_search
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

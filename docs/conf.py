@@ -52,7 +52,7 @@ def get_version(mode: str = "full") -> str:
 
     if mode == "short":
         try:
-            version_ = re.search(r"^(\d+\.\d+)", version_, re.M).group(1)
+            version_ = re.search(r"^(\d+\.\d+.?\d+?)", version_, re.M).group(1)
         except Exception:
             pass
 

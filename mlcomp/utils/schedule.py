@@ -1,5 +1,4 @@
 import atexit
-import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 

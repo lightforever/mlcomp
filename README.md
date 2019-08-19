@@ -93,7 +93,7 @@ Graph
     
     a. Change your [Environment variables](#environment-variables) to use PostgreSql
     
-    b. Install rsync
+    b. Install rsync on each worker computer
     
     ```.env
     sudo apt-get install rsync
@@ -104,41 +104,32 @@ Graph
      
      rsync will perform the following commands:
      
+     to upload
+     ```bash
+     rsync -vhru -e "ssh -p {target.port} -o StrictHostKeyChecking=no" \
+     {folder}/ {target.user}@{target.ip}:{folder}/ --perms  --chmod=777
+     ```
+     to download
      
-         <details>
-            <summary>to upload</summary>
-            
-            ```bash
-             rsync -vhru -e "ssh -p {target.port} -o StrictHostKeyChecking=no" \
-             {folder}/ {target.user}@{target.ip}:{folder}/ --perms  --chmod=777
-            ```
-         
-         </details>
-     
-        <details>
-           <summary>to download</summary>
-           
-             ```.env
-             rsync -vhru -e "ssh -p {source.port} -o StrictHostKeyChecking=no" \
-             {source.user}@{source.ip}:{folder}/ {folder}/ --perms  --chmod=777
-             ```
-        </details>
+     ```.env
+     rsync -vhru -e "ssh -p {source.port} -o StrictHostKeyChecking=no" \
+     {source.user}@{source.ip}:{folder}/ {folder}/ --perms  --chmod=777
+     ```
+   
+    c. Install [apex](https://github.com/NVIDIA/apex#quick-start) for distributed learning
     
-  
-    c. To Run postgresql, redis-server, mlcomp-server, execute on your server-computer:
+    d. To Run postgresql, redis-server, mlcomp-server, execute on your server-computer:
     
      ```bash
     cd ~/mlcomp/configs/
     docker-compose -f server-compose.yml up -d
     ```
     
-    d. Run on each worker computer:
+    e. Run on each worker computer:
     
     ```bash
     mlcomp-worker start
     ```
-   
-    e. Install [apex](https://github.com/NVIDIA/apex#quick-start) for distributed learning
     
  # UI
  
@@ -152,7 +143,7 @@ In case you desire to change it, please consider [front's Readme page](mlcomp/se
  
  # Usage
  
-In your folder:
+Run
  ```bash
 mlcomp dag PATH_TO_CONFIG.yml
 ```
@@ -160,6 +151,8 @@ mlcomp dag PATH_TO_CONFIG.yml
 This command copies files of the directory to the database.
 
 Then, the server schedules the dag considering free resources. 
+
+For more information, please consider [Docs](https://lightforever.github.io/mlcomp/usage.html)
  
 # Docs and examples
  
@@ -190,7 +183,7 @@ The single file to setup your server/worker environment is located at ~/mlcomp/c
 - IP. Ip of a worker. The worker must be accessible from other workers by these IP/PORT
 - PORT. Port of a worker. The worker must be accessible from other workers by these IP/PORT (SSH protocol)
 - MASTER_PORT_RANGE. distributed port range for a worker. 29500-29510 means that if
-this worker will be a master in a distributed learning, it will use first free port
+this worker will be a master in a distributed learning, it will use the first free port
 from this range. Ranges of different workers must be not overlapping.
 - NCCL_SOCKET_IFNAME. NCCL network interface. 
 You can see your network interfaces with `ifconfig` command.
