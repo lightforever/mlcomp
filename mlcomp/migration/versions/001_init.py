@@ -367,7 +367,7 @@ def upgrade(migrate_engine):
         UniqueConstraint(model.c.project, model.c.name,
                          name='model_project_name_unique').create()
 
-        ForeignKeyConstraint([task_synced.c.computer], [computer.c.id],
+        ForeignKeyConstraint([task_synced.c.computer], [computer.c.name],
                              ondelete='CASCADE').create()
         ForeignKeyConstraint([task_synced.c.task], [task.c.id],
                              ondelete='CASCADE').create()
