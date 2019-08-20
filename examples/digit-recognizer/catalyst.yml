@@ -13,7 +13,7 @@ stages:
     num_workers: 1
 
   state_params:
-    num_epochs: 1
+    num_epochs: 10
     main_metric: accuracy01
     minimize_metric: False
     checkpoint_data:

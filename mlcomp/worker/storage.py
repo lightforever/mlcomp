@@ -13,7 +13,7 @@ import importlib
 
 from sqlalchemy.orm import joinedload
 
-from mlcomp import TASK_FOLDER, DATA_FOLDER, MODE_ECONOMIC
+from mlcomp import TASK_FOLDER, DATA_FOLDER, MODE_ECONOMIC, MODEL_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
 from mlcomp.utils.misc import now
@@ -26,6 +26,23 @@ from mlcomp.utils.config import Config
 from mlcomp.utils.req import control_requirements, read_lines
 
 logger = logging.getLogger(__name__)
+
+
+def get_super_names(cls: pyclbr.Class):
+    res = []
+    if isinstance(cls.super, list):
+        for s in cls.super:
+            if isinstance(s, str):
+                res.append(s)
+            else:
+                res.append(s.name)
+                res.extend(get_super_names(s))
+    elif isinstance(cls.super, pyclbr.Class):
+        res.append(cls.super.name)
+        res.extend(get_super_names(cls.super))
+    elif isinstance(cls, str):
+        res.append(cls)
+    return res
 
 
 class Storage:
@@ -75,6 +92,7 @@ class Storage:
         hashs = self.file_provider.hashs(dag.project)
 
         files = []
+        all_files = []
         spec = self._build_spec(folder)
 
         for o in glob(os.path.join(folder, '**'), recursive=True):
@@ -89,6 +107,9 @@ class Storage:
                 continue
             content = open(o, 'rb').read()
             md5 = hashlib.md5(content).hexdigest()
+
+            all_files.append(o)
+
             if md5 in hashs:
                 file_id = hashs[md5]
             else:
@@ -109,7 +130,7 @@ class Storage:
             )
 
         if not MODE_ECONOMIC and control_reqs:
-            reqs = control_requirements(folder, files=files)
+            reqs = control_requirements(folder, files=all_files)
             for name, rel, version in reqs:
                 self.library_provider.add(
                     DagLibrary(dag=dag.id, library=name, version=version)
@@ -141,12 +162,23 @@ class Storage:
         except FileExistsError:
             pass
 
+        try:
+            model_folder = os.path.join(MODEL_FOLDER, info['project'])
+            os.makedirs(model_folder, exist_ok=True)
+
+            os.symlink(model_folder, os.path.join(folder, 'models'))
+        except FileExistsError:
+            pass
+
         sys.path.insert(0, folder)
         return folder
 
     def import_executor(self, folder: str, base_folder: str,
                         executor: str,
                         libraries: List[Tuple] = None):
+
+        sys.path.insert(0, base_folder)
+
         spec = self._build_spec(folder)
         was_installation = False
 
@@ -170,8 +202,10 @@ class Storage:
                 was_installation = True
 
         def is_valid_class(cls: pyclbr.Class):
-            if 'Executor' not in cls.super:
+            super_names = get_super_names(cls)
+            if 'Executor' not in super_names:
                 return False
+
             return cls.name == executor or cls.name.lower() == executor
 
         def relative_name(path: str):

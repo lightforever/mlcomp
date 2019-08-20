@@ -124,11 +124,11 @@ def control_requirements(
         for i in range(len(reqs)):
             if reqs[i][0] == lib:
                 found = True
-                reqs[i][1] = '>='
+                reqs[i][1] = '=='
                 reqs[i][2] = version
                 break
         if not found:
-            reqs.append([lib, '>=', version])
+            reqs.append([lib, '==', version])
 
     _write_requirements(req_file, reqs)
     return reqs

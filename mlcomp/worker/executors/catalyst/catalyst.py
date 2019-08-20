@@ -4,6 +4,8 @@ from collections import OrderedDict
 from pathlib import Path
 from os.path import join
 
+import torch
+
 from catalyst.utils import set_global_seed, load_checkpoint
 from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
 from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
@@ -20,6 +22,7 @@ from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
 from mlcomp.worker.executors.base import Executor
 from mlcomp.contrib.catalyst.register import register
+from mlcomp.worker.executors.model import trace_model_from_checkpoint
 from mlcomp.worker.sync import copy_remote
 
 
@@ -47,13 +50,14 @@ class Args:
 @Executor.register
 class Catalyst(Executor, Callback):
     def __init__(
-        self,
-        args: Args,
-        report: ReportLayoutInfo,
-        cuda_devices: list,
-        distr_info: dict,
-        resume: dict,
-        grid_config: dict,
+            self,
+            args: Args,
+            report: ReportLayoutInfo,
+            cuda_devices: list,
+            distr_info: dict,
+            resume: dict,
+            grid_config: dict,
+            trace: str
     ):
 
         self.resume = resume
@@ -68,6 +72,7 @@ class Catalyst(Executor, Callback):
         self.cuda_devices = cuda_devices
         self.checkpoint_resume = False
         self.checkpoint_stage_epoch = 0
+        self.trace = trace
 
     def callbacks(self):
         result = OrderedDict()
@@ -148,7 +153,7 @@ class Catalyst(Executor, Callback):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         args = Args()
         for k, v in executor['args'].items():
@@ -159,7 +164,8 @@ class Catalyst(Executor, Callback):
 
             setattr(args, k, v)
 
-        report_config = additional_info.get('report_config', dict())
+        assert 'report_config' in additional_info, 'layout was not filled'
+        report_config = additional_info['report_config']
         grid_cell = additional_info.get('grid_cell')
         report = ReportLayoutInfo(report_config)
         if len(args.configs) == 0:
@@ -179,7 +185,8 @@ class Catalyst(Executor, Callback):
             grid_config=grid_config,
             distr_info=distr_info,
             cuda_devices=cuda_devices,
-            resume=resume
+            resume=resume,
+            trace=executor.get('trace')
         )
 
     def set_dist_env(self, config):
@@ -278,8 +285,8 @@ class Catalyst(Executor, Callback):
                 break
             del stages_config[k]
 
-        for k, v in experiment.stages_config[experiment.stages[0]
-                                             ]['callbacks_params'].items():
+        stage = experiment.stages_config[experiment.stages[0]]
+        for k, v in stage['callbacks_params'].items():
             if v.get('callback') == 'CheckpointCallback':
                 v['resume'] = path
 
@@ -356,6 +363,10 @@ class Catalyst(Executor, Callback):
             }
 
         runner.run_experiment(experiment, check=args.check)
+
+        if self.master and self.trace:
+            traced = trace_model_from_checkpoint(self.experiment.logdir, self)
+            torch.jit.save(traced, self.trace)
 
         return {'stage': experiment.stages[-1], 'stages': stages}
 

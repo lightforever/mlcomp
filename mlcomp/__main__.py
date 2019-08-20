@@ -105,7 +105,7 @@ def execute(config: str, debug: bool):
     created_dag = _dag(config, debug)
     for ids in created_dag.values():
         for id in ids:
-            execute_by_id(id)
+            execute_by_id(id, exit=False)
 
 
 # @main.command()

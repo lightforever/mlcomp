@@ -26,11 +26,12 @@ from mlcomp.utils.config import Config
 
 
 class ExecuteBuilder:
-    def __init__(self, id: int, repeat_count: int = 1):
+    def __init__(self, id: int, repeat_count: int = 1, exit=True):
         self.session = Session.create_session(key='ExecuteBuilder')
         self.id = id
         self.repeat_count = repeat_count
         self.logger = create_logger(self.session, 'ExecuteBuilder')
+        self.exit = exit
 
         self.provider = None
         self.library_provider = None
@@ -71,12 +72,15 @@ class ExecuteBuilder:
         self.task = self.provider.by_id(
             self.id, joinedload(Task.dag_rel, innerjoin=True)
         )
+        if not self.task:
+            raise Exception(f'task with id = {self.id} is not found')
+
         self.dag = self.task.dag_rel
         self.executor = None
         self.hostname = socket.gethostname()
 
         self.docker_img = DOCKER_IMG
-        self.worker_index = os.environ['WORKER_INDEX']
+        self.worker_index = os.getenv('WORKER_INDEX', -1)
 
         self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
                               f'{self.worker_index}'
@@ -227,14 +231,17 @@ class ExecuteBuilder:
             self.provider.change_status(self.task, TaskStatus.Failed)
             raise e
         finally:
-            app.current_task.update_state(state=states.SUCCESS)
-            app.close()
-            # noinspection PyProtectedMember
-            os._exit(0)
+            if app.current_task:
+                app.current_task.update_state(state=states.SUCCESS)
+                app.close()
+
+            if self.exit:
+                # noinspection PyProtectedMember
+                os._exit(0)
 
 
-def execute_by_id(id: int, repeat_count=1):
-    ex = ExecuteBuilder(id, repeat_count)
+def execute_by_id(id: int, repeat_count=1, exit=True):
+    ex = ExecuteBuilder(id, repeat_count=repeat_count, exit=exit)
     ex.build()
 
 

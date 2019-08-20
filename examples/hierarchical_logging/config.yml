@@ -3,6 +3,5 @@ info:
   project: examples
   expdir: .
 executors:
-  dummy1:
+  step:
     type: step
-    steps: 2

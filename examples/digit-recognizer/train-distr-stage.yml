@@ -1,11 +1,12 @@
 info:
   name: mnist_train_stage
   project: examples
-  report: classify
+  layout: classify
+  expdir: .
 executors:
   train:
     type: catalyst
-    gpu: 3-4
+    gpu: 2-4
     distr: True
     single_node: True
     args:

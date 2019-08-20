@@ -93,7 +93,7 @@ class Submit(Executor):
         )
 
     @classmethod
-    def from_config(
+    def _from_config(
         cls, executor: dict, config: Config, additional_info: dict
     ):
         file = os.path.join(config.data_folder, executor['file'])

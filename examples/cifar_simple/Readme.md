@@ -3,10 +3,10 @@ A minimal extended example of [Catalyst cifar_simple](https://github.com/catalys
 Run
 
 ```bash
-cd examples/step
+cd examples/cifar_simple
 mlcomp dag config.yml
 ```
 
-Just added config.yml
+Just config.yml is added.
 
 The overhead is minimal.

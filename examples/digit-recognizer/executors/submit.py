@@ -5,12 +5,13 @@ import pandas as pd
 
 from mlcomp.db.providers import ModelProvider
 from mlcomp.utils.config import Config
-from mlcomp.worker.executors import Executor, Submit
+from mlcomp.worker.executors import Executor
+from mlcomp.worker.executors.kaggle import Submit
 
 
 @Executor.register
 class SubmitMnist(Submit):
-    def __init__(self, model_id: int, prob_file: str, out_file: str):
+    def __init__(self, prob_file: str, out_file: str, model_id: int = None):
         super().__init__(
             competition='digit-recognizer',
             file=out_file
@@ -31,10 +32,12 @@ class SubmitMnist(Submit):
         }).to_csv(self.out_file, index=False)
 
         score = super().work()
-        provider = ModelProvider(self.session)
-        model = provider.by_id(self.model_id)
-        model.score_public = score
-        provider.commit()
+
+        if self.model_id:
+            provider = ModelProvider(self.session)
+            model = provider.by_id(self.model_id)
+            model.score_public = score
+            provider.commit()
 
     @classmethod
     def _from_config(cls,
@@ -46,7 +49,7 @@ class SubmitMnist(Submit):
         prob_file = os.path.join(config.data_folder, model_name + '_test.npy')
         out_file = os.path.join(config.data_folder, model_name + '.csv')
         return cls(
-            model_id=slot['id'],
+            model_id=slot.get('id'),
             prob_file=prob_file,
             out_file=out_file
         )

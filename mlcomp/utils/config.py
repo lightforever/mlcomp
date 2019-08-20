@@ -21,7 +21,7 @@ class Config(dict):
 
     @staticmethod
     def from_yaml(config: str):
-        return yaml_load(config)
+        return Config(yaml_load(config))
 
 
 def merge_dicts_smart(target: dict, source: dict, sep='/'):

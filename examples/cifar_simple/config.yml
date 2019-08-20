@@ -2,9 +2,9 @@ info:
   name: cifar
   project: examples
   expdir: .
+  layout: classify
 executors:
   train:
     type: catalyst
-    layout: catalyst
     args:
       config: catalyst.yml

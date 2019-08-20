@@ -10,27 +10,27 @@ branches:
 python:
   - '3.6'
 
-#install: &requirements
-#  pip install -r requirements.txt
+install: &requirements
+  pip install -r requirements.txt
 
 jobs:
   include:
-#    - stage: Tests
-#      install:
-#        - *requirements
-#        - pip install flake8 flake8-quotes yapf
-#        - pip install -U pytest pytest-xdist
-#      script:
-#        # stop the build if there are any unexpected flake8 issues
-#        - flake8 . --count \
-#          --max-complexity=16 \
-#          --inline-quotes "single" \
-#          --multiline-quotes "single" \
-#          --docstring-quotes "double" \
-#          --show-source --statistics
-#        # test to make sure the code is yapf compliant
-#        #- ./yapf.sh --all
-#        - pytest -v --forked --numprocesses=auto
+    - stage: Tests
+      install:
+        - *requirements
+        - pip install flake8 flake8-quotes yapf
+        - pip install -U pytest pytest-xdist
+      script:
+        # stop the build if there are any unexpected flake8 issues
+        - flake8 . --count \
+          --max-complexity=16 \
+          --inline-quotes "single" \
+          --multiline-quotes "single" \
+          --docstring-quotes "double" \
+          --show-source --statistics
+        # test to make sure the code is yapf compliant
+        #- ./yapf.sh --all
+        - pytest -v --forked --numprocesses=auto
     - stage: Deploy
       name: 'Docs'
       if: branch = master

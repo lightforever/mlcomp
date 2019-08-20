@@ -60,8 +60,12 @@ def copy_remote(
 ):
     provider = ComputerProvider(session)
     src = provider.by_name(computer_from)
-    command = f'scp -P {src.port} {src.user}@{src.ip}:{path_from} {path_to}'
-    subprocess.check_output(command, shell=True)
+    host = socket.gethostname()
+    if host != computer_from:
+        c = f'scp -P {src.port} {src.user}@{src.ip}:{path_from} {path_to}'
+    else:
+        f'cp {path_from} {path_to}'
+    subprocess.check_output(c, shell=True)
     return os.path.exists(path_to)
 
 

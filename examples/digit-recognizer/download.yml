@@ -8,4 +8,5 @@ executors:
   split:
     type: split
     variant: frame
+    label: label
     file: train.csv

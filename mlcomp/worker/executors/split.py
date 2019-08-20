@@ -39,7 +39,8 @@ class Split(Executor):
         return cls(
             variant=executor['variant'],
             out=join(config.data_folder, 'fold.csv'),
-            file=file
+            file=file,
+            label=executor['label']
         )
 
 

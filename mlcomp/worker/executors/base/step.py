@@ -52,7 +52,9 @@ class StepWrap:
         )
 
         if index is None and task.current_step:
-            index = int(task.current_step.split('.')[level - 1])
+            parts = task.current_step.split('.')
+            if len(parts) >= level:
+                index = int(parts[level - 1])
 
         if self.step and index == self.step.index and self.step.level == level:
             return
@@ -80,7 +82,7 @@ class StepWrap:
 
         task.current_step = '.'.join(
             [
-                str(c.index + (1 if c.level == 1 else 0))
+                str(c.index + 1)
                 for c in self.children[1:]
             ]
         )

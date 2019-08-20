@@ -103,6 +103,7 @@ Pipfile
 mlcomp/server/front/node_modules
 examples/**/data
 examples/**/log
+examples/**/models
 dist
 docker/*.conf
 *.db
@@ -113,3 +114,4 @@ re
 supervisord*
 .sqlite*
 *.rdb
+examples/**/requirements.txt

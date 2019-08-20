@@ -2,6 +2,7 @@ info:
   name: mnist_pipe
   project: examples
   type: pipe
+  expdir: .
 pipes:
   valid:
     valid:
@@ -9,12 +10,12 @@ pipes:
       slot: model
   infer_valid:
     infer:
-      type: infer
+      type: InferPipe
       slot: model
       suffix: valid
   infer_test:
     infer:
-      type: infer
+      type: InferPipe
       slot: model
       suffix: test
   submit:
