@@ -71,7 +71,7 @@ class Storage:
             pathspec.patterns.GitWildMatchPattern, ignore_patterns
         )
 
-    def upload(self, folder: str, dag: Dag):
+    def upload(self, folder: str, dag: Dag, control_reqs: bool = True):
         hashs = self.file_provider.hashs(dag.project)
 
         files = []
@@ -108,7 +108,7 @@ class Storage:
                 DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False)
             )
 
-        if not MODE_ECONOMIC:
+        if not MODE_ECONOMIC and control_reqs:
             reqs = control_requirements(folder, files=files)
             for name, rel, version in reqs:
                 self.library_provider.add(

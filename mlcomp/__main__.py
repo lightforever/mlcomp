@@ -27,7 +27,7 @@ from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 _session = Session.create_session(key=__name__)
 
 
-def _dag(config: str, debug: bool = False):
+def _dag(config: str, debug: bool = False, control_reqs=True):
     migrate()
 
     config_text = open(config, 'r').read()
@@ -40,7 +40,8 @@ def _dag(config: str, debug: bool = False):
             config=config_parsed,
             debug=debug,
             config_text=config_text,
-            config_path=config
+            config_path=config,
+            control_reqs=control_reqs
         )
 
     return dag_pipe(
@@ -72,8 +73,9 @@ def main():
 
 @main.command()
 @click.argument('config')
-def dag(config: str):
-    _dag(config)
+@click.option('--control_reqs', type=bool, default=True)
+def dag(config: str, control_reqs: bool):
+    _dag(config, control_reqs=control_reqs)
 
 
 @main.command()

@@ -1,4 +1,4 @@
-catalyst==19.8.4
+catalyst==19.8.5
 redis
 
 PyYAML>=5.1

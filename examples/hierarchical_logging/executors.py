@@ -4,17 +4,7 @@ from mlcomp.worker.executors import Executor
 
 
 @Executor.register
-class Dummy(Executor):
-    __name__ = 'dummy'
-
-    def work(self):
-        pass
-
-
-@Executor.register
-class StepExample(Executor):
-    __name__ = 'step'
-
+class Step(Executor):
     def work(self):
         self.step.start(1, 'step 1.1')
         time.sleep(5)

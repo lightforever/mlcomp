@@ -54,11 +54,3 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
    usage
    layout
    grid_search
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

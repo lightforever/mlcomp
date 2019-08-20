@@ -7,6 +7,11 @@ from .__version__ import __version__  # noqa: F401
 ROOT_FOLDER = os.path.abspath(
     os.path.expanduser(os.getenv('ROOT_FOLDER', '~/mlcomp')))
 
+test_worker = os.getenv('PYTEST_XDIST_WORKER')
+if test_worker:
+    ROOT_FOLDER = join(ROOT_FOLDER, 'tests', test_worker)
+    shutil.rmtree(ROOT_FOLDER, ignore_errors=True)
+
 DATA_FOLDER = join(ROOT_FOLDER, 'data')
 MODEL_FOLDER = join(ROOT_FOLDER, 'models')
 TASK_FOLDER = join(ROOT_FOLDER, 'tasks')
@@ -14,6 +19,7 @@ LOG_FOLDER = join(ROOT_FOLDER, 'logs')
 CONFIG_FOLDER = join(ROOT_FOLDER, 'configs')
 DB_FOLDER = join(ROOT_FOLDER, 'db')
 
+os.makedirs(ROOT_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
 os.makedirs(MODEL_FOLDER, exist_ok=True)
 os.makedirs(TASK_FOLDER, exist_ok=True)

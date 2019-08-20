@@ -19,14 +19,15 @@ from mlcomp.utils.io import yaml_dump
 
 class DagStandardBuilder:
     def __init__(
-        self,
-        session: Session,
-        config: dict,
-        debug: bool,
-        config_text: str = None,
-        upload_files: bool = True,
-        copy_files_from: int = None,
-        config_path: str = None
+            self,
+            session: Session,
+            config: dict,
+            debug: bool,
+            config_text: str = None,
+            upload_files: bool = True,
+            copy_files_from: int = None,
+            config_path: str = None,
+            control_reqs: bool = True
     ):
         self.session = session
         self.config = config
@@ -35,6 +36,7 @@ class DagStandardBuilder:
         self.upload_files = upload_files
         self.copy_files_from = copy_files_from
         self.config_path = config_path
+        self.control_reqs = control_reqs
 
         self.info = config['info']
         self.layout_name = self.info.get('layout')
@@ -108,7 +110,8 @@ class DagStandardBuilder:
                 folder = os.path.abspath(
                     os.path.join(path, self.config['info']['expdir'])
                 )
-            self.storage.upload(folder, self.dag)
+            self.storage.upload(folder, self.dag,
+                                control_reqs=self.control_reqs)
         elif self.copy_files_from:
             self.storage.copy_from(self.copy_files_from, self.dag)
 
@@ -244,13 +247,14 @@ class DagStandardBuilder:
 
 
 def dag_standard(
-    session: Session,
-    config: dict,
-    debug: bool,
-    config_text: str = None,
-    upload_files: bool = True,
-    copy_files_from: int = None,
-    config_path: str = None
+        session: Session,
+        config: dict,
+        debug: bool,
+        config_text: str = None,
+        upload_files: bool = True,
+        copy_files_from: int = None,
+        config_path: str = None,
+        control_reqs: bool = True
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -259,7 +263,8 @@ def dag_standard(
         config_text=config_text,
         upload_files=upload_files,
         copy_files_from=copy_files_from,
-        config_path=config_path
+        config_path=config_path,
+        control_reqs=control_reqs
     )
     return builder.build()
 
