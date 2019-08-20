@@ -47,7 +47,7 @@ Put it in any .py file, MLComp will use reflexion to find it.
             cls, executor: dict, config: Config, additional_info: dict
         ):
             # initialize your executor with the params you specified in the configuration file
-            # they are available at executor variable
+            # they are available in executor variable
             return cls(...)
 
 Some service fields in an executor configuration:
@@ -61,3 +61,4 @@ Some service fields in an executor configuration:
     distr: True # use distributed training
     single_node: True # run only on a single machine
     depends: either string or list # create a structure of your DAG
+    grid: list of configurations # more details in gird_search page

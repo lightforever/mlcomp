@@ -1,4 +1,4 @@
-#Production
+### Production
 
 Mlcomp has the compiled angular files.
 
@@ -6,7 +6,7 @@ They are integrated into the flask-server.
 
 You do not have to do anything with these sources.
 
-#Installation
+### Installation
 
 If you want to change the UI, your steps:
 
@@ -51,7 +51,7 @@ Run `npm run ng serve` for a dev server. Navigate to `http://localhost:4200/`.
 The app will automatically reload if you change any of the source files.
 
 
-## Build
+### Build
 
 If you are ready to replace mlcomp UI, 
 
