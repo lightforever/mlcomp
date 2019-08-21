@@ -1,4 +1,4 @@
-- [cifar](cifar/Readme.md) simple is a example extended of [Catalyst cifar_simple](https://github.com/catalyst-team/catalyst/tree/master/examples/cifar_simple)
+- [cifar](cifar_simple/Readme.md) simple is a example extended of [Catalyst cifar_simple](https://github.com/catalyst-team/catalyst/tree/master/examples/cifar_simple)
 - [digit-recognizer](mnist/Readme.md) Kaggle digit recognizer competition
     
     -download from/upload to Kaggle
