@@ -27,7 +27,6 @@ services:
     links:
       - postgres
       - redis
-    #command: sleep 10000
     environment:
       - ROOT_FOLDER=/root/mlcomp
       - EXTRA_ENV=REDIS_HOST=redis;POSTGRES_HOST=postgres;LOG_NAME=server

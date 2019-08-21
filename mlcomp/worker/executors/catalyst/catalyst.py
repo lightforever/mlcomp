@@ -53,7 +53,6 @@ class Catalyst(Executor, Callback):
             self,
             args: Args,
             report: ReportLayoutInfo,
-            cuda_devices: list,
             distr_info: dict,
             resume: dict,
             grid_config: dict,
@@ -69,7 +68,6 @@ class Catalyst(Executor, Callback):
         self.series_provider = ReportSeriesProvider(self.session)
         self.grid_config = grid_config
         self.master = True
-        self.cuda_devices = cuda_devices
         self.checkpoint_resume = False
         self.checkpoint_stage_epoch = 0
         self.trace = trace
@@ -176,7 +174,6 @@ class Catalyst(Executor, Callback):
             grid_config = grid_cells(executor['grid'])[grid_cell][0]
 
         distr_info = additional_info.get('distr_info', {})
-        cuda_devices = additional_info.get('cuda_devices')
         resume = additional_info.get('resume')
 
         return cls(
@@ -184,7 +181,6 @@ class Catalyst(Executor, Callback):
             report=report,
             grid_config=grid_config,
             distr_info=distr_info,
-            cuda_devices=cuda_devices,
             resume=resume,
             trace=executor.get('trace')
         )
@@ -207,9 +203,7 @@ class Catalyst(Executor, Callback):
         args, config = parse_args_uargs(self.args, [])
         config = merge_dicts_smart(config, self.grid_config)
 
-        if self.cuda_devices is not None:
-            os.environ['CUDA_VISIBLE_DEVICES'] = \
-                ','.join(map(str, self.cuda_devices))
+        os.environ['CUDA_VISIBLE_DEVICES'] = self.task.gpu_assigned or ''
 
         if self.distr_info:
             self.set_dist_env(config)

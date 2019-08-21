@@ -10,9 +10,9 @@ Create yml configuration file with the following structure:
 ::
 
     info:
-        name: Name of a dag
+        name: Name of a DAG
         project: Name of your project
-        layout: Name of your layout. Please consider ..layout section
+        layout: Name of your layout. Please, consider layout section
         expdir: root folder of your project
     executors:
       # declaring DAG structure
@@ -25,16 +25,16 @@ Create yml configuration file with the following structure:
         type: executor_c
         depends: [executor_a, executor_b] # if your node depends on several components
 
-MLComp already has some very useful executors. For an example, Catalyst. It can be used to train your deep neural networks.
+MLComp has already had some very useful executors. For example, Catalyst. It can be used to train your deep neural networks.
 
-If you desire to create your own, inherit your executor's class fom from mlcomp.worker.executors.base.Executor.
+In case of a desire to create your own, inherit the executor's class fom mlcomp.worker.executors.base.Executor.
 
 Put it in any .py file, MLComp will use reflexion to find it.
 
 ::
 
-    # MLComp will import a module that contain the class with the specified name
-    # ( register does not matter).
+    # MLComp will import a module that contains the class with the specified name
+    # (register does not matter).
     @Executor.register
     class Executor_A(Executor):
 
@@ -47,18 +47,18 @@ Put it in any .py file, MLComp will use reflexion to find it.
             cls, executor: dict, config: Config, additional_info: dict
         ):
             # initialize your executor with the params you specified in the configuration file
-            # they are available in executor variable
+            # they are available in the executor variable
             return cls(...)
 
-Some service fields in an executor configuration:
+Some service fields in an executor configuration are the following:
 
 ::
 
     gpu: 3 # you can specify requirements: gpu, cpu, memory(GB)
-           # gpu can be set with range, for example: 3-4
+           # gpu can be set with a range; for example, 3-4
     cpu: 1
     memory: 0.1
     distr: True # use distributed training
-    single_node: True # run only on a single machine
+    single_node: True # run only on a single work computer
     depends: either string or list # create a structure of your DAG
-    grid: list of configurations # more details in gird_search page
+    grid: list of configurations # more details on a gird_search page

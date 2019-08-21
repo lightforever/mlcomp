@@ -159,5 +159,12 @@ def sync(project: str, computer: str, only_from: bool, only_to: bool):
                 sync_directed(_session, c, computer, folders_excluded)
 
 
+@main.command()
+def init():
+    # already done by importing mlcomp
+    # that is needed to import it
+    pass
+
+
 if __name__ == '__main__':
     main()

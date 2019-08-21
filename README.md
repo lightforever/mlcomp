@@ -7,8 +7,8 @@
 
 MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI.
 
-The goal of MLComp is to provide tools for training, inference, creating complex pipelines
-(especially for computer vision) in a rapid, well manageable, way.
+The goal of MLComp is to provide tools for training, inferencing, creating complex pipelines
+(especially for computer vision) in a rapid, well manageable way.
 
 MLComp is compatible with: Python 3.6+, Unix operation system.
 
@@ -22,9 +22,9 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
 - Supervisor that controls computational resources
 - Synchronization of both code and data
 - Resource monitoring
-- Full-functionally pause and continue on UI
+- Full functionality of the pause and continue on UI
 - Auto control of the requirements
-- Code dumping(with syntax highlight on UI)
+- Code dumping (with syntax highlight on UI)
 - [Kaggle](https://www.kaggle.com/) integration
 - Hierarchical logging
 - Grid search
@@ -71,19 +71,20 @@ Graph
 
 # Installation
 
-1. Install mlcomp package
+1. Install MLComp package
 
     ```bash
     pip install mlcomp
+    mlcomp init
     ```
 
 2. Setup your environment. Please consider [Environment variables](#environment-variables) section
 
 3. Run db, redis, mlcomp-server, mlcomp-workers:
 
-    **Variant 1: minimal(if you have 1 computer)**
+    **Variant 1: minimal (if you have 1 computer)**
     
-    Run all necessary(mlcomp-server, mlcomp-workers, redis-server), it uses SQLITE:
+    Run all necessary (mlcomp-server, mlcomp-workers, redis-server), it uses SQLITE:
     
     ```bash
     mlcomp-server start
@@ -93,14 +94,14 @@ Graph
     
     a. Change your [Environment variables](#environment-variables) to use PostgreSql
     
-    b. Install rsync on each worker computer
+    b. Install rsync on each work computer
     
     ```.env
     sudo apt-get install rsync
     ```
    
-    Ensure every computer is available by SSH protocol with IP/PORT you specified
-     in the [Environment variables](#environment-variables) file
+    Ensure that every computer is available by SSH protocol with IP/PORT you specified
+     in the [Environment variables](#environment-variables) file.
      
      rsync will perform the following commands:
      
@@ -125,7 +126,7 @@ Graph
     docker-compose -f server-compose.yml up -d
     ```
     
-    e. Run on each worker computer:
+    e. Run on each worker-computer:
     
     ```bash
     mlcomp-worker start
@@ -150,7 +151,7 @@ mlcomp dag PATH_TO_CONFIG.yml
 
 This command copies files of the directory to the database.
 
-Then, the server schedules the dag considering free resources. 
+Then, the server schedules the DAG considering free resources. 
 
 For more information, please consider [Docs](https://lightforever.github.io/mlcomp/usage.html)
  
@@ -159,13 +160,13 @@ For more information, please consider [Docs](https://lightforever.github.io/mlco
 API documentation and an overview of the library can be
  found here [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://lightforever.github.io/mlcomp/index.html)
 
-In the [examples](examples/) folder of the repository, you can find advanced tutorials and MLComp best practices.
+You can find advanced tutorials and MLComp best practices in the [examples](examples/) folder of the repository.
 
 # Environment variables
 
-The single file to setup your server/worker environment is located at ~/mlcomp/configs/.env
+The single file to setup your computer environment is located at ~/mlcomp/configs/.env
 
-- ROOT_FOLDER - folder to save mlcomp files: configs, db, tasks, etc
+- ROOT_FOLDER - folder to save MLComp files: configs, db, tasks, etc.
 - TOKEN - site security token. Please change it to any string
 - DB_TYPE. Either SQLITE or POSTGRESQL
 - POSTGRES_DB. PostgreSql db name
@@ -176,15 +177,15 @@ The single file to setup your server/worker environment is located at ~/mlcomp/c
 - REDIS_HOST. Redis host
 - REDIS_PORT. Redis port
 - REDIS_PASSWORD. Redis password
-- WEB_HOST. mlcomp site host. 0.0.0.0 means it is available from everywhere
-- WEB_PORT. mlcomp site port
+- WEB_HOST. MLComp site host. 0.0.0.0 means it is available from everywhere
+- WEB_PORT. MLComp site port
 - CONSOLE_LOG_LEVEL. log level for output to the console
 - DB_LOG_LEVEL. log level for output to the database
-- IP. Ip of a worker. The worker must be accessible from other workers by these IP/PORT
-- PORT. Port of a worker. The worker must be accessible from other workers by these IP/PORT (SSH protocol)
-- MASTER_PORT_RANGE. distributed port range for a worker. 29500-29510 means that if
-this worker will be a master in a distributed learning, it will use the first free port
-from this range. Ranges of different workers must be not overlapping.
+- IP. Ip of a work computer. The work computer must be accessible from other work computers by these IP/PORT
+- PORT. Port of a work computer. The work computer must be accessible from other work computers by these IP/PORT (SSH protocol)
+- MASTER_PORT_RANGE. distributed port range for a work computer. 29500-29510 means that if
+this work computer is a master in a distributed learning, it will use the first free port
+from this range. Ranges of different work computers must not overlap.
 - NCCL_SOCKET_IFNAME. NCCL network interface. 
 You can see your network interfaces with `ifconfig` command.
  Please consider [nvidia doc](https://docs.nvidia.com/deeplearning/sdk/nccl-developer-guide/docs/env.html)

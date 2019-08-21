@@ -92,6 +92,9 @@ class FileSync:
             for c, project, tasks in task_synced_provider.for_computer(
                     computer.name):
                 if c.name not in computers_names:
+                    self.logger.info(f'Computer = {c.name} '
+                                     f'is offline. Can not sync',
+                                     ComponentType.WorkerSupervisor, hostname)
                     continue
 
                 if c.syncing_computer:

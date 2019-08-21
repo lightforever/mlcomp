@@ -101,11 +101,11 @@ class UploadCommand(Command):
         )
 
         self.status('Uploading the package to PyPI via Twine…')
-        os.system('python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*')
+        os.system('python -m twine upload dist/*')
 
         self.status('Pushing git tags…')
-        # os.system('git tag v{0}'.format(load_version()))
-        # os.system('git push --tags')
+        os.system('git tag v{0}'.format(load_version()))
+        os.system('git push --tags')
 
         sys.exit()
 
@@ -138,7 +138,7 @@ setup(
     ],
     # $ setup.py publish support.
     cmdclass={
-        'upload': UploadCommand,
+        'upload': UploadCommand
     },
     entry_points={
         'console_scripts': [
@@ -149,8 +149,3 @@ setup(
         ],
     }
 )
-
-# noinspection PyUnresolvedReferences
-# flake8: noqa
-# Create necessary folder and default configs
-import mlcomp

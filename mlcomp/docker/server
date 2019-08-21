@@ -1,6 +1,6 @@
 FROM python:3.6
 
-RUN pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple mlcomp
+RUN pip install mlcomp
 
 # Set the locale
 ENV LANG C.UTF-8

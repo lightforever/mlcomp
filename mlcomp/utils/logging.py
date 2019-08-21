@@ -111,7 +111,7 @@ def create_logger(session: Session, name: str, db=True):
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(CONSOLE_LOG_LEVEL)
-    console_handler.setStream(sys.stdout)
+    console_handler.stream = sys.stdout
     logger.handlers.append(console_handler)
 
     file_path = os.path.join(LOG_FOLDER, f'{LOG_NAME}.txt')
