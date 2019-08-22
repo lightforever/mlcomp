@@ -2,7 +2,10 @@ from enum import Enum
 import os
 import time
 
+import socket
+
 from mlcomp.db.core import Session
+from mlcomp.db.enums import ComponentType
 from mlcomp.worker.executors.base.executor import Executor
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.config import Config
@@ -13,7 +16,8 @@ except OSError:
     logger = create_logger(Session.create_session(), __name__)
     logger.warning(
         'Could not find kaggle.json. '
-        'Kaggle executors can not be used'
+        'Kaggle executors can not be used',
+        ComponentType.Worker, socket.gethostname()
     )
 
 
