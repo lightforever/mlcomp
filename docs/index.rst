@@ -5,7 +5,7 @@ MLComp
     :target: https://travis-ci.org/lightforever/mlcomp
     :alt: Build Status
 
-.. image:: https://img.shields.io/github/license/lightforever/mlcomp.svg
+.. image:: https://img.shields.io/github/license/catalyst-team/mlcomp.svg
     :alt: License
 
 .. image:: https://img.shields.io/pypi/v/mlcomp.svg
@@ -13,12 +13,12 @@ MLComp
     :alt: Pypi version
 
 .. image:: https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v
-    :target: https://lightforever.github.io/mlcomp/
+    :target: https://catalyst-team.github.io/mlcomp/
     :alt: Docs
 
 
-.. image:: https://github.com/lightforever/mlcomp/raw/master/mlcomp/server/front/src/assets/img/mlcomp_logo.jpg
-    :target: https://github.com/lightforever/mlcomp
+.. image:: https://github.com/catalyst-team/mlcomp/raw/master/mlcomp/server/front/src/assets/img/mlcomp_logo.jpg
+    :target: https://github.com/catalyst-team/mlcomp
 
 MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI.
 

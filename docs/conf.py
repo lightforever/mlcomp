@@ -29,9 +29,9 @@ copyright = "{}, Evgeny Semyonov".format(datetime.datetime.now().year)
 author = "Evgeny Semyonov"
 
 docs_repo = "mlcomp"
-docs_user = "lightforever"
+docs_user = "catalyst-team"
 
-releases_github_path = "lightforever/mlcomp"
+releases_github_path = "catalyst-team/mlcomp"
 
 
 def get_version(mode: str = "full") -> str:

@@ -10,3 +10,4 @@ executors:
     variant: frame
     label: label
     file: train.csv
+    depends: download

@@ -18,7 +18,7 @@ from setuptools import find_packages, setup, Command
 NAME = 'mlcomp'
 DESCRIPTION = 'Machine learning pipelines. ' \
               'Especially, for competitions, like Kaggle'
-URL = 'https://github.com/lightforever/mlcomp'
+URL = 'https://github.com/catalyst-team/mlcomp'
 EMAIL = 'lightsanweb@gmail.com'
 AUTHOR = 'Evgeny Semyonov'
 REQUIRES_PYTHON = '>=3.6.0'
