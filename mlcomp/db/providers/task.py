@@ -65,9 +65,9 @@ class TaskProvider(BaseDataProvider):
         return query
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Task, Project.name).\
-            join(Dag, Dag.id == Task.dag).\
-            join(Project, Project.id == Dag.project).\
+        query = self.query(Task, Project.name). \
+            join(Dag, Dag.id == Task.dag). \
+            join(Project, Project.id == Dag.project). \
             options(joinedload(Task.dag_rel, innerjoin=True))
 
         query = self._get_filter(query, filter)
@@ -80,7 +80,7 @@ class TaskProvider(BaseDataProvider):
             if p.dag_rel is None:
                 continue
 
-            item = {**self.to_dict(p, rules=('-additional_info', ))}
+            item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
             item['dag_rel']['project'] = {
@@ -192,11 +192,11 @@ class TaskProvider(BaseDataProvider):
         self.update()
 
     def by_status(
-        self,
-        *statuses: TaskStatus,
-        task_docker_assigned: str = None,
-        worker_index: int = None,
-        computer_assigned: str = None
+            self,
+            *statuses: TaskStatus,
+            task_docker_assigned: str = None,
+            worker_index: int = None,
+            computer_assigned: str = None
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
@@ -238,7 +238,7 @@ class TaskProvider(BaseDataProvider):
         return res[0] if res else None
 
     def by_dag(self, id: int):
-        return self.query(Task).filter(Task.dag == id).all()
+        return self.query(Task).filter(Task.dag == id).order_by(Task.id).all()
 
     def parent_tasks_stats(self):
         task_parent = aliased(Task)

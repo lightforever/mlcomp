@@ -126,4 +126,4 @@ class ModelAdd(Executor):
         )
 
 
-__all__ = ['ModelAdd']
+__all__ = ['ModelAdd', 'trace_model_from_checkpoint']

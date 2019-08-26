@@ -82,7 +82,7 @@ class Storage:
             ignore_patterns = []
         else:
             ignore_patterns = read_lines(ignore_file)
-        ignore_patterns.extend(['log', 'data', '__pycache__'])
+        ignore_patterns.extend(['log', 'data', 'models', '__pycache__'])
 
         return pathspec.PathSpec.from_lines(
             pathspec.patterns.GitWildMatchPattern, ignore_patterns
@@ -158,7 +158,8 @@ class Storage:
             data_folder = os.path.join(DATA_FOLDER, info['project'])
             os.makedirs(data_folder, exist_ok=True)
 
-            os.symlink(data_folder, os.path.join(folder, 'data'))
+            os.symlink(data_folder, os.path.join(folder, 'data'),
+                       target_is_directory=True)
         except FileExistsError:
             pass
 
@@ -166,7 +167,8 @@ class Storage:
             model_folder = os.path.join(MODEL_FOLDER, info['project'])
             os.makedirs(model_folder, exist_ok=True)
 
-            os.symlink(model_folder, os.path.join(folder, 'models'))
+            os.symlink(model_folder, os.path.join(folder, 'models'),
+                       target_is_directory=True)
         except FileExistsError:
             pass
 

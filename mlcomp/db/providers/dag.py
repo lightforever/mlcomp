@@ -184,6 +184,7 @@ class DagProvider(BaseDataProvider):
             {
                 'id': t.id,
                 'label': label(t),
+                'name': t.name,
                 'status': to_snake(TaskStatus(t.status).name)
             } for t in tasks
         ]

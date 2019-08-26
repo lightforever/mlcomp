@@ -160,6 +160,8 @@ class ExecuteBuilder:
     def create_executor(self):
         self.info('create_executor')
 
+        os.environ['CUDA_VISIBLE_DEVICES'] = self.task.gpu_assigned or ''
+
         additional_info = yaml_load(self.task.additional_info) \
             if self.task.additional_info else dict()
         self.executor = Executor.from_config(

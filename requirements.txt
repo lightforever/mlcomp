@@ -1,4 +1,4 @@
-catalyst==19.8.5
+catalyst==19.8.6
 redis
 
 PyYAML>=5.1
@@ -24,6 +24,10 @@ sqlalchemy-migrate>=0.12.0
 cython
 pretrainedmodels>=0.7.4
 supervisor>=4.0.4
+
+# For describing
+jupyter
+networkx>=2.2
 
 # For tests
 pytest>=5.0.1
