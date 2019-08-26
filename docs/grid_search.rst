@@ -1,10 +1,10 @@
-Grid search
+xGrid search
 ======================================
 
 .. toctree::
    :maxdepth: 2
 
-An example of a grid_search configuration:
+That is an example of a grid_search configuration:
 ::
 
     executors:
@@ -19,19 +19,19 @@ An example of a grid_search configuration:
             - num_workers: 3
               lr: 0.1
 
-In a grid you need to specify parameter sets.
+The user needs to specify parameter sets in a grid field.
 
-MLComp will use all possible combinations of them and transfer each combination to an executor in a special parameter: `additional_info`.
+MLComp considers all possible combinations of them and transfers each combination to an executor within a special parameter: `additional_info`.
 
 Each parameter set can be specified with 4 different ways:
 
 1. key: list
 
-    an example: batch_size: [20, 40, 80]
+    for example, batch_size: [20, 40, 80]
 
 2. list of dicts
 
-    and example:
+    for example,
     ::
 
         - - num_workers: 2
@@ -41,7 +41,7 @@ Each parameter set can be specified with 4 different ways:
 
 3. _folder: path_to_folder
 
-    an example:
+    for example,
 
     ::
 
@@ -49,17 +49,17 @@ Each parameter set can be specified with 4 different ways:
 
     Each config in the folder must be a valid yml file.
 
-    File structure: the same as in 4.
+    File structure is the same as in number 4.
 
 4. _file: list of files
 
-    an example:
+    for example,
 
     ::
 
         _file: [file1.yml]
 
-    File structure: an ordinary dictionary, an example:
+    File structure is an ordinary dictionary. For example,
 
     ::
 

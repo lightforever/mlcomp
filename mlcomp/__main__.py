@@ -105,17 +105,12 @@ def execute(config: str, debug: bool):
     created_dag = _dag(config, debug)
     for ids in created_dag.values():
         for id in ids:
+            task = provider.by_id(id)
+            task.gpu_assigned = ','.join(
+                [str(i) for i, _ in enumerate(GPUtil.getGPUs())])
+
+            provider.commit()
             execute_by_id(id, exit=False)
-
-
-# @main.command()
-# def describe_execution():
-#     task_provider = TaskProvider()
-#     auxiliary_provider = AuxiliaryProvider()
-#     log_provider = LogProvider()
-#
-#     tasks = task_provider.all()
-#     tasks = sorted(tasks, key=lambda x: x.id)
 
 
 @main.command()

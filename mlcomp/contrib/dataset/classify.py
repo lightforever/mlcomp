@@ -1,6 +1,7 @@
 from os.path import join
 from numbers import Number
 from collections import defaultdict
+import os
 
 import tifffile
 import numpy as np
@@ -15,8 +16,8 @@ class ImageDataset(Dataset):
             self,
             *,
             img_folder: str,
-            fold_csv: str,
-            fold_number: int,
+            fold_csv: str = None,
+            fold_number: int = None,
             is_test: bool = False,
             gray_scale: bool = False,
             num_classes=2,
@@ -25,13 +26,17 @@ class ImageDataset(Dataset):
             transforms=None):
         self.img_folder = img_folder
 
-        df = pd.read_csv(fold_csv)
-        if is_test:
-            self.data = df[df['fold'] == fold_number].to_dict(orient='row')
+        if fold_csv:
+            df = pd.read_csv(fold_csv)
+            if is_test:
+                self.data = df[df['fold'] == fold_number]
+            else:
+                self.data = df[df['fold'] != fold_number]
         else:
-            self.data = df[df['fold'] != fold_number].to_dict(orient='row')
+            self.data = pd.DataFrame(
+                {'image': os.listdir(img_folder)}).sort_values(by='image')
 
-        self.data = self.data
+        self.data = self.data.to_dict(orient='row')
         if max_count is not None:
             self.apply_max_count(max_count)
 
@@ -53,13 +58,17 @@ class ImageDataset(Dataset):
             min_index = np.argmin(max_count)
             min_count = len(data[min_index])
             for k, v in data.items():
-                count = int(min_count*(max_count[k]/max_count[min_index]))
+                count = int(min_count * (max_count[k] / max_count[min_index]))
                 data[k] = data[k][:count]
 
             self.data = [v for i in range(len(data)) for v in data[i]]
 
     def preprocess_row(self, row: dict):
-        row['image'] = join(self.img_folder, str(row['label']), row['image'])
+        if 'label' in row:
+            row['image'] = join(self.img_folder, str(row['label']),
+                                row['image'])
+        else:
+            row['image'] = join(self.img_folder, row['image'])
 
     def __len__(self):
         return len(self.data)
@@ -70,7 +79,8 @@ class ImageDataset(Dataset):
     def _get_item_after_transform(self, row: dict,
                                   transformed: dict,
                                   res: dict):
-        res['targets'] = row['label']
+        if 'label' in row:
+            res['targets'] = row['label']
 
     def __getitem__(self, index):
         row = self.data[index]
@@ -85,7 +95,8 @@ class ImageDataset(Dataset):
             item['image'] = np.expand_dims(item['image'], axis=0)
         res = {
             'features': item['image'].astype(np.float32),
-            'meta': {c: row[c] for c in self.meta_cols}
+            'meta': {c: row[c] for c in self.meta_cols},
+            'image_file': row['image']
         }
         self._get_item_after_transform(row, item, res)
 

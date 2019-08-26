@@ -10,7 +10,7 @@ from catalyst.utils import set_global_seed, load_checkpoint
 from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
 from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
-from catalyst.utils.config import parse_args_uargs, dump_config
+from catalyst.utils.config import parse_args_uargs, dump_environment
 
 from mlcomp import TASK_FOLDER
 from mlcomp.contrib.search.grid import grid_cells
@@ -192,7 +192,6 @@ class Catalyst(Executor, Callback):
         os.environ['WORLD_SIZE'] = str(info['world_size'])
 
         os.environ['RANK'] = str(info['rank'])
-        os.environ['CUDA_VISIBLE_DEVICES'] = str(info['local_rank'])
 
         config['distributed_params'] = {'rank': 0}
 
@@ -202,8 +201,6 @@ class Catalyst(Executor, Callback):
     def parse_args_uargs(self):
         args, config = parse_args_uargs(self.args, [])
         config = merge_dicts_smart(config, self.grid_config)
-
-        os.environ['CUDA_VISIBLE_DEVICES'] = self.task.gpu_assigned or ''
 
         if self.distr_info:
             self.set_dist_env(config)
@@ -338,7 +335,7 @@ class Catalyst(Executor, Callback):
         experiment.get_callbacks = get_callbacks
 
         if experiment.logdir is not None:
-            dump_config(config, experiment.logdir, args.configs)
+            dump_environment(config, experiment.logdir, args.configs)
 
         if self.distr_info:
             info = yaml_load(self.task.additional_info)

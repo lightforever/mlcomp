@@ -26,8 +26,8 @@ class ImageWithMaskDataset(ImageDataset):
             if len(mask.shape) == 2:
                 mask_encoded = np.zeros((self.num_classes, *mask.shape),
                                         dtype=mask.dtype)
-                for i in range(self.num_classes):
-                    mask_encoded[i] = mask == i
+                for i in range(1, self.num_classes):
+                    mask_encoded[i-1] = mask == i
 
                 mask = mask_encoded
             res['targets'] = mask.astype(np.float32)
