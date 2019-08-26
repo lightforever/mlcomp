@@ -1,4 +1,4 @@
-xGrid search
+Grid search
 ======================================
 
 .. toctree::
