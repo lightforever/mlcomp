@@ -29,6 +29,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
     total: number;
     private interval: number;
     id_column: string = 'id';
+    private previous_filter;
 
     protected constructor(
         protected service: BaseService,
@@ -68,7 +69,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        if(!this.init){
+        if (!this.init) {
             return;
         }
 
@@ -102,6 +103,26 @@ export class Paginator<T> implements OnInit, OnDestroy {
                 if (!filter) {
                     return observableOf(new PaginatorRes<T>());
                 }
+                if (this.previous_filter) {
+                    let keys = {...Object.keys(this.previous_filter),
+                        ...Object.keys(filter)};
+
+                    for (let i in keys) {
+                        let k = keys[i];
+                        if (JSON.stringify(this.previous_filter[k])
+                            != JSON.stringify(filter[k])
+                            && k != 'paginator') {
+                            this.paginator.pageIndex = 0;
+                            if (filter.paginator) {
+                                filter.paginator.page_number = 0;
+                            } else {
+                                filter.page_number = 0;
+                            }
+                        }
+                    }
+                }
+
+                this.previous_filter = filter;
                 return this.service.get_paginator<T>(filter);
             }),
             map(res => {
