@@ -14,13 +14,18 @@ items:
 
 layout:
   - type: panel
+    title: table
+    table: True
+    parent_cols: 1
+    items:
+      - type: table
+        source: [loss, dice]
+
+  - type: panel
     title: main
     parent_cols: 3
     row_height: 400
     items:
-      - type: table
-        source: [loss, dice]
-        cols: 1
       - type: series
         source: loss
         multi: True

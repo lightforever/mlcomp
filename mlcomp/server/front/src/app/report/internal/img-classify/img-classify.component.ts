@@ -51,6 +51,9 @@ export class ImgClassifyComponent extends Paginator<Img> {
         let self = this;
         this.subscribe_data_changed();
         this.data_updated.subscribe(res => {
+            if(!res || !res.part){
+                return;
+            }
             self.resource_service.load('plotly').
             then(() => {
                 self.plot_confusion(res.confusion, res.part, res.class_names);

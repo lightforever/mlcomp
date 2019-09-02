@@ -1,10 +1,12 @@
 import os
 import socket
+import time
 import traceback
 import subprocess
 from os.path import join
 from typing import List
 
+from mlcomp import FILE_SYNC_INTERVAL
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
 from mlcomp.db.models import Computer, TaskSynced
@@ -20,7 +22,7 @@ def sync_directed(
         folders_excluded: List
 ):
     current_computer = socket.gethostname()
-    end = ' --perms  --chmod=777'
+    end = ' --perms  --chmod=777 --size-only'
     logger = create_logger(session, __name__)
     for folder, excluded in folders_excluded:
         if len(excluded) > 0:
@@ -82,38 +84,45 @@ class FileSync:
             computer = provider.by_name(hostname)
             sync_start = now()
 
-            computers = provider.all_with_last_activtiy()
-            computers = [
-                c for c in computers
-                if (now() - c.last_activity).total_seconds() < 10
-            ]
-            computers_names = {c.name for c in computers}
-
-            for c, project, tasks in task_synced_provider.for_computer(
-                    computer.name):
-                if c.name not in computers_names:
-                    self.logger.info(f'Computer = {c.name} '
-                                     f'is offline. Can not sync',
-                                     ComponentType.WorkerSupervisor, hostname)
-                    continue
-
-                if c.syncing_computer:
-                    continue
-
-                excluded = list(map(str, yaml_load(project.ignore_folders)))
-                folders_excluded = [
-                    [join('data', project.name), excluded],
-                    [join('models', project.name), []]
+            if FILE_SYNC_INTERVAL == 0:
+                time.sleep(1)
+            else:
+                computers = provider.all_with_last_activtiy()
+                computers = [
+                    c for c in computers
+                    if (now() - c.last_activity).total_seconds() < 10
                 ]
+                computers_names = {c.name for c in computers}
 
-                computer.syncing_computer = c.name
-                provider.update()
-                sync_directed(self.session, c, computer, folders_excluded)
+                for c, project, tasks in task_synced_provider.for_computer(
+                        computer.name):
+                    if c.name not in computers_names:
+                        self.logger.info(f'Computer = {c.name} '
+                                         f'is offline. Can not sync',
+                                         ComponentType.WorkerSupervisor,
+                                         hostname)
+                        continue
 
-                for t in tasks:
-                    task_synced_provider.add(
-                        TaskSynced(computer=computer.name, task=t.id)
-                    )
+                    if c.syncing_computer:
+                        continue
+
+                    excluded = list(map(str,
+                                        yaml_load(project.ignore_folders)))
+                    folders_excluded = [
+                        [join('data', project.name), excluded],
+                        [join('models', project.name), []]
+                    ]
+
+                    computer.syncing_computer = c.name
+                    provider.update()
+                    sync_directed(self.session, c, computer, folders_excluded)
+
+                    for t in tasks:
+                        task_synced_provider.add(
+                            TaskSynced(computer=computer.name, task=t.id)
+                        )
+
+                    time.sleep(FILE_SYNC_INTERVAL)
 
             computer.last_synced = sync_start
             computer.syncing_computer = None

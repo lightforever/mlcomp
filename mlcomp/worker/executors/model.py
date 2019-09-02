@@ -11,7 +11,7 @@ from catalyst import utils
 from catalyst.dl.utils.trace import trace_model
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 
-from mlcomp import TASK_FOLDER, MODEL_FOLDER
+from mlcomp import TASK_FOLDER, MODEL_FOLDER, ROOT_FOLDER
 from mlcomp.db.models import Model, Dag
 from mlcomp.db.providers import TaskProvider, ModelProvider, DagProvider
 from mlcomp.utils.misc import now
@@ -104,7 +104,7 @@ class ModelAdd(Executor):
             shutil.copy(f'{src_log}/checkpoints/best.pth', model_weight_path)
 
             interface_params = yaml_load(model.interface_params)
-            interface_params['file'] = model_path
+            interface_params['file'] = join('models', model.name+'.pth')
             model.interface_params = yaml_dump(interface_params)
             provider.update()
         except Exception as e:

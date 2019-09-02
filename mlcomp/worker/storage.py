@@ -13,10 +13,10 @@ import importlib
 
 from sqlalchemy.orm import joinedload
 
-from mlcomp import TASK_FOLDER, DATA_FOLDER, MODE_ECONOMIC, MODEL_FOLDER
+from mlcomp import TASK_FOLDER, DATA_FOLDER, MODEL_FOLDER, INSTALL_DEPENDENCIES
 from mlcomp.db.core import Session
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
-from mlcomp.utils.misc import now
+from mlcomp.utils.misc import now, to_snake
 from mlcomp.db.providers import FileProvider, \
     DagStorageProvider, \
     TaskProvider, \
@@ -129,7 +129,7 @@ class Storage:
                 DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False)
             )
 
-        if not MODE_ECONOMIC and control_reqs:
+        if INSTALL_DEPENDENCIES and control_reqs:
             reqs = control_requirements(folder, files=all_files)
             for name, rel, version in reqs:
                 self.library_provider.add(
@@ -199,7 +199,7 @@ class Storage:
             except Exception:
                 need_install = True
 
-            if not MODE_ECONOMIC and need_install:
+            if INSTALL_DEPENDENCIES and need_install:
                 os.system(f'pip install {n}=={library_versions[n]}')
                 was_installation = True
 
@@ -208,7 +208,9 @@ class Storage:
             if 'Executor' not in super_names:
                 return False
 
-            return cls.name == executor or cls.name.lower() == executor
+            return cls.name == executor or \
+                cls.name.lower() == executor or \
+                to_snake(cls.name) == executor
 
         def relative_name(path: str):
             rel = os.path.relpath(path, base_folder)

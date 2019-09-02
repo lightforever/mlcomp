@@ -66,6 +66,9 @@ export class ComputerComponent extends Paginator<Computer>
     ngAfterViewInit() {
         let self = this;
         this.data_updated.subscribe((res) => {
+                if(!res || !res.data){
+                    return;
+                }
                 let data = res.data;
                 this.resource_service.load('plotly').
                 then(() => {

@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from mlcomp.utils.misc import to_snake
+
 
 class Interface(ABC):
     _child = dict()
@@ -15,6 +17,7 @@ class Interface(ABC):
     def register(cls):
         Interface._child[cls.__name__] = cls
         Interface._child[cls.__name__.lower()] = cls
+        Interface._child[to_snake(cls.__name__)] = cls
         return cls
 
     @staticmethod

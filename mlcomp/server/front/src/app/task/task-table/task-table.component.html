@@ -232,7 +232,8 @@
                             matTooltip="Create model"
                             (click)="model(element)"
                             [class.transparent]=
-                                    "element.status!='success'
+                                    "['success', 'stopped'].
+                                        indexOf(element.status)==-1
                                     ||not_a_model(element)">
                     </mat-icon>
 
@@ -247,8 +248,8 @@
 
 
     <mat-paginator
-        [pageSizeOptions]="[15, 30, 100]"
-        [length]="paginator.total"
-        [pageSize]="15">
+            [pageSizeOptions]="[15, 30, 100]"
+            [length]="paginator.total"
+            [pageSize]="15">
     </mat-paginator>
 </div>

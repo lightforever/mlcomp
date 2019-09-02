@@ -11,7 +11,7 @@ import psutil
 import numpy as np
 
 from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
-    MODE_ECONOMIC, DOCKER_IMG, DOCKER_MAIN, IP, PORT
+    DOCKER_IMG, DOCKER_MAIN, IP, PORT, WORKER_USAGE_INTERVAL
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
@@ -95,7 +95,10 @@ def worker_usage(session: Session, logger):
     docker = docker_provider.get(computer, DOCKER_IMG)
     usages = []
 
-    for _ in range(1 if MODE_ECONOMIC else 10):
+    count = int(10/WORKER_USAGE_INTERVAL)
+    count = max(1, count)
+
+    for _ in range(count):
         # noinspection PyProtectedMember
         memory = dict(psutil.virtual_memory()._asdict())
 
@@ -116,7 +119,7 @@ def worker_usage(session: Session, logger):
         docker.last_activity = now()
         docker_provider.update()
 
-        time.sleep(10 if MODE_ECONOMIC else 1)
+        time.sleep(WORKER_USAGE_INTERVAL)
 
     usage = json.dumps({'mean': dict_func(usages, np.mean)})
     provider.add(ComputerUsage(computer=computer, usage=usage, time=now()))
@@ -161,7 +164,7 @@ def worker_supervisor():
     if DOCKER_MAIN:
         syncer = FileSync()
         start_schedule([(worker_usage, 0)])
-        start_schedule([(syncer.sync, 10 if MODE_ECONOMIC else 1)])
+        start_schedule([(syncer.sync, 0)])
 
     name = f'{host}_{DOCKER_IMG}_supervisor'
     argv = [

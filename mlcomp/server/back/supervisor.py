@@ -82,7 +82,7 @@ class SupervisorBuilder:
             computer['gpu_total'] = len(computer['gpu'])
 
         for task in self.provider.by_status(
-            TaskStatus.Queued, TaskStatus.InProgress
+                TaskStatus.Queued, TaskStatus.InProgress
         ):
             if task.computer_assigned is None:
                 continue
@@ -110,7 +110,7 @@ class SupervisorBuilder:
         self.auxiliary['computers'] = self.computers
 
     def process_to_celery(self, task: Task, queue: str, computer: dict):
-        r = execute.apply_async((task.id, ), queue=queue)
+        r = execute.apply_async((task.id,), queue=queue, retry=False)
         task.status = TaskStatus.Queued.value
         task.computer_assigned = computer['name']
         task.celery_id = r.id
@@ -121,14 +121,18 @@ class SupervisorBuilder:
             computer['cpu'] -= task.cpu
             computer['memory'] -= task.memory * 1024
 
+        self.logger.info(
+            f'Sent task={task.id} to celery. Queue = {queue} '
+            f'Task status = {task.status} Celery_id = {r.id}',
+            ComponentType.Supervisor)
         self.provider.update()
 
     def create_service_task(
-        self,
-        task: Task,
-        gpu_assigned=None,
-        distr_info: dict = None,
-        resume: dict = None
+            self,
+            task: Task,
+            gpu_assigned=None,
+            distr_info: dict = None,
+            resume: dict = None
     ):
         new_task = Task(
             name=task.name,
@@ -163,7 +167,8 @@ class SupervisorBuilder:
                 return p
         raise Exception(f'All ports in {c["name"]} are taken')
 
-    def _process_task_valid_computer(self, task: Task, c: dict):
+    def _process_task_valid_computer(self, task: Task, c: dict,
+                                     single_node: bool):
         if task.computer is not None and task.computer != c['name']:
             return 'name set in the config!= name of this computer'
 
@@ -183,21 +188,28 @@ class SupervisorBuilder:
         if task.gpu > 0 and not any(g == 0 for g in c['gpu']):
             return f'task requires gpu, but there is not any free'
 
+        free_gpu = sum(g == 0 for g in c['gpu'])
+        if single_node and task.gpu > free_gpu:
+            return f'task requires {task.gpu} ' \
+                   f'but there are only {free_gpu} free'
+
     def _process_task_get_computers(
-        self, executor: dict, task: Task, auxiliary: dict
+            self, executor: dict, task: Task, auxiliary: dict
     ):
         single_node = executor.get('single_node', True)
 
         computers = []
         for c in self.computers:
-            error = self._process_task_valid_computer(task, c)
+            error = self._process_task_valid_computer(task, c, single_node)
             auxiliary['computers'].append({'name': c['name'], 'error': error})
             if not error:
                 computers.append(c)
 
         if task.gpu > 0 and single_node and len(computers) > 0:
             computers = sorted(
-                computers, key=lambda x: x['gpu'], reverse=True
+                computers,
+                key=lambda x: sum(g == 0 for g in c['gpu']),
+                reverse=True
             )[:1]
 
         free_gpu = sum(sum(g == 0 for g in c['gpu']) for c in computers)
@@ -210,7 +222,7 @@ class SupervisorBuilder:
         return computers
 
     def _process_task_to_send(
-        self, executor: dict, task: Task, computers: List[dict]
+            self, executor: dict, task: Task, computers: List[dict]
     ):
         distr = executor.get('distr', True)
         to_send = []
@@ -294,6 +306,7 @@ class SupervisorBuilder:
             )
             self.process_to_celery(service_task, queue, computer)
             rank += 1
+            main_cmp['ports'].add(master_port)
 
         if len(to_send) > 0:
             task.status = TaskStatus.Queued.value

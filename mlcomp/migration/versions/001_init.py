@@ -81,7 +81,7 @@ log = Table(
     'log', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('step', Integer),
-    Column('message', String(4000), nullable=False),
+    Column('message', String(8000), nullable=False),
     Column('time', TIMESTAMP, nullable=False, default='now()'),
     Column('level', Integer, nullable=False),
     Column('component', Integer, nullable=False),

@@ -27,13 +27,35 @@ class Config(dict):
 def merge_dicts_smart(target: dict, source: dict, sep='/'):
     target_flatten = dict_flatten(target)
     mapping = defaultdict(list)
+    hooks = dict()
+
     for k, v in target_flatten.items():
         parts = k.split(sep)
         for i in range(len(parts) - 1, -1, -1):
             key = sep.join(parts[i:])
             mapping[key].append(k)
 
+            if i < len(parts) - 1:
+                hooks[sep.join(parts[i: -1])] = sep.join(parts[:i + 1])
+
+    for k, v in list(source.items()):
+        if isinstance(v, dict):
+            source.update({k + sep + kk: v for kk in dict_flatten(v)})
+
     for k, v in source.items():
+        if len(mapping[k]) == 0:
+            parts = k.split(sep)
+            hook = None
+            for i in range(len(parts) - 1, -1, -1):
+                h = sep.join(parts[:i])
+                if h in hooks:
+                    hook = hooks[h] + sep + sep.join(parts[i:])
+                    break
+
+            if not hook:
+                hook = k
+
+            mapping[k] = [hook]
         assert len(mapping[k]) == 1, f'ambiguous mapping for {k}'
         key = mapping[k][0]
         target_flatten[key] = v

@@ -16,7 +16,12 @@ class LogProvider(BaseDataProvider):
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
         if filter.get('task'):
-            query = query.filter(Task.id == filter['task'])
+            child_tasks = self.query(Task.id).filter(
+                Task.parent == filter['task']).all()
+            child_tasks = [c[0] for c in child_tasks]
+            child_tasks.append(filter['task'])
+
+            query = query.filter(Task.id.in_(child_tasks))
 
         if len(filter.get('components', [])) > 0:
             query = query.filter(Log.component.in_(filter['components']))

@@ -61,7 +61,7 @@ export class StepComponent implements OnInit, OnDestroy {
     load() {
         let self = this;
         this.service.steps(this.task).subscribe(res => {
-            if(!res.data){
+            if(!res || !res.data){
                 return;
             }
             self.dataSource.data = res.data;
