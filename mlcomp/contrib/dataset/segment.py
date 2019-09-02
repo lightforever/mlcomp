@@ -82,12 +82,10 @@ class ImageWithMaskDataset(ImageDataset):
 
         x = np.random.randint(min_x, max_x + 1)
         y = np.random.randint(min_y, max_y + 1)
-        item['image'] = item['image'][y: y + crop_pos_y,
-                        x: x + crop_pos_x]
+        item['image'] = item['image'][y: y + crop_pos_y, x: x + crop_pos_x]
 
-        item['mask'] = item['mask'][y: y + crop_pos_y,
-                       x: x + crop_pos_x]
-        #
+        item['mask'] = item['mask'][y: y + crop_pos_y, x: x + crop_pos_x]
+
         # plt.imshow(item['image'])
         # plt.show()
         # plt.imshow(item['mask'] * 53)
