@@ -6,9 +6,10 @@
  
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
+[![PyPI Status](https://pepy.tech/badge/mlcomp)](https://pepy.tech/project/mlcomp)
 [![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
 
-[![Build Status](https://travis-ci.org/lightforever/mlcomp.svg?branch=master)](https://travis-ci.org/lightforever/mlcomp) 
+[![Build Status](https://travis-ci.com/catalyst-team/mlcomp.svg?branch=master)](https://travis-ci.com/catalyst-team/mlcomp) 
 [![Telegram](./docs/imgs/telegram.svg)](https://t.me/catalyst_team)
 [![Gitter](https://badges.gitter.im/catalyst-team/community.svg)](https://gitter.im/catalyst-team/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Slack](./docs/imgs/slack.svg)](https://opendatascience.slack.com/messages/CGK4KQBHD)
@@ -193,7 +194,11 @@ The single file to setup your computer environment is located at ~/mlcomp/config
 - MASTER_PORT_RANGE. distributed port range for a work computer. 29500-29510 means that if
 this work computer is a master in a distributed learning, it will use the first free port
 from this range. Ranges of different work computers must not overlap.
-- NCCL_SOCKET_IFNAME. NCCL network interface. 
+- NCCL_SOCKET_IFNAME. NCCL network interface.
+- FILE_SYNC_INTERVAL. File sync interval in seconds. 0 means file sync is off
+- WORKER_USAGE_INTERVAL. Interval in seconds of writing worker usage to DB
+- INSTALL_DEPENDENCIES. True/False. Either install dependent libraries or not
+
 You can see your network interfaces with `ifconfig` command.
  Please consider [nvidia doc](https://docs.nvidia.com/deeplearning/sdk/nccl-developer-guide/docs/env.html)
  
