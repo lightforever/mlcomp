@@ -1,18 +1,25 @@
-# MLComp
+<div align="center">
 
-[![Build Status](https://travis-ci.org/lightforever/mlcomp.svg?branch=master)](https://travis-ci.org/lightforever/mlcomp) 
-[![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
+![MLComp logo](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/MLcomp.png)
+
+**MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI**
+ 
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
+[![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
 
-MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI.
+[![Build Status](https://travis-ci.org/lightforever/mlcomp.svg?branch=master)](https://travis-ci.org/lightforever/mlcomp) 
+[![Telegram](./docs/imgs/telegram.svg)](https://t.me/catalyst_team)
+[![Gitter](https://badges.gitter.im/catalyst-team/community.svg)](https://gitter.im/catalyst-team/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Slack](./docs/imgs/slack.svg)](https://opendatascience.slack.com/messages/CGK4KQBHD)
+[![Donate](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/third_party_pics/patreon.png)](https://www.patreon.com/catalyst_team)
+
+</div>
 
 The goal of MLComp is to provide tools for training, inferencing, creating complex pipelines
 (especially for computer vision) in a rapid, well manageable way.
 
 MLComp is compatible with: Python 3.6+, Unix operation system.
-
-![MLComp logo](https://github.com/catalyst-team/mlcomp/raw/master/mlcomp/server/front/src/assets/img/mlcomp_logo.jpg)
 
 **Features**
 
