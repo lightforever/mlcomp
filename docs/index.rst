@@ -17,7 +17,7 @@ MLComp
     :alt: Docs
 
 
-.. image:: https://github.com/catalyst-team/mlcomp/raw/master/mlcomp/server/front/src/assets/img/mlcomp_logo.jpg
+.. image:: https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/MLcomp.png
     :target: https://github.com/catalyst-team/mlcomp
 
 MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI.
