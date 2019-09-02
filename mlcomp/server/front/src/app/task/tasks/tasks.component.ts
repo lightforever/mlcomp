@@ -1,4 +1,9 @@
-import {Component, Input} from '@angular/core';
+import {
+    AfterContentChecked,
+    AfterViewInit,
+    Component,
+    Input
+} from '@angular/core';
 import {Location} from "@angular/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Paginator} from "../../paginator";
@@ -11,7 +16,27 @@ import {TaskService} from "../task.service";
     templateUrl: './tasks.component.html',
     styleUrls: ['./tasks.component.css']
 })
-export class TasksComponent extends Paginator<TasksComponent> {
+export class TasksComponent extends Paginator<TasksComponent>
+    implements AfterContentChecked{
+
+    ngAfterContentChecked(): void {
+         this.route.queryParams.subscribe(params => {
+            if (params['dag']) this.dag = parseInt(params['dag']);
+            if (params['status']) {
+                this.not_ran = false;
+                this.queued = false;
+                this.in_progress = false;
+                this.failed = false;
+                this.stopped = false;
+                this.skipped = false;
+                this.success = false;
+
+                this[params['status']] = true;
+            }
+            this.onchange();
+        });
+
+    }
     displayed_columns: string[];
     @Input() dag: number;
     name: string;
@@ -25,13 +50,13 @@ export class TasksComponent extends Paginator<TasksComponent> {
     created_min: string;
     created_max: string;
 
-    not_ran: boolean;
-    queued: boolean;
-    in_progress: boolean;
-    failed: boolean;
-    stopped: boolean;
-    skipped: boolean;
-    success: boolean;
+    not_ran: boolean = false;
+    queued: boolean = false;
+    in_progress: boolean = false;
+    failed: boolean = false;
+    stopped: boolean = false;
+    skipped: boolean = false;
+    success: boolean = false;
 
     dags: any[];
     projects: any[];
@@ -56,23 +81,10 @@ export class TasksComponent extends Paginator<TasksComponent> {
 
     protected _ngOnInit() {
         let self = this;
-        this.route.queryParams.subscribe(params => {
-            if (params['dag']) this.dag = parseInt(params['dag']);
-            if (params['status']) {
-                this.not_ran = false;
-                this.queued = false;
-                this.in_progress = false;
-                this.failed = false;
-                this.stopped = false;
-                this.skipped = false;
-                this.success = false;
-
-                this[params['status']] = true;
-            }
-            self.onchange();
-        });
-
         this.data_updated.subscribe(res => {
+            if(!res || !res.projects){
+                return;
+            }
             self.projects = res.projects;
             self.projects.splice(0, 0,
                 {'id': -1, 'name': 'None'});

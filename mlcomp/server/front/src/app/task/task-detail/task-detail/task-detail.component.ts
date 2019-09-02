@@ -10,6 +10,7 @@ import {Task} from "../../../models";
 })
 export class TaskDetailComponent extends TasksComponent {
     child_paginator: Paginator<Task>;
+    components: any[] = [];
 
     get_filter(): any {
         let res = super.get_filter();
@@ -49,6 +50,11 @@ export class TaskDetailComponent extends TasksComponent {
         );
 
         this.child_paginator.ngOnInit();
+        this.child_paginator.change.subscribe(x => {
+            for (let c of this.components) {
+                c.task = this.id;
+            }
+        });
         this.child_paginator.change.emit();
     }
 
@@ -59,6 +65,7 @@ export class TaskDetailComponent extends TasksComponent {
 
     onActivate(component) {
         component.task = this.id;
+        this.components.push(component);
     }
 
 }

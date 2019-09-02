@@ -56,7 +56,8 @@ class Catalyst(Executor, Callback):
             distr_info: dict,
             resume: dict,
             grid_config: dict,
-            trace: str
+            trace: str,
+            params: dict
     ):
 
         self.resume = resume
@@ -71,6 +72,7 @@ class Catalyst(Executor, Callback):
         self.checkpoint_resume = False
         self.checkpoint_stage_epoch = 0
         self.trace = trace
+        self.params = params
 
     def callbacks(self):
         result = OrderedDict()
@@ -94,8 +96,7 @@ class Catalyst(Executor, Callback):
             )
 
     def on_epoch_end(self, state: RunnerState):
-        if self.master:
-            self.step.end(2)
+        self.step.end(2)
 
         for s in self.report.series:
             train = state.metrics.epoch_values['train'][s.key]
@@ -141,13 +142,13 @@ class Catalyst(Executor, Callback):
                     self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):
-        state.loggers = [VerboseLogger(), RaiseExceptionLogger()]
+        state.loggers = {'console': VerboseLogger(),
+                         'raise': RaiseExceptionLogger()}
 
     def on_stage_end(self, state: RunnerState):
         self.checkpoint_resume = False
         self.checkpoint_stage_epoch = 0
-        if self.master:
-            self.step.end(1)
+        self.step.end(1)
 
     @classmethod
     def _from_config(
@@ -155,6 +156,7 @@ class Catalyst(Executor, Callback):
     ):
         args = Args()
         for k, v in executor['args'].items():
+            v = str(v)
             if v in ['False', 'True']:
                 v = v == 'True'
             elif v.isnumeric():
@@ -175,6 +177,7 @@ class Catalyst(Executor, Callback):
 
         distr_info = additional_info.get('distr_info', {})
         resume = additional_info.get('resume')
+        params = executor.get('params', {})
 
         return cls(
             args=args,
@@ -182,7 +185,8 @@ class Catalyst(Executor, Callback):
             grid_config=grid_config,
             distr_info=distr_info,
             resume=resume,
-            trace=executor.get('trace')
+            trace=executor.get('trace'),
+            params=params
         )
 
     def set_dist_env(self, config):
@@ -201,6 +205,7 @@ class Catalyst(Executor, Callback):
     def parse_args_uargs(self):
         args, config = parse_args_uargs(self.args, [])
         config = merge_dicts_smart(config, self.grid_config)
+        config = merge_dicts_smart(config, self.params)
 
         if self.distr_info:
             self.set_dist_env(config)

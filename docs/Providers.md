@@ -46,3 +46,16 @@ provider.commit()
 for obj in provider.query(Auxiliary).all():
     print(obj.name, obj.data)
 ```
+
+To see celery task statuses:
+
+1. set env variable CELERY_RESULT_BACKEND=your url 
+
+2. 
+```python
+from celery.result import AsyncResult
+res = AsyncResult("5456eec7-be49-49ee-9a09-268699b31782")
+print(res.status)
+
+
+```

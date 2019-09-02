@@ -44,7 +44,7 @@ def show_values(pc, fmt='%.2f', **kw):
     pc.update_scalarmappable()
     ax = pc.axes
     for p, color, value in zip(
-        pc.get_paths(), pc.get_facecolors(), pc.get_array()
+            pc.get_paths(), pc.get_facecolors(), pc.get_array()
     ):
         x, y = p.vertices[:-2, :].mean(0)
         if np.all(color[:3] > 0.5):
@@ -68,15 +68,15 @@ def cm2inch(*tupl):
 
 
 def heatmap(
-    AUC,
-    xlabel,
-    ylabel,
-    xticklabels,
-    yticklabels,
-    figure_width=40,
-    figure_height=20,
-    correct_orientation=False,
-    cmap='RdBu'
+        AUC,
+        xlabel,
+        ylabel,
+        xticklabels,
+        yticklabels,
+        figure_width=40,
+        figure_height=20,
+        correct_orientation=False,
+        cmap='RdBu'
 ):
     """
     Inspired by:
@@ -174,3 +174,12 @@ def plot_classification_report(classification_report, cmap='RdBu'):
         correct_orientation,
         cmap=cmap
     )
+
+
+def show(*imgs, figsize=(20, 8)):
+    fig, axes = plt.subplots(1, len(imgs), figsize=figsize)
+    if not isinstance(axes, list) and not isinstance(axes, np.ndarray):
+        axes = [axes]
+    for img, ax in zip(imgs, axes):
+        ax.imshow(img)
+    plt.show()

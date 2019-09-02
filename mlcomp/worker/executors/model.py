@@ -104,7 +104,7 @@ class ModelAdd(Executor):
             shutil.copy(f'{src_log}/checkpoints/best.pth', model_weight_path)
 
             interface_params = yaml_load(model.interface_params)
-            interface_params['file'] = model_path
+            interface_params['file'] = join('models', model.name+'.pth')
             model.interface_params = yaml_dump(interface_params)
             provider.update()
         except Exception as e:

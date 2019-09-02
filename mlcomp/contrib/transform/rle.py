@@ -4,7 +4,7 @@ import numpy as np
 def mask2rle(img):
     """
     img: numpy array, 1 - mask, 0 - background
-    Returns run length as string formated
+    Returns run length as string formatted
     """
     pixels = img.T.flatten()
     pixels = np.concatenate([[0], pixels, [0]])
@@ -15,7 +15,7 @@ def mask2rle(img):
 
 def rle2mask(mask_rle, shape):
     """
-    mask_rle: run-length as string formated (start length)
+    mask_rle: run-length as string formatted (start length)
     shape: (width,height) of array to return
     Returns numpy array, 1 - mask, 0 - background
 

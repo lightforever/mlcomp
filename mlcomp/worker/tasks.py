@@ -65,6 +65,10 @@ class ExecuteBuilder:
     def create_base(self):
         self.info('create_base')
 
+        if app.current_task:
+            app.current_task.update_state(state=states.SUCCESS)
+            app.control.revoke(app.current_task.request.id, terminate=True)
+
         self.provider = TaskProvider(self.session)
         self.library_provider = DagLibraryProvider(self.session)
         self.storage = Storage(self.session)
@@ -89,16 +93,29 @@ class ExecuteBuilder:
         self.executor_type = self.config['executors'][self.task.executor][
             'type']
 
+        executor = self.config['executors'][self.task.executor]
+        env = {
+            'MKL_NUM_THREADS': 1,
+            'OMP_NUM_THREADS': 1
+        }
+        env.update(executor.get('env', {}))
+
+        for k, v in env.items():
+            os.environ[k] = str(v)
+            self.info(f'Set env. {k} = {v}')
+
     def check_status(self):
         self.info('check_status')
 
         assert self.dag is not None, 'You must fetch task with dag_rel'
 
-        if self.task.status > TaskStatus.InProgress.value:
+        if self.task.status >= TaskStatus.InProgress.value:
             msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
-                  f'before the execute_by_id invocation'
+                  f'before the execute_by_id invocation.'
+            if app.current_task:
+                msg += f' Request Id = {app.current_task.request.id}'
             self.error(msg)
-            raise Exception(msg)
+            return True
 
     def change_status(self):
         self.info('change_status')
@@ -145,9 +162,13 @@ class ExecuteBuilder:
             if self.repeat_count > 0:
                 try:
                     self.warning(traceback.format_exc())
+                    self.task.status = TaskStatus.Queued.value
+                    self.provider.commit()
+
                     execute.apply_async(
                         (self.id, self.repeat_count - 1),
-                        queue=self.queue_personal
+                        queue=self.queue_personal,
+                        retry=False
                     )
                 except Exception:
                     pass
@@ -195,8 +216,12 @@ class ExecuteBuilder:
                 self.executor.info(f'sending {(self.id, self.repeat_count)} '
                                    f'to {self.queue_personal}')
 
+                self.task.status = TaskStatus.Queued.value
+                self.provider.commit()
+
                 execute.apply_async(
-                    (self.id, self.repeat_count), queue=self.queue_personal
+                    (self.id, self.repeat_count), queue=self.queue_personal,
+                    retry=False
                 )
                 return
 
@@ -209,7 +234,9 @@ class ExecuteBuilder:
         try:
             self.create_base()
 
-            self.check_status()
+            bad_status = self.check_status()
+            if bad_status:
+                return
 
             self.change_status()
 
@@ -230,11 +257,11 @@ class ExecuteBuilder:
                 (self.executor and self.executor.step) else None
 
             self.error(traceback.format_exc(), step)
-            self.provider.change_status(self.task, TaskStatus.Failed)
+            if self.task.status <= TaskStatus.InProgress.value:
+                self.provider.change_status(self.task, TaskStatus.Failed)
             raise e
         finally:
             if app.current_task:
-                app.current_task.update_state(state=states.SUCCESS)
                 app.close()
 
             if self.exit:
@@ -319,7 +346,7 @@ def stop(logger, session: Session, task: Task, dag: Dag):
         if task.pid:
             queue = f'{task.computer_assigned}_' \
                     f'{dag.docker_img or "default"}_supervisor'
-            kill.apply_async((task.pid,), queue=queue)
+            kill.apply_async((task.pid,), queue=queue, retry=False)
         provider.change_status(task, status)
 
     return task.status

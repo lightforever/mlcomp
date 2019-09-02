@@ -136,7 +136,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
                 return observableOf(new PaginatorRes<T>());
             })
         ).subscribe(res => {
-            if (!res.data) {
+            if (!res || !res.data) {
                 return;
             }
 

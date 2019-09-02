@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 import time
 
-from mlcomp import MODE_ECONOMIC
+from mlcomp import FILE_SYNC_INTERVAL
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
 from mlcomp.utils.config import Config
 from mlcomp.db.providers import TaskProvider, TaskSyncedProvider
+from mlcomp.utils.misc import to_snake
 from mlcomp.worker.executors.base.step import StepWrap
 
 
@@ -40,7 +41,7 @@ class Executor(ABC):
         self.step = StepWrap(self.session, self.logger, task, task_provider)
         self.step.enter()
 
-        if not task.debug and not MODE_ECONOMIC:
+        if not task.debug and FILE_SYNC_INTERVAL:
             self.wait_data_sync()
         res = self.work()
         self.step.task_provider.commit()
@@ -87,6 +88,7 @@ class Executor(ABC):
     def register(cls):
         Executor._child[cls.__name__] = cls
         Executor._child[cls.__name__.lower()] = cls
+        Executor._child[to_snake(cls.__name__)] = cls
         return cls
 
     @staticmethod

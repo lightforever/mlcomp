@@ -130,6 +130,9 @@ export class DagsComponent extends Paginator<Dag> {
             });
 
         this.data_updated.subscribe(res => {
+            if(!res || !res.projects){
+                return;
+            }
             self.projects = res.projects;
             self.projects.splice(0, 0,
                 {'id': -1, 'name': 'None'}
