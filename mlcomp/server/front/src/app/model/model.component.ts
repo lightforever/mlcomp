@@ -11,6 +11,8 @@ import {
 import {Helpers} from "../helpers";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ModelStartDialogComponent} from "./model-start-dialog.component";
+import {ModelAddDialogComponent} from "./model-add-dialog.component";
+import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'app-model',
@@ -23,8 +25,6 @@ export class ModelComponent extends Paginator<Model> {
         'dag',
         'id',
         'name',
-        'slot',
-        'interface',
         'created',
         'score_local',
         'score_public',
@@ -47,6 +47,7 @@ export class ModelComponent extends Paginator<Model> {
                 iconRegistry: MatIconRegistry,
                 sanitizer: DomSanitizer,
                 public start_dialog: MatDialog,
+                public model_add_dialog: MatDialog
     ) {
         super(service, location);
 
@@ -122,15 +123,24 @@ export class ModelComponent extends Paginator<Model> {
             width: '500px', height: '400px',
             data: {
                 'dags': element.dags,
-                'interface': element.interface,
-                'slot': element.slot,
                 'dag': dag,
-                'interface_params': element.interface_params,
+                'equations': element.equations,
                 'model_id': element.id
             }
         };
         let dialog = this.start_dialog.open(ModelStartDialogComponent, config);
         dialog.afterClosed().subscribe(res=>this.change.emit());
+    }
+
+    add() {
+         this.model_add_dialog.open(ModelAddDialogComponent, {
+            width: '500px', height: '400px',
+            data: {
+                'projects': this.projects.filter(x=>x.name!='None'),
+                'equations': '',
+                'name': ''
+            }
+        });
     }
 }
 

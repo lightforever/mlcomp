@@ -36,13 +36,6 @@ export class ModelStartDialogComponent {
         if (!dag) {
             return;
         }
-
-        if (dag.slots.length >= 1) {
-            this.data.slot = dag.slots[0];
-        }
-        if (dag.interfaces.length >= 1) {
-            this.data.interface = dag.interfaces[0];
-        }
         if (dag.pipes.length >= 1) {
             this.data.pipe = dag.pipes[0];
         }

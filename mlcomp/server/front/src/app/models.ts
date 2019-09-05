@@ -284,10 +284,8 @@ export class Model {
     project: number;
     created: Date;
     dags: any[];
-    interface: string;
-    slot: string;
     dag: number;
-    interface_params: string;
+    equations: string;
 }
 
 export class ModelFilter {
@@ -319,10 +317,9 @@ export class ReportUpdateData {
 }
 
 export interface ModelAddData {
-    dag: any;
-    slot: string;
-    interface: any;
-    dags: any[];
+    project: number;
+    equations: string;
+    projects: any[];
     name: string;
     task: number;
 }
@@ -330,10 +327,8 @@ export interface ModelAddData {
 export interface ModelStartData {
     dags: any[];
     dag: any;
-    slot: string;
-    interface: string;
+    equations: string;
     pipe: string;
-    interface_params: string;
     model_id: number;
 }
 

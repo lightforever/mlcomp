@@ -47,13 +47,6 @@ class Executor(ABC):
         self.step.task_provider.commit()
         return res
 
-    @staticmethod
-    def kwargs_for_interface(executor: dict, config: Config, **kwargs):
-        return {
-            **executor['slot'], 'project_name': config['info']['project'],
-            **kwargs
-        }
-
     @abstractmethod
     def work(self) -> dict:
         pass

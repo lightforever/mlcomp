@@ -1,6 +1,5 @@
 import {
     AfterContentChecked,
-    AfterViewInit,
     Component,
     Input
 } from '@angular/core';
@@ -17,10 +16,10 @@ import {TaskService} from "../task.service";
     styleUrls: ['./tasks.component.css']
 })
 export class TasksComponent extends Paginator<TasksComponent>
-    implements AfterContentChecked{
+    implements AfterContentChecked {
 
     ngAfterContentChecked(): void {
-         this.route.queryParams.subscribe(params => {
+        this.route.queryParams.subscribe(params => {
             if (params['dag']) this.dag = parseInt(params['dag']);
             if (params['status']) {
                 this.not_ran = false;
@@ -33,10 +32,10 @@ export class TasksComponent extends Paginator<TasksComponent>
 
                 this[params['status']] = true;
             }
-            this.onchange();
         });
 
     }
+
     displayed_columns: string[];
     @Input() dag: number;
     name: string;
@@ -82,7 +81,7 @@ export class TasksComponent extends Paginator<TasksComponent>
     protected _ngOnInit() {
         let self = this;
         this.data_updated.subscribe(res => {
-            if(!res || !res.projects){
+            if (!res || !res.projects) {
                 return;
             }
             self.projects = res.projects;

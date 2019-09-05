@@ -15,7 +15,7 @@ class ModelProvider(BaseDataProvider):
 
     def get(self, filter, options: PaginatorOptions):
         query = self.query(Model). \
-            options(joinedload(Model.dag_rel, innerjoin=True)). \
+            options(joinedload(Model.dag_rel, innerjoin=False)). \
             options(joinedload(Model.project_rel, innerjoin=True))
 
         if filter.get('project'):
@@ -52,23 +52,9 @@ class ModelProvider(BaseDataProvider):
         for dag in models_dags:
             if dag.name in used_dag_names:
                 continue
-
             config = Config.from_yaml(dag.config)
-            slots = []
-            for pipe in config['pipes'].values():
-                for k, v in pipe.items():
-                    if 'slot' in v:
-                        if v['slot'] not in slots:
-                            slots.append(v['slot'])
-                    elif 'slots' in v:
-                        for slot in v['slots']:
-                            if slot not in slots:
-                                slots.append(slot)
-
             d = {'name': dag.name,
                  'id': dag.id,
-                 'slots': slots,
-                 'interfaces': list(config['interfaces']),
                  'pipes': list(config['pipes'])
                  }
 

@@ -14,12 +14,10 @@ export class ModelService extends BaseService {
     add(data: ModelAddData) {
         let message = `${this.constructor.name}.add`;
         let info = {
-            'dag': data.dag.id,
             'name': data.name,
             'task': data.task,
-            'slot': data.slot,
-            'interface': data.interface.name,
-            'interface_params': data.interface.params
+            'equations': data.equations,
+            'project': data.project
         };
         let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
         return this.http.post<BaseResult>(url, info).pipe(
@@ -31,11 +29,9 @@ export class ModelService extends BaseService {
         let message = `${this.constructor.name}.start`;
         let info = {
             'dag': data.dag.id,
-            'slot': data.slot,
-            'interface': data.interface,
             'pipe': data.pipe,
             'model_id': data.model_id,
-            'interface_params': data.interface_params
+            'equations': data.equations,
         };
         let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
         return this.http.post<BaseResult>(url, info).pipe(

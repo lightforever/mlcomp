@@ -10,27 +10,6 @@
 </mat-form-field>
 
 <mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Slot</mat-label>
-    <mat-select (ngModelChange)="data.slot=$event;" [(ngModel)]="data.slot">
-        <mat-option *ngFor="let slot of data.dag.slots" [value]="slot">
-            {{slot}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Interface</mat-label>
-    <mat-select
-            (ngModelChange)="data.interface=$event;"
-            [(ngModel)]="data.interface">
-        <mat-option *ngFor="let interface of data.dag.interfaces"
-                    [value]="interface">
-            {{interface}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
     <mat-label>Pipe</mat-label>
     <mat-select
             (ngModelChange)="data.pipe=$event;"
@@ -43,10 +22,10 @@
 
 <div mat-dialog-content>
   <mat-form-field style="width: 450px">
-    <mat-label>Interface Params</mat-label>
+    <mat-label>Equations</mat-label>
       <textarea
               matInput
-              [(ngModel)]="data.interface_params"
+              [(ngModel)]="data.equations"
               style="height:120px">
 
       </textarea>

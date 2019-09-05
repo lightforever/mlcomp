@@ -117,7 +117,7 @@ class TaskProvider(BaseDataProvider):
         projects = [{'name': name, 'id': id} for name, id in projects]
         dags = [{'name': name, 'id': id} for name, id in dags]
 
-        dags_model = self.query(Dag.name, Dag.id, Dag.config). \
+        dags_model = self.query(Dag.name, Dag.id, Dag.project). \
             filter(Dag.type == DagType.Pipe.value). \
             order_by(Dag.id.desc()). \
             all()
@@ -125,29 +125,14 @@ class TaskProvider(BaseDataProvider):
         dags_model_dict = []
         used_dag_names = set()
 
-        for name, id, config in dags_model:
+        for name, id, project in dags_model:
             if name in used_dag_names:
                 continue
-
-            config = Config.from_yaml(config)
-            slots = []
-            for pipe in config['pipes'].values():
-                for k, v in pipe.items():
-                    if 'slot' in v:
-                        slots.append(v['slot'])
-                    elif 'slots' in v:
-                        slots.extend(v['slots'])
 
             dag = {
                 'name': name,
                 'id': id,
-                'slots': slots,
-                'interfaces': [
-                    {
-                        'name': k,
-                        'params': yaml_dump(v)
-                    } for k, v in config['interfaces'].items()
-                ]
+                'project': project
             }
             dags_model_dict.append(dag)
             used_dag_names.add(name)

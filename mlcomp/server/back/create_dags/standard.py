@@ -27,7 +27,8 @@ class DagStandardBuilder:
             upload_files: bool = True,
             copy_files_from: int = None,
             config_path: str = None,
-            control_reqs: bool = True
+            control_reqs: bool = True,
+            additional_info: dict = None
     ):
         self.session = session
         self.config = config
@@ -40,6 +41,7 @@ class DagStandardBuilder:
 
         self.info = config['info']
         self.layout_name = self.info.get('layout')
+        self.additional_info = additional_info or {}
 
         self.provider = None
         self.report_provider = None
@@ -152,6 +154,8 @@ class DagStandardBuilder:
 
             report_config = self.layouts[self.layout_name]
             info['report_config'] = report_config
+            info.update(self.additional_info)
+
             task.additional_info = yaml_dump(info)
             self.provider.add(task, commit=False)
             report = Report(
@@ -254,7 +258,8 @@ def dag_standard(
         upload_files: bool = True,
         copy_files_from: int = None,
         config_path: str = None,
-        control_reqs: bool = True
+        control_reqs: bool = True,
+        additional_info: dict = None
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -264,7 +269,8 @@ def dag_standard(
         upload_files=upload_files,
         copy_files_from=copy_files_from,
         config_path=config_path,
-        control_reqs=control_reqs
+        control_reqs=control_reqs,
+        additional_info=additional_info
     )
     return builder.build()
 
