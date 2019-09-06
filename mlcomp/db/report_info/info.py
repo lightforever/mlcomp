@@ -10,8 +10,9 @@ from mlcomp.db.report_info.series import ReportLayoutSeries
 
 class ReportLayoutInfo:
     def __init__(self, data: dict):
-        assert 'items' in data, 'no items in report'
-        assert 'metric' in data, 'no metric in report'
+        assert 'items' in data, 'items is required'
+        assert 'metric' in data, 'metric is required'
+        assert 'layout' in data, 'layout is required'
 
         self.data = data
         self.series = self._get_series()
@@ -45,7 +46,9 @@ class ReportLayoutInfo:
                 ('cols', False),
                 ('rows', False),
             ],
-            'img_classify': ['source', ('cols', False), ('rows', False)],
+            'img_classify': [
+                'source', ('attrs', False), ('cols', False), ('rows', False)
+            ],
             'img': ['source', ('cols', False), ('rows', False)]
         }
         keys = set(item.keys()) - {'type'}

@@ -90,44 +90,9 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def _best_task_epoch(
-        self, report: ReportLayoutInfo, series: List[ReportSeries],
-        item: ReportLayoutItem
-    ):
-        tasks = [s.task for s in series]
-        tasks_with_obj = self.query(ReportImg.task, ReportImg.epoch). \
-            filter(ReportImg.task.in_(tasks)). \
-            filter(ReportImg.group == item.name). \
-            group_by(ReportImg.task, ReportImg.epoch).all()
-
-        tasks_with_obj = {(t, e) for t, e in tasks_with_obj}
-
-        best_task_epoch = None
-        for s in series:
-            if s.part != 'valid' or (s.task, s.epoch) not in tasks_with_obj:
-                continue
-
-            if s.name == report.metric.name:
-                if best_task_epoch is None or \
-                        (best_task_epoch[1] < s.value
-                            if report.metric.minimize else
-                            best_task_epoch[1] > s.value
-                         ):
-                    best_task_epoch = [(s.task, s.epoch), s.value]
-
-        return best_task_epoch[0] if best_task_epoch else (None, None)
-
-    def _detail_single_img(
-        self, report: ReportLayoutInfo, series: List[ReportSeries],
-        item: ReportLayoutItem
-    ):
+    def _detail_single_img(self, report: int, item: ReportLayoutItem):
         res = []
-        best_task, best_epoch = self._best_task_epoch(report, series, item)
-        if best_task is None:
-            return res
-
-        img_objs = self.query(ReportImg).filter(ReportImg.task == best_task). \
-            filter(ReportImg.epoch == best_epoch). \
+        img_objs = self.query(ReportImg). \
             filter(ReportImg.group == item.name).all()
 
         for img_obj in img_objs:
@@ -140,38 +105,23 @@ class ReportProvider(BaseDataProvider):
 
         return res
 
-    def detail_img_classify_descr(
-        self, report: ReportLayoutInfo, series: List[ReportSeries],
-        item: ReportLayoutItem
-    ):
+    def detail_img_classify_descr(self, report: int, item: ReportLayoutItem):
         res = []
-        best_task, best_epoch = self._best_task_epoch(report, series, item)
-        if best_task is None:
-            return res
-
-        parts = self.query(ReportImg.part.distinct()). \
-            filter(ReportImg.task == best_task). \
-            filter(ReportImg.group == item.name). \
-            order_by(ReportImg.part).all()
-        for part in parts:
-            part = part[0]
-            res.append(
-                {
-                    'name': part,
-                    'source': item.name,
-                    'epochs': [
-                        e[0]
-                        for e in self.query(ReportImg.epoch.distinct()).filter(
-                            ReportImg.task == best_task
-                        ).filter(ReportImg.group == item.name).filter(
-                            ReportImg.part == part
-                        ).order_by(ReportImg.epoch).all()
-                    ],
-                    'task': best_task,
-                    'group': item.name,
-                    'part': part
-                }
-            )
+        tasks = self.query(ReportTasks.task.distinct()
+                           ).filter(ReportTasks.report == report).all()
+        tasks = [t[0] for t in tasks]
+        task_names = {
+            id: name
+            for id, name in self.query(Task.id, Task.name
+                                       ).filter(Task.id.in_(tasks)).all()
+        }
+        for task in tasks:
+            obj = {
+                'name': task_names[task],
+                'group': item.name,
+                'task': task,
+            }
+            res.append(obj)
         return res
 
     def detail(self, id: int):
@@ -187,22 +137,16 @@ class ReportProvider(BaseDataProvider):
             order_by(ReportSeries.epoch). \
             options(joinedload(ReportSeries.task_rel, innerjoin=True)).all()
 
-        # from time import time
-        # start = time()
         items = dict()
         for s in report.series:
             items[s.name] = self._detail_series(series, s)
 
-        # print('series', time()-start)
         for element in report.precision_recall + report.f1:
-            items[element.name
-                  ] = self._detail_single_img(report, series, element)
-        # print('single image', time() - start)
-        for element in report.img_classify:
-            items[element.name
-                  ] = self.detail_img_classify_descr(report, series, element)
+            items[element.name] = self._detail_single_img(id, element)
 
-        # print('img_classify', time() - start)
+        for element in report.img_classify:
+            items[element.name] = self.detail_img_classify_descr(id, element)
+
         return {
             'data': items,
             'layout': report.layout,

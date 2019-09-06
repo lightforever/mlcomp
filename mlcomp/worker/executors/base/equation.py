@@ -21,11 +21,26 @@ _OP_MAP = {
 @Executor.register
 class Equation(Executor, ast.NodeVisitor):
     # noinspection PyTypeChecker
-    def __init__(self, equations: str, target: str):
-        self.equations = dict(
-            [row.strip().split(':') for row in equations.split('\n') if
-             ':' in row])
-        self.target = target
+    def __init__(self, equations: dict, target: str, name: str):
+        self.equations = equations
+        self.target = self.solve(target)
+        self.name = self.solve(name)
+
+    @staticmethod
+    def encode(v):
+        if isinstance(v, str):
+            return f'\'{v}\''
+        return str(v)
+
+    @staticmethod
+    def split(equations: str):
+        # noinspection PyTypeChecker
+        return dict(
+            [
+                row.strip().replace(' ', '').split(':')
+                for row in equations.split('\n') if ':' in row
+            ]
+        )
 
     def load(self, file: str, type: str = 'numpy'):
         if type == 'numpy':
@@ -33,10 +48,22 @@ class Equation(Executor, ast.NodeVisitor):
 
         raise Exception(f'Unknown load type = {type}')
 
-    def torch(self, x: Dataset, file: str, batch_size: int = 1,
-              use_logistic: bool = True, num_workers: int = 1):
-        return infer(x=x, file=file, batch_size=batch_size,
-                     use_logistic=use_logistic, num_workers=num_workers)
+    def torch(
+        self,
+        x: Dataset,
+        file: str,
+        batch_size: int = 1,
+        use_logistic: bool = True,
+        num_workers: int = 1
+    ):
+        file = f'models/{file}'
+        return infer(
+            x=x,
+            file=file,
+            batch_size=batch_size,
+            use_logistic=use_logistic,
+            num_workers=num_workers
+        )
 
     def visit_BinOp(self, node):
         left = self.visit(node.left)
@@ -50,10 +77,13 @@ class Equation(Executor, ast.NodeVisitor):
         attr = getattr(self, name)
         if attr:
             return attr
-        raise Exception(f'Unknown symbol {name}')
+        return str(name)
 
     def visit_Num(self, node):
         return node.n
+
+    def visit_Str(self, node):
+        return node.s
 
     def visit_Expr(self, node):
         return self.visit(node.value)
@@ -85,24 +115,18 @@ class Equation(Executor, ast.NodeVisitor):
         kwargs = {k.arg: self.get_value(k.value) for k in node.keywords}
         return f(*args, **kwargs)
 
-    def solve(self, name: str):
-        equation = self.equations[name]
+    def solve(self, equation):
+        if equation is None:
+            return None
+        equation = str(equation)
         tree = ast.parse(equation)
         calc = self
         res = calc.visit(tree.body[0])
         return res
 
     def work(self) -> dict:
-        res = self.solve(self.target)
+        res = self.solve(self.equations[self.target])
         return {'res': res}
 
 
-if __name__ == '__main__':
-    eq = Equation(
-        '''
-a:torch(x, batch_size=24, use_logistic=True)
-y:a+30
-        ''',
-        'y'
-    )
-    print(eq.work())
+__all__ = ['Equation']

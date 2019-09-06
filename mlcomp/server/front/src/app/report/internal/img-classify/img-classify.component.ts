@@ -39,11 +39,6 @@ export class ImgClassifyComponent extends Paginator<Img> {
             if (event.key != this.item.source) {
                 return;
             }
-
-            let data = event.data[this.item.index];
-            for(let i=this.data.epochs.length;i<data.epochs.length;i++){
-                this.data.epochs.push(data.epochs[i]);
-            }
         });
     }
 
@@ -51,17 +46,19 @@ export class ImgClassifyComponent extends Paginator<Img> {
         let self = this;
         this.subscribe_data_changed();
         this.data_updated.subscribe(res => {
-            if(!res || !res.part){
+            if(!res || !self.data.name){
                 return;
             }
             self.resource_service.load('plotly').
             then(() => {
-                self.plot_confusion(res.confusion, res.part, res.class_names);
+                self.plot_confusion(res.confusion,
+                    self.data.name,
+                    res.class_names);
             });
         });
     }
 
-    plot_confusion(confusion, part, class_names) {
+    plot_confusion(confusion, name, class_names) {
         if (!confusion||!confusion.data) {
             return;
         }
@@ -72,8 +69,6 @@ export class ImgClassifyComponent extends Paginator<Img> {
         ];
         let x = class_names.slice();
         let y = class_names.slice();
-        y.reverse();
-        confusion.data.reverse();
 
         let data = [{
             x: x,
@@ -85,7 +80,7 @@ export class ImgClassifyComponent extends Paginator<Img> {
         }];
 
         let layout = {
-            title: 'Heatmap',
+            title: 'Confusion matrix',
             annotations: [],
             width: 300,
             height: 300,
@@ -99,7 +94,8 @@ export class ImgClassifyComponent extends Paginator<Img> {
                 ticksuffix: ' ',
                 width: 700,
                 height: 700,
-                autosize: false
+                autosize: false,
+                autorange: 'reversed'
             }
         };
 
@@ -128,14 +124,14 @@ export class ImgClassifyComponent extends Paginator<Img> {
             }
         }
 
-        let id = 'img_classify_' + part;
+        let id = 'img_classify_' + name;
         window['Plotly'].newPlot(id, data, layout, {displayModeBar: false});
         let plot = document.getElementById(id);
         // @ts-ignore
         plot.on('plotly_click', function (data) {
             let pt = data.points[0];
-            let y = class_names.indexOf(pt.y);
-            let y_pred = class_names.indexOf(pt.x);
+            let y = class_names.indexOf(String(pt.y));
+            let y_pred = class_names.indexOf(String(pt.x));
             if (y == self.y && y_pred == self.y_pred) {
                 self.y = null;
                 self.y_pred = null;
@@ -150,24 +146,17 @@ export class ImgClassifyComponent extends Paginator<Img> {
 
 
     get_filter(): any {
-        if (!this.data||this.data.epoch == null) {
+        if (!this.data) {
             return null;
         }
         let res = {};
         res['paginator'] = super.get_filter();
         res['task'] = this.data.task;
-        res['part'] = this.data.part;
-        res['epoch'] = this.data.epoch;
         res['group'] = this.data.group;
         res['y'] = this.y;
         res['y_pred'] = this.y_pred;
         res['metric_diff_min'] = this.metric_diff_min;
         res['metric_diff_max'] = this.metric_diff_max;
         return res;
-    }
-
-    epoch_changed($event: MatButtonToggleChange) {
-        this.data.epoch = $event.value;
-        this.change.emit();
     }
 }

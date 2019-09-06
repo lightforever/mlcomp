@@ -146,7 +146,6 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
-        task.additional_info = ''
 
         if self.layout_name and task_type == TaskType.Train.value:
             if self.layout_name not in self.layouts:
@@ -154,7 +153,6 @@ class DagStandardBuilder:
 
             report_config = self.layouts[self.layout_name]
             info['report_config'] = report_config
-            info.update(self.additional_info)
 
             task.additional_info = yaml_dump(info)
             self.provider.add(task, commit=False)
@@ -177,6 +175,7 @@ class DagStandardBuilder:
 
             self.provider.commit()
         else:
+            task.additional_info = yaml_dump(self.additional_info)
             self.provider.add(task)
 
         return task.id

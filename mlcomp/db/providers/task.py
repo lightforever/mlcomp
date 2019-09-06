@@ -45,14 +45,10 @@ class TaskProvider(BaseDataProvider):
             query = query.filter(Dag.created <= created_max)
         if filter.get('last_activity_min'):
             last_activity_min = parse_time(filter['last_activity_min'])
-            query = query.filter(
-                Task.last_activity >= last_activity_min
-            )
+            query = query.filter(Task.last_activity >= last_activity_min)
         if filter.get('last_activity_max'):
             last_activity_max = parse_time(filter['last_activity_max'])
-            query = query.filter(
-                Task.last_activity <= last_activity_max
-            )
+            query = query.filter(Task.last_activity <= last_activity_max)
         if filter.get('report'):
             query = query.filter(Task.report is not None)
         if filter.get('parent'):
@@ -80,7 +76,7 @@ class TaskProvider(BaseDataProvider):
             if p.dag_rel is None:
                 continue
 
-            item = {**self.to_dict(p, rules=('-additional_info',))}
+            item = {**self.to_dict(p, rules=('-additional_info', ))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
             item['dag_rel']['project'] = {
@@ -129,11 +125,7 @@ class TaskProvider(BaseDataProvider):
             if name in used_dag_names:
                 continue
 
-            dag = {
-                'name': name,
-                'id': id,
-                'project': project
-            }
+            dag = {'name': name, 'id': id, 'project': project}
             dags_model_dict.append(dag)
             used_dag_names.add(name)
 
@@ -177,11 +169,11 @@ class TaskProvider(BaseDataProvider):
         self.update()
 
     def by_status(
-            self,
-            *statuses: TaskStatus,
-            task_docker_assigned: str = None,
-            worker_index: int = None,
-            computer_assigned: str = None
+        self,
+        *statuses: TaskStatus,
+        task_docker_assigned: str = None,
+        worker_index: int = None,
+        computer_assigned: str = None
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
@@ -233,10 +225,8 @@ class TaskProvider(BaseDataProvider):
         for e in TaskStatus:
             task_status.append(
                 func.sum(
-                    case(
-                        whens=[(task_child.status == e.value, 1)],
-                        else_=0
-                    ).label(e.name)
+                    case(whens=[(task_child.status == e.value, 1)],
+                         else_=0).label(e.name)
                 )
             )
 
@@ -273,6 +263,11 @@ class TaskProvider(BaseDataProvider):
             for n in joined_load:
                 res = res.options(joinedload(n, innerjoin=True))
         return res.all()
+
+    def project(self, task_id: int):
+        return self.query(Project).join(Dag).join(Task).filter(
+            Task.id == task_id
+        ).one()
 
 
 __all__ = ['TaskProvider']

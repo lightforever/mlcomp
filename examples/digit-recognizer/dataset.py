@@ -10,7 +10,8 @@ class MnistDataset(Dataset):
         file: str,
         fold_csv: str = None,
         fold_number: int = 0,
-        is_test: bool = False
+        is_test: bool = False,
+        max_count: int = None
     ):
         df = pd.read_csv(file)
         if fold_csv is not None:
@@ -19,6 +20,9 @@ class MnistDataset(Dataset):
                 df = df[fold['fold'] == fold_number]
             else:
                 df = df[fold['fold'] != fold_number]
+
+        if max_count:
+            df = df[:max_count]
 
         if 'label' in df.columns:
             self.y = df['label'].values.astype(np.int)

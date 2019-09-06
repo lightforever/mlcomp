@@ -120,7 +120,7 @@ export class ModelComponent extends Paginator<Model> {
             }
         }
         let config = {
-            width: '500px', height: '400px',
+            width: '670px', height: '800px',
             data: {
                 'dags': element.dags,
                 'dag': dag,

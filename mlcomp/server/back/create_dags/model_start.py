@@ -19,8 +19,7 @@ def dag_model_start(session: Session, data: dict):
             'name': data['pipe'],
             'project': project.name
         },
-        'executors': pipe,
-        'interfaces': src_config.get('interfaces', {})
+        'executors': pipe
     }
 
     dag_standard(
@@ -29,7 +28,7 @@ def dag_model_start(session: Session, data: dict):
         debug=False,
         upload_files=False,
         copy_files_from=data['dag'],
-        additional_info={'model_id': model.id}
+        additional_info={'model_id': model.id, 'equations': data['equations']}
     )
 
     model.dag = data['dag']

@@ -10,6 +10,7 @@ class ReportLayoutImgClassify(ReportLayoutItem):
         epoch_every: int,
         count_class_max: int,
         train: bool,
+        confusion_matrix: bool,
         threshold=None
     ):
         super().__init__(name)
@@ -18,6 +19,7 @@ class ReportLayoutImgClassify(ReportLayoutItem):
         self.count_class_max = count_class_max
         self.train = train
         self.threshold = threshold
+        self.confusion_matrix = confusion_matrix
 
     @classmethod
     def from_dict(cls, name: str, value: OrderedDict):
@@ -26,6 +28,7 @@ class ReportLayoutImgClassify(ReportLayoutItem):
         count_class_max = value.pop('count_class_max', None)
         train = value.pop('train', False)
         threshold = value.pop('threshold', dict())
+        confusion_matrix = value.pop('confusion_matrix', False)
 
         assert len(value) == 0, f'Unknown parameter in ' \
             f'report.img_classify={value.popitem()}'
@@ -34,7 +37,8 @@ class ReportLayoutImgClassify(ReportLayoutItem):
             epoch_every=epoch_every,
             count_class_max=count_class_max,
             train=train,
-            threshold=threshold
+            threshold=threshold,
+            confusion_matrix=confusion_matrix
         )
 
 

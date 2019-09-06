@@ -1,10 +1,10 @@
 <div *ngIf="item && data">
     <div *ngIf="item.type=='root'" style="margin-top: 10px">
         <app-layout
-                [data]="data"
+                [data]="items_joined_data[i]"
                 [item]="child"
                 [metric]="metric"
-                *ngFor="let child of items_joined">
+                *ngFor="let child of items_joined; index as i">
 
         </app-layout>
     </div>
@@ -83,7 +83,6 @@
                 [data]="data">
 
         </app-series>
-
     </div>
 
     <div *ngIf="item.type=='img'">

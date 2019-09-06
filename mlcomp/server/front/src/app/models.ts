@@ -216,6 +216,7 @@ export class ReportItem {
     data: any;
     part: string;
     index: number;
+    attrs: any[];
 }
 
 export class Metric{
@@ -266,13 +267,8 @@ export class SeriesItem {
 
 export class ImgClassify {
     name: string;
-    source: string;
-    epochs: number[];
     task: number;
     group: string;
-    part: string;
-    epoch: number;
-
 }
 
 export class Model {

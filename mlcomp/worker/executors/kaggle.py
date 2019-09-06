@@ -8,6 +8,7 @@ import socket
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
+from mlcomp.db.providers import ModelProvider
 from mlcomp.worker.executors.base.executor import Executor
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.config import Config
@@ -61,25 +62,27 @@ class Submit(Executor):
             self,
             competition: str,
             file: str,
-            type: str = 'file',
+            submit_type: str = 'file',
             predict_column: str = None,
             kernel_suffix: str = 'api',
             message: str = '',
-            wait_seconds=60 * 20
+            wait_seconds=60 * 20,
+            model_id=None
     ):
-        assert type in ['file', 'kernel']
+        assert submit_type in ['file', 'kernel']
 
-        if type == 'kernel':
+        if submit_type == 'kernel':
             assert predict_column, 'predict_column must be specified'
 
         self.competition = competition
         self.file = file
         self.message = message
         self.wait_seconds = wait_seconds
-        self.type = type
+        self.type = submit_type
         self.kernel_suffix = kernel_suffix
         self.file_name = os.path.basename(file)
         self.predict_column = predict_column
+        self.model_id = model_id
 
     def file_submit(self):
         api.competition_submit(
@@ -188,7 +191,14 @@ res.to_csv('submission.csv', index=False)
                                     'Submission is complete, '
                                     'but publicScore is None'
                                 )
-                            return float(s.publicScore)
+                            score = float(s.publicScore)
+                            if self.model_id:
+                                provider = ModelProvider(self.session)
+                                model = provider.by_id(self.model_id)
+                                model.score_public = score
+                                provider.commit()
+
+                            return score
                         elif s.status == 'error':
                             raise Exception(
                                 f'Submission error '
@@ -213,7 +223,12 @@ res.to_csv('submission.csv', index=False)
         return cls(
             file=file,
             competition=executor['competition'],
-            message=executor.get('message', 'no message')
+            message=executor.get('message', 'no message'),
+            model_id=additional_info['model_id'],
+            submit_type=executor.get('submit_type', 'file'),
+            predict_column=executor['predict_column'],
+            wait_seconds=executor.get('wait_seconds', 60*20),
+            kernel_suffix=executor.get('kernel_suffix', 'api')
         )
 
 
@@ -222,7 +237,7 @@ __all__ = ['Download', 'Submit']
 if __name__ == '__main__':
     submit = Submit('severstal-steel-defect-detection',
                     file='submissions/resnetunet.csv',
-                    type='kernel',
+                    submit_type='kernel',
                     predict_column='EncodedPixels'
                     )
     submit.work()

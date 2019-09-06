@@ -6,26 +6,20 @@ info:
 pipes:
   valid:
     valid:
-      type: valid
-      slot: model
+      type: valid_mnist
+      gpu: 1
   infer_valid:
     infer:
-      type: InferPipe
-      slot: model
+      type: infer_mnist
       suffix: valid
+      gpu: 1
   infer_test:
     infer:
-      type: InferPipe
-      slot: model
+      type: infer_mnist
       suffix: test
+      gpu: 1
   submit:
     submit_mnist:
-      type: submit_mnist
-      slot: model
-
-
-interfaces:
-  torch:
-    batch_size: 512
-  equation:
-    equation: ''
+      type: submit
+      competition: digit-recognizer
+      predict_column: Label

@@ -1,6 +1,7 @@
 import base64
 import pickle
 
+import cv2
 from sqlalchemy import and_
 
 from mlcomp.db.core import PaginatorOptions
@@ -44,20 +45,17 @@ class ReportImgProvider(BaseDataProvider):
         res = {'data': []}
         confusion = self.query(ReportImg.img). \
             filter(ReportImg.task == filter['task']). \
-            filter(ReportImg.part == filter['part']). \
-            filter(ReportImg.group == filter['group'] + '_confusion'). \
-            filter(ReportImg.epoch == filter['epoch']).first()
+            filter(ReportImg.group == filter['group'] + '_confusion').first()
+
         if confusion:
-            confusion = pickle.loads(confusion[0])['data'].tolist()
-            res['confusion'] = {'data': confusion}
+            confusion = pickle.loads(confusion[0])['data']
+            res['confusion'] = {'data': confusion.tolist()}
 
         res.update(filter)
 
         query = self.query(ReportImg).filter(
-            ReportImg.task == filter['task']).filter(
-            ReportImg.epoch == filter['epoch']). \
-            filter(ReportImg.group == filter['group']).filter(
-            ReportImg.part == filter['part'])
+            ReportImg.task == filter['task']). \
+            filter(ReportImg.group == filter['group'])
 
         if filter.get('y') is not None and filter.get('y_pred') is not None:
             query = query.filter(
@@ -76,25 +74,35 @@ class ReportImgProvider(BaseDataProvider):
                 ReportImg.metric_diff <= filter['metric_diff_max']
             )
 
-        project = self.query(Project).join(Dag).join(Task).filter(
-            Task.id == filter['task']
-        ).first()
-        class_names = yaml_load(project.class_names)
-
         res['total'] = query.count()
-        if 'default' in class_names:
-            res['class_names'] = class_names['default']
-        else:
-            res['class_names'] = [str(i) for i in confusion.shape[0]]
+
+        if confusion is not None:
+            project = self.query(Project).join(Dag).join(Task).filter(
+                Task.id == filter['task']
+            ).first()
+            class_names = yaml_load(project.class_names)
+
+            if 'default' in class_names:
+                res['class_names'] = class_names['default']
+            else:
+                res['class_names'] = [
+                    str(i) for i in range(confusion.shape[1])
+                ]
 
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
             img = pickle.loads(img_obj.img)
+            if img['img'].shape[-1] == 2:
+                img['img'] = cv2.cvtColor(img['img'], cv2.COLOR_GRAY2BGR)
+
+            retval, buffer = cv2.imencode('.jpg', img['img'])
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
             # noinspection PyTypeChecker
             res['data'].append(
                 {
-                    'content': base64.b64encode(img['img']).decode('utf-8'),
+                    'content': jpg_as_text,
                     'id': img_obj.id,
                     'y_pred': img_obj.y_pred,
                     'y': img_obj.y,

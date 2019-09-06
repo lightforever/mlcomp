@@ -31,7 +31,7 @@ class Executor(ABC):
         self.step.error(message)
 
     def __call__(
-            self, *, task: Task, task_provider: TaskProvider, dag: Dag
+        self, *, task: Task, task_provider: TaskProvider, dag: Dag
     ) -> dict:
         assert dag is not None, 'You must fetch task with dag_rel'
 
@@ -53,14 +53,14 @@ class Executor(ABC):
 
     @classmethod
     def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
+        cls, executor: dict, config: Config, additional_info: dict
     ):
         return cls()
 
     @staticmethod
     def from_config(
-            *, executor: str, config: Config, additional_info: dict,
-            session: Session, logger
+        *, executor: str, config: Config, additional_info: dict,
+        session: Session, logger
     ) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(
@@ -71,8 +71,7 @@ class Executor(ABC):
         executor = config['executors'][executor]
         child_class = Executor._child[executor['type']]
         # noinspection PyProtectedMember
-        res = child_class._from_config(executor, config,
-                                       additional_info)
+        res = child_class._from_config(executor, config, additional_info)
         res.session = session
         res.logger = logger
         return res
@@ -97,7 +96,8 @@ class Executor(ABC):
 
             wait = False
             for computer, project, tasks in provider.for_computer(
-                    self.task.computer_assigned):
+                self.task.computer_assigned
+            ):
                 if project.id == self.dag.project:
                     wait = True
 

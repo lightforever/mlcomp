@@ -158,8 +158,11 @@ class Storage:
             data_folder = os.path.join(DATA_FOLDER, info['project'])
             os.makedirs(data_folder, exist_ok=True)
 
-            os.symlink(data_folder, os.path.join(folder, 'data'),
-                       target_is_directory=True)
+            os.symlink(
+                data_folder,
+                os.path.join(folder, 'data'),
+                target_is_directory=True
+            )
         except FileExistsError:
             pass
 
@@ -167,17 +170,24 @@ class Storage:
             model_folder = os.path.join(MODEL_FOLDER, info['project'])
             os.makedirs(model_folder, exist_ok=True)
 
-            os.symlink(model_folder, os.path.join(folder, 'models'),
-                       target_is_directory=True)
+            os.symlink(
+                model_folder,
+                os.path.join(folder, 'models'),
+                target_is_directory=True
+            )
         except FileExistsError:
             pass
 
         sys.path.insert(0, folder)
         return folder
 
-    def import_executor(self, folder: str, base_folder: str,
-                        executor: str,
-                        libraries: List[Tuple] = None):
+    def import_executor(
+        self,
+        folder: str,
+        base_folder: str,
+        executor: str,
+        libraries: List[Tuple] = None
+    ):
 
         sys.path.insert(0, base_folder)
 
@@ -204,10 +214,6 @@ class Storage:
                 was_installation = True
 
         def is_valid_class(cls: pyclbr.Class):
-            super_names = get_super_names(cls)
-            if 'Executor' not in super_names:
-                return False
-
             return cls.name == executor or \
                 cls.name.lower() == executor or \
                 to_snake(cls.name) == executor
@@ -220,12 +226,12 @@ class Storage:
         for (module_loader, module_name,
              ispkg) in pkgutil.iter_modules(folders):
             module = module_loader.find_module(module_name)
-            module_folder = dirname(module.path)
-            classes = pyclbr.readmodule(module_name, path=[module_folder])
+            rel_path = os.path.relpath(os.path.splitext(module.path)[0],
+                                       base_folder).replace('/', '.')
+            classes = pyclbr.readmodule(rel_path, path=[base_folder])
             for k, v in classes.items():
                 if is_valid_class(v):
                     importlib.import_module(relative_name(module.path))
-
                     return True, was_installation
 
         return False, was_installation
