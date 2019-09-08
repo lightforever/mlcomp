@@ -7,8 +7,6 @@ from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.executors.base.equation import Equation
 
-from dataset import MnistDataset
-
 
 @Executor.register
 class Infer(Equation, ABC):
@@ -23,6 +21,7 @@ class Infer(Equation, ABC):
         prepare_submit: bool = False,
         layout: str = None,
         suffix: str = 'valid',
+        plot_count: int = 0,
         **kwargs
     ):
         super().__init__(equations, target, name)
@@ -32,13 +31,7 @@ class Infer(Equation, ABC):
         self.prepare_submit = self.solve(prepare_submit)
         self.layout = self.solve(layout)
         self.suffix = self.solve(suffix)
-
-        if self.test:
-            self.x = MnistDataset(file='data/test.csv')
-        else:
-            self.x = MnistDataset(
-                file='data/train.csv', fold_csv='data/fold.csv', is_test=True
-            )
+        self.plot_count = self.solve(plot_count)
 
     def plot(self, res):
         pass
@@ -49,7 +42,10 @@ class Infer(Equation, ABC):
 
     def work(self):
         res = super().work()['res']
-        np.save(f'data/{self.name}_{self.suffix}', res)
+        folder = 'data/pred'
+        os.makedirs(folder, exist_ok=True)
+
+        np.save(f'{folder}/{self.name}_{self.suffix}', res)
 
         if self.test and self.prepare_submit:
             folder = 'data/submissions'

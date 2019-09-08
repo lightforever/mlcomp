@@ -30,6 +30,7 @@ class SegmentationReportBuilder:
         attrs: List[dict] = None,
         stack_type: str = 'vertical',
         main_metric: str = 'dice',
+        plot_count: int = 0,
         colors: List[Tuple] = None
     ):
         self.session = session
@@ -46,6 +47,7 @@ class SegmentationReportBuilder:
         self.stack_type = stack_type
         self.main_metric = main_metric
         self.colors = colors
+        self.plot_count = plot_count
 
         self.dag_provider = DagProvider(session)
         self.report_provider = ReportProvider(session)
@@ -105,8 +107,9 @@ class SegmentationReportBuilder:
         mask = mask.astype(np.uint8)
 
         for i, c in enumerate(mask):
-            contours, _ = cv2.findContours(c, cv2.RETR_LIST,
-                                           cv2.CHAIN_APPROX_NONE)
+            contours, _ = cv2.findContours(
+                c, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE
+            )
             color = self.colors[i] if self.colors else (0, 255, 0)
             for i in range(0, len(contours)):
                 cv2.polylines(img, contours[i], True, color, 2)
@@ -118,6 +121,9 @@ class SegmentationReportBuilder:
         dag = self.dag_provider.by_id(self.task.dag)
 
         for i in range(len(self.imgs)):
+            if i >= self.plot_count:
+                break
+
             if self.targets is not None:
                 img = self.plot_mask(self.imgs[i], self.targets[i])
             else:
@@ -126,8 +132,8 @@ class SegmentationReportBuilder:
             pred = self.encode_pred(self.preds[i] * 255)
             imgs = [img, pred]
 
-            for i in range(len(imgs)):
-                imgs[i] = resize_saving_ratio(imgs[i], self.max_img_size)
+            for j in range(len(imgs)):
+                imgs[j] = resize_saving_ratio(imgs[j], self.max_img_size)
 
             if self.stack_type == 'horizontal':
                 img = np.hstack(imgs)
@@ -140,11 +146,12 @@ class SegmentationReportBuilder:
             if self.targets is not None:
                 score = self.scores[self.main_metric][i]
 
+            retval, buffer = cv2.imencode('.jpg', img)
             report_img = ReportImg(
                 group=item['name'],
                 epoch=0,
                 task=self.task.id,
-                img=pickle.dumps({'img': img}),
+                img=buffer,
                 dag=self.task.dag,
                 part=self.part,
                 project=self.project,

@@ -53,7 +53,8 @@ class ReportLayoutInfo:
                 'source', ('attrs', False), ('cols', False), ('rows', False)
             ],
             'img_segment': [
-                'source', ('attrs', False), ('cols', False), ('rows', False)
+                'source', ('attrs', False), ('cols', False), ('rows', False),
+                ('max_width', False), ('max_height', False)
             ],
             'img': ['source', ('cols', False), ('rows', False)]
         }

@@ -276,10 +276,18 @@ def model_remove():
     provider.remove(model.id)
 
 
-@app.route('/api/model/start', methods=['POST'])
+@app.route('/api/model/start_begin', methods=['POST'])
 @requires_auth
 @error_handler
-def model_start():
+def model_start_begin():
+    data = request_data()
+    return ModelProvider(_read_session).model_start_begin(data['model_id'])
+
+
+@app.route('/api/model/start_end', methods=['POST'])
+@requires_auth
+@error_handler
+def model_start_end():
     data = request_data()
     dag_model_start(_write_session, data)
 

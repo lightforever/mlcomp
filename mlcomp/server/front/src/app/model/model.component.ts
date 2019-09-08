@@ -12,7 +12,6 @@ import {Helpers} from "../helpers";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ModelStartDialogComponent} from "./model-start-dialog.component";
 import {ModelAddDialogComponent} from "./model-add-dialog.component";
-import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
     selector: 'app-model',
@@ -112,19 +111,9 @@ export class ModelComponent extends Paginator<Model> {
 
 
     start(element: Model) {
-        let dag;
-        for (let d of element.dags) {
-            if (element.dag == d.id) {
-                dag = d;
-                break
-            }
-        }
         let config = {
             width: '670px', height: '800px',
             data: {
-                'dags': element.dags,
-                'dag': dag,
-                'equations': element.equations,
                 'model_id': element.id
             }
         };

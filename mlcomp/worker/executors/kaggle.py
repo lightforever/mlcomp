@@ -76,14 +76,9 @@ class Submit(Equation):
     ):
         super().__init__(equations, target, name)
 
-        assert submit_type in ['file', 'kernel']
-
-        if submit_type == 'kernel':
-            assert predict_column, 'predict_column must be specified'
-
         self.competition = self.solve(competition)
         self.wait_seconds = self.solve(wait_seconds)
-        self.type = self.solve(submit_type)
+        self.submit_type = self.solve(submit_type)
         self.kernel_suffix = self.solve(kernel_suffix)
         self.predict_column = self.solve(predict_column)
         self.model_id = self.solve(model_id)
@@ -91,12 +86,20 @@ class Submit(Equation):
         self.file = f'data/submissions/{self.name}.csv'
         self.file_name = os.path.basename(self.file)
 
+        assert self.submit_type in ['file', 'kernel']
+        if self.submit_type == 'kernel':
+            assert self.predict_column, 'predict_column must be specified'
+
     def file_submit(self):
+        self.info(f'file_submit. file = {self.file} start')
         api.competition_submit(
             self.file, message=self.message, competition=self.competition
         )
+        self.info(f'file_submit. file = {self.file} end')
 
     def kernel_submit(self):
+        self.info('kernel_submit updating dataset')
+
         folder = 'submit'
         os.makedirs(folder, exist_ok=True)
 
@@ -118,12 +121,19 @@ class Submit(Equation):
         try:
             api.dataset_status(dataset_meta['id'])
             api.dataset_create_version(folder, 'Updated')
+            self.info('dataset updated')
         except Exception:
+            self.info(f'no dataset on Kaggle. creating new')
             api.dataset_create_new(folder)
+            self.info('dataset created on Kaggle')
 
+        seconds_to_sleep = 20
+        self.info(f'sleeping {seconds_to_sleep} seconds')
+        time.sleep(seconds_to_sleep)
+
+        slug = f'{self.competition}-{self.kernel_suffix}'
         kernel_meta = {
-            'id': f'{username}/{self.competition}-'
-            f'{self.kernel_suffix}',
+            'id': f'{username}/{slug}',
             'title': f'{self.competition}-{self.kernel_suffix}',
             'code_file': 'code.py',
             'language': 'python',
@@ -172,16 +182,39 @@ res.to_csv('submission.csv', index=False)
         with open(f'{folder}/code.py', 'w') as f:
             f.write(code)
 
+        self.info('kernel data created')
         api.kernels_push(folder)
+        self.info('kernel is pushed. waiting for the end of the commit')
+        self.info(f'kernel address: https://www.kaggle.com/{username}/{slug}')
+
+        seconds = self.wait_seconds
+        for i in range(seconds):
+            response = api.kernel_status(username, slug)
+            if response['status'] == 'complete':
+                self.info(f'kernel has completed successfully. '
+                          f'Please go to '
+                          f'https://www.kaggle.com/{username}/{slug} '
+                          f'and push the button "Submit to the competition"')
+                return
+            if response['status'] == 'error':
+                raise Exception(
+                    f'Kernel is failed. Msg = {response["failureMessage"]}'
+                )
+            time.sleep(1)
+            self.wait_seconds -= 1
+
+        self.info(f'kernel is not finished after {seconds}')
 
     def work(self):
         submissions = api.competition_submissions(self.competition)
         submission_refs = {s.ref for s in submissions}
 
-        if self.type == 'file':
+        if self.submit_type == 'file':
             self.file_submit()
         else:
             self.kernel_submit()
+
+        self.info('waiting for the submission on Kaggle')
 
         step = 10
         for i in range(int(self.wait_seconds // step)):

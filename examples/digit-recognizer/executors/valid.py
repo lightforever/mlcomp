@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.metrics import accuracy_score
 import cv2
 
 from mlcomp.worker.executors import Executor
@@ -24,7 +23,8 @@ class ValidMnist(Valid):
 
     def score(self, res):
         # noinspection PyUnresolvedReferences
-        return (self.x.y == res.argmax(axis=1)).astype(np.uint8)
+        scores = res[np.arange(len(self.x)), self.x.y]
+        return np.mean(scores), scores
 
     def plot(self, res, scores):
         imgs = [
@@ -50,6 +50,7 @@ class ValidMnist(Valid):
             imgs=imgs,
             scores={'accuracy': scores},
             name=self.name,
-            attrs=attrs
+            attrs=attrs,
+            plot_count=self.plot_count
         )
         builder.build()

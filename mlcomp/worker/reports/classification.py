@@ -1,6 +1,7 @@
 import pickle
 from typing import Tuple, List
 
+import cv2
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
@@ -28,7 +29,8 @@ class ClassificationReportBuilder:
         scores: dict = None,
         max_img_size: Tuple[int, int] = None,
         attrs: List[dict] = None,
-        main_metric: str = 'accuracy'
+        main_metric: str = 'accuracy',
+        plot_count: int = 0
     ):
         self.session = session
         self.task = task
@@ -42,6 +44,7 @@ class ClassificationReportBuilder:
         self.max_img_size = max_img_size
         self.attrs = attrs
         self.main_metric = main_metric
+        self.plot_count = plot_count
 
         self.dag_provider = DagProvider(session)
         self.report_provider = ReportProvider(session)
@@ -76,7 +79,7 @@ class ClassificationReportBuilder:
         # noinspection PyTypeChecker
         series = ReportSeries(
             name=item['name'],
-            value=np.mean(self.scores.get(item['key'], [0])),
+            value=float(np.mean(self.scores.get(item['key'], [0]))),
             epoch=0,
             time=now(),
             task=self.task.id,
@@ -91,6 +94,9 @@ class ClassificationReportBuilder:
         dag = self.dag_provider.by_id(self.task.dag)
 
         for i in range(len(self.imgs)):
+            if i >= self.plot_count:
+                break
+
             img = resize_saving_ratio(self.imgs[i], self.max_img_size)
             pred = self.preds[i]
             attrs = self.attrs[i] if self.attrs else {}
@@ -99,14 +105,15 @@ class ClassificationReportBuilder:
             score = None
             if self.targets is not None:
                 y = self.targets[i]
-                score = self.scores[self.main_metric][i]
+                score = float(self.scores[self.main_metric][i])
 
             y_pred = pred.argmax()
+            retval, buffer = cv2.imencode('.jpg', img)
             report_img = ReportImg(
                 group=item['name'],
                 epoch=0,
                 task=self.task.id,
-                img=pickle.dumps({'img': img}),
+                img=buffer,
                 dag=self.task.dag,
                 part=self.part,
                 project=self.project,

@@ -16,7 +16,8 @@ class Valid(Equation, ABC):
         max_count=None,
         layout=None,
         model_id=None,
-        fold_number=0,
+        fold_number: int = 0,
+        plot_count: int = 0,
         **kwargs
     ):
         super().__init__(equations, target, name)
@@ -24,6 +25,7 @@ class Valid(Equation, ABC):
         self.max_count = self.solve(max_count)
         self.layout = self.solve(layout)
         self.fold_number = self.solve(fold_number)
+        self.plot_count = self.solve(plot_count)
         self.model_id = model_id
 
     @abstractmethod
@@ -36,6 +38,8 @@ class Valid(Equation, ABC):
     def work(self):
         res = super().work()['res']
         score, scores = self.score(res)
+        score = float(score)
+
         self.task.score = score
         self.task_provider.update()
 

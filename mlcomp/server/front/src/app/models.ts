@@ -288,9 +288,7 @@ export class Model {
     task: number;
     project: number;
     created: Date;
-    dags: any[];
-    dag: number;
-    equations: string;
+    dag_rel: Dag;
 }
 
 export class ModelFilter {
@@ -329,7 +327,7 @@ export interface ModelAddData {
     task: number;
 }
 
-export interface ModelStartData {
+export class ModelStartData extends BaseResult{
     dags: any[];
     dag: any;
     pipe: any;

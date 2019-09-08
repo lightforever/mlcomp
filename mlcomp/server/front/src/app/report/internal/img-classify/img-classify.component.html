@@ -51,6 +51,32 @@
                             </mat-form-field>
                         </div>
 
+                        <div *ngIf="element.type=='greater'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_greater</mat-label>
+
+                                <input
+                                        matInput
+                                        [(ngModel)]="element.greater"
+                                        (change)="change.emit()"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
+                        <div *ngIf="element.type=='less'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_less</mat-label>
+
+                                <input
+                                        matInput
+                                        [(ngModel)]="element.less"
+                                        (change)="change.emit()"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
                         <div *ngIf="element.type=='greater_less'">
                             <mat-form-field>
                                 <mat-label>{{element.name}}_less</mat-label>

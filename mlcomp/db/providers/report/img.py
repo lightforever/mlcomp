@@ -2,11 +2,13 @@ import base64
 import pickle
 
 import cv2
+import numpy as np
 from sqlalchemy import and_, or_
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, ReportImg, Task
 from mlcomp.db.providers.base import BaseDataProvider
+from mlcomp.utils.img import resize_saving_ratio
 from mlcomp.utils.io import yaml_load
 
 
@@ -87,9 +89,9 @@ class ReportImgProvider(BaseDataProvider):
                 if attr.get('equal') is not None:
                     query = query.filter(field == attr['equal'])
                 if attr.get('greater') is not None:
-                    query = query.filter(field > attr['greater'])
+                    query = query.filter(field >= attr['greater'])
                 if attr.get('less') is not None:
-                    query = query.filter(field < attr['less'])
+                    query = query.filter(field <= attr['less'])
 
         res['total'] = query.count()
 
@@ -123,8 +125,7 @@ class ReportImgProvider(BaseDataProvider):
                     'id': img_obj.id,
                     'y_pred': img_obj.y_pred,
                     'y': img_obj.y,
-                    'score': round(img_obj.score, 2)
-                    if img_obj.score else None
+                    'score': round(img_obj.score, 2) if img_obj.score else None
                 }
             )
 
@@ -164,26 +165,32 @@ class ReportImgProvider(BaseDataProvider):
                 )
             )
 
-        if filter.get('attrs'):
-            for attr in filter['attrs']:
+        layout = filter.get('layout')
+
+        if layout and layout.get('attrs'):
+            for attr in layout['attrs']:
                 field = getattr(ReportImg, attr['source'])
                 if attr.get('equal') is not None:
                     query = query.filter(field == attr['equal'])
                 if attr.get('greater') is not None:
-                    query = query.filter(field > attr['greater'])
+                    query = query.filter(field >= attr['greater'])
                 if attr.get('less') is not None:
-                    query = query.filter(field < attr['less'])
+                    query = query.filter(field <= attr['less'])
 
         res['total'] = query.count()
 
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
-            img = pickle.loads(img_obj.img)
-            if img['img'].shape[-1] == 2:
-                img['img'] = cv2.cvtColor(img['img'], cv2.COLOR_GRAY2BGR)
+            buffer = img_obj.img
+            if layout:
+                buffer = np.fromstring(buffer, np.uint8)
+                img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+                img = resize_saving_ratio(
+                    img, (layout.get('max_height'), layout.get('max_width'))
+                )
+                retval, buffer = cv2.imencode('.jpg', img)
 
-            retval, buffer = cv2.imencode('.jpg', img['img'])
             jpg_as_text = base64.b64encode(buffer).decode('utf-8')
 
             # noinspection PyTypeChecker
@@ -194,7 +201,7 @@ class ReportImgProvider(BaseDataProvider):
                     'y_pred': img_obj.y_pred,
                     'y': img_obj.y,
                     'score': round(img_obj.score, 2)
-                    if img_obj.score else None
+                    if img_obj.score is not None else None
                 }
             )
 

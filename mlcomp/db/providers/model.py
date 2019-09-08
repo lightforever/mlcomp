@@ -42,40 +42,6 @@ class ModelProvider(BaseDataProvider):
             res.append(row)
             models_projects.add(model.project)
 
-        models_dags = self.query(Dag). \
-            filter(Dag.type == DagType.Pipe.value). \
-            filter(Dag.project.in_(list(models_projects))). \
-            order_by(Dag.id.desc()). \
-            all()
-
-        dags_by_project = defaultdict(list)
-        used_dag_names = set()
-
-        for dag in models_dags:
-            if dag.name in used_dag_names:
-                continue
-            config = Config.from_yaml(dag.config)
-            d = {
-                'name': dag.name,
-                'id': dag.id,
-                'pipes': [
-                    {
-                        'name': p
-                    } for p in config['pipes']
-                ]
-            }
-
-            dags_by_project[dag.project].append(d)
-            used_dag_names.add(dag.name)
-
-        for row in res:
-            equations = yaml_load(row['equations'])
-            row['dags'] = deepcopy(dags_by_project[row['project']])
-
-            for dag in row['dags']:
-                for pipe in dag['pipes']:
-                    pipe['equations'] = equations.get(pipe['name'], '')
-
         projects = self.query(Project.name, Project.id). \
             order_by(Project.id.desc()). \
             limit(20). \
@@ -97,6 +63,43 @@ class ModelProvider(BaseDataProvider):
             filter(Model.id.in_(ids)). \
             update({'dag': to}, synchronize_session=False)
         self.commit()
+
+    def model_start_begin(self, model_id: int):
+        model = self.by_id(model_id)
+
+        models_dags = self.query(Dag). \
+            filter(Dag.type == DagType.Pipe.value). \
+            filter(Dag.project == model.project). \
+            order_by(Dag.id.desc()). \
+            all()
+
+        used_dag_names = set()
+        equations = yaml_load(model.equations)
+
+        res_dags = []
+        res_dag = None
+
+        for dag in models_dags:
+            if dag.name in used_dag_names:
+                continue
+            config = Config.from_yaml(dag.config)
+            d = {
+                'name': dag.name,
+                'id': dag.id,
+                'pipes': [{
+                    'name': p
+                } for p in config['pipes']]
+            }
+            for pipe in d['pipes']:
+                pipe['equations'] = equations.get(pipe['name'], '')
+
+            used_dag_names.add(dag.name)
+            res_dags.append(d)
+
+            if d['id'] == model.dag:
+                res_dag = d
+
+        return {'dags': res_dags, 'dag': res_dag, 'model_id': model_id}
 
 
 __all__ = ['ModelProvider']
