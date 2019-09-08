@@ -216,7 +216,7 @@ export class ReportItem {
     data: any;
     part: string;
     index: number;
-    attrs: any[];
+    attrs: ImgAttr[];
 }
 
 export class Metric{
@@ -263,6 +263,15 @@ export class SeriesItem {
     name: string;
     series: Series[];
     layout: any;
+}
+
+export class ImgAttr {
+    type: string;
+    source: string;
+    name: string;
+    equal: any;
+    greater: number;
+    less: number;
 }
 
 export class ImgClassify {
@@ -323,8 +332,7 @@ export interface ModelAddData {
 export interface ModelStartData {
     dags: any[];
     dag: any;
-    equations: string;
-    pipe: string;
+    pipe: any;
     model_id: number;
 }
 

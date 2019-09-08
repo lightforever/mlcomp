@@ -30,8 +30,7 @@ export class ModelService extends BaseService {
         let info = {
             'dag': data.dag.id,
             'pipe': data.pipe,
-            'model_id': data.model_id,
-            'equations': data.equations,
+            'model_id': data.model_id
         };
         let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
         return this.http.post<BaseResult>(url, info).pipe(

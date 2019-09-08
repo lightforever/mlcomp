@@ -11,7 +11,8 @@ class MnistDataset(Dataset):
         fold_csv: str = None,
         fold_number: int = 0,
         is_test: bool = False,
-        max_count: int = None
+        max_count: int = None,
+        transforms=None
     ):
         df = pd.read_csv(file)
         if fold_csv is not None:
@@ -31,12 +32,17 @@ class MnistDataset(Dataset):
             self.y = None
 
         self.x = df.values.reshape((-1, 1, 28, 28)).astype(np.float32)
+        self.transforms = transforms
 
     def __len__(self):
         return len(self.x)
 
     def __getitem__(self, index):
-        res = {'features': self.x[index] / 255}
+        x = self.x[index]
+        if self.transforms:
+            x = self.transforms(image=x)['image']
+        res = {'features': x}
+
         if self.y is not None:
             res['targets'] = self.y[index]
         return res

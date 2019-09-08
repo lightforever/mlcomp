@@ -247,14 +247,14 @@ class ExecuteBuilder:
             self.execute()
 
         except Exception as e:
+            step = self.executor.step.id if \
+                (self.executor and self.executor.step) else None
+
             if Session.sqlalchemy_error(e):
                 Session.cleanup(key='ExecuteBuilder')
                 self.session = Session.create_session(key='ExecuteBuilder')
                 self.logger.session = create_logger(self.session,
                                                     'ExecuteBuilder')
-
-            step = self.executor.step.id if \
-                (self.executor and self.executor.step) else None
 
             self.error(traceback.format_exc(), step)
             if self.task.status <= TaskStatus.InProgress.value:

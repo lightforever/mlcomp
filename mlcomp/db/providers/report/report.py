@@ -124,6 +124,25 @@ class ReportProvider(BaseDataProvider):
             res.append(obj)
         return res
 
+    def detail_img_segment_descr(self, report: int, item: ReportLayoutItem):
+        res = []
+        tasks = self.query(ReportTasks.task.distinct()
+                           ).filter(ReportTasks.report == report).all()
+        tasks = [t[0] for t in tasks]
+        task_names = {
+            id: name
+            for id, name in self.query(Task.id, Task.name
+                                       ).filter(Task.id.in_(tasks)).all()
+        }
+        for task in tasks:
+            obj = {
+                'name': task_names[task],
+                'group': item.name,
+                'task': task,
+            }
+            res.append(obj)
+        return res
+
     def detail(self, id: int):
         report_obj = self.by_id(id)
         tasks = self.query(ReportTasks.task).filter(ReportTasks.report == id
@@ -146,6 +165,9 @@ class ReportProvider(BaseDataProvider):
 
         for element in report.img_classify:
             items[element.name] = self.detail_img_classify_descr(id, element)
+
+        for element in report.img_segment:
+            items[element.name] = self.detail_img_segment_descr(id, element)
 
         return {
             'data': items,

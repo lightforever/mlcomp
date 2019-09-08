@@ -7,7 +7,8 @@ from sklearn.metrics import confusion_matrix
 from mlcomp.db.core import Session
 from mlcomp.db.models import Report, ReportImg, Task, ReportTasks, ReportSeries
 from mlcomp.db.providers import ReportProvider, ReportLayoutProvider, \
-    TaskProvider, ReportImgProvider, ReportTasksProvider, ReportSeriesProvider
+    TaskProvider, ReportImgProvider, ReportTasksProvider, ReportSeriesProvider, \
+    DagProvider
 from mlcomp.utils.img import resize_saving_ratio
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.misc import now
@@ -26,7 +27,8 @@ class ClassificationReportBuilder:
         name: str = 'img_classify',
         scores: dict = None,
         max_img_size: Tuple[int, int] = None,
-        attrs: List[dict] = None
+        attrs: List[dict] = None,
+        main_metric: str = 'accuracy'
     ):
         self.session = session
         self.task = task
@@ -36,10 +38,12 @@ class ClassificationReportBuilder:
         self.targets = targets
         self.part = part
         self.name = name
-        self.scores = scores
+        self.scores = scores or {}
         self.max_img_size = max_img_size
         self.attrs = attrs
+        self.main_metric = main_metric
 
+        self.dag_provider = DagProvider(session)
         self.report_provider = ReportProvider(session)
         self.layout_provider = ReportLayoutProvider(session)
         self.task_provider = TaskProvider(session)
@@ -69,9 +73,10 @@ class ClassificationReportBuilder:
         self.task_provider.update()
 
     def process_series(self, item: dict):
+        # noinspection PyTypeChecker
         series = ReportSeries(
             name=item['name'],
-            value=self.scores.get(item['key'], 0),
+            value=np.mean(self.scores.get(item['key'], [0])),
             epoch=0,
             time=now(),
             task=self.task.id,
@@ -82,20 +87,23 @@ class ClassificationReportBuilder:
         self.report_series_provider.add(series)
 
     def process_img_classify(self, item: dict):
+        report_imgs = []
+        dag = self.dag_provider.by_id(self.task.dag)
+
         for i in range(len(self.imgs)):
             img = resize_saving_ratio(self.imgs[i], self.max_img_size)
             pred = self.preds[i]
             attrs = self.attrs[i] if self.attrs else {}
 
             y = None
-            metric_diff = None
+            score = None
             if self.targets is not None:
                 y = self.targets[i]
-                metric_diff = 1 - pred[y]
+                score = self.scores[self.main_metric][i]
 
             y_pred = pred.argmax()
             report_img = ReportImg(
-                group='img_classify',
+                group=item['name'],
                 epoch=0,
                 task=self.task.id,
                 img=pickle.dumps({'img': img}),
@@ -104,13 +112,17 @@ class ClassificationReportBuilder:
                 project=self.project,
                 y_pred=y_pred,
                 y=y,
-                metric_diff=metric_diff,
+                score=score,
                 **attrs
             )
 
-            self.report_img_provider.add(report_img)
+            report_imgs.append(report_img)
+            dag.img_size += report_img.size
 
-        if item.get('confusion_matrix'):
+        self.dag_provider.commit()
+        self.report_img_provider.bulk_save_objects(report_imgs)
+
+        if self.targets is not None and item.get('confusion_matrix'):
             matrix = confusion_matrix(
                 self.targets,
                 self.preds.argmax(axis=1),
@@ -128,7 +140,6 @@ class ClassificationReportBuilder:
                 part=self.part
             )
             self.report_img_provider.add(obj)
-
 
     def build(self):
         self.create_base()

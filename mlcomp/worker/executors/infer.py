@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -21,6 +22,7 @@ class Infer(Equation, ABC):
         test: bool = False,
         prepare_submit: bool = False,
         layout: str = None,
+        suffix: str = 'valid',
         **kwargs
     ):
         super().__init__(equations, target, name)
@@ -29,6 +31,7 @@ class Infer(Equation, ABC):
         self.test = self.solve(test)
         self.prepare_submit = self.solve(prepare_submit)
         self.layout = self.solve(layout)
+        self.suffix = self.solve(suffix)
 
         if self.test:
             self.x = MnistDataset(file='data/test.csv')
@@ -41,15 +44,17 @@ class Infer(Equation, ABC):
         pass
 
     @abstractmethod
-    def submit(self, res):
+    def submit(self, res, folder):
         pass
 
     def work(self):
         res = super().work()['res']
-        np.save(f'data/{self.model.name}_{self.suffix}', res['prob'])
+        np.save(f'data/{self.name}_{self.suffix}', res)
 
         if self.test and self.prepare_submit:
-            self.submit(res)
+            folder = 'data/submissions'
+            os.makedirs(folder, exist_ok=True)
+            self.submit(res, folder)
 
         if self.layout:
             self.plot(res)

@@ -2,7 +2,7 @@ import base64
 import pickle
 
 import cv2
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, ReportImg, Task
@@ -65,14 +65,31 @@ class ReportImgProvider(BaseDataProvider):
                 )
             )
 
-        if filter.get('metric_diff_min') is not None:
+        if filter.get('score_min') is not None:
             query = query.filter(
-                ReportImg.metric_diff >= filter['metric_diff_min']
+                or_(
+                    ReportImg.score >= filter['score_min'],
+                    ReportImg.score.__eq__(None)
+                )
             )
-        if filter.get('metric_diff_max') is not None:
+
+        if filter.get('score_max') is not None:
             query = query.filter(
-                ReportImg.metric_diff <= filter['metric_diff_max']
+                or_(
+                    ReportImg.score <= filter['score_max'],
+                    ReportImg.score.__eq__(None)
+                )
             )
+
+        if filter.get('attrs'):
+            for attr in filter['attrs']:
+                field = getattr(ReportImg, attr['source'])
+                if attr.get('equal') is not None:
+                    query = query.filter(field == attr['equal'])
+                if attr.get('greater') is not None:
+                    query = query.filter(field > attr['greater'])
+                if attr.get('less') is not None:
+                    query = query.filter(field < attr['less'])
 
         res['total'] = query.count()
 
@@ -106,7 +123,78 @@ class ReportImgProvider(BaseDataProvider):
                     'id': img_obj.id,
                     'y_pred': img_obj.y_pred,
                     'y': img_obj.y,
-                    'metric_diff': round(img_obj.metric_diff, 2)
+                    'score': round(img_obj.score, 2)
+                    if img_obj.score else None
+                }
+            )
+
+        return res
+
+    def detail_img_segment(
+        self, filter: dict, options: PaginatorOptions = None
+    ):
+        res = {'data': []}
+        res.update(filter)
+
+        query = self.query(ReportImg).filter(
+            ReportImg.task == filter['task']). \
+            filter(ReportImg.group == filter['group'])
+
+        if filter.get('y') is not None and filter.get('y_pred') is not None:
+            query = query.filter(
+                and_(
+                    ReportImg.y == filter['y'],
+                    ReportImg.y_pred == filter['y_pred']
+                )
+            )
+
+        if filter.get('score_min') is not None:
+            query = query.filter(
+                or_(
+                    ReportImg.score >= filter['score_min'],
+                    ReportImg.score.__eq__(None)
+                )
+            )
+
+        if filter.get('score_max') is not None:
+            query = query.filter(
+                or_(
+                    ReportImg.score <= filter['score_max'],
+                    ReportImg.score.__eq__(None)
+                )
+            )
+
+        if filter.get('attrs'):
+            for attr in filter['attrs']:
+                field = getattr(ReportImg, attr['source'])
+                if attr.get('equal') is not None:
+                    query = query.filter(field == attr['equal'])
+                if attr.get('greater') is not None:
+                    query = query.filter(field > attr['greater'])
+                if attr.get('less') is not None:
+                    query = query.filter(field < attr['less'])
+
+        res['total'] = query.count()
+
+        query = self.paginator(query, options)
+        img_objs = query.all()
+        for img_obj in img_objs:
+            img = pickle.loads(img_obj.img)
+            if img['img'].shape[-1] == 2:
+                img['img'] = cv2.cvtColor(img['img'], cv2.COLOR_GRAY2BGR)
+
+            retval, buffer = cv2.imencode('.jpg', img['img'])
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
+            # noinspection PyTypeChecker
+            res['data'].append(
+                {
+                    'content': jpg_as_text,
+                    'id': img_obj.id,
+                    'y_pred': img_obj.y_pred,
+                    'y': img_obj.y,
+                    'score': round(img_obj.score, 2)
+                    if img_obj.score else None
                 }
             )
 

@@ -36,7 +36,7 @@ class ReportImg(Base):
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
     y_pred = sa.Column(sa.Integer)
     y = sa.Column(sa.Integer)
-    metric_diff = sa.Column(sa.Float)
+    score = sa.Column(sa.Float)
     size = sa.Column(sa.BigInteger)
     attr1 = sa.Column(sa.Float)
     attr2 = sa.Column(sa.Float)

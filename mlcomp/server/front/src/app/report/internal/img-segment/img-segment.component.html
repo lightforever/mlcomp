@@ -4,7 +4,6 @@
         <ng-container matColumnDef="img">
             <th mat-header-cell *matHeaderCellDef>
                 <div>{{data.name}}</div>
-                <div [id]="'img_classify_'+data.name"></div>
 
                 <mat-card class="result">
                     <mat-card-content>
@@ -95,10 +94,6 @@
 
             <td mat-cell *matCellDef="let element">
                 <div>
-                    <span *ngIf="element.y!=null">True:{{element.y}}
-                    </span>
-
-                    Pred:{{element.y_pred}} &nbsp;
 
                     <span *ngIf="element.score!=null">
                         Score: {{element.score}}
@@ -106,7 +101,8 @@
 
                 </div>
 
-                <img [attr.src]="'data:image/JPEG;base64,' + element.content">
+                <img [attr.src]="'data:image/JPEG;base64,' + element.content"
+                    style="width: 100px">
             </td>
         </ng-container>
 

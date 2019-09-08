@@ -294,6 +294,16 @@ def img_classify():
     return res
 
 
+@app.route('/api/img_segment', methods=['POST'])
+@requires_auth
+@error_handler
+def img_segment():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    res = ReportImgProvider(_read_session).detail_img_segment(data, options)
+    return res
+
+
 @app.route('/api/config', methods=['POST'])
 @requires_auth
 @error_handler

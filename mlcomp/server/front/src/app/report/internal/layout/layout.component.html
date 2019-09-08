@@ -101,5 +101,13 @@
         </app-img-classify>
     </div>
 
+    <div *ngIf="item.type=='img_segment'">
+        <app-img-segment
+                [item]="item"
+                [data]="data">
+
+        </app-img-segment>
+    </div>
+
 
 </div>

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 from sqlalchemy.orm import joinedload
 
@@ -7,6 +8,7 @@ from mlcomp.db.enums import DagType
 from mlcomp.db.models import Model, Dag, Project
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.config import Config
+from mlcomp.utils.io import yaml_load
 from mlcomp.utils.misc import parse_time
 
 
@@ -36,7 +38,7 @@ class ModelProvider(BaseDataProvider):
         models = paginator.all()
         models_projects = set()
         for model in models:
-            row = self.to_dict(model, rules=('-project_rel.class_names',))
+            row = self.to_dict(model, rules=('-project_rel.class_names', ))
             res.append(row)
             models_projects.add(model.project)
 
@@ -53,16 +55,26 @@ class ModelProvider(BaseDataProvider):
             if dag.name in used_dag_names:
                 continue
             config = Config.from_yaml(dag.config)
-            d = {'name': dag.name,
-                 'id': dag.id,
-                 'pipes': list(config['pipes'])
-                 }
+            d = {
+                'name': dag.name,
+                'id': dag.id,
+                'pipes': [
+                    {
+                        'name': p
+                    } for p in config['pipes']
+                ]
+            }
 
             dags_by_project[dag.project].append(d)
             used_dag_names.add(dag.name)
 
         for row in res:
-            row['dags'] = dags_by_project[row['project']]
+            equations = yaml_load(row['equations'])
+            row['dags'] = deepcopy(dags_by_project[row['project']])
+
+            for dag in row['dags']:
+                for pipe in dag['pipes']:
+                    pipe['equations'] = equations.get(pipe['name'], '')
 
         projects = self.query(Project.name, Project.id). \
             order_by(Project.id.desc()). \

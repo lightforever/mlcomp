@@ -3,7 +3,6 @@ import {Paginator} from "../../../paginator";
 import {Img, ImgClassify, ReportItem} from "../../../models";
 import {Location} from "@angular/common";
 import {ImgClassifyService} from "./img-classify.service";
-import {MatButtonToggleChange} from "@angular/material";
 import {DynamicresourceService} from "../../../dynamicresource.service";
 import {LayoutService} from "../layout/layout.service";
 
@@ -20,8 +19,8 @@ export class ImgClassifyComponent extends Paginator<Img> {
     @Output() loaded = new EventEmitter<number>();
     y: number;
     y_pred: number;
-    metric_diff_min: number = 0;
-    metric_diff_max: number = 1;
+    score_min: number = 0;
+    score_max: number = 1;
 
     constructor(protected service: ImgClassifyService,
                 protected location: Location,
@@ -155,8 +154,10 @@ export class ImgClassifyComponent extends Paginator<Img> {
         res['group'] = this.data.group;
         res['y'] = this.y;
         res['y_pred'] = this.y_pred;
-        res['metric_diff_min'] = this.metric_diff_min;
-        res['metric_diff_max'] = this.metric_diff_max;
+        res['score_min'] = this.score_min;
+        res['score_max'] = this.score_max;
+        res['attrs'] = this.item.attrs;
+
         return res;
     }
 }

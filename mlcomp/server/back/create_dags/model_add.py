@@ -40,7 +40,6 @@ def dag_model_add(session: Session, data: dict):
             'model_add': {
                 'type': 'model_add',
                 'project': data['project'],
-                'equations': data['equations'],
                 'task': data.get('task'),
                 'name': data['name'],
                 'child_task': child_task

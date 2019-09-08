@@ -15,17 +15,17 @@
             (ngModelChange)="data.pipe=$event;"
             [(ngModel)]="data.pipe">
         <mat-option *ngFor="let pipe of data.dag.pipes" [value]="pipe">
-            {{pipe}}
+            {{pipe.name}}
         </mat-option>
     </mat-select>
 </mat-form-field>
 
-<div mat-dialog-content>
+<div mat-dialog-content *ngIf="data.pipe">
   <mat-form-field style="width: 600px">
     <mat-label>Equations</mat-label>
       <textarea
               matInput
-              [(ngModel)]="data.equations"
+              [(ngModel)]="data.pipe.equations"
               style="height:550px;width: 800px">
 
       </textarea>

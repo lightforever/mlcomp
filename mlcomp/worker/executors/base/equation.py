@@ -1,10 +1,13 @@
 import ast
 import operator
+from copy import deepcopy
 
 import numpy as np
+import albumentations as A
 
 from torch.utils.data import Dataset
 
+from mlcomp.utils.config import parse_albu_short
 from mlcomp.utils.torch import infer
 from mlcomp.worker.executors import Executor
 
@@ -25,6 +28,23 @@ class Equation(Executor, ast.NodeVisitor):
         self.equations = equations
         self.target = self.solve(target)
         self.name = self.solve(name)
+
+    def tta(self, x: Dataset, tfms=()):
+        x = deepcopy(x)
+        transforms = getattr(x, 'transforms')
+        if not transforms:
+            return x
+        assert isinstance(transforms, A.Compose), \
+            'only Albumentations transforms are supported'
+        index = len(transforms.transforms)
+        for i, t in enumerate(transforms.transforms):
+            if isinstance(t, A.Normalize):
+                index = i
+                break
+        for i, t in enumerate(tfms):
+            t = parse_albu_short(t, always_apply=True)
+            transforms.transforms.insert(index+i, t)
+        return x
 
     @staticmethod
     def encode(v):
@@ -73,8 +93,8 @@ class Equation(Executor, ast.NodeVisitor):
     def visit_Name(self, node):
         name = node.id
         if name in self.equations:
-            return self.solve(name)
-        attr = getattr(self, name)
+            return self.solve(self.equations[name])
+        attr = getattr(self, name, None)
         if attr:
             return attr
         return str(name)
@@ -91,6 +111,9 @@ class Equation(Executor, ast.NodeVisitor):
     def visit_pow(self, node):
         return node
 
+    def visit_NameConstant(self, node):
+        return node.value
+
     def get_value(self, node):
         t = type(node)
         if t == ast.NameConstant:
@@ -103,6 +126,11 @@ class Equation(Executor, ast.NodeVisitor):
             return node.id
         if t == ast.Num:
             return node.n
+        if t == ast.List:
+            res = []
+            for e in node.elts:
+                res.append(self.get_value(e))
+            return res
         raise Exception(f'Unknown type {t}')
 
     def visit_Call(self, node):
@@ -120,6 +148,8 @@ class Equation(Executor, ast.NodeVisitor):
             return None
         equation = str(equation)
         tree = ast.parse(equation)
+        if len(tree.body) == 0:
+            return None
         calc = self
         res = calc.visit(tree.body[0])
         return res

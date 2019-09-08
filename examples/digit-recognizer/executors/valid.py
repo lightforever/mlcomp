@@ -7,6 +7,7 @@ from mlcomp.worker.executors.valid import Valid
 from mlcomp.worker.reports.classification import ClassificationReportBuilder
 
 from dataset import MnistDataset
+from experiment import Experiment
 
 
 @Executor.register
@@ -17,16 +18,19 @@ class ValidMnist(Valid):
             file='data/train.csv',
             fold_csv='data/fold.csv',
             is_test=True,
-            max_count=self.max_count
+            max_count=self.max_count,
+            transforms=Experiment.get_test_transforms()
         )
 
     def score(self, res):
-        return accuracy_score(self.x.y, res.argmax(axis=1))
+        # noinspection PyUnresolvedReferences
+        return (self.x.y == res.argmax(axis=1)).astype(np.uint8)
 
-    def plot(self, res, score):
+    def plot(self, res, scores):
         imgs = [
             cv2.cvtColor(
-                (row['features'][0] * 255).astype(np.uint8), cv2.COLOR_GRAY2BGR
+                ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8),
+                cv2.COLOR_GRAY2BGR
             ) for row in self.x
         ]
 
@@ -44,7 +48,7 @@ class ValidMnist(Valid):
             targets=self.x.y,
             task=self.task,
             imgs=imgs,
-            scores={'accuracy': score},
+            scores={'accuracy': scores},
             name=self.name,
             attrs=attrs
         )

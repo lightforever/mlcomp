@@ -17,6 +17,7 @@ pipes:
     infer:
       type: infer_mnist
       suffix: test
+      test: true
       gpu: 1
   submit:
     submit_mnist:

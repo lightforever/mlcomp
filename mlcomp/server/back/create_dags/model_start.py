@@ -3,6 +3,7 @@ from mlcomp.db.models import Dag
 from mlcomp.db.providers import ModelProvider, DagProvider
 from mlcomp.server.back.create_dags.standard import dag_standard
 from mlcomp.utils.config import Config
+from mlcomp.utils.io import yaml_load, yaml_dump
 
 
 def dag_model_start(session: Session, data: dict):
@@ -13,14 +14,20 @@ def dag_model_start(session: Session, data: dict):
 
     project = dag.project_rel
     src_config = Config.from_yaml(dag.config)
-    pipe = src_config['pipes'][data['pipe']]
+    pipe = src_config['pipes'][data['pipe']['name']]
     config = {
         'info': {
-            'name': data['pipe'],
+            'name': data['pipe']['name'],
             'project': project.name
         },
         'executors': pipe
     }
+
+    model.dag = data['dag']
+    equations = yaml_load(model.equations)
+    equations[data['pipe']['name']] = data['pipe']['equations']
+    model.equations = yaml_dump(equations)
+    provider.commit()
 
     dag_standard(
         session=session,
@@ -28,12 +35,11 @@ def dag_model_start(session: Session, data: dict):
         debug=False,
         upload_files=False,
         copy_files_from=data['dag'],
-        additional_info={'model_id': model.id, 'equations': data['equations']}
+        additional_info={
+            'model_id': model.id,
+            'equations': data['pipe']['equations']
+        }
     )
-
-    model.dag = data['dag']
-    model.equations = data['equations']
-    provider.commit()
 
 
 __all__ = ['dag_model_start']

@@ -16,24 +16,26 @@ class Valid(Equation, ABC):
         max_count=None,
         layout=None,
         model_id=None,
+        fold_number=0,
         **kwargs
     ):
         super().__init__(equations, target, name)
 
         self.max_count = self.solve(max_count)
         self.layout = self.solve(layout)
+        self.fold_number = self.solve(fold_number)
         self.model_id = model_id
 
     @abstractmethod
     def score(self, res):
         pass
 
-    def plot(self, res, score):
+    def plot(self, res, scores):
         pass
 
     def work(self):
         res = super().work()['res']
-        score = self.score(res)
+        score, scores = self.score(res)
         self.task.score = score
         self.task_provider.update()
 
@@ -44,7 +46,7 @@ class Valid(Equation, ABC):
             provider.commit()
 
         if self.layout:
-            self.plot(res, score)
+            self.plot(res, scores)
 
     @classmethod
     def _from_config(

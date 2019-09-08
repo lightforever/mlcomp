@@ -20,9 +20,7 @@ from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 
 
-def trace_model_from_checkpoint(logdir,
-                                logger,
-                                method_name='forward'):
+def trace_model_from_checkpoint(logdir, logger, method_name='forward'):
     config_path = f'{logdir}/configs/_config.json'
     checkpoint_path = f'{logdir}/checkpoints/best.pth'
     logger.info('Load config')
@@ -56,10 +54,12 @@ def trace_model_from_checkpoint(logdir,
 @Executor.register
 class ModelAdd(Executor):
     def __init__(
-            self, name: str, project: int, equations: str,
-            train_task: int = None, child_task: int = None
+        self,
+        name: str,
+        project: int,
+        train_task: int = None,
+        child_task: int = None
     ):
-        self.equations = equations
         self.train_task = train_task
         self.name = name
         self.child_task = child_task
@@ -71,10 +71,10 @@ class ModelAdd(Executor):
         self.info(f'Task = {self.train_task} child_task: {self.child_task}')
 
         model = Model(
-            equations=self.equations,
             created=now(),
             name=self.name,
             project=self.project,
+            equations=''
         )
 
         provider = ModelProvider(self.session)
@@ -101,12 +101,11 @@ class ModelAdd(Executor):
 
     @classmethod
     def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
+        cls, executor: dict, config: Config, additional_info: dict
     ):
         return ModelAdd(
             name=executor['name'],
             project=executor['project'],
-            equations=executor['equations'],
             train_task=executor['task'],
             child_task=executor['child_task']
         )

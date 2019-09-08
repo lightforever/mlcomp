@@ -9,6 +9,7 @@ import socket
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
 from mlcomp.db.providers import ModelProvider
+from mlcomp.worker.executors.base.equation import Equation
 from mlcomp.worker.executors.base.executor import Executor
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.config import Config
@@ -19,8 +20,8 @@ except OSError:
     logger = create_logger(Session.create_session(), __name__)
     logger.warning(
         'Could not find kaggle.json. '
-        'Kaggle executors can not be used',
-        ComponentType.Worker, socket.gethostname()
+        'Kaggle executors can not be used', ComponentType.Worker,
+        socket.gethostname()
     )
 
 
@@ -32,11 +33,11 @@ class DownloadType(Enum):
 @Executor.register
 class Download(Executor):
     def __init__(
-            self,
-            output: str,
-            type=DownloadType.Kaggle,
-            competition: str = None,
-            link: str = None,
+        self,
+        output: str,
+        type=DownloadType.Kaggle,
+        competition: str = None,
+        link: str = None,
     ):
         if type == DownloadType.Kaggle and competition is None:
             raise Exception('Competition is required for Kaggle')
@@ -50,39 +51,45 @@ class Download(Executor):
 
     @classmethod
     def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
+        cls, executor: dict, config: Config, additional_info: dict
     ):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
 
 
 @Executor.register
-class Submit(Executor):
+class Submit(Equation):
     def __init__(
-            self,
-            competition: str,
-            file: str,
-            submit_type: str = 'file',
-            predict_column: str = None,
-            kernel_suffix: str = 'api',
-            message: str = '',
-            wait_seconds=60 * 20,
-            model_id=None
+        self,
+        *,
+        equations: dict,
+        target: str = '',
+        name: str = '',
+        competition: str,
+        submit_type: str = 'file',
+        predict_column: str = None,
+        kernel_suffix: str = 'api',
+        message: str = '',
+        wait_seconds=60 * 20,
+        model_id=None,
+        **kwargs
     ):
+        super().__init__(equations, target, name)
+
         assert submit_type in ['file', 'kernel']
 
         if submit_type == 'kernel':
             assert predict_column, 'predict_column must be specified'
 
-        self.competition = competition
-        self.file = file
-        self.message = message
-        self.wait_seconds = wait_seconds
-        self.type = submit_type
-        self.kernel_suffix = kernel_suffix
-        self.file_name = os.path.basename(file)
-        self.predict_column = predict_column
-        self.model_id = model_id
+        self.competition = self.solve(competition)
+        self.wait_seconds = self.solve(wait_seconds)
+        self.type = self.solve(submit_type)
+        self.kernel_suffix = self.solve(kernel_suffix)
+        self.predict_column = self.solve(predict_column)
+        self.model_id = self.solve(model_id)
+        self.message = self.solve(message) or f'model_id = {self.model_id}'
+        self.file = f'data/submissions/{self.name}.csv'
+        self.file_name = os.path.basename(self.file)
 
     def file_submit(self):
         api.competition_submit(
@@ -93,20 +100,17 @@ class Submit(Executor):
         folder = 'submit'
         os.makedirs(folder, exist_ok=True)
 
-        shutil.copy(self.file,
-                    os.path.join(folder, self.file_name))
+        shutil.copy(self.file, os.path.join(folder, self.file_name))
 
         config = api.read_config_file()
         username = config['username']
         dataset_meta = {
             'title': f'{self.competition}-{self.kernel_suffix}-dataset',
             'id': f'{username}/'
-                  f'{self.competition}-{self.kernel_suffix}-dataset',
-            'licenses': [
-                {
-                    'name': 'CC0-1.0'
-                }
-            ]
+            f'{self.competition}-{self.kernel_suffix}-dataset',
+            'licenses': [{
+                'name': 'CC0-1.0'
+            }]
         }
         with open(f'{folder}/dataset-metadata.json', 'w') as f:
             json.dump(dataset_meta, f)
@@ -119,7 +123,7 @@ class Submit(Executor):
 
         kernel_meta = {
             'id': f'{username}/{self.competition}-'
-                  f'{self.kernel_suffix}',
+            f'{self.kernel_suffix}',
             'title': f'{self.competition}-{self.kernel_suffix}',
             'code_file': 'code.py',
             'language': 'python',
@@ -161,9 +165,9 @@ for index, row in df.iterrows():
 res = pd.DataFrame(res)
 res.to_csv('submission.csv', index=False)
         '''.replace('{self.competition}', self.competition).replace(
-            '{self.kernel_suffix}', self.kernel_suffix).replace(
-            '{self.file_name}', self.file_name).replace(
-            '{self.predict_column}', self.predict_column)
+            '{self.kernel_suffix}', self.kernel_suffix
+        ).replace('{self.file_name}', self.file_name
+                  ).replace('{self.predict_column}', self.predict_column)
 
         with open(f'{folder}/code.py', 'w') as f:
             f.write(code)
@@ -198,7 +202,7 @@ res.to_csv('submission.csv', index=False)
                                 model.score_public = score
                                 provider.commit()
 
-                            return score
+                            return {'res': score}
                         elif s.status == 'error':
                             raise Exception(
                                 f'Submission error '
@@ -217,27 +221,23 @@ res.to_csv('submission.csv', index=False)
 
     @classmethod
     def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
+        cls, executor: dict, config: Config, additional_info: dict
     ):
-        file = os.path.join(config.data_folder, executor['file'])
-        return cls(
-            file=file,
-            competition=executor['competition'],
-            message=executor.get('message', 'no message'),
-            model_id=additional_info['model_id'],
-            submit_type=executor.get('submit_type', 'file'),
-            predict_column=executor['predict_column'],
-            wait_seconds=executor.get('wait_seconds', 60*20),
-            kernel_suffix=executor.get('kernel_suffix', 'api')
-        )
+        equations = cls.split(additional_info.get('equations', ''))
+        kwargs = equations.copy()
+        kwargs['equations'] = equations
+        kwargs['model_id'] = additional_info.get('model_id')
+        kwargs.update({k: Equation.encode(v) for k, v in executor.items()})
+        return cls(**kwargs)
 
 
 __all__ = ['Download', 'Submit']
 
 if __name__ == '__main__':
-    submit = Submit('severstal-steel-defect-detection',
-                    file='submissions/resnetunet.csv',
-                    submit_type='kernel',
-                    predict_column='EncodedPixels'
-                    )
+    submit = Submit(
+        competition='severstal-steel-defect-detection',
+        name='resnetunet',
+        submit_type='kernel',
+        predict_column='EncodedPixels'
+    )
     submit.work()
