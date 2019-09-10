@@ -1,6 +1,8 @@
 import ast
 import operator
+from collections import OrderedDict
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 import albumentations as A
@@ -10,6 +12,7 @@ from torch.utils.data import Dataset
 from mlcomp.utils.config import parse_albu_short
 from mlcomp.utils.torch import infer
 from mlcomp.worker.executors import Executor
+from mlcomp.worker.executors.base.tta_wrap import TtaWrap
 
 _OP_MAP = {
     ast.Add: operator.add,
@@ -24,10 +27,15 @@ _OP_MAP = {
 @Executor.register
 class Equation(Executor, ast.NodeVisitor):
     # noinspection PyTypeChecker
-    def __init__(self, equations: dict, target: str, name: str):
+    def __init__(self, equations: dict, targets: List[str], name: str):
+        self.cache = dict()
+
         self.equations = equations
-        self.target = self.solve(target)
+        self.targets = self.solve(targets)
         self.name = self.solve(name)
+
+        for t in self.targets:
+            assert t in self.equations, f'target = {t} not in equations'
 
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
@@ -41,10 +49,12 @@ class Equation(Executor, ast.NodeVisitor):
             if isinstance(t, A.Normalize):
                 index = i
                 break
+        tfms_albu = []
         for i, t in enumerate(tfms):
             t = parse_albu_short(t, always_apply=True)
+            tfms_albu.append(t)
             transforms.transforms.insert(index+i, t)
-        return x
+        return TtaWrap(x, tfms_albu)
 
     @staticmethod
     def encode(v):
@@ -99,6 +109,12 @@ class Equation(Executor, ast.NodeVisitor):
             return attr
         return str(name)
 
+    def visit_List(self, node):
+        return self.get_value(node)
+
+    def visit_Tuple(self, node):
+        return self.get_value(node)
+
     def visit_Num(self, node):
         return node.n
 
@@ -131,6 +147,11 @@ class Equation(Executor, ast.NodeVisitor):
             for e in node.elts:
                 res.append(self.get_value(e))
             return res
+        if t == ast.Tuple:
+            res = []
+            for e in node.elts:
+                res.append(self.get_value(e))
+            return res
         raise Exception(f'Unknown type {t}')
 
     def visit_Call(self, node):
@@ -146,17 +167,25 @@ class Equation(Executor, ast.NodeVisitor):
     def solve(self, equation):
         if equation is None:
             return None
+
         equation = str(equation)
+        if equation in self.cache:
+            return self.cache[equation]
+
         tree = ast.parse(equation)
         if len(tree.body) == 0:
             return None
         calc = self
         res = calc.visit(tree.body[0])
+        self.cache[equation] = res
+
         return res
 
     def work(self) -> dict:
-        res = self.solve(self.equations[self.target])
-        return {'res': res}
+        res = OrderedDict()
+        for t in self.targets:
+            res[t] = self.solve(self.equations[t])
+        return res
 
 
 __all__ = ['Equation']

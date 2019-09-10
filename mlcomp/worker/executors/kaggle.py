@@ -5,6 +5,7 @@ import os
 import time
 
 import socket
+from typing import List
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
@@ -63,7 +64,7 @@ class Submit(Equation):
         self,
         *,
         equations: dict,
-        target: str = '',
+        targets: List[str] = (),
         name: str = '',
         competition: str,
         submit_type: str = 'file',
@@ -74,7 +75,7 @@ class Submit(Equation):
         model_id=None,
         **kwargs
     ):
-        super().__init__(equations, target, name)
+        super().__init__(equations, targets, name)
 
         self.competition = self.solve(competition)
         self.wait_seconds = self.solve(wait_seconds)

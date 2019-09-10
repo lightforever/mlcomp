@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from typing import List
 
 import numpy as np
 
@@ -14,7 +15,7 @@ class Infer(Equation, ABC):
         self,
         *,
         equations: dict,
-        target: str = '\'y\'',
+        targets: List[str] = ('\'y\'',),
         name: str = '\'infer\'',
         max_count=None,
         test: bool = False,
@@ -24,7 +25,7 @@ class Infer(Equation, ABC):
         plot_count: int = 0,
         **kwargs
     ):
-        super().__init__(equations, target, name)
+        super().__init__(equations, targets, name)
 
         self.max_count = self.solve(max_count)
         self.test = self.solve(test)
@@ -41,11 +42,11 @@ class Infer(Equation, ABC):
         pass
 
     def work(self):
-        res = super().work()['res']
+        res = super().work()
         folder = 'data/pred'
         os.makedirs(folder, exist_ok=True)
 
-        np.save(f'{folder}/{self.name}_{self.suffix}', res)
+        np.save(f'{folder}/{self.name}_{self.suffix}', res['y'])
 
         if self.test and self.prepare_submit:
             folder = 'data/submissions'
@@ -57,11 +58,13 @@ class Infer(Equation, ABC):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         equations = cls.split(additional_info.get('equations', ''))
-        kwargs = equations.copy()
+        kwargs = {k: Equation.encode(v) for k, v in executor.items()}
+        kwargs.update(equations.copy())
+
         kwargs['equations'] = equations
         kwargs['model_id'] = additional_info.get('model_id')
-        kwargs.update({k: Equation.encode(v) for k, v in executor.items()})
         return cls(**kwargs)
+

@@ -1,4 +1,5 @@
 import pickle
+from collections import OrderedDict
 from typing import Tuple, List
 
 import cv2
@@ -21,7 +22,7 @@ class SegmentationReportBuilder:
         task: Task,
         layout: str,
         imgs: np.array,
-        preds: np.array,
+        preds: OrderedDict,
         targets: np.array = None,
         part: str = 'valid',
         name: str = 'img_segment',
@@ -92,12 +93,14 @@ class SegmentationReportBuilder:
         self.report_series_provider.add(series)
 
     def encode_pred(self, mask: np.array):
-        res = np.zeros((mask.shape[1:]), dtype=np.uint8)
-        mult = 255 / mask.shape[0]
+        res = np.zeros((*mask.shape[1:], 3), dtype=np.uint8)
         for i, c in enumerate(mask):
-            res += (c * (mult * (i + 1))).astype(np.uint8)
+            c = np.repeat(c[:,:,None], 3, axis=2)
+            color = self.colors[i] if self.colors is not None else (
+                255, 255, 255
+            )
+            res += (c * color).astype(np.uint8)
 
-        res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
         return res
 
     def plot_mask(self, img: np.array, mask: np.array):
@@ -129,8 +132,9 @@ class SegmentationReportBuilder:
             else:
                 img = self.imgs[i]
 
-            pred = self.encode_pred(self.preds[i] * 255)
-            imgs = [img, pred]
+            imgs = [img]
+            for key, value in self.preds.items():
+                imgs.append(self.encode_pred(value[i]))
 
             for j in range(len(imgs)):
                 imgs[j] = resize_saving_ratio(imgs[j], self.max_img_size)

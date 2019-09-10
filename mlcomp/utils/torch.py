@@ -5,8 +5,10 @@ import torch
 from torch.jit import load
 from torch.utils.data import DataLoader, Dataset
 
+from mlcomp.worker.executors.base.tta_wrap import TtaWrap
 
-def _infer_batch(model, loader, use_logistic):
+
+def _infer_batch(model, loader: DataLoader, use_logistic):
     for batch in tqdm(loader, total=len(loader)):
         features = batch['features'].cuda()
         logits = model(features)
@@ -17,10 +19,13 @@ def _infer_batch(model, loader, use_logistic):
             p = torch.softmax(logits, 1)
 
         p = p.detach().cpu().numpy()
+        if isinstance(loader.dataset, TtaWrap):
+            p = loader.dataset.inverse(p)
+
         yield {'prob': p, 'count': p.shape[0], **batch}
 
 
-def _infer(model, loader, use_logistic):
+def _infer(model, loader: DataLoader, use_logistic):
     pred = []
     for batch in tqdm(loader, total=len(loader)):
         features = batch['features'].cuda()
@@ -32,6 +37,9 @@ def _infer(model, loader, use_logistic):
             p = torch.softmax(logits, 1)
 
         p = p.detach().cpu().numpy()
+        if isinstance(loader.dataset, TtaWrap):
+            p = loader.dataset.inverse(p)
+
         pred.append(p)
 
     pred = np.vstack(pred)
