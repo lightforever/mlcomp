@@ -7,6 +7,7 @@
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
 [![PyPI Status](https://pepy.tech/badge/mlcomp)](https://pepy.tech/project/mlcomp)
+[![Github contributors](https://img.shields.io/github/contributors/catalyst-team/mlcomp.svg?logo=github&logoColor=white)](https://github.com/catalyst-team/mlcomp/graphs/contributors)
 [![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
 
 [![Build Status](https://travis-ci.com/catalyst-team/mlcomp.svg?branch=master)](https://travis-ci.com/catalyst-team/mlcomp) 
