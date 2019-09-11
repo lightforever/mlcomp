@@ -31,6 +31,12 @@ class TaskProvider(BaseDataProvider):
             if len(status) > 0:
                 query = query.filter(Task.status.in_(status))
 
+        if filter.get('id_min'):
+            query = query.filter(Task.id >= filter['id_min'])
+
+        if filter.get('id_max'):
+            query = query.filter(Task.id <= filter['id_max'])
+
         if filter.get('id'):
             query = query.filter(Task.id == filter['id'])
 

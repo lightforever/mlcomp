@@ -20,27 +20,55 @@
     </mat-select>
 </mat-form-field>
 
-<div mat-dialog-content *ngIf="data.pipe">
-  <mat-form-field style="width: 600px">
-    <mat-label>Equations</mat-label>
-      <textarea
-              matInput
-              [(ngModel)]="data.pipe.equations"
-              style="height:550px;width: 800px">
+<mat-form-field style="width: 200px" *ngIf="data.pipe && data.pipe.versions">
+    <mat-label>Versions</mat-label>
+
+    <mat-select
+            (ngModelChange)="data.pipe.version=$event;"
+            [(ngModel)]="data.pipe.version">
+        <mat-option
+                *ngFor="let version of data.pipe.versions"
+                [value]="version">
+            {{version.name}}
+        </mat-option>
+    </mat-select>
+
+    <mat-icon class="positionCameras" matSuffix>
+        <ul>
+            <li title='Move Up' class="cameraLeft"
+                (click)="move_up($event)"
+                [class.transparent]='is_up_transparent()'></li>
+            <li title="Move Down" class="cameraRight"
+                (click)="move_down($event)"
+                [class.transparent]='is_down_transparent()'></li>
+        </ul>
+    </mat-icon>
+
+</mat-form-field>
+
+<div mat-dialog-content *ngIf="data.pipe && data.pipe.version">
+    <mat-form-field style="width: 600px">
+        <mat-label>Additional info</mat-label>
+        <textarea
+                #textarea
+                matInput
+                [(ngModel)]="data.pipe.version.equations"
+                (keydown)="key_down($event)"
+                style="height:550px;width: 800px">
 
       </textarea>
-  </mat-form-field>
+    </mat-form-field>
 </div>
 
-<pre style="color: red"  *ngIf="error">
+<pre style="color: red" *ngIf="error">
     {{error}}
 </pre>
 
 <div mat-dialog-actions>
-  <button mat-button (click)="on_cancel_click()">Cancel</button>
-  <button mat-button
-          (click)="on_ok_click()"
-          cdkFocusInitial>
-      Ok
-  </button>
+    <button mat-button (click)="on_cancel_click()">Cancel</button>
+    <button mat-button
+            (click)="on_ok_click()"
+            cdkFocusInitial>
+        Ok
+    </button>
 </div>

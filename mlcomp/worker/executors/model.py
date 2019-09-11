@@ -12,7 +12,7 @@ from catalyst.dl.utils.trace import trace_model
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 
 from mlcomp import TASK_FOLDER, MODEL_FOLDER
-from mlcomp.db.models import Model, Dag
+from mlcomp.db.models import Model
 from mlcomp.db.providers import TaskProvider, ModelProvider, \
     ProjectProvider
 from mlcomp.utils.misc import now

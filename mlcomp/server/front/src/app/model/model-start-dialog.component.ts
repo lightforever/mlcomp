@@ -1,14 +1,17 @@
-import {Component, Inject, OnInit} from "@angular/core";
+import {Component, Inject, OnInit, ViewChild} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 import {ModelStartData} from "../models";
 import {ModelService} from "./model.service";
+import {Helpers} from "../helpers";
 
 @Component({
     selector: 'model-start-dialog',
     templateUrl: 'model-start-dialog.html',
+    styleUrls: ['./model-start-dialog.css']
 })
 export class ModelStartDialogComponent implements OnInit {
     error: string;
+    @ViewChild('textarea') textarea;
 
     constructor(
         public dialogRef: MatDialogRef<ModelStartDialogComponent>,
@@ -38,6 +41,14 @@ export class ModelStartDialogComponent implements OnInit {
         }
         if (dag.pipes.length >= 1) {
             this.data.pipe = dag.pipes[0];
+            if (!this.data.pipe.versions ||
+                this.data.pipe.versions.length == 0) {
+                this.data.pipe.versions = [
+                    {'name': 'last', 'equations': ''}
+                ];
+            }
+
+            this.data.pipe.version = this.data.pipe.versions[0];
         }
     }
 
@@ -45,7 +56,7 @@ export class ModelStartDialogComponent implements OnInit {
         let self = this;
         this.service.start_begin(this.data).subscribe(res => {
             this.error = res.error;
-            if(this.error){
+            if (this.error) {
                 return;
             }
             this.data = {
@@ -53,9 +64,9 @@ export class ModelStartDialogComponent implements OnInit {
                 'dags': res.dags
             } as ModelStartData;
 
-            if(res.dag){
-                for(let d of this.data.dags){
-                    if(d.id == res.dag.id){
+            if (res.dag) {
+                for (let d of this.data.dags) {
+                    if (d.id == res.dag.id) {
                         this.data.dag = d;
                         break
                     }
@@ -64,5 +75,82 @@ export class ModelStartDialogComponent implements OnInit {
 
             this.dag_changed();
         })
+    }
+
+    key_down(event) {
+        if (!this.data.pipe || !this.data.pipe.version) {
+            return;
+        }
+        let version = this.data.pipe.version;
+        if (version.name != 'last') {
+            let new_version = {
+                'name': 'last',
+                'equations': event.target.value
+            };
+            this.data.pipe.version = new_version;
+            if (this.data.pipe.versions[0].name == 'last') {
+                this.data.pipe.versions[0] = new_version;
+            } else {
+                this.data.pipe.versions.splice(0, 0,
+                    new_version);
+            }
+
+        }
+
+        let content = Helpers.handle_textarea_down_key(event,
+            this.textarea.nativeElement);
+        if (content) {
+            this.data.pipe.version.equations = content;
+        }
+
+
+    }
+
+    move_up(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!this.data.pipe || !this.data.pipe.version) {
+            return;
+        }
+        let index = this.data.pipe.versions.indexOf(this.data.pipe.version);
+        if (index == 0) {
+            return;
+        }
+
+        this.data.pipe.version = this.data.pipe.versions[index - 1];
+    }
+
+    move_down(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!this.data.pipe || !this.data.pipe.version) {
+            return;
+        }
+        let index = this.data.pipe.versions.indexOf(this.data.pipe.version);
+        if (index >= this.data.pipe.versions.length - 1) {
+            return;
+        }
+
+        this.data.pipe.version = this.data.pipe.versions[index + 1];
+    }
+
+    is_up_transparent() {
+        if (!this.data.pipe || !this.data.pipe.version) {
+            return true;
+        }
+        let index = this.data.pipe.versions.indexOf(this.data.pipe.version);
+        return index <= 0;
+
+    }
+
+    is_down_transparent() {
+        if (!this.data.pipe || !this.data.pipe.version) {
+            return true;
+        }
+        let index = this.data.pipe.versions.indexOf(this.data.pipe.version);
+        return index >= this.data.pipe.versions.length - 1;
+
     }
 }

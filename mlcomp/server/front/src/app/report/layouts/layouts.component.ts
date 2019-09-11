@@ -6,6 +6,7 @@ import {LayoutsService} from "./layouts.service";
 import {MatDialog} from "@angular/material";
 import {LayoutAddDialogComponent} from "./layout-add-dialog";
 import {el} from "@angular/platform-browser/testing/src/browser_util";
+import {Helpers} from "../../helpers";
 
 @Component({
     selector: 'app-layouts',
@@ -74,10 +75,11 @@ export class LayoutsComponent extends Paginator<Layout> {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.service.edit(name, null, result.name).subscribe(res => {
-                    this.change.emit();
-                    this.error = res.error;
-                });
+                this.service.edit(name, null, result.name).subscribe(
+                    res => {
+                        this.change.emit();
+                        this.error = res.error;
+                    });
 
             }
         });
@@ -111,32 +113,20 @@ export class LayoutsComponent extends Paginator<Layout> {
             return;
         }
 
-        let element = this.textarea.nativeElement;
-        let content = event.target.value;
-        let start = event.target.selectionStart;
-
-        if (event.key == 'Tab' && !event.ctrlKey && !event.shiftKey) {
-            event.preventDefault();
-            content = content.substring(0, start) +
-                "  " + content.substring(event.target.selectionEnd);
-            start = start + 2;
-
+        let content = Helpers.handle_textarea_down_key(event,
+            this.textarea.nativeElement);
+        if (content) {
             this.selected.content = content;
-            element.value = content;
-
-            element.selectionStart = start;
-            element.selectionEnd = start;
-
         }
 
     }
 
-     key_up(event) {
-         if (!this.selected) {
-             return;
-         }
+    key_up(event) {
+        if (!this.selected) {
+            return;
+        }
 
-         this.selected.content = event.target.value;
-     }
+        this.selected.content = event.target.value;
+    }
 
 }

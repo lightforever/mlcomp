@@ -9,7 +9,7 @@ import albumentations as A
 
 from torch.utils.data import Dataset
 
-from mlcomp.utils.config import parse_albu_short
+from mlcomp.utils.config import parse_albu_short, Config
 from mlcomp.utils.torch import infer
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.executors.base.tta_wrap import TtaWrap
@@ -27,15 +27,9 @@ _OP_MAP = {
 @Executor.register
 class Equation(Executor, ast.NodeVisitor):
     # noinspection PyTypeChecker
-    def __init__(self, equations: dict, targets: List[str], name: str):
+    def __init__(self, **kwargs):
         self.cache = dict()
-
-        self.equations = equations
-        self.targets = self.solve(targets)
-        self.name = self.solve(name)
-
-        for t in self.targets:
-            assert t in self.equations, f'target = {t} not in equations'
+        self.__dict__.update(kwargs)
 
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
@@ -61,16 +55,6 @@ class Equation(Executor, ast.NodeVisitor):
         if isinstance(v, str):
             return f'\'{v}\''
         return str(v)
-
-    @staticmethod
-    def split(equations: str):
-        # noinspection PyTypeChecker
-        return dict(
-            [
-                row.strip().replace(' ', '').split(':')
-                for row in equations.split('\n') if ':' in row
-            ]
-        )
 
     def load(self, file: str, type: str = 'numpy'):
         if type == 'numpy':
@@ -181,11 +165,12 @@ class Equation(Executor, ast.NodeVisitor):
 
         return res
 
-    def work(self) -> dict:
-        res = OrderedDict()
-        for t in self.targets:
-            res[t] = self.solve(self.equations[t])
-        return res
+    @classmethod
+    def _from_config(
+        cls, executor: dict, config: Config, additional_info: dict
+    ):
+        kwargs = {k: v for k, v in executor.items()}
+        return cls(**kwargs)
 
 
 __all__ = ['Equation']

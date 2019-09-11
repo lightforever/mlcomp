@@ -4,40 +4,47 @@
 
 <table style="width: 70%;">
   <td class="mat-app-background basic-container" style="width: 30%">
-  <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-    <!-- This is the tree node template for leaf nodes -->
-    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-      <!-- use a disabled button to provide padding for tree leaf -->
 
-      <button mat-icon-button
-              mat-button
-              class="mat-icon-button"
-              (click)="node_click(node)">
+    <button mat-raised-button
+            style="margin-top: 15px;margin-bottom: 10px"
+            (click)="download()">
+        Download
+    </button>
 
-      </button>
+    <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+      <!-- This is the tree node template for leaf nodes -->
+      <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+        <!-- use a disabled button to provide padding for tree leaf -->
 
-      {{node.name}}
+        <button mat-icon-button
+                mat-button
+                class="mat-icon-button"
+                (click)="node_click(node)">
 
-    </mat-tree-node>
+        </button>
 
-    <mat-tree-node
-            *matTreeNodeDef="let node;when: hasChild"
-            matTreeNodePadding>
-      <button mat-icon-button matTreeNodeToggle
-              [attr.aria-label]="'toggle ' + node.name"
-              class="mat-icon-button">
+        {{node.name}}
 
-        <mat-icon class="mat-icon-rtl-mirror">
-          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-        </mat-icon>
+      </mat-tree-node>
 
-      </button>
+      <mat-tree-node
+              *matTreeNodeDef="let node;when: hasChild"
+              matTreeNodePadding>
+        <button mat-icon-button matTreeNodeToggle
+                [attr.aria-label]="'toggle ' + node.name"
+                class="mat-icon-button">
 
-      {{node.name}}
+          <mat-icon class="mat-icon-rtl-mirror">
+            {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+          </mat-icon>
 
-     </mat-tree-node>
+        </button>
 
-    </mat-tree>
+        {{node.name}}
+
+       </mat-tree-node>
+
+      </mat-tree>
 
   </td>
 

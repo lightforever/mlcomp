@@ -28,7 +28,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         this.form_items_joined();
-        // this.subscribe_report_changed();
+        this.subscribe_report_changed();
     }
 
     @Input()

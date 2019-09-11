@@ -19,6 +19,12 @@ class DagProvider(BaseDataProvider):
         if filter.get('id'):
             query = query.filter(Dag.id == int(filter['id']))
 
+        if filter.get('id_min'):
+            query = query.filter(Dag.id >= filter['id_min'])
+
+        if filter.get('id_max'):
+            query = query.filter(Dag.id <= filter['id_max'])
+
         if filter.get('created_min'):
             created_min = parse_time(filter['created_min'])
             query = query.filter(Dag.created >= created_min)

@@ -18,6 +18,7 @@ TASK_FOLDER = join(ROOT_FOLDER, 'tasks')
 LOG_FOLDER = join(ROOT_FOLDER, 'logs')
 CONFIG_FOLDER = join(ROOT_FOLDER, 'configs')
 DB_FOLDER = join(ROOT_FOLDER, 'db')
+TMP_FOLDER = join(ROOT_FOLDER, 'tmp')
 
 os.makedirs(ROOT_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
@@ -26,6 +27,7 @@ os.makedirs(TASK_FOLDER, exist_ok=True)
 os.makedirs(LOG_FOLDER, exist_ok=True)
 os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(DB_FOLDER, exist_ok=True)
+os.makedirs(TMP_FOLDER, exist_ok=True)
 
 # copy conf files if they do not exist
 

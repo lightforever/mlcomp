@@ -221,7 +221,7 @@ class Catalyst(Executor, Callback):
         checkpoint_dir = join(experiment.logdir, 'checkpoints')
         os.makedirs(checkpoint_dir, exist_ok=True)
 
-        file = 'last.pth' if resume.get('load_last') else 'best.pth'
+        file = 'last_full.pth' if resume.get('load_last') else 'best_full.pth'
 
         path = join(checkpoint_dir, file)
         computer = socket.gethostname()

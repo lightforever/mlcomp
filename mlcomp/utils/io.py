@@ -1,4 +1,7 @@
 import os
+from io import BytesIO
+from zipfile import ZipFile
+
 import yaml
 
 yaml.warnings({'YAMLLoadWarning': False})
@@ -24,6 +27,21 @@ def yaml_load(text: str = None, file: str = None):
 
 def yaml_dump(data):
     return yaml.dump(data, default_flow_style=False, sort_keys=False)
+
+
+def zip_folder(folder: str, dst: str = None):
+    if dst is None:
+        dst = BytesIO()
+
+    with ZipFile(dst, 'w') as zip_obj:
+        # Iterate over all the files in directory
+        for folderName, subfolders, filenames in os.walk(folder):
+            for filename in filenames:
+                # create complete filepath of file in directory
+                filePath = os.path.join(folderName, filename)
+                # Add file to zip
+                zip_obj.write(filePath, os.path.relpath(filePath, folder))
+    return dst
 
 
 __all__ = ['read_lines', 'from_module_path', 'yaml_load', 'yaml_dump']

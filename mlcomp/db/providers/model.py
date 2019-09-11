@@ -74,7 +74,7 @@ class ModelProvider(BaseDataProvider):
             all()
 
         used_dag_names = set()
-        equations = yaml_load(model.equations)
+        versions = yaml_load(model.equations)
 
         res_dags = []
         res_dag = None
@@ -91,7 +91,7 @@ class ModelProvider(BaseDataProvider):
                 } for p in config['pipes']]
             }
             for pipe in d['pipes']:
-                pipe['equations'] = equations.get(pipe['name'], '')
+                pipe['versions'] = versions.get(pipe['name'], [])
 
             used_dag_names.add(dag.name)
             res_dags.append(d)

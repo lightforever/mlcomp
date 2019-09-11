@@ -1,7 +1,6 @@
 from glob import glob
 import os
-import logging
-from os.path import isdir, join, dirname
+from os.path import isdir, join
 import hashlib
 from typing import List, Tuple
 import pkgutil
@@ -24,8 +23,6 @@ from mlcomp.db.providers import FileProvider, \
 
 from mlcomp.utils.config import Config
 from mlcomp.utils.req import control_requirements, read_lines
-
-logger = logging.getLogger(__name__)
 
 
 def get_super_names(cls: pyclbr.Class):
@@ -136,13 +133,10 @@ class Storage:
                     DagLibrary(dag=dag.id, library=name, version=version)
                 )
 
-    def download(self, task: int):
-        task = self.task_provider.by_id(
-            task, joinedload(Task.dag_rel, innerjoin=True)
-        )
-        folder = join(TASK_FOLDER, str(task.id))
+    def download_dag(self, dag: int, folder: str):
         os.makedirs(folder, exist_ok=True)
-        items = self.provider.by_dag(task.dag)
+
+        items = self.provider.by_dag(dag)
         items = sorted(items, key=lambda x: x[1] is not None)
         for item, file in items:
             path = os.path.join(folder, item.path)
@@ -151,6 +145,13 @@ class Storage:
             else:
                 with open(path, 'wb') as f:
                     f.write(file.content)
+
+    def download(self, task: int):
+        task = self.task_provider.by_id(
+            task, joinedload(Task.dag_rel, innerjoin=True)
+        )
+        folder = join(TASK_FOLDER, str(task.id))
+        self.download_dag(task.dag, folder)
 
         config = Config.from_yaml(task.dag_rel.config)
         info = config['info']
@@ -226,8 +227,9 @@ class Storage:
         for (module_loader, module_name,
              ispkg) in pkgutil.iter_modules(folders):
             module = module_loader.find_module(module_name)
-            rel_path = os.path.relpath(os.path.splitext(module.path)[0],
-                                       base_folder).replace('/', '.')
+            rel_path = os.path.relpath(
+                os.path.splitext(module.path)[0], base_folder
+            ).replace('/', '.')
             classes = pyclbr.readmodule(rel_path, path=[base_folder])
             for k, v in classes.items():
                 if is_valid_class(v):

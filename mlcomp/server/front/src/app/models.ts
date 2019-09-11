@@ -158,6 +158,8 @@ export class DagFilter {
     created_max: Date;
     last_activity_min: Date;
     last_activity_max: Date;
+    id_min: number;
+    id_max: number;
 }
 
 export class TaskFilter {
@@ -174,6 +176,8 @@ export class TaskFilter {
     last_activity_max: Date;
     project: number;
     type: string[];
+    id_min: number;
+    id_max: number;
 }
 
 export class ReportsFilter {

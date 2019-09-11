@@ -19,6 +19,16 @@
                placeholder="Name">
     </mat-form-field>
 
+    <mat-form-field style="width: 100px">
+        <input matInput (keyup)="id_min=$event.target.value;onchange()"
+               placeholder="Id min" type="number">
+    </mat-form-field>
+
+    <mat-form-field style="width: 100px">
+        <input matInput (keyup)="id_max=$event.target.value;onchange()"
+               placeholder="Id max" type="number">
+    </mat-form-field>
+
 
     <mat-form-field style="width: 200px">
         <input matInput type="datetime-local" placeholder="created min"

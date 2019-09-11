@@ -12,18 +12,18 @@ from mlcomp.worker.executors.base.equation import Equation
 @Executor.register
 class Infer(Equation, ABC):
     def __init__(
-        self,
-        *,
-        equations: dict,
-        targets: List[str] = ('\'y\'',),
-        name: str = '\'infer\'',
-        max_count=None,
-        test: bool = False,
-        prepare_submit: bool = False,
-        layout: str = None,
-        suffix: str = 'valid',
-        plot_count: int = 0,
-        **kwargs
+            self,
+            *,
+            equations: dict,
+            targets: List[str] = ('\'y\'',),
+            name: str = '\'infer\'',
+            max_count=None,
+            test: bool = False,
+            prepare_submit: bool = False,
+            layout: str = None,
+            suffix: str = 'valid',
+            plot_count: int = 0,
+            **kwargs
     ):
         super().__init__(equations, targets, name)
 
@@ -55,16 +55,3 @@ class Infer(Equation, ABC):
 
         if self.layout:
             self.plot(res)
-
-    @classmethod
-    def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
-    ):
-        equations = cls.split(additional_info.get('equations', ''))
-        kwargs = {k: Equation.encode(v) for k, v in executor.items()}
-        kwargs.update(equations.copy())
-
-        kwargs['equations'] = equations
-        kwargs['model_id'] = additional_info.get('model_id')
-        return cls(**kwargs)
-

@@ -1,16 +1,18 @@
+import shutil
 import traceback
 import requests
 import os
 import json
 from collections import OrderedDict
 from functools import wraps
+from uuid import uuid4
 
-from flask import Flask, request, Response, send_from_directory
+from flask import Flask, request, Response, send_from_directory, send_file
 from flask_cors import CORS
 from sqlalchemy.orm import joinedload
 
 import mlcomp.worker.tasks as celery_tasks
-from mlcomp import TOKEN, WEB_PORT, WEB_HOST, FLASK_ENV
+from mlcomp import TOKEN, WEB_PORT, WEB_HOST, FLASK_ENV, TMP_FOLDER
 from mlcomp.db.enums import TaskStatus, ComponentType
 from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
@@ -20,11 +22,12 @@ from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.utils.logging import create_logger
-from mlcomp.utils.io import from_module_path
+from mlcomp.utils.io import from_module_path, zip_folder
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake, now
 from mlcomp.db.models import Model, Report, ReportLayout, Task
 from mlcomp.utils.io import yaml_load, yaml_dump
+from mlcomp.worker.storage import Storage
 
 app = Flask(__name__)
 CORS(app)
@@ -118,6 +121,9 @@ def error_handler(f):
             res = None
 
         res = res or {}
+        if isinstance(res, Response):
+            return res
+
         res['success'] = success
         res['error'] = error
 
@@ -393,6 +399,28 @@ def code():
         sort(r)
 
     return {'items': res}
+
+
+@app.route('/api/code_download', methods=['GET'])
+@requires_auth
+@error_handler
+def code_download():
+    id = int(request.args['id'])
+    storage = Storage(_read_session)
+    dag = DagProvider().by_id(id)
+    folder = os.path.join(TMP_FOLDER, f'{dag.id}({dag.name})')
+
+    try:
+        storage.download_dag(id, folder)
+
+        file_name = f'{dag.id}({dag.name}).zip'
+        dst = os.path.join(TMP_FOLDER, file_name)
+        zip_folder(folder, dst)
+        res = send_from_directory(TMP_FOLDER, file_name)
+        os.remove(dst)
+        return res
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
 
 
 @app.route('/api/tasks', methods=['POST'])
@@ -709,10 +737,7 @@ def start_server():
         logger.info(f'Server TOKEN = {TOKEN}', ComponentType.API)
         register_supervisor()
 
-    app.run(
-        debug=FLASK_ENV == 'development', port=WEB_PORT,
-        host=WEB_HOST
-    )
+    app.run(debug=FLASK_ENV == 'development', port=WEB_PORT, host=WEB_HOST)
 
 
 def stop_server():

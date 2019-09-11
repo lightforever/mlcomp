@@ -39,6 +39,8 @@ export class TasksComponent extends Paginator<TasksComponent>
     displayed_columns: string[];
     @Input() dag: number;
     name: string;
+    id_min: number;
+    id_max: number;
     @Input() report: number;
 
     project: number;
@@ -123,6 +125,8 @@ export class TasksComponent extends Paginator<TasksComponent>
         res.created_max = Helpers.parse_time(this.created_max);
         res.last_activity_min = Helpers.parse_time(this.last_activity_min);
         res.last_activity_max = Helpers.parse_time(this.last_activity_max);
+        res.id_min = this.id_min;
+        res.id_max = this.id_max;
 
         return res;
     }

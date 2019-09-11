@@ -253,17 +253,6 @@ res.to_csv('submission.csv', index=False)
             f'complete after {self.wait_seconds}'
         )
 
-    @classmethod
-    def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
-    ):
-        equations = cls.split(additional_info.get('equations', ''))
-        kwargs = equations.copy()
-        kwargs['equations'] = equations
-        kwargs['model_id'] = additional_info.get('model_id')
-        kwargs.update({k: Equation.encode(v) for k, v in executor.items()})
-        return cls(**kwargs)
-
 
 __all__ = ['Download', 'Submit']
 

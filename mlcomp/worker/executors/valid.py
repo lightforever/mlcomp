@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from mlcomp.db.providers import ModelProvider
-from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.executors.base.equation import Equation
 
@@ -12,8 +11,6 @@ class Valid(Equation, ABC):
     def __init__(
         self,
         equations: dict,
-        targets: List[str] = ('\'y\'',),
-        name: str = '\'valid\'',
         max_count=None,
         layout=None,
         model_id=None,
@@ -52,15 +49,3 @@ class Valid(Equation, ABC):
 
         if self.layout:
             self.plot(res, scores)
-
-    @classmethod
-    def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
-    ):
-        equations = cls.split(additional_info.get('equations', ''))
-        kwargs = {k: Equation.encode(v) for k, v in executor.items()}
-        kwargs.update(equations.copy())
-
-        kwargs['equations'] = equations
-        kwargs['model_id'] = additional_info.get('model_id')
-        return cls(**kwargs)
