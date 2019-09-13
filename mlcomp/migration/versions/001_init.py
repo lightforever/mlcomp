@@ -333,8 +333,8 @@ def upgrade(migrate_engine):
         Index('report_img_attr1_str_idx', report_img.c.attr1_str).create()
         Index('report_img_attr2_str_idx', report_img.c.attr2_str).create()
         Index('report_img_attr3_str_idx', report_img.c.attr3_str).create()
-        Index('report_img_attr4_idx', report_img.c.attr4_str).create()
-        Index('report_img_attr5_idx', report_img.c.attr5_str).create()
+        Index('report_img_attr4_str_idx', report_img.c.attr4_str).create()
+        Index('report_img_attr5_str_idx', report_img.c.attr5_str).create()
 
         ForeignKeyConstraint([report_series.c.task], [task.c.id],
                              ondelete='CASCADE').create()

@@ -1,10 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from typing import List
 
-import numpy as np
-
-from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.executors.base.equation import Equation
 
@@ -85,7 +81,3 @@ class Infer(Equation, ABC):
 
         if self.prepare_submit:
             self.submit_final(submit_folder)
-
-
-
-

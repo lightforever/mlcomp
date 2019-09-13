@@ -7,9 +7,7 @@ from sqlalchemy.orm import joinedload, aliased
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.db.enums import TaskType, DagType, TaskStatus
-from mlcomp.utils.io import yaml_dump
 from mlcomp.utils.misc import to_snake, duration_format, now, parse_time
-from mlcomp.utils.config import Config
 from mlcomp.db.models import Task, Project, Dag, TaskDependence, ReportTasks
 
 

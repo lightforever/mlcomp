@@ -5,9 +5,8 @@ import os
 import json
 from collections import OrderedDict
 from functools import wraps
-from uuid import uuid4
 
-from flask import Flask, request, Response, send_from_directory, send_file
+from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 from sqlalchemy.orm import joinedload
 

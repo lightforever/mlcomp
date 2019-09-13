@@ -7,8 +7,12 @@ from sklearn.metrics import confusion_matrix
 
 from mlcomp.db.core import Session
 from mlcomp.db.models import Report, ReportImg, Task, ReportTasks, ReportSeries
-from mlcomp.db.providers import ReportProvider, ReportLayoutProvider, \
-    TaskProvider, ReportImgProvider, ReportTasksProvider, ReportSeriesProvider, \
+from mlcomp.db.providers import ReportProvider, \
+    ReportLayoutProvider, \
+    TaskProvider,\
+    ReportImgProvider, \
+    ReportTasksProvider, \
+    ReportSeriesProvider, \
     DagProvider
 from mlcomp.utils.img import resize_saving_ratio
 from mlcomp.utils.io import yaml_load, yaml_dump

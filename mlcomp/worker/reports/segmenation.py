@@ -1,5 +1,3 @@
-import pickle
-from collections import OrderedDict
 from typing import Tuple, List
 
 import cv2

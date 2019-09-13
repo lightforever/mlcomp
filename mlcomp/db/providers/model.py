@@ -9,7 +9,7 @@ from mlcomp.db.models import Model, Dag, Project, Task
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.config import Config
 from mlcomp.utils.io import yaml_load
-from mlcomp.utils.misc import parse_time, now
+from mlcomp.utils.misc import parse_time
 
 
 class ModelProvider(BaseDataProvider):

@@ -5,7 +5,6 @@ import os
 import time
 
 import socket
-from typing import List
 
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
