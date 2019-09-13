@@ -210,8 +210,7 @@ class DagStandardBuilder:
                         grid = v['grid']
                         cells = grid_cells(grid)
                         for i, (cell, cell_name) in enumerate(cells):
-                            name = f'{k} {cell_name}'
-                            names.append(name)
+                            names.append(cell_name)
                             infos.append({'grid_cell': i})
                     else:
                         names.append(k)

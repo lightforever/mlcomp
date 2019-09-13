@@ -12,6 +12,7 @@ import {Helpers} from "../helpers";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ModelStartDialogComponent} from "./model-start-dialog.component";
 import {ModelAddDialogComponent} from "./model-add-dialog.component";
+import {DialogComponent} from "../dialog/dialog.component";
 
 @Component({
     selector: 'app-model',
@@ -46,7 +47,8 @@ export class ModelComponent extends Paginator<Model> {
                 iconRegistry: MatIconRegistry,
                 sanitizer: DomSanitizer,
                 public start_dialog: MatDialog,
-                public model_add_dialog: MatDialog
+                public model_add_dialog: MatDialog,
+                public dialog: MatDialog
     ) {
         super(service, location);
 
@@ -67,7 +69,7 @@ export class ModelComponent extends Paginator<Model> {
     protected _ngOnInit() {
         let self = this;
         this.data_updated.subscribe(res => {
-            if(!res || !res.projects){
+            if (!res || !res.projects) {
                 return;
             }
             self.projects = res.projects;
@@ -104,9 +106,21 @@ export class ModelComponent extends Paginator<Model> {
 
     remove(element: Model) {
         let self = this;
-        this.service.remove(element.id).subscribe(res => {
-            self.change.emit();
+        const dialogRef = this.dialog.open(DialogComponent, {
+            width: '550px', height: '200px',
+            data: {
+                'message': 'The all content will be deleted. ' +
+                    'Do you want to continue?'
+            }
         });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.remove(element.id).subscribe(res => {
+                    self.change.emit();
+                });
+            }
+        })
     }
 
 
@@ -118,18 +132,20 @@ export class ModelComponent extends Paginator<Model> {
             }
         };
         let dialog = this.start_dialog.open(ModelStartDialogComponent, config);
-        dialog.afterClosed().subscribe(res=>this.change.emit());
+        dialog.afterClosed().subscribe(res => this.change.emit());
     }
 
     add() {
-         this.model_add_dialog.open(ModelAddDialogComponent, {
-            width: '500px', height: '400px',
-            data: {
-                'projects': this.projects.filter(x=>x.name!='None'),
-                'equations': '',
-                'name': ''
-            }
-        });
+        let dialog = this.model_add_dialog.open(ModelAddDialogComponent,
+            {
+                width: '500px', height: '400px',
+                data: {
+                    'projects': this.projects.filter(x => x.name != 'None'),
+                    'equations': '',
+                    'name': ''
+                }
+            });
+        dialog.afterClosed().subscribe(res => this.change.emit());
     }
 }
 

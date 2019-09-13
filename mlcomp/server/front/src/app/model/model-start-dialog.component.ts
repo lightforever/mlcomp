@@ -22,6 +22,14 @@ export class ModelStartDialogComponent implements OnInit {
     }
 
     on_ok_click(): void {
+        if (this.data && this.data.pipe && this.data.pipe.versions) {
+            let version = this.data.pipe.versions[0];
+            if (version.name == 'last') {
+                version.name = Helpers.format_date_time(new Date(),
+                    true, true);
+            }
+        }
+
         this.service.start_end(this.data).subscribe(res => {
             this.error = res.error;
             if (res.success) {
@@ -39,17 +47,28 @@ export class ModelStartDialogComponent implements OnInit {
         if (!dag) {
             return;
         }
-        if (dag.pipes.length >= 1) {
-            this.data.pipe = dag.pipes[0];
-            if (!this.data.pipe.versions ||
-                this.data.pipe.versions.length == 0) {
-                this.data.pipe.versions = [
+        for (let pipe of dag.pipes) {
+            if (!pipe.versions ||
+                pipe.versions.length == 0) {
+                pipe.versions = [
                     {'name': 'last', 'equations': ''}
                 ];
             }
 
+        }
+        if (dag.pipes.length >= 1) {
+            this.data.pipe = dag.pipes[0];
             this.data.pipe.version = this.data.pipe.versions[0];
         }
+    }
+
+    pipe_changed(){
+        let pipe = this.data.pipe;
+        if(!pipe || !pipe.versions || pipe.versions.length == 0){
+            return;
+        }
+
+        pipe.version = pipe.versions[0];
     }
 
     ngOnInit(): void {
@@ -79,6 +98,9 @@ export class ModelStartDialogComponent implements OnInit {
 
     key_down(event) {
         if (!this.data.pipe || !this.data.pipe.version) {
+            return;
+        }
+        if(event.ctrlKey && event.key != 'v'){
             return;
         }
         let version = this.data.pipe.version;

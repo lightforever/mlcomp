@@ -62,28 +62,22 @@ class Download(Executor):
 class Submit(Equation):
     def __init__(
         self,
-        *,
-        equations: dict,
-        targets: List[str] = (),
-        name: str = '',
         competition: str,
         submit_type: str = 'file',
         predict_column: str = None,
         kernel_suffix: str = 'api',
         message: str = '',
         wait_seconds=60 * 20,
-        model_id=None,
         **kwargs
     ):
-        super().__init__(equations, targets, name)
+        super().__init__(**kwargs)
 
-        self.competition = self.solve(competition)
-        self.wait_seconds = self.solve(wait_seconds)
-        self.submit_type = self.solve(submit_type)
-        self.kernel_suffix = self.solve(kernel_suffix)
-        self.predict_column = self.solve(predict_column)
-        self.model_id = self.solve(model_id)
-        self.message = self.solve(message) or f'model_id = {self.model_id}'
+        self.competition = competition
+        self.wait_seconds = wait_seconds
+        self.submit_type = submit_type
+        self.kernel_suffix = kernel_suffix
+        self.predict_column = predict_column
+        self.message = message or f'model_id = {self.model_id}'
         self.file = f'data/submissions/{self.name}.csv'
         self.file_name = os.path.basename(self.file)
 

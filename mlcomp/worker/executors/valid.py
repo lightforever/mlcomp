@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List
+
+from numpy import isnan
 
 from mlcomp.db.providers import ModelProvider
 from mlcomp.worker.executors import Executor
@@ -9,34 +10,65 @@ from mlcomp.worker.executors.base.equation import Equation
 @Executor.register
 class Valid(Equation, ABC):
     def __init__(
-        self,
-        equations: dict,
-        max_count=None,
-        layout=None,
-        model_id=None,
-        fold_number: int = 0,
-        plot_count: int = 0,
-        **kwargs
+            self,
+            layout=None,
+            fold_number: int = 0,
+            plot_count: int = 0,
+            **kwargs
     ):
-        super().__init__(equations, targets, name)
+        super().__init__(**kwargs)
 
-        self.max_count = self.solve(max_count)
-        self.layout = self.solve(layout)
-        self.fold_number = self.solve(fold_number)
-        self.plot_count = self.solve(plot_count)
-        self.model_id = model_id
+        self.layout = layout
+        self.fold_number = fold_number
+        self.plot_count = plot_count
 
     @abstractmethod
-    def score(self, res):
+    def score(self, preds):
         pass
 
-    def plot(self, res, scores):
+    @abstractmethod
+    def count(self):
+        pass
+
+    @abstractmethod
+    def plot(self, preds, score):
+        pass
+
+    @abstractmethod
+    def score_final(self):
+        pass
+
+    @abstractmethod
+    def key_equation(self):
+        pass
+
+    @abstractmethod
+    def create_base(self):
+        pass
+
+    @abstractmethod
+    def adjust_part(self, part):
+        pass
+
+    @abstractmethod
+    def plot_final(self, score):
         pass
 
     def work(self):
-        res = super().work()
-        score, scores = self.score(res)
-        score = float(score)
+        self.create_base()
+        parts = self.generate_parts(self.count())
+
+        for preds in self.solve(self.key_equation(), parts):
+            score = self.score(preds)
+            if self.layout and self.plot_count > 0:
+                self.plot(preds, score)
+
+        score = self.score_final()
+        if isnan(score):
+            score = -1
+
+        if self.layout:
+            self.plot_final(score)
 
         self.task.score = score
         self.task_provider.update()
@@ -46,6 +78,3 @@ class Valid(Equation, ABC):
             model = provider.by_id(self.model_id)
             model.score_local = score
             provider.commit()
-
-        if self.layout:
-            self.plot(res, scores)

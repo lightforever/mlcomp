@@ -25,7 +25,7 @@ export class Helpers {
 
     }
 
-    public static format_date_time(date) {
+    public static format_date_time(date, year=false, month_numeric=false) {
         const monthNames = [
             "January",
             "February",
@@ -47,7 +47,21 @@ export class Helpers {
 
         if (day.length < 2) day = '0' + day;
 
-        return [monthNames[month], day].join('.') + ' ' +
+        let parts = [];
+        if(year){
+            parts.push(d.getFullYear());
+        }
+        if(month_numeric){
+            let month_str = String(month);
+            if(month_str.length == 1) month_str = '0' + month_str;
+            parts.push(month_str);
+        }
+        else{
+            parts.push(monthNames[month]);
+        }
+        parts.push(day);
+
+        return parts.join('.') + ' ' +
             date.toTimeString().slice(0, 8);
     }
 

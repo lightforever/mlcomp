@@ -21,14 +21,14 @@ class ValidMnist(Valid):
             transforms=Experiment.get_test_transforms()
         )
 
-    def score(self, res):
+    def score(self):
         # noinspection PyUnresolvedReferences
-        res = res['y']
+        res = self.solve(self.y)
         scores = res[np.arange(len(self.x)), self.x.y]
         return np.mean(scores), scores
 
-    def plot(self, res, scores):
-        res = res['y']
+    def plot(self, scores):
+        res = self.solve(self.y)
         imgs = [
             cv2.cvtColor(
                 ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8),

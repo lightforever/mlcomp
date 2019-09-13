@@ -10,8 +10,8 @@ from mlcomp.utils.misc import now
 def dag_model_start(session: Session, data: dict):
     provider = ModelProvider(session)
     model = provider.by_id(data['model_id'])
-    dag = DagProvider(session
-                      ).by_id(data['dag'], joined_load=[Dag.project_rel])
+    dag_provider = DagProvider(session)
+    dag = dag_provider.by_id(data['dag'], joined_load=[Dag.project_rel])
 
     project = dag.project_rel
     src_config = Config.from_yaml(dag.config)
@@ -19,17 +19,18 @@ def dag_model_start(session: Session, data: dict):
 
     equations = yaml_load(model.equations)
     versions = data['pipe']['versions']
-    if len(versions) > 0 and versions[0]['name'] == 'last':
-        versions[0]['name'] = now().strftime('%Y.%m.%d %H:%M:%S')
-    equations[data['pipe']['name']] = versions
-    model.equations = yaml_dump(equations)
 
     if len(versions) > 0:
-        equations = yaml_load(versions[0]['equations'])
+        pipe_equations = yaml_load(versions[0]['equations'])
+        versions[0]['used'] = now()
+
         if len(pipe) == 1:
-            pipe[list(pipe)[0]].update(equations)
+            pipe[list(pipe)[0]].update(pipe_equations)
         else:
-            pipe.update(equations)
+            pipe.update(pipe_equations)
+
+    equations[data['pipe']['name']] = versions
+    model.equations = yaml_dump(equations)
 
     for v in pipe.values():
         v['model_id'] = model.id
@@ -42,7 +43,13 @@ def dag_model_start(session: Session, data: dict):
         'executors': pipe
     }
 
-    model.dag = data['dag']
+    if model.dag:
+        old_dag = dag_provider.by_id(model.dag)
+        if old_dag.name != dag.name:
+            model.dag = dag.id
+    else:
+        model.dag = dag.id
+
     provider.commit()
 
     dag_standard(

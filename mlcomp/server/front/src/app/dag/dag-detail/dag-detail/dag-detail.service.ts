@@ -42,8 +42,8 @@ export class DagDetailService extends BaseService {
         let url = `${this.url}code_download`;
         let params = new HttpParams().set('id', String(dag_id));
 
-         return this.http.get<any>(
-            url, {params: params, responseType: 'blob'}
+        return this.http.get<any>(
+            url, {params: params, responseType: 'blob' as 'json'}
         )
          .pipe(
            tap(_ => this.log('fetched archive')),

@@ -30,9 +30,9 @@ class InferMnist(Infer):
                 max_count=self.max_count
             )
 
-    def submit(self, res, folder):
-        res = res['y']
-        argmax = res.argmax(axis=1)
+    def submit(self, folder):
+        y = self.solve(self.y)
+        argmax = y.argmax(axis=1)
         pd.DataFrame(
             {
                 'ImageId': np.arange(1,
@@ -41,8 +41,8 @@ class InferMnist(Infer):
             }
         ).to_csv(f'{folder}/{self.name}.csv', index=False)
 
-    def plot(self, res):
-        res = res['y']
+    def plot(self):
+        y = self.solve(self.y)
         imgs = [
             ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8)
             for row in self.x
@@ -50,13 +50,13 @@ class InferMnist(Infer):
         attrs = [
             {
                 'attr1': p.argmax()
-            } for p in res
+            } for p in y
         ]
         builder = ClassificationReportBuilder(
             session=self.session,
             task=self.task,
             layout=self.layout,
-            preds=res,
+            preds=y,
             targets=None if self.test else self.x.y,
             imgs=imgs,
             name=self.name,

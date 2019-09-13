@@ -1,15 +1,15 @@
-from collections import defaultdict
-from copy import deepcopy
+import datetime
 
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import DagType
-from mlcomp.db.models import Model, Dag, Project
+from mlcomp.db.models import Model, Dag, Project, Task
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.config import Config
 from mlcomp.utils.io import yaml_load
-from mlcomp.utils.misc import parse_time
+from mlcomp.utils.misc import parse_time, now
 
 
 class ModelProvider(BaseDataProvider):
@@ -38,15 +38,23 @@ class ModelProvider(BaseDataProvider):
         models = paginator.all()
         models_projects = set()
         for model in models:
-            row = self.to_dict(model, rules=('-project_rel.class_names', ))
+            if not model.project_rel:
+                model.project_rel = self.query(Project).filter(
+                    Project.id == model.project).one()
+
+            row = self.to_dict(model, rules=('-project_rel.class_names',))
             res.append(row)
             models_projects.add(model.project)
 
-        projects = self.query(Project.name, Project.id). \
-            order_by(Project.id.desc()). \
-            limit(20). \
+        last_activity = func.max(Task.last_activity).label('last_activity')
+        projects = self.query(Project.name, Project.id,
+                              last_activity). \
+            join(Dag, Dag.project == Project.id, isouter=True). \
+            join(Task, isouter=True). \
+            group_by(Project.id). \
+            order_by(last_activity.desc()). \
             all()
-        projects = [{'name': name, 'id': id} for name, id in projects]
+        projects = [{'name': name, 'id': id} for name, id, _ in projects]
         return {'total': total, 'data': res, 'projects': projects}
 
     def change_dag(self, project: int, name: str, to: int):
@@ -92,6 +100,18 @@ class ModelProvider(BaseDataProvider):
             }
             for pipe in d['pipes']:
                 pipe['versions'] = versions.get(pipe['name'], [])
+                used = [v.get('used', datetime.datetime.min) for v in
+                        pipe['versions']]
+                pipe['used'] = datetime.datetime.min if len(
+                    used) == 0 else max(used)
+
+            d['pipes'] = sorted(d['pipes'], key=lambda x: x['used'],
+                                reverse=True)
+            for p in d['pipes']:
+                del p['used']
+                for v in p['versions']:
+                    if 'used' in v:
+                        del v['used']
 
             used_dag_names.add(dag.name)
             res_dags.append(d)

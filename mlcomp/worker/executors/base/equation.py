@@ -1,14 +1,15 @@
 import ast
 import operator
-from collections import OrderedDict
+import pickle
 from copy import deepcopy
-from typing import List
 
+import cv2
 import numpy as np
 import albumentations as A
 
 from torch.utils.data import Dataset
 
+from mlcomp.db.providers import ModelProvider
 from mlcomp.utils.config import parse_albu_short, Config
 from mlcomp.utils.torch import infer
 from mlcomp.worker.executors import Executor
@@ -27,9 +28,25 @@ _OP_MAP = {
 @Executor.register
 class Equation(Executor, ast.NodeVisitor):
     # noinspection PyTypeChecker
-    def __init__(self, **kwargs):
-        self.cache = dict()
+    def __init__(
+        self,
+        model_id: int,
+        suffix: str = '',
+        max_count=None,
+        part_size: int = None,
+        **kwargs
+    ):
         self.__dict__.update(kwargs)
+        self.model_id = model_id
+        name = kwargs.get('name')
+        if not name:
+            self.name = ModelProvider(self.session).by_id(self.model_id).name
+
+        self.suffix = suffix
+        self.max_count = max_count
+        self.part_size = part_size
+        self.part = None
+        self.cache = dict()
 
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
@@ -47,29 +64,46 @@ class Equation(Executor, ast.NodeVisitor):
         for i, t in enumerate(tfms):
             t = parse_albu_short(t, always_apply=True)
             tfms_albu.append(t)
-            transforms.transforms.insert(index+i, t)
+            transforms.transforms.insert(index + i, t)
         return TtaWrap(x, tfms_albu)
 
-    @staticmethod
-    def encode(v):
-        if isinstance(v, str):
-            return f'\'{v}\''
-        return str(v)
+    def adjust_part(self, part):
+        pass
 
-    def load(self, file: str, type: str = 'numpy'):
-        if type == 'numpy':
-            return np.load(file)
+    def generate_parts(self, count):
+        part_size = self.part_size or count
+        res = []
+        for i in range(0, count, part_size):
+            res.append((i, min(count, i + part_size)))
+        return res
 
-        raise Exception(f'Unknown load type = {type}')
+    def load(self, file: str = None):
+        file = file or self.name + f'_{self.suffix}'
+        file = f'data/pred/{file}'
+
+        data = pickle.load(open(file, 'rb'))
+        data = data[self.part[0]: self.part[1]]
+
+        if isinstance(data, list):
+            for row in data:
+                if type(row).__module__ == np.__name__:
+                    continue
+                if isinstance(row, list):
+                    for i, c in enumerate(row):
+                        row[i] = cv2.imdecode(c, cv2.IMREAD_GRAYSCALE)
+            data = np.array(data)
+
+        return data
 
     def torch(
         self,
         x: Dataset,
-        file: str,
+        file: str = None,
         batch_size: int = 1,
         use_logistic: bool = True,
         num_workers: int = 1
     ):
+        file = file or self.name + '.pth'
         file = f'models/{file}'
         return infer(
             x=x,
@@ -86,10 +120,12 @@ class Equation(Executor, ast.NodeVisitor):
 
     def visit_Name(self, node):
         name = node.id
-        if name in self.equations:
-            return self.solve(self.equations[name])
         attr = getattr(self, name, None)
         if attr:
+            if isinstance(attr, str):
+                res = self._solve(attr)
+                self.cache[name] = res
+                return res
             return attr
         return str(name)
 
@@ -148,7 +184,7 @@ class Equation(Executor, ast.NodeVisitor):
         kwargs = {k.arg: self.get_value(k.value) for k in node.keywords}
         return f(*args, **kwargs)
 
-    def solve(self, equation):
+    def _solve(self, equation):
         if equation is None:
             return None
 
@@ -165,12 +201,18 @@ class Equation(Executor, ast.NodeVisitor):
 
         return res
 
+    def solve(self, equation, parts):
+        for part in parts:
+            self.cache = {}
+            self.part = part
+            self.adjust_part(part)
+            yield self._solve(equation)
+
     @classmethod
     def _from_config(
         cls, executor: dict, config: Config, additional_info: dict
     ):
-        kwargs = {k: v for k, v in executor.items()}
-        return cls(**kwargs)
+        return cls(**executor)
 
 
 __all__ = ['Equation']

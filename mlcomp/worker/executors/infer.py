@@ -13,45 +13,79 @@ from mlcomp.worker.executors.base.equation import Equation
 class Infer(Equation, ABC):
     def __init__(
             self,
-            *,
-            equations: dict,
-            targets: List[str] = ('\'y\'',),
-            name: str = '\'infer\'',
-            max_count=None,
             test: bool = False,
             prepare_submit: bool = False,
             layout: str = None,
-            suffix: str = 'valid',
             plot_count: int = 0,
             **kwargs
     ):
-        super().__init__(equations, targets, name)
+        super().__init__(**kwargs)
 
-        self.max_count = self.solve(max_count)
-        self.test = self.solve(test)
-        self.prepare_submit = self.solve(prepare_submit)
-        self.layout = self.solve(layout)
-        self.suffix = self.solve(suffix)
-        self.plot_count = self.solve(plot_count)
+        self.test = test
+        self.prepare_submit = prepare_submit
+        self.layout = layout
+        self.plot_count = plot_count
 
-    def plot(self, res):
+    @abstractmethod
+    def count(self):
         pass
 
     @abstractmethod
-    def submit(self, res, folder):
+    def plot(self, preds):
+        pass
+
+    @abstractmethod
+    def key_equation(self):
+        pass
+
+    @abstractmethod
+    def save(self, preds, folder: str):
+        pass
+
+    @abstractmethod
+    def save_final(self, folder: str):
+        pass
+
+    @abstractmethod
+    def create_base(self):
+        pass
+
+    @abstractmethod
+    def submit(self, preds):
+        pass
+
+    @abstractmethod
+    def submit_final(self, folder):
+        pass
+
+    @abstractmethod
+    def adjust_part(self, part):
         pass
 
     def work(self):
-        res = super().work()
         folder = 'data/pred'
         os.makedirs(folder, exist_ok=True)
 
-        np.save(f'{folder}/{self.name}_{self.suffix}', res['y'])
+        submit_folder = 'data/submissions'
+        os.makedirs(submit_folder, exist_ok=True)
 
-        if self.test and self.prepare_submit:
-            folder = 'data/submissions'
-            os.makedirs(folder, exist_ok=True)
-            self.submit(res, folder)
+        self.create_base()
+        parts = self.generate_parts(self.count())
 
-        if self.layout:
-            self.plot(res)
+        for preds in self.solve(self.key_equation(), parts):
+            self.save(preds, folder)
+
+            if self.prepare_submit:
+                self.submit(preds)
+
+            if self.layout:
+                self.plot(preds)
+
+        self.save_final(folder)
+
+        if self.prepare_submit:
+            self.submit_final(submit_folder)
+
+
+
+

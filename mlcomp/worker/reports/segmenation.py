@@ -17,34 +17,24 @@ from mlcomp.utils.misc import now
 
 class SegmentationReportBuilder:
     def __init__(
-        self,
-        session: Session,
-        task: Task,
-        layout: str,
-        imgs: np.array,
-        preds: OrderedDict,
-        targets: np.array = None,
-        part: str = 'valid',
-        name: str = 'img_segment',
-        scores: dict = None,
-        max_img_size: Tuple[int, int] = None,
-        attrs: List[dict] = None,
-        stack_type: str = 'vertical',
-        main_metric: str = 'dice',
-        plot_count: int = 0,
-        colors: List[Tuple] = None
+            self,
+            session: Session,
+            task: Task,
+            layout: str,
+            part: str = 'valid',
+            name: str = 'img_segment',
+            max_img_size: Tuple[int, int] = None,
+            stack_type: str = 'vertical',
+            main_metric: str = 'dice',
+            plot_count: int = 0,
+            colors: List[Tuple] = None
     ):
         self.session = session
         self.task = task
         self.layout = layout
-        self.imgs = imgs
-        self.preds = preds
-        self.targets = targets
         self.part = part
         self.name = name
-        self.scores = scores or {}
         self.max_img_size = max_img_size
-        self.attrs = attrs
         self.stack_type = stack_type
         self.main_metric = main_metric
         self.colors = colors
@@ -61,6 +51,8 @@ class SegmentationReportBuilder:
         self.project = self.task_provider.project(task.id).id
         self.layout = self.layout_provider.by_name(layout)
         self.layout_dict = yaml_load(self.layout.content)
+
+        self.create_base()
 
     def create_base(self):
         report = Report(
@@ -79,23 +71,10 @@ class SegmentationReportBuilder:
         self.task.name = self.name
         self.task_provider.update()
 
-    def process_series(self, item: dict):
-        series = ReportSeries(
-            name=item['name'],
-            value=float(np.mean(self.scores.get(item['key'], [0]))),
-            epoch=0,
-            time=now(),
-            task=self.task.id,
-            part='valid',
-            stage='stage1'
-        )
-
-        self.report_series_provider.add(series)
-
     def encode_pred(self, mask: np.array):
         res = np.zeros((*mask.shape[1:], 3), dtype=np.uint8)
         for i, c in enumerate(mask):
-            c = np.repeat(c[:,:,None], 3, axis=2)
+            c = np.repeat(c[:, :, None], 3, axis=2)
             color = self.colors[i] if self.colors is not None else (
                 255, 255, 255
             )
@@ -119,65 +98,79 @@ class SegmentationReportBuilder:
 
         return img
 
-    def process_img_segment(self, item: dict):
-        report_imgs = []
-        dag = self.dag_provider.by_id(self.task.dag)
-
-        for i in range(len(self.imgs)):
-            if i >= self.plot_count:
-                break
-
-            if self.targets is not None:
-                img = self.plot_mask(self.imgs[i], self.targets[i])
-            else:
-                img = self.imgs[i]
-
-            imgs = [img]
-            for key, value in self.preds.items():
-                imgs.append(self.encode_pred(value[i]))
-
-            for j in range(len(imgs)):
-                imgs[j] = resize_saving_ratio(imgs[j], self.max_img_size)
-
-            if self.stack_type == 'horizontal':
-                img = np.hstack(imgs)
-            else:
-                img = np.vstack(imgs)
-
-            attrs = self.attrs[i] if self.attrs else {}
-
-            score = None
-            if self.targets is not None:
-                score = self.scores[self.main_metric][i]
-
-            retval, buffer = cv2.imencode('.jpg', img)
-            report_img = ReportImg(
-                group=item['name'],
-                epoch=0,
-                task=self.task.id,
-                img=buffer,
-                dag=self.task.dag,
-                part=self.part,
-                project=self.project,
-                score=score,
-                **attrs
-            )
-
-            report_imgs.append(report_img)
-            dag.img_size += report_img.size
-
-        self.dag_provider.commit()
-        self.report_img_provider.bulk_save_objects(report_imgs)
-
-    def build(self):
-        self.create_base()
-
+    def process_scores(self, scores):
         for key, item in self.layout_dict['items'].items():
             item['name'] = key
-            if item['type'] == 'series':
-                self.process_series(item)
-            elif item['type'] == 'img_segment':
-                self.process_img_segment(item)
+            if item['type'] == 'series' and item['key'] in scores:
+                series = ReportSeries(
+                    name=item['name'],
+                    value=scores[item['key']],
+                    epoch=0,
+                    time=now(),
+                    task=self.task.id,
+                    part='valid',
+                    stage='stage1'
+                )
+
+                self.report_series_provider.add(series)
+
+    def process_pred(self, imgs: np.array, preds: dict,
+                     targets: np.array = None, attrs=None, scores=None):
+        for key, item in self.layout_dict['items'].items():
+            item['name'] = key
+            if item['type'] != 'img_segment':
+                continue
+
+            report_imgs = []
+            dag = self.dag_provider.by_id(self.task.dag)
+
+            for i in range(len(imgs)):
+                if self.plot_count <= 0:
+                    break
+
+                if targets is not None:
+                    img = self.plot_mask(imgs[i], targets[i])
+                else:
+                    img = imgs[i]
+
+                imgs_add = [img]
+                for key, value in preds.items():
+                    imgs_add.append(self.encode_pred(value[i]))
+
+                for j in range(len(imgs_add)):
+                    imgs_add[j] = resize_saving_ratio(imgs_add[j],
+                                                      self.max_img_size)
+
+                if self.stack_type == 'horizontal':
+                    img = np.hstack(imgs_add)
+                else:
+                    img = np.vstack(imgs_add)
+
+                attr = attrs[i] if attrs else {}
+
+                score = None
+                if targets is not None:
+                    score = scores[self.main_metric][i]
+
+                retval, buffer = cv2.imencode('.jpg', img)
+                report_img = ReportImg(
+                    group=item['name'],
+                    epoch=0,
+                    task=self.task.id,
+                    img=buffer,
+                    dag=self.task.dag,
+                    part=self.part,
+                    project=self.project,
+                    score=score,
+                    **attr
+                )
+
+                self.plot_count -= 1
+                report_imgs.append(report_img)
+                dag.img_size += report_img.size
+
+            self.dag_provider.commit()
+            self.report_img_provider.bulk_save_objects(report_imgs)
 
 
 __all__ = ['SegmentationReportBuilder']

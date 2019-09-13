@@ -12,7 +12,7 @@
 <mat-form-field style="width: 150px" *ngIf="data.dag">
     <mat-label>Pipe</mat-label>
     <mat-select
-            (ngModelChange)="data.pipe=$event;"
+            (ngModelChange)="data.pipe=$event; pipe_changed()"
             [(ngModel)]="data.pipe">
         <mat-option *ngFor="let pipe of data.dag.pipes" [value]="pipe">
             {{pipe.name}}

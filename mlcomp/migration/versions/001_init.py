@@ -104,7 +104,7 @@ report = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('config', String(4000), nullable=False),
     Column('time', TIMESTAMP, nullable=False, default='now()'),
-    Column('name', String(100), nullable=False),
+    Column('name', String(300), nullable=False),
     Column('project', Integer, nullable=False),
     Column('layout', String(100), nullable=False)
 )
@@ -179,7 +179,7 @@ step = Table(
 task = Table(
     'task', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', String(180), nullable=False),
+    Column('name', String(300), nullable=False),
     Column('status', Integer, nullable=False),
     Column('started', TIMESTAMP),
     Column('finished', TIMESTAMP),
@@ -237,7 +237,7 @@ model = Table(
     Column('dag', Integer),
     Column('project', Integer, nullable=False),
     Column('created', TIMESTAMP, nullable=False),
-    Column('equations', String(20000), nullable=False)
+    Column('equations', String(2000000), nullable=False)
 )
 
 

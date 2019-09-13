@@ -13,7 +13,7 @@ def cell_name(cell: dict):
     for k, v in c.items():
         parts.append(f'{k}={v}')
 
-    return ' '.join(parts)
+    return ' '.join(parts)[-300:]
 
 
 def grid_cells(grid: List):

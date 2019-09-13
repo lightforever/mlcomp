@@ -4,12 +4,11 @@ import {DagService} from '../dag.service';
 import {Location} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
 import {DomSanitizer} from '@angular/platform-browser';
-import {MatIconRegistry} from '@angular/material';
-import {MessageService} from '../../message.service';
+import {MatIconRegistry, MatDialog} from '@angular/material';
 import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {Helpers} from "../../helpers";
-import {ReportService} from "../../report/report.service";
+import {DialogComponent} from "../../dialog/dialog.component";
 
 @Component({
     selector: 'app-dags',
@@ -64,8 +63,7 @@ export class DagsComponent extends Paginator<Dag> {
                 protected  route: ActivatedRoute,
                 iconRegistry: MatIconRegistry,
                 sanitizer: DomSanitizer,
-                private message_service: MessageService,
-                private report_service: ReportService
+                public dialog: MatDialog
     ) {
         super(service, location);
 
@@ -136,7 +134,7 @@ export class DagsComponent extends Paginator<Dag> {
             });
 
         this.data_updated.subscribe(res => {
-            if(!res || !res.projects){
+            if (!res || !res.projects) {
                 return;
             }
             self.projects = res.projects;
@@ -156,11 +154,11 @@ export class DagsComponent extends Paginator<Dag> {
             {queryParams: {status: status.name}});
     }
 
-    start(element: any){
-        if(!this.can_start(element)){
+    start(element: any) {
+        if (!this.can_start(element)) {
             return;
         }
-        this.service.start(element.id).subscribe(data =>{
+        this.service.start(element.id).subscribe(data => {
             this.change.emit();
         });
     }
@@ -169,8 +167,7 @@ export class DagsComponent extends Paginator<Dag> {
         if (element.success) {
             return;
         }
-        if(!this.has_unfinished(element))
-        {
+        if (!this.has_unfinished(element)) {
             return;
         }
         this.service.stop(element.id).subscribe(data =>
@@ -179,7 +176,7 @@ export class DagsComponent extends Paginator<Dag> {
 
 
     can_start(element: Dag) {
-        if(this.has_unfinished(element)){
+        if (this.has_unfinished(element)) {
             return false;
         }
 
@@ -198,16 +195,41 @@ export class DagsComponent extends Paginator<Dag> {
         let self = this;
         if (!element.finished) {
             this.service.stop(element.id).subscribe(data => {
-                this.service.remove(element.id).subscribe(data =>
-                    self.change.emit()
-                );
+                const dialogRef = this.dialog.open(DialogComponent, {
+                    width: '550px', height: '200px',
+                    data: {
+                        'message': 'The all content will be deleted. ' +
+                            'Do you want to continue?'
+                    }
+                });
+
+                dialogRef.afterClosed().subscribe(result => {
+                    if (result) {
+                        this.service.remove(element.id).subscribe(res => {
+                            self.change.emit();
+                        });
+                    }
+                })
+
             });
             return;
         }
 
-        this.service.remove(element.id).subscribe(data =>
-            self.change.emit()
-        );
+        const dialogRef = this.dialog.open(DialogComponent, {
+            width: '550px', height: '200px',
+            data: {
+                'message': 'The all content will be deleted. ' +
+                    'Do you want to continue?'
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.remove(element.id).subscribe(res => {
+                    self.change.emit();
+                });
+            }
+        })
 
     }
 
@@ -275,7 +297,7 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     report_link(element: any) {
-        if(this.report){
+        if (this.report) {
             return null;
         }
 
