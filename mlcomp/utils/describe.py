@@ -9,6 +9,7 @@ from IPython import display
 import matplotlib.pyplot as plt
 import networkx as nx
 from matplotlib.ticker import MaxNLocator
+import pandas as pd
 
 from mlcomp.db.enums import TaskStatus, ComponentType
 from mlcomp.db.providers import TaskProvider, LogProvider, \
@@ -20,7 +21,7 @@ warnings.simplefilter('ignore')
 
 def describe_tasks(dag: int, axis):
     provider = TaskProvider()
-    columns = ['Name', 'Started', 'Duration', 'Step', 'Status']
+    columns = ['Id', 'Started', 'Duration', 'Step', 'Status']
     cells = []
     cells_colours = []
 
@@ -65,19 +66,22 @@ def describe_tasks(dag: int, axis):
         status = to_snake(TaskStatus(task.status).name)
         status_color = status_colors[status]
 
-        task_cells = [task.name, started, duration, task.current_step or '1',
-                      status]
+        task_cells = [
+            str(task.id), started, duration, task.current_step or '1', status
+        ]
         task_colors = ['white', 'white', 'white', 'white', status_color]
         cells.append(task_cells)
         cells_colours.append(task_colors)
 
-    table = axis.table(cellText=cells,
-                       colLabels=columns,
-                       cellColours=cells_colours,
-                       cellLoc='center',
-                       colWidths=[0.2, 0.3, 0.4, 0.1, 0.2],
-                       bbox=[0, 0, 1.0, 1.0],
-                       loc='center')
+    table = axis.table(
+        cellText=cells,
+        colLabels=columns,
+        cellColours=cells_colours,
+        cellLoc='center',
+        colWidths=[0.2, 0.3, 0.4, 0.1, 0.2],
+        bbox=[0, 0, 1.0, 1.0],
+        loc='center'
+    )
 
     table.auto_set_font_size(False)
     table.set_fontsize(14)
@@ -89,18 +93,23 @@ def describe_tasks(dag: int, axis):
     return finish
 
 
-def describe_logs(dag: int, axis, max_log_text: int = None,
-                  log_count: int = 5, col_withds: List[float] = None):
+def describe_logs(
+        dag: int,
+        axis,
+        max_log_text: int = None,
+        log_count: int = 5,
+        col_withds: List[float] = None
+):
     columns = ['Component', 'Level', 'Task', 'Time', 'Text']
     provider = LogProvider()
-    logs = provider.last(log_count)
+    logs = provider.last(log_count, dag=dag)
 
     res = []
 
     cells = []
     cells_colours = []
 
-    for log, task_name in logs:
+    for log, task_id in logs:
         component = to_snake(ComponentType(log.component).name)
 
         level = log.level
@@ -110,9 +119,11 @@ def describe_logs(dag: int, axis, max_log_text: int = None,
         message = log.message
         if max_log_text:
             message = message[:max_log_text]
-        log_cells = [component, level, task_name,
-                     log.time.strftime('%m.%d %H:%M:%S'),
-                     message]
+        log_cells = [
+            component, level,
+            str(task_id),
+            log.time.strftime('%m.%d %H:%M:%S'), message
+        ]
 
         cells.append(log_cells)
 
@@ -127,13 +138,15 @@ def describe_logs(dag: int, axis, max_log_text: int = None,
 
     col_withds = col_withds or [0.2, 0.1, 0.25, 0.2, 0.45]
     if len(cells) > 0:
-        table = axis.table(cellText=cells,
-                           colLabels=columns,
-                           cellColours=cells_colours,
-                           cellLoc='center',
-                           colWidths=col_withds,
-                           bbox=[0, 0, 1, 1.0],
-                           loc='center')
+        table = axis.table(
+            cellText=cells,
+            colLabels=columns,
+            cellColours=cells_colours,
+            cellLoc='center',
+            colWidths=col_withds,
+            bbox=[0, 0, 1, 1.0],
+            loc='center'
+        )
 
         table.auto_set_font_size(False)
         table.set_fontsize(14)
@@ -165,7 +178,7 @@ def describe_dag(dag, axis):
     labels = dict()
     for n in graph['nodes']:
         G.add_node(n['id'])
-        labels[n['id']] = n['name']
+        labels[n['id']] = n['id']
         node_color.append(status_colors[n['status']])
 
     edges = []
@@ -175,16 +188,28 @@ def describe_dag(dag, axis):
         edge_color.append(status_colors[e['status']])
 
     pos = nx.spring_layout(G, seed=0)
-    nx.draw_networkx_nodes(G, pos,
-                           node_color=node_color,
-                           ax=axis,
-                           node_size=2000)
-    nx.draw_networkx_labels(G, pos, labels, ax=axis, with_labels=True,
-                            font_color='orange',
-                            font_weight='bold',
-                            font_size=18)
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=edge_color,
-                           arrows=True, arrowsize=80, ax=axis)
+    nx.draw_networkx_nodes(
+        G, pos, node_color=node_color, ax=axis, node_size=2000
+    )
+    nx.draw_networkx_labels(
+        G,
+        pos,
+        labels,
+        ax=axis,
+        with_labels=True,
+        font_color='orange',
+        font_weight='bold',
+        font_size=18
+    )
+    nx.draw_networkx_edges(
+        G,
+        pos,
+        edgelist=edges,
+        edge_color=edge_color,
+        arrows=True,
+        arrowsize=80,
+        ax=axis
+    )
 
     axis.set_xticks([])
     axis.axis('off')
@@ -196,8 +221,10 @@ def describe_resources(computer: str, axis):
     res = provider.get({})['data']
     res = [r for r in res if r['name'] == computer][0]
     usage = res['usage_history']
-    x = [datetime.datetime.strptime(t, provider.datetime_format) for t in
-         usage['time']]
+    x = [
+        datetime.datetime.strptime(t, provider.datetime_format)
+        for t in usage['time']
+    ]
 
     for item in usage['mean']:
         if item['name'] == 'disk':
@@ -210,18 +237,14 @@ def describe_resources(computer: str, axis):
     axis.legend(loc='lower left')
 
 
-def describe_metrics(dag: int, metrics: List[str], axis, last_n_epoch=None):
-    metrics = metrics or []
-
-    series_provider = ReportSeriesProvider()
-    series = series_provider.by_dag(dag, metrics)
-
+def describe_metrics(series, axis, last_n_epoch=None):
     for i in range(len(axis)):
         ax = axis[i]
         if i >= len(series):
             ax.axis('off')
             continue
 
+        ax = axis[i]
         ax.axis('on')
         task_name, metric, groups = series[i]
 
@@ -239,24 +262,63 @@ def describe_metrics(dag: int, metrics: List[str], axis, last_n_epoch=None):
         ax.legend()
 
 
-def describe(dag: int, metrics=None, last_n_epoch=None,
-             computer: str = None, max_log_text: int = 45,
-             fig_size=(12, 10), grid_spec: dict = None,
-             log_count=5, log_col_widths: List[float] = None,
-             wait=True, wait_interval=5):
+def describe_task_names(dag: int):
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.expand_frame_repr', False)
+    pd.set_option('max_colwidth', -1)
+
+    provider = TaskProvider()
+    tasks = provider.by_dag(dag)
+    return pd.DataFrame([{'id': t.id, 'name': t.name} for t in tasks])
+
+
+def describe(
+        dag: int,
+        metrics=None,
+        last_n_epoch=None,
+        computer: str = None,
+        max_log_text: int = 45,
+        fig_size=(12, 10),
+        grid_spec: dict = None,
+        log_count=5,
+        log_col_widths: List[float] = None,
+        wait=True,
+        wait_interval=5,
+        task_with_metric_count=0
+):
     grid_spec = grid_spec or {}
     metrics = metrics or []
-    size = (4 + ceil(len(metrics) / 2), 2)
+
+    series_count = task_with_metric_count * len(metrics)
+    size = (4 + ceil(series_count / 2), 2)
     default_grid_spec = {
-        'tasks': {'rowspan': 1, 'colspan': 2, 'loc': (0, 0)},
-        'dag': {'rowspan': 1, 'colspan': 2, 'loc': (1, 0)},
-        'logs': {'rowspan': 1, 'colspan': 2, 'loc': (2, 0)},
-        'resources': {'rowspan': 1, 'colspan': 2, 'loc': (3, 0)},
+        'tasks': {
+            'rowspan': 1,
+            'colspan': 2,
+            'loc': (0, 0)
+        },
+        'dag': {
+            'rowspan': 1,
+            'colspan': 2,
+            'loc': (1, 0)
+        },
+        'logs': {
+            'rowspan': 1,
+            'colspan': 2,
+            'loc': (2, 0)
+        },
+        'resources': {
+            'rowspan': 1,
+            'colspan': 2,
+            'loc': (3, 0)
+        },
         'size': size
     }
+
     loc = (4, 0)
-    for m in metrics:
-        default_grid_spec[m] = {'rowspan': 1, 'colspan': 1, 'loc': loc}
+    for i in range(series_count):
+        default_grid_spec[i] = {'rowspan': 1, 'colspan': 1,
+                                'loc': loc}
         if loc[1] == 1:
             loc = (loc[0] + 1, 0)
         else:
@@ -268,11 +330,13 @@ def describe(dag: int, metrics=None, last_n_epoch=None,
     fig = plt.figure(figsize=fig_size)
 
     def grid_cell(spec: dict):
-        return plt.subplot2grid(size, spec['loc'],
-                                colspan=spec['colspan'],
-                                rowspan=spec['rowspan'],
-                                fig=fig
-                                )
+        return plt.subplot2grid(
+            size,
+            spec['loc'],
+            colspan=spec['colspan'],
+            rowspan=spec['rowspan'],
+            fig=fig
+        )
 
     while True:
         computer = computer or gethostname()
@@ -284,18 +348,21 @@ def describe(dag: int, metrics=None, last_n_epoch=None,
 
         finish = describe_tasks(dag, task_axis)
         describe_dag(dag, dag_axis)
-        errors = describe_logs(dag, axis=logs_axis,
-                               max_log_text=max_log_text,
-                               log_count=log_count,
-                               col_withds=log_col_widths)
+        errors = describe_logs(
+            dag,
+            axis=logs_axis,
+            max_log_text=max_log_text,
+            log_count=log_count,
+            col_withds=log_col_widths
+        )
         describe_resources(computer=computer, axis=resources_axis)
 
-        metric_axis = [grid_cell(grid_spec[m]) for m in metrics]
+        series_provider = ReportSeriesProvider()
+        series = series_provider.by_dag(dag, metrics)
 
-        describe_metrics(dag, metrics,
-                         last_n_epoch=last_n_epoch,
-                         axis=metric_axis
-                         )
+        metric_axis = [grid_cell(grid_spec[i]) for i, s in enumerate(series)]
+
+        describe_metrics(series, last_n_epoch=last_n_epoch, axis=metric_axis)
 
         plt.tight_layout()
 

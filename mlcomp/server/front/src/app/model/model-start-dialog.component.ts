@@ -11,6 +11,7 @@ import {Helpers} from "../helpers";
 })
 export class ModelStartDialogComponent implements OnInit {
     error: string;
+    success: boolean;
     @ViewChild('textarea') textarea;
 
     constructor(
@@ -21,7 +22,7 @@ export class ModelStartDialogComponent implements OnInit {
 
     }
 
-    on_ok_click(): void {
+    on_ok_click(close: boolean = true): void {
         if (this.data && this.data.pipe && this.data.pipe.versions) {
             let version = this.data.pipe.versions[0];
             if (version.name == 'last') {
@@ -33,7 +34,12 @@ export class ModelStartDialogComponent implements OnInit {
         this.service.start_end(this.data).subscribe(res => {
             this.error = res.error;
             if (res.success) {
-                this.dialogRef.close();
+                if(close) {
+                    this.dialogRef.close();
+                }
+                else {
+                    this.success = true;
+                }
             }
         });
     }
@@ -100,6 +106,8 @@ export class ModelStartDialogComponent implements OnInit {
         if (!this.data.pipe || !this.data.pipe.version) {
             return;
         }
+        this.success = false;
+
         if(event.ctrlKey && event.key != 'v'){
             return;
         }

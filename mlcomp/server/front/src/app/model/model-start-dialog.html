@@ -47,14 +47,14 @@
 </mat-form-field>
 
 <div mat-dialog-content *ngIf="data.pipe && data.pipe.version">
-    <mat-form-field style="width: 600px">
+    <mat-form-field style="width: 1000px">
         <mat-label>Additional info</mat-label>
         <textarea
                 #textarea
                 matInput
                 [(ngModel)]="data.pipe.version.equations"
                 (keydown)="key_down($event)"
-                style="height:550px;width: 800px">
+                style="height:550px;width: 1000px">
 
       </textarea>
     </mat-form-field>
@@ -64,11 +64,19 @@
     {{error}}
 </pre>
 
+<div style="color: green" *ngIf="success">Success</div>
+
 <div mat-dialog-actions>
     <button mat-button (click)="on_cancel_click()">Cancel</button>
+
     <button mat-button
             (click)="on_ok_click()"
             cdkFocusInitial>
         Ok
+    </button>
+
+    <button mat-button
+            (click)="on_ok_click(false)">
+        Ok(don't close)
     </button>
 </div>

@@ -1,3 +1,6 @@
+import pickle
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 
@@ -13,16 +16,17 @@ from experiment import Experiment
 @Executor.register
 class InferMnist(Infer):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
+        cache_names = ['y']
+        super().__init__(cache_names=cache_names, layout='img_segment',
+                         **kwargs)
         if self.test:
-            self.x = MnistDataset(
+            self.x_source = MnistDataset(
                 file='data/test.csv',
                 transforms=Experiment.get_test_transforms(),
                 max_count=self.max_count,
             )
         else:
-            self.x = MnistDataset(
+            self.x_source = MnistDataset(
                 file='data/train.csv',
                 fold_csv='data/fold.csv',
                 is_test=True,
@@ -30,19 +34,44 @@ class InferMnist(Infer):
                 max_count=self.max_count
             )
 
-    def submit(self, folder):
-        y = self.solve(self.y)
-        argmax = y.argmax(axis=1)
-        pd.DataFrame(
-            {
-                'ImageId': np.arange(1,
-                                     len(argmax) + 1),
-                'Label': argmax
-            }
-        ).to_csv(f'{folder}/{self.name}.csv', index=False)
+        self.builder = None
+        self.x = None
+        self.res = []
+        self.submit_res = []
 
-    def plot(self):
-        y = self.solve(self.y)
+    def create_base(self):
+        self.builder = ClassificationReportBuilder(
+            session=self.session,
+            task=self.task,
+            layout=self.layout,
+            name=self.name,
+            plot_count=self.plot_count
+        )
+
+    def count(self):
+        return len(self.x_source)
+
+    def adjust_part(self, part):
+        self.x = deepcopy(self.x_source)
+        self.x.data = self.x.data[part[0]:part[1]]
+
+    def save(self, preds, folder: str):
+        self.res.extend(preds)
+
+    def save_final(self, folder):
+        pickle.dump(np.array(self.res), open(f'{folder}/{self.name}.p', 'wb'))
+
+    def submit(self, preds):
+        argmax = preds.argmax(axis=1)
+        self.submit_res.extend(
+            [{'ImageId': len(self.submit_res) + i, 'Label': p} for i, p in
+             enumerate(argmax)])
+
+    def submit_final(self, folder):
+        pd.DataFrame(self.submit_res). \
+            to_csv(f'{folder}/{self.name}.csv', index=False)
+
+    def _plot_main(self, preds):
         imgs = [
             ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8)
             for row in self.x
@@ -50,17 +79,14 @@ class InferMnist(Infer):
         attrs = [
             {
                 'attr1': p.argmax()
-            } for p in y
+            } for p in preds
         ]
-        builder = ClassificationReportBuilder(
-            session=self.session,
-            task=self.task,
-            layout=self.layout,
-            preds=y,
-            targets=None if self.test else self.x.y,
+
+        self.builder.process_pred(
             imgs=imgs,
-            name=self.name,
-            attrs=attrs,
-            plot_count=self.plot_count
+            preds=preds,
+            attrs=attrs
         )
-        builder.build()
+
+    def plot(self, preds):
+        self._plot_main(preds)

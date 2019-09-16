@@ -1,5 +1,5 @@
 import pickle
-from typing import Tuple, List
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -25,28 +25,18 @@ class ClassificationReportBuilder:
         session: Session,
         task: Task,
         layout: str,
-        imgs: np.array,
-        preds: np.array,
-        targets: np.array = None,
         part: str = 'valid',
         name: str = 'img_classify',
-        scores: dict = None,
         max_img_size: Tuple[int, int] = None,
-        attrs: List[dict] = None,
         main_metric: str = 'accuracy',
         plot_count: int = 0
     ):
         self.session = session
         self.task = task
         self.layout = layout
-        self.imgs = imgs
-        self.preds = preds
-        self.targets = targets
         self.part = part
-        self.name = name
-        self.scores = scores or {}
+        self.name = name or 'img_classify'
         self.max_img_size = max_img_size
-        self.attrs = attrs
         self.main_metric = main_metric
         self.plot_count = plot_count
 
@@ -76,91 +66,90 @@ class ClassificationReportBuilder:
         )
 
         self.task.report = report.id
-        self.task.name = self.name
         self.task_provider.update()
 
-    def process_series(self, item: dict):
-        # noinspection PyTypeChecker
-        series = ReportSeries(
-            name=item['name'],
-            value=float(np.mean(self.scores.get(item['key'], [0]))),
-            epoch=0,
-            time=now(),
-            task=self.task.id,
-            part='valid',
-            stage='stage1'
-        )
-
-        self.report_series_provider.add(series)
-
-    def process_img_classify(self, item: dict):
-        report_imgs = []
-        dag = self.dag_provider.by_id(self.task.dag)
-
-        for i in range(len(self.imgs)):
-            if i >= self.plot_count:
-                break
-
-            img = resize_saving_ratio(self.imgs[i], self.max_img_size)
-            pred = self.preds[i]
-            attrs = self.attrs[i] if self.attrs else {}
-
-            y = None
-            score = None
-            if self.targets is not None:
-                y = self.targets[i]
-                score = float(self.scores[self.main_metric][i])
-
-            y_pred = pred.argmax()
-            retval, buffer = cv2.imencode('.jpg', img)
-            report_img = ReportImg(
-                group=item['name'],
-                epoch=0,
-                task=self.task.id,
-                img=buffer,
-                dag=self.task.dag,
-                part=self.part,
-                project=self.project,
-                y_pred=y_pred,
-                y=y,
-                score=score,
-                **attrs
-            )
-
-            report_imgs.append(report_img)
-            dag.img_size += report_img.size
-
-        self.dag_provider.commit()
-        self.report_img_provider.bulk_save_objects(report_imgs)
-
-        if self.targets is not None and item.get('confusion_matrix'):
-            matrix = confusion_matrix(
-                self.targets,
-                self.preds.argmax(axis=1),
-                labels=np.arange(self.preds.shape[1])
-            )
-            matrix = np.array(matrix)
-            c = {'data': matrix}
-            obj = ReportImg(
-                group=item['name'] + '_confusion',
-                epoch=0,
-                task=self.task.id,
-                img=pickle.dumps(c),
-                project=self.project,
-                dag=self.task.dag,
-                part=self.part
-            )
-            self.report_img_provider.add(obj)
-
-    def build(self):
-        self.create_base()
-
+    def process_scores(self, scores):
         for key, item in self.layout_dict['items'].items():
             item['name'] = key
-            if item['type'] == 'series':
-                self.process_series(item)
-            elif item['type'] == 'img_classify':
-                self.process_img_classify(item)
+            if item['type'] == 'series' and item['key'] in scores:
+                series = ReportSeries(
+                    name=item['name'],
+                    value=scores[item['key']],
+                    epoch=0,
+                    time=now(),
+                    task=self.task.id,
+                    part='valid',
+                    stage='stage1'
+                )
+
+                self.report_series_provider.add(series)
+
+    def process_pred(self, imgs: np.array, preds: np.array,
+                     targets: np.array = None, attrs=None, scores=None):
+        for key, item in self.layout_dict['items'].items():
+            item['name'] = key
+            if item['type'] != 'img_classify':
+                continue
+
+            report_imgs = []
+            dag = self.dag_provider.by_id(self.task.dag)
+
+            for i in range(len(imgs)):
+                if i >= self.plot_count:
+                    break
+
+                img = resize_saving_ratio(imgs[i], self.max_img_size)
+                pred = preds[i]
+                attrs = attrs[i] if attrs else {}
+
+                y = None
+                score = None
+                if targets is not None:
+                    y = targets[i]
+                    score = float(scores[self.main_metric][i])
+
+                y_pred = pred.argmax()
+                retval, buffer = cv2.imencode('.jpg', img)
+                report_img = ReportImg(
+                    group=item['name'],
+                    epoch=0,
+                    task=self.task.id,
+                    img=buffer,
+                    dag=self.task.dag,
+                    part=self.part,
+                    project=self.project,
+                    y_pred=y_pred,
+                    y=y,
+                    score=score,
+                    **attrs
+                )
+
+                report_imgs.append(report_img)
+                dag.img_size += report_img.size
+
+            self.dag_provider.commit()
+            self.report_img_provider.bulk_save_objects(report_imgs)
+
+            if targets is not None and item.get('confusion_matrix'):
+                matrix = confusion_matrix(
+                    targets,
+                    preds.argmax(axis=1),
+                    labels=np.arange(preds.shape[1])
+                )
+                matrix = np.array(matrix)
+                c = {'data': matrix}
+                obj = ReportImg(
+                    group=item['name'] + '_confusion',
+                    epoch=0,
+                    task=self.task.id,
+                    img=pickle.dumps(c),
+                    project=self.project,
+                    dag=self.task.dag,
+                    part=self.part
+                )
+                self.report_img_provider.add(obj)
+
+            self.plot_count -= 1
 
 
 __all__ = ['ClassificationReportBuilder']

@@ -77,7 +77,7 @@ class Submit(Equation):
         self.kernel_suffix = kernel_suffix
         self.predict_column = predict_column
         self.message = message or f'model_id = {self.model_id}'
-        self.file = f'data/submissions/{self.name}.csv'
+        self.file = f'data/submissions/{self.name}_{self.suffix}.csv'
         self.file_name = os.path.basename(self.file)
 
         assert self.submit_type in ['file', 'kernel']

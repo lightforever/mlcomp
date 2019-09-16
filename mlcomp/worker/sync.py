@@ -96,26 +96,29 @@ class FileSync:
 
                 for c, project, tasks in task_synced_provider.for_computer(
                         computer.name):
-                    if c.name not in computers_names:
-                        self.logger.info(f'Computer = {c.name} '
-                                         f'is offline. Can not sync',
-                                         ComponentType.WorkerSupervisor,
-                                         hostname)
-                        continue
+                    if c.sync_with_this_computer:
+                        if c.name not in computers_names:
+                            self.logger.info(f'Computer = {c.name} '
+                                             f'is offline. Can not sync',
+                                             ComponentType.WorkerSupervisor,
+                                             hostname)
+                            continue
 
-                    if c.syncing_computer:
-                        continue
+                        if c.syncing_computer:
+                            continue
 
-                    excluded = list(map(str,
-                                        yaml_load(project.ignore_folders)))
-                    folders_excluded = [
-                        [join('data', project.name), excluded],
-                        [join('models', project.name), []]
-                    ]
+                        excluded = list(map(str,
+                                            yaml_load(project.ignore_folders)))
+                        folders_excluded = [
+                            [join('data', project.name), excluded],
+                            [join('models', project.name), []]
+                        ]
 
-                    computer.syncing_computer = c.name
-                    provider.update()
-                    sync_directed(self.session, c, computer, folders_excluded)
+                        computer.syncing_computer = c.name
+                        provider.update()
+
+                        sync_directed(self.session, c, computer,
+                                      folders_excluded)
 
                     for t in tasks:
                         task_synced_provider.add(

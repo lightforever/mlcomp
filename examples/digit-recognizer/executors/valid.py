@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import cv2
 
@@ -13,22 +15,41 @@ from experiment import Experiment
 class ValidMnist(Valid):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.x = MnistDataset(
+        self.x_source = MnistDataset(
             file='data/train.csv',
             fold_csv='data/fold.csv',
             is_test=True,
             max_count=self.max_count,
             transforms=Experiment.get_test_transforms()
         )
+        self.builder = None
+        self.x = None
+        self.scores = []
 
-    def score(self):
-        # noinspection PyUnresolvedReferences
-        res = self.solve(self.y)
-        scores = res[np.arange(len(self.x)), self.x.y]
-        return np.mean(scores), scores
+    def create_base(self):
+        self.builder = ClassificationReportBuilder(
+            session=self.session,
+            task=self.task,
+            layout=self.layout,
+            name=self.name,
+            plot_count=self.plot_count
+        )
 
-    def plot(self, scores):
-        res = self.solve(self.y)
+    def count(self):
+        return len(self.x_source)
+
+    def score(self, preds):
+        res = preds[np.arange(len(self.x)), self.x.y]
+        self.scores.extend(res)
+
+    def score_final(self):
+        return np.mean(self.scores)
+
+    def adjust_part(self, part):
+        self.x = deepcopy(self.x_source)
+        self.x.data = self.x.data[part[0]:part[1]]
+
+    def plot(self, preds, score):
         imgs = [
             cv2.cvtColor(
                 ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8),
@@ -40,19 +61,15 @@ class ValidMnist(Valid):
             {
                 'attr1': p.argmax(),
                 'attr2': t
-            } for p, t in zip(res, self.x.y)
+            } for p, t in zip(preds, self.x.y)
         ]
 
-        builder = ClassificationReportBuilder(
-            session=self.session,
-            layout=self.layout,
-            preds=res,
-            targets=self.x.y,
-            task=self.task,
+        self.builder.process_pred(
             imgs=imgs,
-            scores={'accuracy': scores},
-            name=self.name,
-            attrs=attrs,
-            plot_count=self.plot_count
+            preds=preds,
+            targets=self.x.y,
+            attrs=attrs
         )
-        builder.build()
+
+    def plot_final(self, score):
+        self.builder.process_scores({'accuracy': score})

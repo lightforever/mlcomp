@@ -40,7 +40,8 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
 
     for k, v in list(source.items()):
         if isinstance(v, dict):
-            source.update({k + sep + kk: v for kk in dict_flatten(v)})
+            source.update(
+                {k + sep + kk: vv for kk, vv in dict_flatten(v).items()})
 
     for k, v in source.items():
         if len(mapping[k]) == 0:
@@ -61,6 +62,17 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
         target_flatten[key] = v
 
     return dict_unflatten(target_flatten)
+
+
+def dict_from_list_str(params):
+    params = dict(p.split(':') for p in params)
+    for k, v in params.items():
+        if v.isnumeric():
+            if '.' in v:
+                params[k] = float(v)
+            else:
+                params[k] = int(v)
+    return params
 
 
 def parse_albu(configs: List[dict]):
@@ -84,6 +96,8 @@ def parse_albu_short(config, always_apply=False):
             return A.HorizontalFlip(always_apply=always_apply)
         if config == 'vflip':
             return A.VerticalFlip(always_apply=always_apply)
+        if config == 'transpose':
+            return A.Transpose(always_apply=always_apply)
 
         raise Exception(f'Unknwon augmentation {config}')
     assert type(config) == dict

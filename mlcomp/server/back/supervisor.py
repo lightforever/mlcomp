@@ -80,6 +80,7 @@ class SupervisorBuilder:
             computer['cpu_total'] = computer['cpu']
             computer['memory_total'] = computer['memory']
             computer['gpu_total'] = len(computer['gpu'])
+            computer['can_process_tasks'] = computer['can_process_tasks']
 
         for task in self.provider.by_status(
                 TaskStatus.Queued, TaskStatus.InProgress
@@ -169,6 +170,9 @@ class SupervisorBuilder:
 
     def _process_task_valid_computer(self, task: Task, c: dict,
                                      single_node: bool):
+        if not c['can_process_tasks']:
+            return 'this computer can not process tasks'
+
         if task.computer is not None and task.computer != c['name']:
             return 'name set in the config!= name of this computer'
 

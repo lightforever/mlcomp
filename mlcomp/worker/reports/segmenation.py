@@ -31,7 +31,7 @@ class SegmentationReportBuilder:
         self.task = task
         self.layout = layout
         self.part = part
-        self.name = name
+        self.name = name or 'img_segment'
         self.max_img_size = max_img_size
         self.stack_type = stack_type
         self.main_metric = main_metric
@@ -66,7 +66,6 @@ class SegmentationReportBuilder:
         )
 
         self.task.report = report.id
-        self.task.name = self.name
         self.task_provider.update()
 
     def encode_pred(self, mask: np.array):

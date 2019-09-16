@@ -7,6 +7,9 @@ from catalyst.contrib.models.segmentation import (
 from mlcomp.contrib.criterion import RingLoss
 from mlcomp.contrib.catalyst.callbacks.inference import InferBestCallback
 from mlcomp.contrib.catalyst.optim import OneCycleCosineAnnealLR
+from mlcomp.contrib.model.segmentation_model_pytorch import \
+            SegmentationModelPytorch
+from mlcomp.contrib.model import Pretrained
 
 
 def register():
@@ -17,11 +20,7 @@ def register():
     registry.Scheduler(OneCycleCosineAnnealLR)
 
     # classification
-    try:
-        from mlcomp.contrib.model import Pretrained
-        registry.Model(Pretrained)
-    except Exception:
-        pass
+    registry.Model(Pretrained)
 
     # segmentation
     registry.Model(Unet)
@@ -35,12 +34,7 @@ def register():
     registry.Model(PSPnet)
     registry.Model(ResNetLinknet)
 
-    try:
-        from mlcomp.contrib.model.segmentation_model_pytorch import \
-            SegmentationModelPytorch
-        registry.Model(SegmentationModelPytorch)
-    except Exception:
-        pass
+    registry.Model(SegmentationModelPytorch)
 
 
 __all__ = ['register']

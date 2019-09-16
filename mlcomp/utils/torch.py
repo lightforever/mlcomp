@@ -5,7 +5,7 @@ import torch
 from torch.jit import load
 from torch.utils.data import DataLoader, Dataset
 
-from mlcomp.worker.executors.base.tta_wrap import TtaWrap
+from mlcomp.contrib.transform.tta import TtaWrap
 
 
 def _infer_batch(model, loader: DataLoader, use_logistic):
@@ -18,9 +18,9 @@ def _infer_batch(model, loader: DataLoader, use_logistic):
         else:
             p = torch.softmax(logits, 1)
 
-        p = p.detach().cpu().numpy()
         if isinstance(loader.dataset, TtaWrap):
             p = loader.dataset.inverse(p)
+        p = p.detach().cpu().numpy()
 
         yield {'prob': p, 'count': p.shape[0], **batch}
 
@@ -36,9 +36,9 @@ def _infer(model, loader: DataLoader, use_logistic):
         else:
             p = torch.softmax(logits, 1)
 
-        p = p.detach().cpu().numpy()
         if isinstance(loader.dataset, TtaWrap):
             p = loader.dataset.inverse(p)
+        p = p.detach().cpu().numpy()
 
         pred.append(p)
 

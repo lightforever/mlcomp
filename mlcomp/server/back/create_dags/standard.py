@@ -213,7 +213,7 @@ class DagStandardBuilder:
                             names.append(cell_name)
                             infos.append({'grid_cell': i})
                     else:
-                        names.append(k)
+                        names.append(v.get('name', k))
                         infos.append({})
 
                     ids = []

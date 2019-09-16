@@ -1,4 +1,4 @@
-catalyst==19.9.3
+catalyst==19.9.4
 redis
 
 PyYAML>=5.1
@@ -31,3 +31,6 @@ networkx>=2.2
 # For tests
 pytest>=5.0.1
 pytest-xdist>=1.29.0
+
+# Application level
+pretrainedmodels>=0.7.4

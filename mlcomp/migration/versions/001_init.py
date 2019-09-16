@@ -23,8 +23,9 @@ computer = Table(
     Column('last_synced', TIMESTAMP),
     Column('disk', Integer, nullable=False),
     Column('syncing_computer', String(100)),
-    Column('root_folder', String(100), nullable=False)
-
+    Column('root_folder', String(100), nullable=False),
+    Column('can_process_tasks', Boolean),
+    Column('sync_with_this_computer', Boolean)
 )
 
 computer_usage = Table(

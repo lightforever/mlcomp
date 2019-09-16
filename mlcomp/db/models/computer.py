@@ -20,6 +20,8 @@ class Computer(Base):
     disk = sa.Column(sa.Integer)
     syncing_computer = sa.Column(sa.String, ForeignKey('computer.name'))
     root_folder = sa.Column(sa.String)
+    can_process_tasks = sa.Column(sa.Boolean)
+    sync_with_this_computer = sa.Column(sa.Boolean)
 
 
 class ComputerUsage(Base):

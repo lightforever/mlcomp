@@ -23,10 +23,6 @@ class Valid(Equation, ABC):
         self.plot_count = plot_count
 
     @abstractmethod
-    def score(self, preds):
-        pass
-
-    @abstractmethod
     def count(self):
         pass
 
@@ -35,11 +31,15 @@ class Valid(Equation, ABC):
         pass
 
     @abstractmethod
-    def score_final(self):
+    def plot_final(self, score):
         pass
 
     @abstractmethod
-    def key_equation(self):
+    def score(self, preds):
+        pass
+
+    @abstractmethod
+    def score_final(self):
         pass
 
     @abstractmethod
@@ -50,15 +50,14 @@ class Valid(Equation, ABC):
     def adjust_part(self, part):
         pass
 
-    @abstractmethod
-    def plot_final(self, score):
-        pass
+    def key(self):
+        return 'y'
 
     def work(self):
         self.create_base()
         parts = self.generate_parts(self.count())
 
-        for preds in self.solve(self.key_equation(), parts):
+        for preds in self.solve(self.key(), parts):
             score = self.score(preds)
             if self.layout and self.plot_count > 0:
                 self.plot(preds, score)

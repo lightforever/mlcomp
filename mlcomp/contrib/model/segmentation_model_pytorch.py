@@ -1,6 +1,6 @@
 from torch import nn
 
-import segmentation_models_pytorch as smb
+import mlcomp.contrib.segmentation as smb
 
 
 class SegmentationModelPytorch(nn.Module):

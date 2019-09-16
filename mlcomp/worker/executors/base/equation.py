@@ -2,6 +2,7 @@ import ast
 import operator
 import pickle
 from copy import deepcopy
+from typing import List
 
 import cv2
 import numpy as np
@@ -13,7 +14,7 @@ from mlcomp.db.providers import ModelProvider
 from mlcomp.utils.config import parse_albu_short, Config
 from mlcomp.utils.torch import infer
 from mlcomp.worker.executors import Executor
-from mlcomp.worker.executors.base.tta_wrap import TtaWrap
+from mlcomp.contrib.transform.tta import TtaWrap
 
 _OP_MAP = {
     ast.Add: operator.add,
@@ -34,19 +35,21 @@ class Equation(Executor, ast.NodeVisitor):
         suffix: str = '',
         max_count=None,
         part_size: int = None,
+        cache_names: List[str] = (),
         **kwargs
     ):
         self.__dict__.update(kwargs)
         self.model_id = model_id
-        name = kwargs.get('name')
-        if not name:
-            self.name = ModelProvider(self.session).by_id(self.model_id).name
-
         self.suffix = suffix
         self.max_count = max_count
         self.part_size = part_size
         self.part = None
         self.cache = dict()
+        self.cache_names = cache_names
+        if self.model_id:
+            self.name = ModelProvider(self.session).by_id(self.model_id).name
+        else:
+            self.name = None
 
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
@@ -124,7 +127,8 @@ class Equation(Executor, ast.NodeVisitor):
         if attr:
             if isinstance(attr, str):
                 res = self._solve(attr)
-                self.cache[name] = res
+                if attr in self.cache_names:
+                    self.cache[attr] = res
                 return res
             return attr
         return str(name)
@@ -197,16 +201,19 @@ class Equation(Executor, ast.NodeVisitor):
             return None
         calc = self
         res = calc.visit(tree.body[0])
-        self.cache[equation] = res
 
         return res
 
-    def solve(self, equation, parts):
+    def solve(self, name, parts):
+        equation = getattr(self, name)
         for part in parts:
             self.cache = {}
             self.part = part
             self.adjust_part(part)
-            yield self._solve(equation)
+            res = self._solve(equation)
+            if name in self.cache_names:
+                self.cache[name] = res
+            yield res
 
     @classmethod
     def _from_config(

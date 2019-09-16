@@ -126,7 +126,7 @@ export class ModelComponent extends Paginator<Model> {
 
     start(element: Model) {
         let config = {
-            width: '650px', height: '800px',
+            width: '1050px', height: '800px',
             data: {
                 'model_id': element.id
             }

@@ -30,9 +30,8 @@ class Infer(Equation, ABC):
     def plot(self, preds):
         pass
 
-    @abstractmethod
-    def key_equation(self):
-        pass
+    def key(self):
+        return 'y'
 
     @abstractmethod
     def save(self, preds, folder: str):
@@ -68,7 +67,7 @@ class Infer(Equation, ABC):
         self.create_base()
         parts = self.generate_parts(self.count())
 
-        for preds in self.solve(self.key_equation(), parts):
+        for preds in self.solve(self.key(), parts):
             self.save(preds, folder)
 
             if self.prepare_submit:

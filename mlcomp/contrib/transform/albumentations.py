@@ -3,6 +3,9 @@ from albumentations import ImageOnlyTransform
 
 
 class ChannelTranspose(ImageOnlyTransform):
+    def get_transform_init_args_names(self):
+        return ()
+
     def get_params_dependent_on_targets(self, params):
         pass
 
