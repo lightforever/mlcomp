@@ -25,7 +25,7 @@ export class Helpers {
 
     }
 
-    public static format_date_time(date) {
+    public static format_date_time(date, year=false, month_numeric=false) {
         const monthNames = [
             "January",
             "February",
@@ -47,7 +47,21 @@ export class Helpers {
 
         if (day.length < 2) day = '0' + day;
 
-        return [monthNames[month], day].join('.') + ' ' +
+        let parts = [];
+        if(year){
+            parts.push(d.getFullYear());
+        }
+        if(month_numeric){
+            let month_str = String(month);
+            if(month_str.length == 1) month_str = '0' + month_str;
+            parts.push(month_str);
+        }
+        else{
+            parts.push(monthNames[month]);
+        }
+        parts.push(day);
+
+        return parts.join('.') + ' ' +
             date.toTimeString().slice(0, 8);
     }
 
@@ -160,6 +174,47 @@ export class Helpers {
         }
 
         return d1;
+    }
+
+    public static handle_textarea_down_key(event, element){
+        let content = event.target.value;
+        let start = event.target.selectionStart;
+
+        if (event.key == 'Tab' && !event.ctrlKey) {
+            event.preventDefault();
+            let selection = content.substring(start,
+                event.target.selectionEnd);
+            let lines = selection.split(/\r?\n/);
+            for (let i = 0; i < lines.length; i++) {
+                if (!event.shiftKey) {
+                    lines[i] = "  " + lines[i];
+                } else {
+                    for (let j = 0; j < 2; j++) {
+                        if (lines[i].length > 0 && lines[i][0] == ' ') {
+                            lines[i] = lines[i].slice(1);
+                        }
+                    }
+
+                }
+
+            }
+            selection = lines.reduce((a, c) => a + '\r\n' + c);
+
+            content = content.substring(0, start) +
+                selection + content.substring(event.target.selectionEnd);
+            if(!event.shiftKey)
+            {
+                start = start + 2;
+            }
+
+            element.value = content;
+
+            element.selectionStart = start;
+            element.selectionEnd = start;
+
+            return content;
+
+        }
     }
 
 

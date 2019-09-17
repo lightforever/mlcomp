@@ -16,8 +16,9 @@ class LogProvider(BaseDataProvider):
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
         if filter.get('task'):
-            child_tasks = self.query(Task.id).filter(
-                Task.parent == filter['task']).all()
+            child_tasks = self.query(Task.id
+                                     ).filter(Task.parent == filter['task']
+                                              ).all()
             child_tasks = [c[0] for c in child_tasks]
             child_tasks.append(filter['task'])
 
@@ -54,16 +55,18 @@ class LogProvider(BaseDataProvider):
                 'component': to_snake(ComponentType(log.component).name),
                 'computer': log.computer,
                 'step': self.to_dict(step) if step else None,
-                'task': self.to_dict(task, rules=('-additional_info',))
+                'task': self.to_dict(task, rules=('-additional_info', ))
                 if task else None
             }
             data.append(item)
 
         return {'total': total, 'data': data}
 
-    def last(self, count: int):
-        return self.query(Log, Task.name).outerjoin(Task).order_by(
-            Log.id.desc()).limit(count).all()
+    def last(self, count: int, dag: int = None):
+        query = self.query(Log, Task.id).outerjoin(Task)
+        if dag:
+            query = query.filter(Task.dag == dag)
+        return query.order_by(Log.id.desc()).limit(count).all()
 
 
 __all__ = ['LogProvider']

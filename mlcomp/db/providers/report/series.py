@@ -11,7 +11,6 @@ class ReportSeriesProvider(BaseDataProvider):
     def by_dag(self, dag: int, metrics: List[str]):
         tasks = self.query(Task.id, Task.name).filter(Task.dag == dag).all()
         ids = [id for id, _ in tasks]
-        id_to_name = {id: name for id, name in tasks}
 
         series = self.query(ReportSeries).filter(
             ReportSeries.task.in_(ids)).filter(
@@ -36,7 +35,7 @@ class ReportSeriesProvider(BaseDataProvider):
                              'value': [s.value for s in part_series]
                              }
                     groups.append(group)
-                res.append((id_to_name[task_id], name, groups))
+                res.append((task_id, name, groups))
         return res
 
 

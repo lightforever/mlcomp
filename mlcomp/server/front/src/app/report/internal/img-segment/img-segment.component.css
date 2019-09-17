@@ -1,0 +1,15 @@
+mat-button-toggle-group {
+    flex-wrap: wrap;
+}
+
+img {
+    height: auto;
+    width: auto;
+}
+
+.section {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    height: 12px;
+}

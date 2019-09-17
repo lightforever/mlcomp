@@ -9,6 +9,7 @@ import {LayoutComponent} from "./internal/layout/layout.component";
 import {ReportDetailComponent} from "./report-detail/report-detail.component";
 import { LayoutsComponent } from './layouts/layouts.component';
 import {TableComponent} from "./internal/table/table.component";
+import {ImgSegmentComponent} from "./internal/img-segment/img-segment.component";
 
 @NgModule({
     imports: [
@@ -19,6 +20,7 @@ import {TableComponent} from "./internal/table/table.component";
         SeriesComponent,
         ImgComponent,
         ImgClassifyComponent,
+        ImgSegmentComponent,
         ReportComponent,
         LayoutComponent,
         ReportDetailComponent,

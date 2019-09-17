@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component} from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {FlatNode, CodeNode} from '../../../models'
@@ -6,6 +6,7 @@ import {DagDetailService} from "../dag-detail/dag-detail.service";
 import {ActivatedRoute} from "@angular/router";
 import {MessageService} from "../../../message.service";
 import {DynamicresourceService} from "../../../dynamicresource.service";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
     selector: 'app-code',
@@ -31,9 +32,9 @@ export class CodeComponent implements AfterViewInit {
 
     treeFlattener = new MatTreeFlattener(
         this.transformer,
-            node => node.level,
-            node => node.expandable,
-            node => node.children);
+        node => node.level,
+        node => node.expandable,
+        node => node.children);
 
     dataSource = new MatTreeFlatDataSource(this.treeControl,
         this.treeFlattener);
@@ -41,7 +42,8 @@ export class CodeComponent implements AfterViewInit {
     constructor(private service: DagDetailService,
                 private route: ActivatedRoute,
                 private message_service: MessageService,
-                private resource_service: DynamicresourceService
+                private resource_service: DynamicresourceService,
+                private sanitizer: DomSanitizer
     ) {
 
     }
@@ -73,8 +75,8 @@ export class CodeComponent implements AfterViewInit {
     node_click(node: FlatNode) {
         let pre = document.createElement('pre');
         pre.textContent = node.content;
-        let ext = node.name.indexOf('.')!=-1?
-            node.name.split('.')[1].toLowerCase():'';
+        let ext = node.name.indexOf('.') != -1 ?
+            node.name.split('.')[1].toLowerCase() : '';
         pre.className = "prettyprint linenums " + this.prettify_lang(ext);
         let code_holder = document.getElementById('codeholder');
         code_holder.innerHTML = '';
@@ -86,4 +88,17 @@ export class CodeComponent implements AfterViewInit {
     hasChild = (_: number, node: FlatNode) => node.expandable;
 
 
+    download() {
+        this.service.code_download(this.dag).subscribe(x => {
+            let url = window.URL.createObjectURL(x);
+            let link = document.createElement('a');
+            link.setAttribute('download', String(this.dag));
+            link.setAttribute('href', url);
+            document.body.append(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+        });
+    }
 }

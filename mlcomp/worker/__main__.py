@@ -11,7 +11,8 @@ import psutil
 import numpy as np
 
 from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
-    DOCKER_IMG, DOCKER_MAIN, IP, PORT, WORKER_USAGE_INTERVAL
+    DOCKER_IMG, DOCKER_MAIN, IP, PORT, WORKER_USAGE_INTERVAL, \
+    SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
 from mlcomp.utils.logging import create_logger
@@ -257,7 +258,9 @@ def _create_computer():
         port=PORT,
         user=get_username(),
         disk=tot_d,
-        root_folder=ROOT_FOLDER
+        root_folder=ROOT_FOLDER,
+        sync_with_this_computer=SYNC_WITH_THIS_COMPUTER,
+        can_process_tasks=CAN_PROCESS_TASKS
     )
     ComputerProvider(_session).create_or_update(computer, 'name')
 

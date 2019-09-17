@@ -1,13 +1,23 @@
 from sqlalchemy.orm import joinedload
 
 from mlcomp.db.core import Session
-from mlcomp.db.models import Task
-from mlcomp.db.providers import TaskProvider, ProjectProvider
+from mlcomp.db.models import Task, Model
+from mlcomp.db.providers import TaskProvider, ProjectProvider, ModelProvider
 from mlcomp.server.back.create_dags.standard import dag_standard
-from mlcomp.utils.io import yaml_load
+from mlcomp.utils.misc import now
 
 
 def dag_model_add(session: Session, data: dict):
+    if not data.get('task'):
+        model = Model(
+            name=data['name'],
+            project=data['project'],
+            equations=data['equations'],
+            created=now()
+        )
+        ModelProvider(session).add(model)
+        return
+
     task_provider = TaskProvider(session)
     task = task_provider.by_id(
         data['task'], options=joinedload(Task.dag_rel, innerjoin=True)
@@ -20,8 +30,6 @@ def dag_model_add(session: Session, data: dict):
         computer = child_tasks[0].computer_assigned
 
     project = ProjectProvider(session).by_id(task.dag_rel.project)
-    interface_params = data.get('interface_params', '')
-    interface_params = yaml_load(interface_params)
     config = {
         'info': {
             'name': 'model_add',
@@ -31,12 +39,9 @@ def dag_model_add(session: Session, data: dict):
         'executors': {
             'model_add': {
                 'type': 'model_add',
-                'dag': data['dag'],
-                'slot': data['slot'],
-                'interface': data['interface'],
+                'project': data['project'],
                 'task': data.get('task'),
                 'name': data['name'],
-                'interface_params': interface_params,
                 'child_task': child_task
             }
         }

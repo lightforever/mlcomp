@@ -199,6 +199,8 @@ from this range. Ranges of different work computers must not overlap.
 - FILE_SYNC_INTERVAL. File sync interval in seconds. 0 means file sync is off
 - WORKER_USAGE_INTERVAL. Interval in seconds of writing worker usage to DB
 - INSTALL_DEPENDENCIES. True/False. Either install dependent libraries or not
+- SYNC_WITH_THIS_COMPUTER. True/False. If False, all computers except that will not sync with that one
+- CAN_PROCESS_TASKS. True/False. If false, this computer does not process tasks
 
 You can see your network interfaces with `ifconfig` command.
  Please consider [nvidia doc](https://docs.nvidia.com/deeplearning/sdk/nccl-developer-guide/docs/env.html)

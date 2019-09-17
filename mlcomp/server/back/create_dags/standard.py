@@ -27,7 +27,8 @@ class DagStandardBuilder:
             upload_files: bool = True,
             copy_files_from: int = None,
             config_path: str = None,
-            control_reqs: bool = True
+            control_reqs: bool = True,
+            additional_info: dict = None
     ):
         self.session = session
         self.config = config
@@ -40,6 +41,7 @@ class DagStandardBuilder:
 
         self.info = config['info']
         self.layout_name = self.info.get('layout')
+        self.additional_info = additional_info or {}
 
         self.provider = None
         self.report_provider = None
@@ -104,7 +106,7 @@ class DagStandardBuilder:
 
     def upload(self):
         if self.upload_files:
-            folder = os.getcwd()
+            folder = os.path.dirname(os.path.abspath(self.config_path))
             if 'expdir' in self.config['info']:
                 path = os.path.dirname(os.path.abspath(self.config_path))
                 folder = os.path.abspath(
@@ -144,7 +146,6 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
-        task.additional_info = ''
 
         if self.layout_name and task_type == TaskType.Train.value:
             if self.layout_name not in self.layouts:
@@ -152,6 +153,7 @@ class DagStandardBuilder:
 
             report_config = self.layouts[self.layout_name]
             info['report_config'] = report_config
+
             task.additional_info = yaml_dump(info)
             self.provider.add(task, commit=False)
             report = Report(
@@ -173,6 +175,7 @@ class DagStandardBuilder:
 
             self.provider.commit()
         else:
+            task.additional_info = yaml_dump(self.additional_info)
             self.provider.add(task)
 
         return task.id
@@ -207,11 +210,10 @@ class DagStandardBuilder:
                         grid = v['grid']
                         cells = grid_cells(grid)
                         for i, (cell, cell_name) in enumerate(cells):
-                            name = f'{k} {cell_name}'
-                            names.append(name)
+                            names.append(cell_name)
                             infos.append({'grid_cell': i})
                     else:
-                        names.append(k)
+                        names.append(v.get('name', k))
                         infos.append({})
 
                     ids = []
@@ -254,7 +256,8 @@ def dag_standard(
         upload_files: bool = True,
         copy_files_from: int = None,
         config_path: str = None,
-        control_reqs: bool = True
+        control_reqs: bool = True,
+        additional_info: dict = None
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -264,7 +267,8 @@ def dag_standard(
         upload_files=upload_files,
         copy_files_from=copy_files_from,
         config_path=config_path,
-        control_reqs=control_reqs
+        control_reqs=control_reqs,
+        additional_info=additional_info
     )
     return builder.build()
 

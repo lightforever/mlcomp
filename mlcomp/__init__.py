@@ -18,6 +18,7 @@ TASK_FOLDER = join(ROOT_FOLDER, 'tasks')
 LOG_FOLDER = join(ROOT_FOLDER, 'logs')
 CONFIG_FOLDER = join(ROOT_FOLDER, 'configs')
 DB_FOLDER = join(ROOT_FOLDER, 'db')
+TMP_FOLDER = join(ROOT_FOLDER, 'tmp')
 
 os.makedirs(ROOT_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
@@ -26,6 +27,7 @@ os.makedirs(TASK_FOLDER, exist_ok=True)
 os.makedirs(LOG_FOLDER, exist_ok=True)
 os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(DB_FOLDER, exist_ok=True)
+os.makedirs(TMP_FOLDER, exist_ok=True)
 
 # copy conf files if they do not exist
 
@@ -76,6 +78,8 @@ CONSOLE_LOG_LEVEL = os.getenv('CONSOLE_LOG_LEVEL', 'DEBUG')
 DB_LOG_LEVEL = os.getenv('DB_LOG_LEVEL', 'DEBUG')
 FILE_LOG_LEVEL = os.getenv('FILE_LOG_LEVEL', 'INFO')
 LOG_NAME = os.getenv('LOG_NAME', 'log')
+SYNC_WITH_THIS_COMPUTER = os.getenv('SYNC_WITH_THIS_COMPUTER') == 'True'
+CAN_PROCESS_TASKS = os.getenv('CAN_PROCESS_TASKS') == 'True'
 
 DB_TYPE = os.getenv('DB_TYPE')
 if DB_TYPE == 'POSTGRESQL':
@@ -108,5 +112,6 @@ __all__ = [
     'WEB_PORT', 'WORKER_INDEX', 'CONSOLE_LOG_LEVEL', 'DB_LOG_LEVEL',
     'FILE_LOG_LEVEL', 'DB_TYPE', 'SA_CONNECTION_STRING', 'FLASK_ENV',
     'DOCKER_MAIN', 'IP', 'PORT', 'LOG_NAME', 'WORKER_USAGE_INTERVAL',
-    'FILE_SYNC_INTERVAL', 'INSTALL_DEPENDENCIES'
+    'FILE_SYNC_INTERVAL', 'INSTALL_DEPENDENCIES', 'SYNC_WITH_THIS_COMPUTER',
+    'CAN_PROCESS_TASKS'
 ]

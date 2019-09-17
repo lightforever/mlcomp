@@ -23,8 +23,9 @@ computer = Table(
     Column('last_synced', TIMESTAMP),
     Column('disk', Integer, nullable=False),
     Column('syncing_computer', String(100)),
-    Column('root_folder', String(100), nullable=False)
-
+    Column('root_folder', String(100), nullable=False),
+    Column('can_process_tasks', Boolean),
+    Column('sync_with_this_computer', Boolean)
 )
 
 computer_usage = Table(
@@ -104,7 +105,7 @@ report = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('config', String(4000), nullable=False),
     Column('time', TIMESTAMP, nullable=False, default='now()'),
-    Column('name', String(100), nullable=False),
+    Column('name', String(300), nullable=False),
     Column('project', Integer, nullable=False),
     Column('layout', String(100), nullable=False)
 )
@@ -121,10 +122,21 @@ report_img = Table(
     Column('part', String(30)),
     Column('y_pred', Integer),
     Column('y', Integer),
-    Column('metric_diff', Float),
+    Column('score', Float),
     Column('attr1', Float),
     Column('attr2', Float),
     Column('attr3', Float),
+    Column('attr4', Float),
+    Column('attr5', Float),
+    Column('attr6', Float),
+    Column('attr7', Float),
+    Column('attr8', Float),
+    Column('attr9', Float),
+    Column('attr1_str', String(500)),
+    Column('attr2_str', String(500)),
+    Column('attr3_str', String(500)),
+    Column('attr4_str', String(500)),
+    Column('attr5_str', String(500)),
     Column('size', BigInteger, nullable=False),
 )
 
@@ -168,7 +180,7 @@ step = Table(
 task = Table(
     'task', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', String(180), nullable=False),
+    Column('name', String(300), nullable=False),
     Column('status', Integer, nullable=False),
     Column('started', TIMESTAMP),
     Column('finished', TIMESTAMP),
@@ -221,14 +233,12 @@ model = Table(
     'model', meta,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', String(500), nullable=False),
-    Column('score_local', Float, nullable=False),
+    Column('score_local', Float),
     Column('score_public', Float),
-    Column('dag', Integer, nullable=False),
+    Column('dag', Integer),
     Column('project', Integer, nullable=False),
     Column('created', TIMESTAMP, nullable=False),
-    Column('interface', String(100), nullable=False),
-    Column('interface_params', String(4000)),
-    Column('slot', String(100), nullable=False)
+    Column('equations', String(2000000), nullable=False)
 )
 
 
@@ -312,6 +322,20 @@ def upgrade(migrate_engine):
                              ondelete='CASCADE').create()
         Index('report_img_project_idx', report_img.c.project.desc()).create()
         Index('report_img_task_idx', report_img.c.task.desc()).create()
+        Index('report_img_attr1_idx', report_img.c.attr1).create()
+        Index('report_img_attr2_idx', report_img.c.attr2).create()
+        Index('report_img_attr3_idx', report_img.c.attr3).create()
+        Index('report_img_attr4_idx', report_img.c.attr4).create()
+        Index('report_img_attr5_idx', report_img.c.attr5).create()
+        Index('report_img_attr6_idx', report_img.c.attr6).create()
+        Index('report_img_attr7_idx', report_img.c.attr7).create()
+        Index('report_img_attr8_idx', report_img.c.attr8).create()
+        Index('report_img_attr9_idx', report_img.c.attr9).create()
+        Index('report_img_attr1_str_idx', report_img.c.attr1_str).create()
+        Index('report_img_attr2_str_idx', report_img.c.attr2_str).create()
+        Index('report_img_attr3_str_idx', report_img.c.attr3_str).create()
+        Index('report_img_attr4_str_idx', report_img.c.attr4_str).create()
+        Index('report_img_attr5_str_idx', report_img.c.attr5_str).create()
 
         ForeignKeyConstraint([report_series.c.task], [task.c.id],
                              ondelete='CASCADE').create()

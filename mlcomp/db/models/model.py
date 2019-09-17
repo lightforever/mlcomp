@@ -15,9 +15,7 @@ class Model(Base):
     project = sa.Column(sa.Integer, ForeignKey('project.id'))
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     created = sa.Column(sa.DateTime)
-    interface = sa.Column(sa.String)
-    interface_params = sa.Column(sa.String)
-    slot = sa.Column(sa.String)
+    equations = sa.Column(sa.String)
 
     dag_rel = relationship('Dag', lazy='noload')
     project_rel = relationship('Project', lazy='noload')

@@ -158,6 +158,8 @@ export class DagFilter {
     created_max: Date;
     last_activity_min: Date;
     last_activity_max: Date;
+    id_min: number;
+    id_max: number;
 }
 
 export class TaskFilter {
@@ -174,6 +176,8 @@ export class TaskFilter {
     last_activity_max: Date;
     project: number;
     type: string[];
+    id_min: number;
+    id_max: number;
 }
 
 export class ReportsFilter {
@@ -216,6 +220,7 @@ export class ReportItem {
     data: any;
     part: string;
     index: number;
+    attrs: ImgAttr[];
 }
 
 export class Metric{
@@ -264,15 +269,19 @@ export class SeriesItem {
     layout: any;
 }
 
+export class ImgAttr {
+    type: string;
+    source: string;
+    name: string;
+    equal: any;
+    greater: number;
+    less: number;
+}
+
 export class ImgClassify {
     name: string;
-    source: string;
-    epochs: number[];
     task: number;
     group: string;
-    part: string;
-    epoch: number;
-
 }
 
 export class Model {
@@ -283,11 +292,7 @@ export class Model {
     task: number;
     project: number;
     created: Date;
-    dags: any[];
-    interface: string;
-    slot: string;
-    dag: number;
-    interface_params: string;
+    dag_rel: Dag;
 }
 
 export class ModelFilter {
@@ -319,21 +324,17 @@ export class ReportUpdateData {
 }
 
 export interface ModelAddData {
-    dag: any;
-    slot: string;
-    interface: any;
-    dags: any[];
+    project: number;
+    equations: string;
+    projects: any[];
     name: string;
     task: number;
 }
 
-export interface ModelStartData {
+export class ModelStartData extends BaseResult{
     dags: any[];
     dag: any;
-    slot: string;
-    interface: string;
-    pipe: string;
-    interface_params: string;
+    pipe: any;
     model_id: number;
 }
 

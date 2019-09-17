@@ -20,11 +20,18 @@ executors:
     trace: models/net.pth
     depends: split
   infer:
-    type: infer
+    type: infer_mnist
     gpu: 1
+    y: torch(x, file='net.pth', batch_size=128)
+    test: True
+    suffix: test
+    prepare_submit: True
+    model_name: net
     depends: train
   submit:
-    type: SubmitMnist
-    slot:
-      name: net
+    type: Submit
     depends: infer
+    suffix: test
+    model_name: net
+    competition: digit-recognizer
+    column: Label

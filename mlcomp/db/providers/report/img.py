@@ -1,11 +1,14 @@
 import base64
 import pickle
 
-from sqlalchemy import and_
+import cv2
+import numpy as np
+from sqlalchemy import and_, or_
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Project, Dag, ReportImg, Task
 from mlcomp.db.providers.base import BaseDataProvider
+from mlcomp.utils.img import resize_saving_ratio
 from mlcomp.utils.io import yaml_load
 
 
@@ -44,20 +47,17 @@ class ReportImgProvider(BaseDataProvider):
         res = {'data': []}
         confusion = self.query(ReportImg.img). \
             filter(ReportImg.task == filter['task']). \
-            filter(ReportImg.part == filter['part']). \
-            filter(ReportImg.group == filter['group'] + '_confusion'). \
-            filter(ReportImg.epoch == filter['epoch']).first()
+            filter(ReportImg.group == filter['group'] + '_confusion').first()
+
         if confusion:
-            confusion = pickle.loads(confusion[0])['data'].tolist()
-            res['confusion'] = {'data': confusion}
+            confusion = pickle.loads(confusion[0])['data']
+            res['confusion'] = {'data': confusion.tolist()}
 
         res.update(filter)
 
         query = self.query(ReportImg).filter(
-            ReportImg.task == filter['task']).filter(
-            ReportImg.epoch == filter['epoch']). \
-            filter(ReportImg.group == filter['group']).filter(
-            ReportImg.part == filter['part'])
+            ReportImg.task == filter['task']). \
+            filter(ReportImg.group == filter['group'])
 
         if filter.get('y') is not None and filter.get('y_pred') is not None:
             query = query.filter(
@@ -67,38 +67,147 @@ class ReportImgProvider(BaseDataProvider):
                 )
             )
 
-        if filter.get('metric_diff_min') is not None:
+        if filter.get('score_min') is not None:
             query = query.filter(
-                ReportImg.metric_diff >= filter['metric_diff_min']
-            )
-        if filter.get('metric_diff_max') is not None:
-            query = query.filter(
-                ReportImg.metric_diff <= filter['metric_diff_max']
+                or_(
+                    ReportImg.score >= filter['score_min'],
+                    ReportImg.score.__eq__(None)
+                )
             )
 
-        project = self.query(Project).join(Dag).join(Task).filter(
-            Task.id == filter['task']
-        ).first()
-        class_names = yaml_load(project.class_names)
+        if filter.get('score_max') is not None:
+            query = query.filter(
+                or_(
+                    ReportImg.score <= filter['score_max'],
+                    ReportImg.score.__eq__(None)
+                )
+            )
+
+        layout = filter.get('layout')
+
+        if layout and layout.get('attrs'):
+            for attr in layout['attrs']:
+                field = getattr(ReportImg, attr['source'])
+                if attr.get('equal') is not None:
+                    query = query.filter(field == attr['equal'])
+                if attr.get('greater') is not None:
+                    query = query.filter(field >= attr['greater'])
+                if attr.get('less') is not None:
+                    query = query.filter(field <= attr['less'])
 
         res['total'] = query.count()
-        if 'default' in class_names:
-            res['class_names'] = class_names['default']
-        else:
-            res['class_names'] = [str(i) for i in confusion.shape[0]]
+
+        if confusion is not None:
+            project = self.query(Project).join(Dag).join(Task).filter(
+                Task.id == filter['task']
+            ).first()
+            class_names = yaml_load(project.class_names)
+
+            if 'default' in class_names:
+                res['class_names'] = class_names['default']
+            else:
+                res['class_names'] = [
+                    str(i) for i in range(confusion.shape[1])
+                ]
 
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
-            img = pickle.loads(img_obj.img)
+            buffer = img_obj.img
+            if layout:
+                buffer = np.fromstring(buffer, np.uint8)
+                img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+                img = resize_saving_ratio(
+                    img, (layout.get('max_height'), layout.get('max_width'))
+                )
+                retval, buffer = cv2.imencode('.jpg', img)
+
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
             # noinspection PyTypeChecker
             res['data'].append(
                 {
-                    'content': base64.b64encode(img['img']).decode('utf-8'),
+                    'content': jpg_as_text,
                     'id': img_obj.id,
                     'y_pred': img_obj.y_pred,
                     'y': img_obj.y,
-                    'metric_diff': round(img_obj.metric_diff, 2)
+                    'score': round(img_obj.score, 2) if img_obj.score else None
+                }
+            )
+
+        return res
+
+    def detail_img_segment(
+        self, filter: dict, options: PaginatorOptions = None
+    ):
+        res = {'data': []}
+        res.update(filter)
+
+        query = self.query(ReportImg).filter(
+            ReportImg.task == filter['task']). \
+            filter(ReportImg.group == filter['group'])
+
+        if filter.get('y') is not None and filter.get('y_pred') is not None:
+            query = query.filter(
+                and_(
+                    ReportImg.y == filter['y'],
+                    ReportImg.y_pred == filter['y_pred']
+                )
+            )
+
+        if filter.get('score_min') is not None:
+            query = query.filter(
+                or_(
+                    ReportImg.score >= filter['score_min'],
+                    ReportImg.score.__eq__(None)
+                )
+            )
+
+        if filter.get('score_max') is not None:
+            query = query.filter(
+                or_(
+                    ReportImg.score <= filter['score_max'],
+                    ReportImg.score.__eq__(None)
+                )
+            )
+
+        layout = filter.get('layout')
+
+        if layout and layout.get('attrs'):
+            for attr in layout['attrs']:
+                field = getattr(ReportImg, attr['source'])
+                if attr.get('equal') is not None:
+                    query = query.filter(field == attr['equal'])
+                if attr.get('greater') is not None:
+                    query = query.filter(field >= attr['greater'])
+                if attr.get('less') is not None:
+                    query = query.filter(field <= attr['less'])
+
+        res['total'] = query.count()
+
+        query = self.paginator(query, options)
+        img_objs = query.all()
+        for img_obj in img_objs:
+            buffer = img_obj.img
+            if layout:
+                buffer = np.fromstring(buffer, np.uint8)
+                img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+                img = resize_saving_ratio(
+                    img, (layout.get('max_height'), layout.get('max_width'))
+                )
+                retval, buffer = cv2.imencode('.jpg', img)
+
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
+            # noinspection PyTypeChecker
+            res['data'].append(
+                {
+                    'content': jpg_as_text,
+                    'id': img_obj.id,
+                    'y_pred': img_obj.y_pred,
+                    'y': img_obj.y,
+                    'score': round(img_obj.score, 2)
+                    if img_obj.score is not None else None
                 }
             )
 

@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from mlcomp.db.report_info.f1 import ReportLayoutF1
 from mlcomp.db.report_info.img_classify import ReportLayoutImgClassify
+from mlcomp.db.report_info.img_segment import ReportLayoutImgSegment
 from mlcomp.db.report_info.metric import ReportLayoutMetric
 from mlcomp.db.report_info.precision_recall import ReportLayoutPrecisionRecall
 from mlcomp.db.report_info.series import ReportLayoutSeries
@@ -10,8 +11,9 @@ from mlcomp.db.report_info.series import ReportLayoutSeries
 
 class ReportLayoutInfo:
     def __init__(self, data: dict):
-        assert 'items' in data, 'no items in report'
-        assert 'metric' in data, 'no metric in report'
+        assert 'items' in data, 'items is required'
+        assert 'metric' in data, 'metric is required'
+        assert 'layout' in data, 'layout is required'
 
         self.data = data
         self.series = self._get_series()
@@ -19,12 +21,14 @@ class ReportLayoutInfo:
         self.metric = self._get_metric()
         self.f1 = self._get_f1()
         self.img_classify = self._get_img_classify()
+        self.img_segment = self._get_img_segment()
         self.layout = {'type': 'root', 'items': data.get('layout', [])}
         self._check_layout(self.layout)
 
     def _check_layout(self, item):
         types = [
-            'root', 'panel', 'blank', 'series', 'table', 'img_classify', 'img'
+            'root', 'panel', 'blank', 'series', 'table', 'img_classify', 'img',
+            'img_segment'
         ]
         assert item.get('type') in types, f'Unknown item type = {item["type"]}'
 
@@ -45,7 +49,13 @@ class ReportLayoutInfo:
                 ('cols', False),
                 ('rows', False),
             ],
-            'img_classify': ['source', ('cols', False), ('rows', False)],
+            'img_classify': [
+                'source', ('attrs', False), ('cols', False), ('rows', False)
+            ],
+            'img_segment': [
+                'source', ('attrs', False), ('cols', False), ('rows', False),
+                ('max_width', False), ('max_height', False)
+            ],
             'img': ['source', ('cols', False), ('rows', False)]
         }
         keys = set(item.keys()) - {'type'}
@@ -75,6 +85,9 @@ class ReportLayoutInfo:
 
     def _get_img_classify(self) -> List[ReportLayoutImgClassify]:
         return self._by_type('img_classify', ReportLayoutImgClassify)
+
+    def _get_img_segment(self) -> List[ReportLayoutImgSegment]:
+        return self._by_type('img_segment', ReportLayoutImgSegment)
 
     def _get_f1(self) -> List[ReportLayoutF1]:
         return self._by_type('f1', ReportLayoutF1)

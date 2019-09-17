@@ -28,18 +28,4 @@ export class ModelAddDialogComponent {
     on_cancel_click(): void {
         this.dialogRef.close();
     }
-
-    dag_changed() {
-        let dag = this.data.dag;
-        if (!dag) {
-            return;
-        }
-
-        if (dag.slots.length >= 1) {
-            this.data.slot = dag.slots[0];
-        }
-        if (dag.interfaces.length >= 1) {
-            this.data.interface = dag.interfaces[0];
-        }
-    }
 }

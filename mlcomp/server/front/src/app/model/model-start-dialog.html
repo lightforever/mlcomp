@@ -10,58 +10,73 @@
 </mat-form-field>
 
 <mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Slot</mat-label>
-    <mat-select (ngModelChange)="data.slot=$event;" [(ngModel)]="data.slot">
-        <mat-option *ngFor="let slot of data.dag.slots" [value]="slot">
-            {{slot}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Interface</mat-label>
-    <mat-select
-            (ngModelChange)="data.interface=$event;"
-            [(ngModel)]="data.interface">
-        <mat-option *ngFor="let interface of data.dag.interfaces"
-                    [value]="interface">
-            {{interface}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
     <mat-label>Pipe</mat-label>
     <mat-select
-            (ngModelChange)="data.pipe=$event;"
+            (ngModelChange)="data.pipe=$event; pipe_changed()"
             [(ngModel)]="data.pipe">
         <mat-option *ngFor="let pipe of data.dag.pipes" [value]="pipe">
-            {{pipe}}
+            {{pipe.name}}
         </mat-option>
     </mat-select>
 </mat-form-field>
 
-<div mat-dialog-content>
-  <mat-form-field style="width: 450px">
-    <mat-label>Interface Params</mat-label>
-      <textarea
-              matInput
-              [(ngModel)]="data.interface_params"
-              style="height:120px">
+<mat-form-field style="width: 200px" *ngIf="data.pipe && data.pipe.versions">
+    <mat-label>Versions</mat-label>
+
+    <mat-select
+            (ngModelChange)="data.pipe.version=$event;"
+            [(ngModel)]="data.pipe.version">
+        <mat-option
+                *ngFor="let version of data.pipe.versions"
+                [value]="version">
+            {{version.name}}
+        </mat-option>
+    </mat-select>
+
+    <mat-icon class="positionCameras" matSuffix>
+        <ul>
+            <li title='Move Up' class="cameraLeft"
+                (click)="move_up($event)"
+                [class.transparent]='is_up_transparent()'></li>
+            <li title="Move Down" class="cameraRight"
+                (click)="move_down($event)"
+                [class.transparent]='is_down_transparent()'></li>
+        </ul>
+    </mat-icon>
+
+</mat-form-field>
+
+<div mat-dialog-content *ngIf="data.pipe && data.pipe.version">
+    <mat-form-field style="width: 1000px">
+        <mat-label>Additional info</mat-label>
+        <textarea
+                #textarea
+                matInput
+                [(ngModel)]="data.pipe.version.equations"
+                (keydown)="key_down($event)"
+                style="height:550px;width: 1000px">
 
       </textarea>
-  </mat-form-field>
+    </mat-form-field>
 </div>
 
-<pre style="color: red"  *ngIf="error">
+<pre style="color: red" *ngIf="error">
     {{error}}
 </pre>
 
+<div style="color: green" *ngIf="success">Success</div>
+
 <div mat-dialog-actions>
-  <button mat-button (click)="on_cancel_click()">Cancel</button>
-  <button mat-button
-          (click)="on_ok_click()"
-          cdkFocusInitial>
-      Ok
-  </button>
+    <button mat-button (click)="on_cancel_click()">Cancel</button>
+
+    <button mat-button
+            (click)="on_ok_click()"
+            cdkFocusInitial>
+        Ok
+    </button>
+
+    <button mat-button
+            (click)="on_ok_click(false)">
+        Ok(don't close)
+    </button>
 </div>

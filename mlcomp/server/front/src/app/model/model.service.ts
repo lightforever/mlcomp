@@ -14,12 +14,10 @@ export class ModelService extends BaseService {
     add(data: ModelAddData) {
         let message = `${this.constructor.name}.add`;
         let info = {
-            'dag': data.dag.id,
             'name': data.name,
             'task': data.task,
-            'slot': data.slot,
-            'interface': data.interface.name,
-            'interface_params': data.interface.params
+            'equations': data.equations,
+            'project': data.project
         };
         let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
         return this.http.post<BaseResult>(url, info).pipe(
@@ -27,24 +25,35 @@ export class ModelService extends BaseService {
         );
     }
 
-    start(data: ModelStartData) {
-        let message = `${this.constructor.name}.start`;
+    start_begin(data: ModelStartData) {
+        let message = `${this.constructor.name}.start_begin`;
+        let info = {
+            'model_id': data.model_id
+        };
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/start_begin';
+        return this.http.post<ModelStartData>(url, info).pipe(
+            catchError(this.handleError<ModelStartData>(
+                message,
+                new ModelStartData())
+            )
+        );
+    }
+
+    start_end(data: ModelStartData) {
+        let message = `${this.constructor.name}.start_end`;
         let info = {
             'dag': data.dag.id,
-            'slot': data.slot,
-            'interface': data.interface,
             'pipe': data.pipe,
-            'model_id': data.model_id,
-            'interface_params': data.interface_params
+            'model_id': data.model_id
         };
-        let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/start_end';
         return this.http.post<BaseResult>(url, info).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
 
     remove(id: number) {
-         let message = `${this.constructor.name}.remove`;
+        let message = `${this.constructor.name}.remove`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/remove';
         return this.http.post<BaseResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))

@@ -1,0 +1,144 @@
+<div class="mat-elevation-z8" style="float: left">
+    <table mat-table [dataSource]="dataSource">
+
+        <ng-container matColumnDef="img">
+            <th mat-header-cell *matHeaderCellDef>
+                <div>{{data.name}}</div>
+
+                <mat-card class="result">
+                    <mat-card-content>
+                        <div>
+                            <div>score min</div>
+                            <mat-slider
+                                    [max]="1"
+                                    [min]="0"
+                                    [step]="0.01"
+                                    [thumbLabel]="true"
+                                    (change)="change.emit()"
+                                    [(ngModel)]="score_min">
+
+                            </mat-slider>
+                        </div>
+
+                        <div>
+                            <div style="text-align: left">score max</div>
+                            <mat-slider
+                                    [max]="1"
+                                    [min]="0"
+                                    [step]="0.01"
+                                    [thumbLabel]="true"
+                                    (change)="change.emit()"
+                                    [(ngModel)]="score_max">
+
+                            </mat-slider>
+                        </div>
+
+                    </mat-card-content>
+
+                    <mat-card-content *ngFor="let element of item.attrs">
+
+                        <div *ngIf="element.type=='int'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}</mat-label>
+
+                                <input
+                                        matInput
+                                        [(ngModel)]="element.equal"
+                                        (change)="change.emit()"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
+                        <div *ngIf="element.type=='greater'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_greater</mat-label>
+
+                                <input
+                                        matInput
+                                        [(ngModel)]="element.greater"
+                                        (change)="change.emit()"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
+                        <div *ngIf="element.type=='less'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_less</mat-label>
+
+                                <input
+                                        matInput
+                                        [(ngModel)]="element.less"
+                                        (change)="change.emit()"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
+                        <div *ngIf="element.type=='greater_less'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_less</mat-label>
+
+                                <input
+                                        matInput
+                                        (change)="change.emit()"
+                                        [(ngModel)]="element.less"
+                                        type="number"/>
+
+                            </mat-form-field>
+
+                            <mat-form-field>
+                                <mat-label>{{element.name}}_greater</mat-label>
+
+                                <input
+                                        matInput
+                                        (change)="change.emit()"
+                                        [(ngModel)]="element.greater"
+                                        type="number"/>
+
+                            </mat-form-field>
+                        </div>
+
+                        <div *ngIf="element.type=='str'">
+                            <mat-form-field>
+                                <mat-label>{{element.name}}</mat-label>
+
+                                <input
+                                        matInput
+                                        (change)="change.emit()"
+                                        [(ngModel)]="element.equal"/>
+
+                            </mat-form-field>
+                        </div>
+
+
+                    </mat-card-content>
+
+                </mat-card>
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                <div>
+
+                    <span *ngIf="element.score!=null">
+                        Score: {{element.score}}
+                    </span>
+
+                </div>
+
+                <img [attr.src]="'data:image/JPEG;base64,' + element.content">
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+    </table>
+
+    <mat-paginator
+            [pageSizeOptions]="[1 ,3, 5, 15, 30, 100]"
+            [length]="total"
+            [pageSize]="15">
+
+    </mat-paginator>
+</div>

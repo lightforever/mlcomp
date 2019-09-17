@@ -1,3 +1,10 @@
+<button mat-raised-button
+        style="margin-top: 15px"
+        (click)="add()">
+    Add
+</button>
+
+
 <button mat-raised-button style="margin-top: 15px"
         (click)="filter_hidden=!filter_hidden">
     Filters {{filter_applied_text}}
@@ -8,7 +15,9 @@
         <mat-label>Project</mat-label>
         <mat-select (ngModelChange)="project=$event; onchange()"
                     [ngModel]="project">
-            <mat-option *ngFor="let project of projects" [value]="project.id">
+            <mat-option
+                    *ngFor="let project of projects"
+                    [value]="project.id">
                 {{project.name}}
             </mat-option>
         </mat-select>
@@ -61,7 +70,11 @@
         <ng-container matColumnDef="project">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Project</th>
             <td mat-cell *matCellDef="let element">
-                {{element.project_rel.name}}
+                
+                <span *ngIf="element.project_rel">
+                    {{element.project_rel.name}}
+                </span>
+
             </td>
         </ng-container>
 
@@ -94,30 +107,18 @@
         <ng-container matColumnDef="dag">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Dag</th>
             <td mat-cell *matCellDef="let element">
-                <a routerLink="/dags/dag-detail/{{element.dag}}">
+                <a
+                        routerLink="/dags/dag-detail/{{element.dag}}"
+                        *ngIf="element.dag_rel">
                     {{element.dag_rel.name}}
                 </a>
             </td>
         </ng-container>
 
-        <ng-container matColumnDef="slot">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Slot</th>
-            <td mat-cell *matCellDef="let element">
-                {{element.slot}}
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="interface">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Interface
-            </th>
-            <td mat-cell *matCellDef="let element">
-                {{element.interface}}
-            </td>
-        </ng-container>
-
         <ng-container matColumnDef="links">
             <th mat-header-cell *matHeaderCellDef
-                style="text-align: center; width: 14%;"> Links
+                style="text-align: center; width: 14%;">
+                Links
             </th>
             <td mat-cell *matCellDef="let element"
                 style="padding-left: 1%;min-width: 120px">

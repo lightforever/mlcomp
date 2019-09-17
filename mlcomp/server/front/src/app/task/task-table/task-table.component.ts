@@ -18,12 +18,12 @@ import {Paginator} from "../../paginator";
     templateUrl: './task-table.component.html',
     styleUrls: ['./task-table.component.css']
 })
-export class TaskTableComponent implements OnInit{
+export class TaskTableComponent implements OnInit {
     @Input() paginator: Paginator<any>;
     @Input() report: number;
     @Input() show_links: boolean = true;
 
-    @Input() dags_model: any[];
+    @Input() projects: any[];
 
     @ViewChild(MatPaginator) paginator_view: MatPaginator;
     @ViewChild(MatSort) sort_view: MatSort;
@@ -125,8 +125,8 @@ export class TaskTableComponent implements OnInit{
         this.model_add_dialog.open(ModelAddDialogComponent, {
             width: '500px', height: '400px',
             data: {
-                'dag': null,
-                'dags': this.dags_model,
+                'project': element.dag_rel.project.id,
+                'projects': this.projects,
                 'task': element.id
             }
         });
@@ -142,7 +142,7 @@ export class TaskTableComponent implements OnInit{
     }
 
     router_link(element) {
-        if(this.report){
+        if (this.report) {
             return null;
         }
         return `/reports/report-detail/${element.report}`

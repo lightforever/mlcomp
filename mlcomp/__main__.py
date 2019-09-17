@@ -1,4 +1,5 @@
 from os.path import join
+from typing import Tuple
 
 import click
 import socket
@@ -7,7 +8,7 @@ from multiprocessing import cpu_count
 import GPUtil
 
 from mlcomp import ROOT_FOLDER, IP, PORT, \
-    WORKER_INDEX
+    WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
@@ -17,7 +18,8 @@ from mlcomp.db.providers import \
     StepProvider, \
     ProjectProvider
 from mlcomp.migration.manage import migrate
-from mlcomp.utils.io import yaml_load
+from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
+from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.logging import create_logger
 from mlcomp.worker.sync import sync_directed
 from mlcomp.worker.tasks import execute_by_id
@@ -27,11 +29,15 @@ from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 _session = Session.create_session(key=__name__)
 
 
-def _dag(config: str, debug: bool = False, control_reqs=True):
+def _dag(config: str, debug: bool = False, control_reqs=True,
+         params: Tuple[str] = ()):
     migrate()
 
     config_text = open(config, 'r').read()
     config_parsed = yaml_load(config_text)
+    params = dict_from_list_str(params)
+    config_parsed = merge_dicts_smart(config_parsed, params)
+    config_text = yaml_dump(config_parsed)
 
     type_name = config_parsed['info'].get('type', 'standard')
     if type_name == DagType.Standard.name.lower():
@@ -61,7 +67,9 @@ def _create_computer():
         port=PORT,
         user=get_username(),
         disk=tot_d,
-        root_folder=ROOT_FOLDER
+        root_folder=ROOT_FOLDER,
+        sync_with_this_computer=SYNC_WITH_THIS_COMPUTER,
+        can_process_tasks=CAN_PROCESS_TASKS
     )
     ComputerProvider(_session).create_or_update(computer, 'name')
 
@@ -74,14 +82,16 @@ def main():
 @main.command()
 @click.argument('config')
 @click.option('--control_reqs', type=bool, default=True)
-def dag(config: str, control_reqs: bool):
-    _dag(config, control_reqs=control_reqs)
+@click.option('--params', multiple=True)
+def dag(config: str, control_reqs: bool, params):
+    _dag(config, control_reqs=control_reqs, params=params)
 
 
 @main.command()
 @click.argument('config')
 @click.option('--debug', type=bool, default=True)
-def execute(config: str, debug: bool):
+@click.option('--params', multiple=True)
+def execute(config: str, debug: bool, params):
     _create_computer()
 
     # Fail all InProgress Tasks
@@ -102,7 +112,7 @@ def execute(config: str, debug: bool):
         provider.change_status(t, TaskStatus.Failed)
 
     # Create dag
-    created_dag = _dag(config, debug)
+    created_dag = _dag(config, debug, params=params)
     for ids in created_dag.values():
         for id in ids:
             task = provider.by_id(id)

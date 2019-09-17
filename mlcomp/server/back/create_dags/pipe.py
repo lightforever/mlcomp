@@ -8,7 +8,6 @@ from mlcomp.worker.storage import Storage
 
 
 def dag_pipe(session: Session, config: dict, config_text: str = None):
-    assert 'interfaces' in config, 'interfaces missed'
     assert 'pipes' in config, 'pipe missed'
 
     info = config['info']

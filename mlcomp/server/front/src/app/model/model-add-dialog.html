@@ -6,49 +6,15 @@
 </div>
 
 <mat-form-field style="width: 150px">
-    <mat-label>Dag</mat-label>
+    <mat-label>Project</mat-label>
     <mat-select
-            (ngModelChange)="data.dag=$event; dag_changed()"
-            [(ngModel)]="data.dag">
-        <mat-option *ngFor="let dag of data.dags" [value]="dag">
-            {{dag.name}}
+            (ngModelChange)="data.project=$event;"
+            [(ngModel)]="data.project">
+        <mat-option *ngFor="let project of data.projects" [value]="project.id">
+            {{project.name}}
         </mat-option>
     </mat-select>
 </mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Slot</mat-label>
-    <mat-select (ngModelChange)="data.slot=$event;" [(ngModel)]="data.slot">
-        <mat-option *ngFor="let slot of data.dag.slots" [value]="slot">
-            {{slot}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<mat-form-field style="width: 150px" *ngIf="data.dag">
-    <mat-label>Interface</mat-label>
-    <mat-select
-            (ngModelChange)="data.interface=$event;"
-            [(ngModel)]="data.interface">
-        <mat-option
-                *ngFor="let interface of data.dag.interfaces"
-                [value]="interface">
-            {{interface.name}}
-        </mat-option>
-    </mat-select>
-</mat-form-field>
-
-<div mat-dialog-content *ngIf="data.interface">
-  <mat-form-field style="width: 450px">
-    <mat-label>Interface Params</mat-label>
-      <textarea
-              matInput
-              [(ngModel)]="data.interface.params"
-              style="height:100px">
-
-      </textarea>
-  </mat-form-field>
-</div>
 
 <pre style="color: red" *ngIf="error">
     Error:

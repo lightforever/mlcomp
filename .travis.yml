@@ -27,7 +27,8 @@ jobs:
           --inline-quotes "single" \
           --multiline-quotes "single" \
           --docstring-quotes "double" \
-          --show-source --statistics
+          --show-source \
+          --statistics
         # test to make sure the code is yapf compliant
         #- ./yapf.sh --all
         - pytest -v --forked --numprocesses=auto

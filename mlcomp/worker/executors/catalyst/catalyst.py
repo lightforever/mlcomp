@@ -59,6 +59,7 @@ class Catalyst(Executor, Callback):
             trace: str,
             params: dict
     ):
+        super().__init__(order=0)
 
         self.resume = resume
         self.distr_info = distr_info
@@ -128,16 +129,17 @@ class Catalyst(Executor, Callback):
 
             if s.key == self.report.metric.name:
                 best = False
+                task = self.task
+                if task.parent:
+                    task = self.task_provider.by_id(task.parent)
+
                 if self.report.metric.minimize:
-                    if self.task.score is None or val.value < self.task.score:
+                    if task.score is None or val.value < task.score:
                         best = True
                 else:
-                    if self.task.score is None or val.value > self.task.score:
+                    if task.score is None or val.value > task.score:
                         best = True
                 if best:
-                    task = self.task
-                    if task.parent:
-                        task = self.task_provider.by_id(task.parent)
                     task.score = val.value
                     self.task_provider.update()
 
@@ -219,7 +221,7 @@ class Catalyst(Executor, Callback):
         checkpoint_dir = join(experiment.logdir, 'checkpoints')
         os.makedirs(checkpoint_dir, exist_ok=True)
 
-        file = 'last.pth' if resume.get('load_last') else 'best.pth'
+        file = 'last_full.pth' if resume.get('load_last') else 'best_full.pth'
 
         path = join(checkpoint_dir, file)
         computer = socket.gethostname()

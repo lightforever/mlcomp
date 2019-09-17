@@ -67,24 +67,27 @@ export class LayoutComponent implements OnInit, OnDestroy {
                     this.items_joined.push(s[0]);
                     this.items_joined_data.push(s[1]);
                 }
-            } else if (['img_classify', 'img'].indexOf(child.type) != -1) {
-                if (!(child.source in this.data)) {
-                    continue
-                }
-                let i = 0;
-                for (let d of this.data[child.source]) {
-                    let child_clone = Helpers.clone(child);
-                    child_clone.index = i;
-                    this.items_joined.push(child_clone);
-                    this.items_joined_data.push(d);
-                    i++;
-                }
-            } else if (child.type == 'table') {
-                this.items_joined.push(child);
-                this.items_joined_data.push(this.data);
             } else {
-                this.items_joined.push(child);
-                this.items_joined_data.push(this.data);
+                let single_elements = ['img_classify', 'img', 'img_segment'];
+                if (single_elements.indexOf(child.type) != -1) {
+                    if (!(child.source in this.data)) {
+                        continue
+                    }
+                    let i = 0;
+                    for (let d of this.data[child.source]) {
+                        let child_clone = Helpers.clone(child);
+                        child_clone.index = i;
+                        this.items_joined.push(child_clone);
+                        this.items_joined_data.push(d);
+                        i++;
+                    }
+                } else if (child.type == 'table') {
+                    this.items_joined.push(child);
+                    this.items_joined_data.push(this.data);
+                } else {
+                    this.items_joined.push(child);
+                    this.items_joined_data.push(this.data);
+                }
             }
         }
     }

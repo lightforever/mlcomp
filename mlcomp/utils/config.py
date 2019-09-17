@@ -36,11 +36,12 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
             mapping[key].append(k)
 
             if i < len(parts) - 1:
-                hooks[sep.join(parts[i: -1])] = sep.join(parts[:i + 1])
+                hooks[sep.join(parts[i:-1])] = sep.join(parts[:i + 1])
 
     for k, v in list(source.items()):
         if isinstance(v, dict):
-            source.update({k + sep + kk: v for kk in dict_flatten(v)})
+            source.update(
+                {k + sep + kk: vv for kk, vv in dict_flatten(v).items()})
 
     for k, v in source.items():
         if len(mapping[k]) == 0:
@@ -63,6 +64,17 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
     return dict_unflatten(target_flatten)
 
 
+def dict_from_list_str(params):
+    params = dict(p.split(':') for p in params)
+    for k, v in params.items():
+        if v.isnumeric():
+            if '.' in v:
+                params[k] = float(v)
+            else:
+                params[k] = int(v)
+    return params
+
+
 def parse_albu(configs: List[dict]):
     res = []
     for config in configs:
@@ -78,4 +90,18 @@ def parse_albu(configs: List[dict]):
     return res
 
 
-__all__ = ['Config', 'merge_dicts_smart', 'parse_albu']
+def parse_albu_short(config, always_apply=False):
+    if isinstance(config, str):
+        if config == 'hflip':
+            return A.HorizontalFlip(always_apply=always_apply)
+        if config == 'vflip':
+            return A.VerticalFlip(always_apply=always_apply)
+        if config == 'transpose':
+            return A.Transpose(always_apply=always_apply)
+
+        raise Exception(f'Unknwon augmentation {config}')
+    assert type(config) == dict
+    return parse_albu([config])
+
+
+__all__ = ['Config', 'merge_dicts_smart', 'parse_albu', 'parse_albu_short']

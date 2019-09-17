@@ -90,7 +90,7 @@ class DbHandler(logging.Handler):
             if record.funcName and record.funcName != '<module>':
                 module = f'{module}:{record.funcName}'
             log = Log(
-                message=record.msg[:4000],
+                message=record.msg[-16000:],
                 time=now(),
                 level=record.levelno,
                 step=step,
