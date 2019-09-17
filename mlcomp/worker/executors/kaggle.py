@@ -142,7 +142,7 @@ class Submit(Equation):
         with open(f'{folder}/kernel-metadata.json', 'w') as f:
             json.dump(kernel_meta, f)
 
-        code = '''
+        code = """
 import pandas as pd
 
 DATA_DIR = '../input/{self.competition}'
@@ -168,7 +168,7 @@ for index, row in df.iterrows():
 
 res = pd.DataFrame(res)
 res.to_csv('submission.csv', index=False)
-        '''.replace('{self.competition}', self.competition).replace(
+        """.replace('{self.competition}', self.competition).replace(
             '{self.kernel_suffix}', self.kernel_suffix
         ).replace('{self.file_name}', self.file_name
                   ).replace('{self.predict_column}', self.predict_column)
