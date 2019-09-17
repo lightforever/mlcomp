@@ -17,8 +17,9 @@ from experiment import Experiment
 class InferMnist(Infer):
     def __init__(self, **kwargs):
         cache_names = ['y']
-        super().__init__(cache_names=cache_names, layout='img_segment',
+        super().__init__(cache_names=cache_names, layout='img_classify',
                          **kwargs)
+
         if self.test:
             self.x_source = MnistDataset(
                 file='data/test.csv',
@@ -53,23 +54,27 @@ class InferMnist(Infer):
 
     def adjust_part(self, part):
         self.x = deepcopy(self.x_source)
-        self.x.data = self.x.data[part[0]:part[1]]
+        self.x.x = self.x.x[part[0]:part[1]]
+        if not self.test:
+            self.x.y = self.x.y[part[0]:part[1]]
 
     def save(self, preds, folder: str):
         self.res.extend(preds)
 
     def save_final(self, folder):
-        pickle.dump(np.array(self.res), open(f'{folder}/{self.name}.p', 'wb'))
+        pickle.dump(np.array(self.res),
+                    open(f'{folder}/{self.model_name}_{self.suffix}.p', 'wb'))
 
     def submit(self, preds):
         argmax = preds.argmax(axis=1)
         self.submit_res.extend(
-            [{'ImageId': len(self.submit_res) + i, 'Label': p} for i, p in
+            [{'ImageId': len(self.submit_res) + i + 1, 'Label': p} for i, p in
              enumerate(argmax)])
 
     def submit_final(self, folder):
         pd.DataFrame(self.submit_res). \
-            to_csv(f'{folder}/{self.name}.csv', index=False)
+            to_csv(f'{folder}/{self.model_name}_{self.suffix}.csv',
+                   index=False)
 
     def _plot_main(self, preds):
         imgs = [

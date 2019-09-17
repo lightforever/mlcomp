@@ -1,0 +1,24 @@
+metric:
+  name: accuracy
+  minimize: False
+
+items:
+  accuracy:
+    key: accuracy
+    type: series
+  img_classify:
+    type: img_classify
+    confusion_matrix: True
+
+layout:
+  - type: table
+    source: [accuracy]
+  - type: img_classify
+    source: img_classify
+    attrs:
+     -  type: int
+        source: attr1
+        name: y_pred
+     -  type: int
+        source: attr2
+        name: y

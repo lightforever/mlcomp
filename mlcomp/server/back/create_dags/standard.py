@@ -106,7 +106,7 @@ class DagStandardBuilder:
 
     def upload(self):
         if self.upload_files:
-            folder = os.getcwd()
+            folder = os.path.dirname(os.path.abspath(self.config_path))
             if 'expdir' in self.config['info']:
                 path = os.path.dirname(os.path.abspath(self.config_path))
                 folder = os.path.abspath(

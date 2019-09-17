@@ -14,7 +14,10 @@ from experiment import Experiment
 @Executor.register
 class ValidMnist(Valid):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        cache_names = ['y']
+        super().__init__(cache_names=cache_names, layout='img_classify',
+                         **kwargs)
+
         self.x_source = MnistDataset(
             file='data/train.csv',
             fold_csv='data/fold.csv',
@@ -47,7 +50,8 @@ class ValidMnist(Valid):
 
     def adjust_part(self, part):
         self.x = deepcopy(self.x_source)
-        self.x.data = self.x.data[part[0]:part[1]]
+        self.x.x = self.x.x[part[0]:part[1]]
+        self.x.y = self.x.y[part[0]:part[1]]
 
     def plot(self, preds, score):
         imgs = [

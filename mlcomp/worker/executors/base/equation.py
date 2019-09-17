@@ -30,13 +30,13 @@ _OP_MAP = {
 class Equation(Executor, ast.NodeVisitor):
     # noinspection PyTypeChecker
     def __init__(
-        self,
-        model_id: int,
-        suffix: str = '',
-        max_count=None,
-        part_size: int = None,
-        cache_names: List[str] = (),
-        **kwargs
+            self,
+            model_id: int = None,
+            suffix: str = '',
+            max_count=None,
+            part_size: int = None,
+            cache_names: List[str] = (),
+            **kwargs
     ):
         self.__dict__.update(kwargs)
         self.model_id = model_id
@@ -46,10 +46,13 @@ class Equation(Executor, ast.NodeVisitor):
         self.part = None
         self.cache = dict()
         self.cache_names = cache_names
-        if self.model_id:
-            self.name = ModelProvider(self.session).by_id(self.model_id).name
-        else:
-            self.name = None
+        self.model_name = kwargs.get('model_name')
+        self.name = kwargs.get('name')
+        if not self.model_name and self.model_id:
+            self.model_name = ModelProvider(self.session).by_id(
+                self.model_id).name
+        if not self.name:
+            self.name = self.model_name
 
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
@@ -99,12 +102,12 @@ class Equation(Executor, ast.NodeVisitor):
         return data
 
     def torch(
-        self,
-        x: Dataset,
-        file: str = None,
-        batch_size: int = 1,
-        use_logistic: bool = True,
-        num_workers: int = 1
+            self,
+            x: Dataset,
+            file: str = None,
+            batch_size: int = 1,
+            use_logistic: bool = True,
+            num_workers: int = 1
     ):
         file = file or self.name + '.pth'
         file = f'models/{file}'
@@ -217,7 +220,7 @@ class Equation(Executor, ast.NodeVisitor):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         return cls(**executor)
 

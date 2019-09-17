@@ -77,7 +77,7 @@ class Submit(Equation):
         self.kernel_suffix = kernel_suffix
         self.predict_column = predict_column
         self.message = message or f'model_id = {self.model_id}'
-        self.file = f'data/submissions/{self.name}_{self.suffix}.csv'
+        self.file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
         self.file_name = os.path.basename(self.file)
 
         assert self.submit_type in ['file', 'kernel']
@@ -142,7 +142,7 @@ class Submit(Equation):
         with open(f'{folder}/kernel-metadata.json', 'w') as f:
             json.dump(kernel_meta, f)
 
-        code = '''
+        code = """
 import pandas as pd
 
 DATA_DIR = '../input/{self.competition}'
@@ -168,7 +168,7 @@ for index, row in df.iterrows():
 
 res = pd.DataFrame(res)
 res.to_csv('submission.csv', index=False)
-        '''.replace('{self.competition}', self.competition).replace(
+        """.replace('{self.competition}', self.competition).replace(
             '{self.kernel_suffix}', self.kernel_suffix
         ).replace('{self.file_name}', self.file_name
                   ).replace('{self.predict_column}', self.predict_column)
