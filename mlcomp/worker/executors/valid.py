@@ -65,6 +65,8 @@ class Valid(Equation, ABC):
         score = self.score_final()
         if isnan(score):
             score = -1
+        else:
+            score = float(score)
 
         if self.layout:
             self.plot_final(score)

@@ -74,7 +74,7 @@ class ClassificationReportBuilder:
             if item['type'] == 'series' and item['key'] in scores:
                 series = ReportSeries(
                     name=item['name'],
-                    value=scores[item['key']],
+                    value=float(scores[item['key']]),
                     epoch=0,
                     time=now(),
                     task=self.task.id,
@@ -95,12 +95,12 @@ class ClassificationReportBuilder:
             dag = self.dag_provider.by_id(self.task.dag)
 
             for i in range(len(imgs)):
-                if i >= self.plot_count:
+                if self.plot_count <= 0:
                     break
 
                 img = resize_saving_ratio(imgs[i], self.max_img_size)
                 pred = preds[i]
-                attrs = attrs[i] if attrs else {}
+                attr = attrs[i] if attrs else {}
 
                 y = None
                 score = None
@@ -121,7 +121,7 @@ class ClassificationReportBuilder:
                     y_pred=y_pred,
                     y=y,
                     score=score,
-                    **attrs
+                    **attr
                 )
 
                 report_imgs.append(report_img)

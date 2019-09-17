@@ -83,8 +83,10 @@ class ReportImgProvider(BaseDataProvider):
                 )
             )
 
-        if filter.get('attrs'):
-            for attr in filter['attrs']:
+        layout = filter.get('layout')
+
+        if layout and layout.get('attrs'):
+            for attr in layout['attrs']:
                 field = getattr(ReportImg, attr['source'])
                 if attr.get('equal') is not None:
                     query = query.filter(field == attr['equal'])
@@ -111,11 +113,15 @@ class ReportImgProvider(BaseDataProvider):
         query = self.paginator(query, options)
         img_objs = query.all()
         for img_obj in img_objs:
-            img = pickle.loads(img_obj.img)
-            if img['img'].shape[-1] == 2:
-                img['img'] = cv2.cvtColor(img['img'], cv2.COLOR_GRAY2BGR)
+            buffer = img_obj.img
+            if layout:
+                buffer = np.fromstring(buffer, np.uint8)
+                img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+                img = resize_saving_ratio(
+                    img, (layout.get('max_height'), layout.get('max_width'))
+                )
+                retval, buffer = cv2.imencode('.jpg', img)
 
-            retval, buffer = cv2.imencode('.jpg', img['img'])
             jpg_as_text = base64.b64encode(buffer).decode('utf-8')
 
             # noinspection PyTypeChecker

@@ -156,7 +156,7 @@ export class ImgClassifyComponent extends Paginator<Img> {
         res['y_pred'] = this.y_pred;
         res['score_min'] = this.score_min;
         res['score_max'] = this.score_max;
-        res['attrs'] = this.item.attrs;
+        res['layout'] = this.item;
 
         return res;
     }

@@ -48,6 +48,7 @@ class InferMnist(Infer):
             name=self.name,
             plot_count=self.plot_count
         )
+        self.builder.create_base()
 
     def count(self):
         return len(self.x_source)

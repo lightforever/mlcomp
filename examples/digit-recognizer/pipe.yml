@@ -24,3 +24,4 @@ pipes:
       type: submit
       competition: digit-recognizer
       predict_column: Label
+      suffix: test

@@ -37,13 +37,16 @@ class ValidMnist(Valid):
             name=self.name,
             plot_count=self.plot_count
         )
+        self.builder.create_base()
 
     def count(self):
         return len(self.x_source)
 
     def score(self, preds):
-        res = preds[np.arange(len(self.x)), self.x.y]
+        # noinspection PyUnresolvedReferences
+        res = (preds.argmax(axis=1) == self.x.y).astype(np.float)
         self.scores.extend(res)
+        return res
 
     def score_final(self):
         return np.mean(self.scores)
@@ -72,7 +75,8 @@ class ValidMnist(Valid):
             imgs=imgs,
             preds=preds,
             targets=self.x.y,
-            attrs=attrs
+            attrs=attrs,
+            scores={'accuracy': score}
         )
 
     def plot_final(self, score):
