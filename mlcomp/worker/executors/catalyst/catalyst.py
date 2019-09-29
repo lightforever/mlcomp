@@ -198,8 +198,9 @@ class Catalyst(Executor, Callback):
         os.environ['WORLD_SIZE'] = str(info['world_size'])
 
         os.environ['RANK'] = str(info['rank'])
-
-        config['distributed_params'] = {'rank': 0}
+        distributed_params = config.get('distributed_params', {})
+        distributed_params['rank'] = 0
+        config['distributed_params'] = distributed_params
 
         if info['rank'] > 0:
             self.master = False
@@ -311,8 +312,10 @@ class Catalyst(Executor, Callback):
 
         Experiment, R = import_experiment_and_runner(Path(args.expdir))
 
+        runner_params = config.pop('runner_params', {})
+
         experiment = Experiment(config)
-        runner: Runner = R()
+        runner: Runner = R(**runner_params)
 
         register()
 

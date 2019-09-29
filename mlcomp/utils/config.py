@@ -35,7 +35,7 @@ def merge_dicts_smart(target: dict, source: dict, sep='/'):
             key = sep.join(parts[i:])
             mapping[key].append(k)
 
-            if i < len(parts) - 1:
+            if 0 < i < len(parts) - 1:
                 hooks[sep.join(parts[i:-1])] = sep.join(parts[:i + 1])
 
     for k, v in list(source.items()):

@@ -8,15 +8,21 @@ from torch.utils.data import DataLoader, Dataset
 from mlcomp.contrib.transform.tta import TtaWrap
 
 
-def _infer_batch(model, loader: DataLoader, use_logistic):
+def apply_activation(x, activation):
+    if not activation:
+        return x
+    if activation == 'sigmoid':
+        return torch.sigmoid(x)
+    if activation == 'softmax':
+        return torch.softmax(x, 1)
+    raise Exception(f'unknown activation = {activation}')
+
+
+def _infer_batch(model, loader: DataLoader, activation=None):
     for batch in tqdm(loader, total=len(loader)):
         features = batch['features'].cuda()
         logits = model(features)
-        if use_logistic:
-            # noinspection PyTypeChecker
-            p = 1 / (1 + torch.exp(-logits))
-        else:
-            p = torch.softmax(logits, 1)
+        p = apply_activation(logits, activation)
 
         if isinstance(loader.dataset, TtaWrap):
             p = loader.dataset.inverse(p)
@@ -25,16 +31,12 @@ def _infer_batch(model, loader: DataLoader, use_logistic):
         yield {'prob': p, 'count': p.shape[0], **batch}
 
 
-def _infer(model, loader: DataLoader, use_logistic):
+def _infer(model, loader: DataLoader, activation=None):
     pred = []
     for batch in tqdm(loader, total=len(loader)):
         features = batch['features'].cuda()
         logits = model(features)
-        if use_logistic:
-            # noinspection PyTypeChecker
-            p = 1 / (1 + torch.exp(-logits))
-        else:
-            p = torch.softmax(logits, 1)
+        p = apply_activation(logits, activation)
 
         if isinstance(loader.dataset, TtaWrap):
             p = loader.dataset.inverse(p)
@@ -46,19 +48,26 @@ def _infer(model, loader: DataLoader, use_logistic):
     return pred
 
 
-def infer(x: Dataset, file: str, batch_size: int = 1,
-          batch_mode: bool = False,
-          use_logistic: bool = True, num_workers: int = 1):
+def infer(
+        x: Dataset,
+        file: str,
+        batch_size: int = 1,
+        batch_mode: bool = False,
+        activation=None,
+        num_workers: int = 1,
+):
     loader = DataLoader(
-        x, batch_size=batch_size, shuffle=False,
+        x,
+        batch_size=batch_size,
+        shuffle=False,
         num_workers=num_workers,
         pin_memory=True
     )
     model = load(file).cuda()
     if batch_mode:
-        return _infer_batch(model, loader, use_logistic=use_logistic)
+        return _infer_batch(model, loader, activation=activation)
 
-    return _infer(model, loader, use_logistic=use_logistic)
+    return _infer(model, loader, activation=activation)
 
 
-__all__ = ['infer']
+__all__ = ['infer', 'apply_activation']

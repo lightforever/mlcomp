@@ -8,14 +8,17 @@ from mlcomp.contrib.dataset.classify import ImageDataset
 
 class ImageWithMaskDataset(ImageDataset):
     def __init__(
-        self, *, mask_folder: str, crop_positive=None, encode=True, **kwargs
+            self, *, mask_folder: str, crop_positive=None, encode=True,
+            include_binary=False, **kwargs
     ):
         assert mask_folder, 'Mask folder is required'
         self.mask_folder = mask_folder
         self.crop_positive = crop_positive
         self.encode = encode
+        self.include_binary = include_binary
         if not encode and kwargs.get('num_classes', 1) > 1:
             kwargs['num_classes'] += 1
+
         super().__init__(**kwargs)
 
     def preprocess_row(self, row: dict):
@@ -28,7 +31,7 @@ class ImageWithMaskDataset(ImageDataset):
             self._process_crop_positive(item)
 
     def _get_item_after_transform(
-        self, row: dict, transformed: dict, res: dict
+            self, row: dict, transformed: dict, res: dict
     ):
         if 'mask' in transformed:
             mask = transformed['mask'].astype(np.int64)
@@ -37,7 +40,7 @@ class ImageWithMaskDataset(ImageDataset):
                     (self.num_classes, *mask.shape), dtype=np.float32
                 )
                 if self.num_classes == 1:
-                    mask_encoded = (mask > 0).astype(np.uint8)
+                    mask = (mask >= 1).astype(np.uint8)
 
                 if self.encode:
                     for i in range(1, self.num_classes + 1):
@@ -45,12 +48,17 @@ class ImageWithMaskDataset(ImageDataset):
 
                     mask = mask_encoded
                 else:
-                    for i in range(self.num_classes):
-                        mask_encoded[i] = mask == i
+                    for i in range(1, self.num_classes + 1):
+                        mask_encoded[i - 1] = mask == i
 
                     res['targets_encoded'] = mask_encoded
 
-            res['targets'] = mask
+            res['targets'] = mask.astype(np.float32)
+
+            if self.include_binary:
+                for i, c in enumerate(mask):
+                    res[f'empty_{i}'] = int(c.sum() == 0)
+                res['empty_all'] = int(mask.sum() == 0)
 
     def _process_crop_positive(self, item: dict):
         if not self.crop_positive:
@@ -71,7 +79,9 @@ class ImageWithMaskDataset(ImageDataset):
         if type(crop_pos_x) == tuple:
             crop_pos_x = np.random.randint(crop_pos_x[0], crop_pos_x[1])
 
-        if mask.sum() == 0:
+        p = self.crop_positive[2]
+
+        if mask.sum() == 0 or np.random.uniform(0, 1) < p:
             min_y = 0
             max_y = size[0] - crop_pos_y
             min_x = 0

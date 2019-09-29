@@ -42,6 +42,7 @@ def dag_model_add(session: Session, data: dict):
                 'project': data['project'],
                 'task': data.get('task'),
                 'name': data['name'],
+                'file': data['file'],
                 'child_task': child_task
             }
         }

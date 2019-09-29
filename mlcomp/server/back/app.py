@@ -353,6 +353,7 @@ def code():
     id = request_data()
     res = OrderedDict()
     parents = dict()
+
     for s, f in DagStorageProvider(_read_session).by_dag(id):
         s.path = s.path.strip()
         parent = os.path.dirname(s.path)
@@ -364,10 +365,11 @@ def code():
             node = {'name': name, 'children': []}
             if not parent:
                 res[name] = node
-                parents[s.path] = res[name]
+                parents[s.path] = node
             else:
                 # noinspection PyUnresolvedReferences
                 parents[parent]['children'].append(node)
+                parents[os.path.join(parent, name)] = node
         else:
             node = {'name': name}
             try:

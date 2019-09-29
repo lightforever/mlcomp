@@ -58,12 +58,14 @@ class ModelAdd(Executor):
         name: str,
         project: int,
         train_task: int = None,
-        child_task: int = None
+        child_task: int = None,
+        file: str = None
     ):
         self.train_task = train_task
         self.name = name
         self.child_task = child_task
         self.project = project
+        self.file = file
 
     def work(self):
         project = ProjectProvider(self.session).by_id(self.project)
@@ -95,7 +97,9 @@ class ModelAdd(Executor):
             model_weight_path = f'{models_dir}/{model.name}_weight.pth'
             torch.jit.save(traced, model_path_tmp)
             shutil.copy(model_path_tmp, model_path)
-            shutil.copy(f'{src_log}/checkpoints/best.pth', model_weight_path)
+            file = self.file = 'best_full'
+            shutil.copy(f'{src_log}/checkpoints/{file}.pth',
+                        model_weight_path)
 
         provider.add(model)
 
