@@ -56,7 +56,7 @@ class ValidMnist(Valid):
         self.x.x = self.x.x[part[0]:part[1]]
         self.x.y = self.x.y[part[0]:part[1]]
 
-    def plot(self, preds, score):
+    def plot(self, preds, scores):
         imgs = [
             cv2.cvtColor(
                 ((row['features'][0] * 0.229 + 0.485) * 255).astype(np.uint8),
@@ -76,7 +76,7 @@ class ValidMnist(Valid):
             preds=preds,
             targets=self.x.y,
             attrs=attrs,
-            scores={'accuracy': score}
+            scores={'accuracy': scores}
         )
 
     def plot_final(self, score):

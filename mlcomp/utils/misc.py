@@ -5,6 +5,7 @@ import re
 from typing import List
 import os
 import pwd
+import random
 
 import dateutil
 import numpy as np
@@ -13,6 +14,26 @@ import psutil
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
+
+
+def set_global_seed(seed: int) -> None:
+    """
+    Sets random seed into PyTorch, TensorFlow, Numpy and Random.
+
+    Args:
+        seed: random seed
+    """
+
+    try:
+        import torch
+    except ImportError:
+        pass
+    else:
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    random.seed(seed)
+    np.random.seed(seed)
 
 
 def dict_func(objcts: List, func=np.mean):

@@ -54,6 +54,8 @@ class Equation(Executor, ast.NodeVisitor):
         if not self.name:
             self.name = self.model_name
 
+        self.suffix = self._solve(suffix)
+
     def tta(self, x: Dataset, tfms=()):
         x = deepcopy(x)
         transforms = getattr(x, 'transforms')
@@ -106,16 +108,16 @@ class Equation(Executor, ast.NodeVisitor):
             x: Dataset,
             file: str = None,
             batch_size: int = 1,
-            use_logistic: bool = True,
+            activation=None,
             num_workers: int = 1
     ):
-        file = file or self.name + '.pth'
+        file = (file or self.name) + '.pth'
         file = f'models/{file}'
         return infer(
             x=x,
             file=file,
             batch_size=batch_size,
-            use_logistic=use_logistic,
+            activation=activation,
             num_workers=num_workers
         )
 

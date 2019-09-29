@@ -142,7 +142,8 @@ export class ModelComponent extends Paginator<Model> {
                 data: {
                     'projects': this.projects.filter(x => x.name != 'None'),
                     'equations': '',
-                    'name': ''
+                    'name': '',
+                    'file': ''
                 }
             });
         dialog.afterClosed().subscribe(res => this.change.emit());

@@ -230,11 +230,7 @@
                             *ngIf="show_links"
                             svgIcon="model"
                             matTooltip="Create model"
-                            (click)="model(element)"
-                            [class.transparent]=
-                                    "['success', 'stopped'].
-                                        indexOf(element.status)==-1
-                                    ||not_a_model(element)">
+                            (click)="model(element)">
                     </mat-icon>
 
                 </div>

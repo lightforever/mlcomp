@@ -21,8 +21,15 @@ def dag_model_start(session: Session, data: dict):
     versions = data['pipe']['versions']
 
     if len(versions) > 0:
-        pipe_equations = yaml_load(versions[0]['equations'])
-        versions[0]['used'] = now()
+        version = data['pipe']['version']
+        pipe_equations = yaml_load(version['equations'])
+        found_version = versions[0]
+        for v in versions:
+            if v['name'] == version['name']:
+                found_version = v
+                break
+
+        found_version['used'] = now()
 
         if len(pipe) == 1:
             pipe[list(pipe)[0]].update(pipe_equations)
@@ -34,6 +41,7 @@ def dag_model_start(session: Session, data: dict):
 
     for v in pipe.values():
         v['model_id'] = model.id
+        v['model_name'] = model.name
 
     config = {
         'info': {

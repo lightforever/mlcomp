@@ -19,6 +19,7 @@ from mlcomp.db.providers import TaskProvider, \
     DockerProvider
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import yaml_load, yaml_dump
+from mlcomp.utils.misc import set_global_seed
 from mlcomp.worker.app import app
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
@@ -90,6 +91,9 @@ class ExecuteBuilder:
                               f'{self.worker_index}'
 
         self.config = Config.from_yaml(self.dag.config)
+
+        set_global_seed(self.config['info'].get('seed', 0))
+
         self.executor_type = self.config['executors'][self.task.executor][
             'type']
 

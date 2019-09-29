@@ -329,6 +329,7 @@ export interface ModelAddData {
     projects: any[];
     name: string;
     task: number;
+    file: string;
 }
 
 export class ModelStartData extends BaseResult{

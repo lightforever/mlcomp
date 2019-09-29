@@ -1,7 +1,9 @@
+import ast
 from os.path import join
 from numbers import Number
 from collections import defaultdict
 import os
+from typing import Callable, Dict
 
 import tifffile
 import numpy as np
@@ -23,15 +25,21 @@ class ImageDataset(Dataset):
             num_classes=2,
             max_count=None,
             meta_cols=(),
-            transforms=None):
+            transforms=None,
+            postprocess_func: Callable[[Dict], Dict] = None,
+            include_image_orig=False
+    ):
         self.img_folder = img_folder
 
         if fold_csv:
             df = pd.read_csv(fold_csv)
-            if is_test:
-                self.data = df[df['fold'] == fold_number]
+            if fold_number is not None:
+                if is_test:
+                    self.data = df[df['fold'] == fold_number]
+                else:
+                    self.data = df[df['fold'] != fold_number]
             else:
-                self.data = df[df['fold'] != fold_number]
+                self.data = df
         else:
             self.data = pd.DataFrame(
                 {'image': os.listdir(img_folder)}).sort_values(by='image')
@@ -47,6 +55,8 @@ class ImageDataset(Dataset):
         self.gray_scale = gray_scale
         self.num_classes = num_classes
         self.meta_cols = meta_cols
+        self.postprocess_func = postprocess_func
+        self.include_image_orig = include_image_orig
 
     def apply_max_count(self, max_count):
         if isinstance(max_count, Number):
@@ -64,11 +74,7 @@ class ImageDataset(Dataset):
             self.data = [v for i in range(len(data)) for v in data[i]]
 
     def preprocess_row(self, row: dict):
-        if 'label' in row:
-            row['image'] = join(self.img_folder, str(row['label']),
-                                row['image'])
-        else:
-            row['image'] = join(self.img_folder, row['image'])
+        row['image'] = join(self.img_folder, row['image'])
 
     def __len__(self):
         return len(self.data)
@@ -80,7 +86,9 @@ class ImageDataset(Dataset):
                                   transformed: dict,
                                   res: dict):
         if 'label' in row:
-            res['targets'] = row['label']
+            res['targets'] = ast.literal_eval(str(row['label']))
+            if isinstance(res['targets'], list):
+                res['targets'] = np.array(res['targets'], dtype=np.float32)
 
     def __getitem__(self, index):
         row = self.data[index]
@@ -95,11 +103,17 @@ class ImageDataset(Dataset):
             item['image'] = np.expand_dims(item['image'], axis=0)
         res = {
             'features': item['image'].astype(np.float32),
-            'meta': {c: row[c] for c in self.meta_cols},
             'image_file': row['image']
         }
-        self._get_item_after_transform(row, item, res)
+        if self.include_image_orig:
+            res['image'] = image
 
+        for c in self.meta_cols:
+            res[c] = row[c]
+
+        self._get_item_after_transform(row, item, res)
+        if self.postprocess_func:
+            res = self.postprocess_func(res)
         return res
 
     @staticmethod

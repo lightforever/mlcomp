@@ -17,7 +17,8 @@ export class ModelService extends BaseService {
             'name': data.name,
             'task': data.task,
             'equations': data.equations,
-            'project': data.project
+            'project': data.project,
+            'file': data.file
         };
         let url = AppSettings.API_ENDPOINT + this.single_part + '/add';
         return this.http.post<BaseResult>(url, info).pipe(
