@@ -1,6 +1,6 @@
 export class AppSettings {
     public static get API_ENDPOINT(): string {
-        return `http://${window.location.hostname}:4201/api/`
+        return `http://${window.location.hostname}:${window.location.port}/api/`
     }
 
     public static status_colors = {
