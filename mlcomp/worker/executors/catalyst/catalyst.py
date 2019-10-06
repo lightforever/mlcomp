@@ -14,7 +14,7 @@ from catalyst.utils.config import parse_args_uargs, dump_environment
 
 from mlcomp import TASK_FOLDER
 from mlcomp.contrib.search.grid import grid_cells
-from mlcomp.db.providers import ReportSeriesProvider
+from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.misc import now
@@ -68,6 +68,7 @@ class Catalyst(Executor, Callback):
         self.experiment = None
         self.runner = None
         self.series_provider = ReportSeriesProvider(self.session)
+        self.computer_provider = ComputerProvider(self.session)
         self.grid_config = grid_config
         self.master = True
         self.checkpoint_resume = False
@@ -227,8 +228,11 @@ class Catalyst(Executor, Callback):
         path = join(checkpoint_dir, file)
         computer = socket.gethostname()
         if computer != resume['master_computer']:
+            master_computer = self.computer_provider.by_name(
+                resume['master_computer'])
             path_from = join(
-                TASK_FOLDER, str(resume['master_task_id']), 'log',
+                master_computer.root_folder, str(resume['master_task_id']),
+                'log',
                 'checkpoints', file
             )
             self.info(
