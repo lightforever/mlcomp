@@ -9,6 +9,7 @@ import click
 import GPUtil
 import psutil
 import numpy as np
+import torch
 
 from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
     DOCKER_IMG, DOCKER_MAIN, IP, PORT, WORKER_USAGE_INTERVAL, \
@@ -251,7 +252,7 @@ def _create_computer():
     tot_d, used_d, free_d = disk(ROOT_FOLDER)
     computer = Computer(
         name=socket.gethostname(),
-        gpu=len(GPUtil.getGPUs()),
+        gpu=torch.cuda.device_count(),
         cpu=cpu_count(),
         memory=tot_m,
         ip=IP,

@@ -5,7 +5,7 @@ import click
 import socket
 from multiprocessing import cpu_count
 
-import GPUtil
+import torch
 
 from mlcomp import ROOT_FOLDER, IP, PORT, \
     WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
@@ -60,7 +60,7 @@ def _create_computer():
     tot_d, used_d, free_d = disk(ROOT_FOLDER)
     computer = Computer(
         name=socket.gethostname(),
-        gpu=len(GPUtil.getGPUs()),
+        gpu=torch.cuda.device_count(),
         cpu=cpu_count(),
         memory=tot_m,
         ip=IP,
@@ -117,7 +117,7 @@ def execute(config: str, debug: bool, params):
         for id in ids:
             task = provider.by_id(id)
             task.gpu_assigned = ','.join(
-                [str(i) for i, _ in enumerate(GPUtil.getGPUs())])
+                [str(i) for i in range(torch.cuda.device_count())])
 
             provider.commit()
             execute_by_id(id, exit=False)
