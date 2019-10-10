@@ -186,7 +186,7 @@ class ExecuteBuilder:
         self.info('create_executor')
 
         cuda_visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
-        if len(cuda_visible_devices) > 0:
+        if os.getenv('CUDA_VISIBLE_DEVICES', '').strip() != '':
             self.task.gpu_assigned = ','.join(
                 [cuda_visible_devices[int(g)] for g in
                  (self.task.gpu_assigned or '').split(',')])
