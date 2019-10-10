@@ -88,7 +88,7 @@ class ExecuteBuilder:
         self.worker_index = os.getenv('WORKER_INDEX', -1)
 
         self.queue_personal = f'{self.hostname}_{self.docker_img}_' \
-                              f'{self.worker_index}'
+            f'{self.worker_index}'
 
         self.config = Config.from_yaml(self.dag.config)
 
@@ -115,7 +115,7 @@ class ExecuteBuilder:
 
         if self.task.status >= TaskStatus.InProgress.value:
             msg = f'Task = {self.task.id}. Status = {self.task.status}, ' \
-                  f'before the execute_by_id invocation.'
+                f'before the execute_by_id invocation.'
             if app.current_task:
                 msg += f' Request Id = {app.current_task.request.id}'
             self.error(msg)
@@ -184,6 +184,12 @@ class ExecuteBuilder:
 
     def create_executor(self):
         self.info('create_executor')
+
+        cuda_visible_devices = os.getenv('CUDA_VISIBLE_DEVICES', '').split(',')
+        if os.getenv('CUDA_VISIBLE_DEVICES', '').strip() != '':
+            self.task.gpu_assigned = ','.join(
+                [cuda_visible_devices[int(g)] for g in
+                 (self.task.gpu_assigned or '').split(',')])
 
         os.environ['CUDA_VISIBLE_DEVICES'] = self.task.gpu_assigned or ''
 
@@ -349,7 +355,7 @@ def stop(logger, session: Session, task: Task, dag: Dag):
     finally:
         if task.pid:
             queue = f'{task.computer_assigned}_' \
-                    f'{dag.docker_img or "default"}_supervisor'
+                f'{dag.docker_img or "default"}_supervisor'
             kill.apply_async((task.pid,), queue=queue, retry=False)
         provider.change_status(task, status)
 

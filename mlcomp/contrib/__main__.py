@@ -39,7 +39,7 @@ def split_classify(img_path: str,
                      for img in os.listdir(join(img_path, sub_folder))]
 
     file_group_kfold(n_splits, output, get_group=get_group,
-                     image=[img for img, label in images_labels],
+                     image=[join(label, img) for img, label in images_labels],
                      label=[label for img, label in images_labels]
                      )
 
