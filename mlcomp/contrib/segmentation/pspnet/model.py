@@ -47,7 +47,10 @@ class PSPNet(EncoderDecoder):
             dropout=0.2,
             activation='softmax',
     ):
-        encoder = get_encoder(encoder_name, encoder_weights=encoder_weights)
+        encoder = get_encoder(
+            encoder_name,
+            encoder_weights=encoder_weights
+        )
 
         decoder = PSPDecoder(
             encoder_channels=encoder.out_shapes,

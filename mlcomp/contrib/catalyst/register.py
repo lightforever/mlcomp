@@ -10,7 +10,6 @@ from mlcomp.contrib.catalyst.optim import OneCycleCosineAnnealLR
 from mlcomp.contrib.model.segmentation_model_pytorch import \
             SegmentationModelPytorch
 from mlcomp.contrib.model import Pretrained
-from mlcomp.contrib.segmentation.deeplabv3.deeplab import DeepLab
 
 
 def register():
@@ -36,7 +35,6 @@ def register():
     registry.Model(ResNetLinknet)
 
     registry.Model(SegmentationModelPytorch)
-    registry.Model(DeepLab)
 
 
 __all__ = ['register']

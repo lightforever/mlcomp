@@ -5,7 +5,6 @@ from pretrainedmodels.models.torchvision_models import pretrained_settings
 
 
 class ResNetEncoder(ResNet):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pretrained = False
@@ -41,7 +40,6 @@ resnet_encoders = {
             'layers': [2, 2, 2, 2],
         },
     },
-
     'resnet34': {
         'encoder': ResNetEncoder,
         'pretrained_settings': pretrained_settings['resnet34'],
@@ -51,7 +49,6 @@ resnet_encoders = {
             'layers': [3, 4, 6, 3],
         },
     },
-
     'resnet50': {
         'encoder': ResNetEncoder,
         'pretrained_settings': pretrained_settings['resnet50'],
@@ -61,7 +58,6 @@ resnet_encoders = {
             'layers': [3, 4, 6, 3],
         },
     },
-
     'resnet101': {
         'encoder': ResNetEncoder,
         'pretrained_settings': pretrained_settings['resnet101'],
@@ -71,7 +67,6 @@ resnet_encoders = {
             'layers': [3, 4, 23, 3],
         },
     },
-
     'resnet152': {
         'encoder': ResNetEncoder,
         'pretrained_settings': pretrained_settings['resnet152'],
@@ -81,7 +76,6 @@ resnet_encoders = {
             'layers': [3, 8, 36, 3],
         },
     },
-
     'resnext50_32x4d': {
         'encoder': ResNetEncoder,
         'pretrained_settings': {
@@ -104,7 +98,6 @@ resnet_encoders = {
             'width_per_group': 4
         },
     },
-
     'resnext101_32x8d': {
         'encoder': ResNetEncoder,
         'pretrained_settings': {
@@ -137,7 +130,6 @@ resnet_encoders = {
             'width_per_group': 8
         },
     },
-
     'resnext101_32x16d': {
         'encoder': ResNetEncoder,
         'pretrained_settings': {
@@ -160,7 +152,6 @@ resnet_encoders = {
             'width_per_group': 16
         },
     },
-
     'resnext101_32x32d': {
         'encoder': ResNetEncoder,
         'pretrained_settings': {
@@ -183,7 +174,6 @@ resnet_encoders = {
             'width_per_group': 32
         },
     },
-
     'resnext101_32x48d': {
         'encoder': ResNetEncoder,
         'pretrained_settings': {

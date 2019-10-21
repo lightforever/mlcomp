@@ -66,11 +66,20 @@ class FPNDecoder(Model):
             encoder_channels,
             pyramid_channels=256,
             segmentation_channels=128,
+            final_upsampling=4,
             final_channels=1,
             dropout=0.2,
+            merge_policy='add'
     ):
         super().__init__()
 
+        if merge_policy not in ['add', 'cat']:
+            raise ValueError(
+                "`merge_policy` must be one of: ['add', 'cat'], got {}".format(
+                    merge_policy))
+        self.merge_policy = merge_policy
+
+        self.final_upsampling = final_upsampling
         self.conv1 = nn.Conv2d(encoder_channels[0], pyramid_channels,
                                kernel_size=(1, 1))
 
@@ -88,6 +97,10 @@ class FPNDecoder(Model):
                                     n_upsamples=0)
 
         self.dropout = nn.Dropout2d(p=dropout, inplace=True)
+
+        if self.merge_policy == 'cat':
+            segmentation_channels *= 4
+
         self.final_conv = nn.Conv2d(segmentation_channels, final_channels,
                                     kernel_size=1, padding=0)
 
@@ -106,11 +119,15 @@ class FPNDecoder(Model):
         s3 = self.s3(p3)
         s2 = self.s2(p2)
 
-        x = s5 + s4 + s3 + s2
+        if self.merge_policy == 'add':
+            x = s5 + s4 + s3 + s2
+        elif self.merge_policy == 'cat':
+            x = torch.cat([s5, s4, s3, s2], dim=1)
 
         x = self.dropout(x)
         x = self.final_conv(x)
 
-        x = F.interpolate(x, scale_factor=4, mode='bilinear',
-                          align_corners=True)
+        if self.final_upsampling is not None and self.final_upsampling > 1:
+            x = F.interpolate(x, scale_factor=self.final_upsampling,
+                              mode='bilinear', align_corners=True)
         return x

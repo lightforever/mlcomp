@@ -7,8 +7,13 @@ from ..base.model import Model
 
 
 class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, use_batchnorm=True,
-                 attention_type=None):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        use_batchnorm=True,
+        attention_type=None
+    ):
         super().__init__()
         if attention_type is None:
             self.attention1 = nn.Identity()
@@ -18,10 +23,20 @@ class DecoderBlock(nn.Module):
             self.attention2 = SCSEModule(out_channels)
 
         self.block = nn.Sequential(
-            Conv2dReLU(in_channels, out_channels, kernel_size=3, padding=1,
-                       use_batchnorm=use_batchnorm),
-            Conv2dReLU(out_channels, out_channels, kernel_size=3, padding=1,
-                       use_batchnorm=use_batchnorm),
+            Conv2dReLU(
+                in_channels,
+                out_channels,
+                kernel_size=3,
+                padding=1,
+                use_batchnorm=use_batchnorm
+            ),
+            Conv2dReLU(
+                out_channels,
+                out_channels,
+                kernel_size=3,
+                padding=1,
+                use_batchnorm=use_batchnorm
+            ),
         )
 
     def forward(self, x):
@@ -37,51 +52,66 @@ class DecoderBlock(nn.Module):
 
 
 class CenterBlock(DecoderBlock):
-
     def forward(self, x):
         return self.block(x)
 
 
 class UnetDecoder(Model):
-
     def __init__(
-            self,
-            encoder_channels,
-            decoder_channels=(256, 128, 64, 32, 16),
-            final_channels=1,
-            use_batchnorm=True,
-            center=False,
-            attention_type=None
+        self,
+        encoder_channels,
+        decoder_channels=(256, 128, 64, 32, 16),
+        final_channels=1,
+        use_batchnorm=True,
+        center=False,
+        attention_type=None
     ):
         super().__init__()
 
         if center:
             channels = encoder_channels[0]
-            self.center = CenterBlock(channels, channels,
-                                      use_batchnorm=use_batchnorm)
+            self.center = CenterBlock(
+                channels, channels, use_batchnorm=use_batchnorm
+            )
         else:
             self.center = None
 
         in_channels = self.compute_channels(encoder_channels, decoder_channels)
         out_channels = decoder_channels
 
-        self.layer1 = DecoderBlock(in_channels[0], out_channels[0],
-                                   use_batchnorm=use_batchnorm,
-                                   attention_type=attention_type)
-        self.layer2 = DecoderBlock(in_channels[1], out_channels[1],
-                                   use_batchnorm=use_batchnorm,
-                                   attention_type=attention_type)
-        self.layer3 = DecoderBlock(in_channels[2], out_channels[2],
-                                   use_batchnorm=use_batchnorm,
-                                   attention_type=attention_type)
-        self.layer4 = DecoderBlock(in_channels[3], out_channels[3],
-                                   use_batchnorm=use_batchnorm,
-                                   attention_type=attention_type)
-        self.layer5 = DecoderBlock(in_channels[4], out_channels[4],
-                                   use_batchnorm=use_batchnorm,
-                                   attention_type=attention_type)
-        self.final_conv = nn.Conv2d(out_channels[4], final_channels,
-                                    kernel_size=(1, 1))
+        self.layer1 = DecoderBlock(
+            in_channels[0],
+            out_channels[0],
+            use_batchnorm=use_batchnorm,
+            attention_type=attention_type
+        )
+        self.layer2 = DecoderBlock(
+            in_channels[1],
+            out_channels[1],
+            use_batchnorm=use_batchnorm,
+            attention_type=attention_type
+        )
+        self.layer3 = DecoderBlock(
+            in_channels[2],
+            out_channels[2],
+            use_batchnorm=use_batchnorm,
+            attention_type=attention_type
+        )
+        self.layer4 = DecoderBlock(
+            in_channels[3],
+            out_channels[3],
+            use_batchnorm=use_batchnorm,
+            attention_type=attention_type
+        )
+        self.layer5 = DecoderBlock(
+            in_channels[4],
+            out_channels[4],
+            use_batchnorm=use_batchnorm,
+            attention_type=attention_type
+        )
+        self.final_conv = nn.Conv2d(
+            out_channels[4], final_channels, kernel_size=(1, 1)
+        )
 
         self.initialize()
 
