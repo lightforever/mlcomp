@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from .model import Model
 
 
 class EncoderDecoder(Model):
-
     def __init__(self, encoder, decoder, activation):
         super().__init__()
         self.encoder = encoder
@@ -18,13 +19,21 @@ class EncoderDecoder(Model):
             self.activation = nn.Sigmoid()
         else:
             raise ValueError(
-                'Activation should be "sigmoid"/"softmax"/callable/None')
+                'Activation should be "sigmoid"/"softmax"/callable/None'
+            )
 
     def forward(self, x):
         """Sequentially pass `x` trough model`s
          `encoder` and `decoder` (return logits!)"""
+        input_shape = x.size()[-2:]
+
         x = self.encoder(x)
         x = self.decoder(x)
+
+        if input_shape[0] != x.shape[-2] or input_shape[1] != x.shape[-1]:
+            x = F.interpolate(
+                x, size=input_shape, mode='bilinear', align_corners=False
+            )
         return x
 
     def predict(self, x):
