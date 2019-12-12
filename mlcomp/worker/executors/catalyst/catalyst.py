@@ -8,7 +8,7 @@ import torch
 
 from catalyst.utils import set_global_seed, load_checkpoint
 from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
-from catalyst.dl.callbacks import VerboseLogger, RaiseExceptionLogger
+from catalyst.dl.callbacks import VerboseLogger
 from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_environment
 
@@ -145,8 +145,7 @@ class Catalyst(Executor, Callback):
                     self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):
-        state.loggers = {'console': VerboseLogger(),
-                         'raise': RaiseExceptionLogger()}
+        state.loggers = {'console': VerboseLogger()}
 
     def on_stage_end(self, state: RunnerState):
         self.checkpoint_resume = False
@@ -181,6 +180,7 @@ class Catalyst(Executor, Callback):
         distr_info = additional_info.get('distr_info', {})
         resume = additional_info.get('resume')
         params = executor.get('params', {})
+        params.update(additional_info.get('params', {}))
 
         return cls(
             args=args,
