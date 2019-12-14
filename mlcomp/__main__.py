@@ -17,7 +17,6 @@ from mlcomp.db.providers import \
     TaskProvider, \
     StepProvider, \
     ProjectProvider
-from mlcomp.migration.manage import migrate
 from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.logging import create_logger
@@ -31,8 +30,6 @@ _session = Session.create_session(key=__name__)
 
 def _dag(config: str, debug: bool = False, control_reqs=True,
          params: Tuple[str] = ()):
-    migrate()
-
     config_text = open(config, 'r').read()
     config_parsed = yaml_load(config_text)
     params = dict_from_list_str(params)

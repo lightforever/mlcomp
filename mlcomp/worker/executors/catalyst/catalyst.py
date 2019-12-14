@@ -57,10 +57,12 @@ class Catalyst(Executor, Callback):
             resume: dict,
             grid_config: dict,
             trace: str,
-            params: dict
+            params: dict,
+            **kwargs
     ):
-        super().__init__(order=0)
+        super().__init__(**kwargs)
 
+        self.order = 0
         self.resume = resume
         self.distr_info = distr_info
         self.args = args

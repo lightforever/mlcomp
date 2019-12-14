@@ -18,6 +18,9 @@ class Executor(ABC):
     logger = None
     step = None
 
+    def __init__(self, **kwargs):
+        pass
+
     def debug(self, message: str):
         self.step.debug(message)
 
@@ -55,7 +58,7 @@ class Executor(ABC):
     def _from_config(
         cls, executor: dict, config: Config, additional_info: dict
     ):
-        return cls()
+        return cls(**executor)
 
     @staticmethod
     def from_config(

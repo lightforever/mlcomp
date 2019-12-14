@@ -1,0 +1,8 @@
+info:
+  name: bash
+  project: examples
+  expdir: .
+executors:
+  bash:
+    type: bash
+    command: ls

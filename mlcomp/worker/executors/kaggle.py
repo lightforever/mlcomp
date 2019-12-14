@@ -38,7 +38,10 @@ class Download(Executor):
         type=DownloadType.Kaggle,
         competition: str = None,
         link: str = None,
+        **kwargs
     ):
+        super().__init__(**kwargs)
+
         if type == DownloadType.Kaggle and competition is None:
             raise Exception('Competition is required for Kaggle')
         self.type = type
