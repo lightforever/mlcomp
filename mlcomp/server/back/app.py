@@ -162,11 +162,10 @@ def project_add():
     data = request_data()
 
     provider = ProjectProvider(_write_session)
-    res = provider.add_project(
+    provider.add_project(
         data['name'], yaml_load(data['class_names']),
         yaml_load(data['ignore_folders'])
     )
-    return res
 
 
 @app.route('/api/project/edit', methods=['POST'])
@@ -176,11 +175,10 @@ def project_edit():
     data = request_data()
 
     provider = ProjectProvider(_write_session)
-    res = provider.edit_project(
+    provider.edit_project(
         data['name'], yaml_load(data['class_names']),
         yaml_load(data['ignore_folders'])
     )
-    return res
 
 
 @app.route('/api/report/add_start', methods=['POST'])

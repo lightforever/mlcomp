@@ -20,7 +20,6 @@ def start_site():
     """
     Start only site
     """
-    migrate()
     _start_server()
 
 
@@ -47,8 +46,6 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
 
     It starts: redis-server, site, worker_supervisor, workers
     """
-    migrate()
-
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'

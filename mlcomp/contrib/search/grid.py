@@ -34,12 +34,14 @@ def grid_cells(grid: List):
                 raise Exception('Dict value must be list or str')
             new_row = []
             if val_type == str:
-                if key != '_folder':
-                    raise Exception('If dict value is str, '
-                                    'only key=_folder can be filled')
-
-                for file in glob(join(row[key], '*.yml')):
-                    new_row.append(yaml_load(file))
+                if '-' in row[key]:
+                    start, end = map(int, row[key].split('-'))
+                    for p in range(start, end + 1):
+                        new_row.append({key: p})
+                else:
+                    if key == '_folder':
+                        for file in glob(join(row[key], '*.yml')):
+                            new_row.append(yaml_load(file))
             else:
                 for v in row[key]:
                     if key == '_file':

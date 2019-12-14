@@ -27,8 +27,7 @@ class DagStandardBuilder:
             upload_files: bool = True,
             copy_files_from: int = None,
             config_path: str = None,
-            control_reqs: bool = True,
-            additional_info: dict = None
+            control_reqs: bool = True
     ):
         self.session = session
         self.config = config
@@ -41,7 +40,6 @@ class DagStandardBuilder:
 
         self.info = config['info']
         self.layout_name = self.info.get('layout')
-        self.additional_info = additional_info or {}
 
         self.provider = None
         self.report_provider = None
@@ -146,7 +144,6 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
-
         if self.layout_name and task_type == TaskType.Train.value:
             if self.layout_name not in self.layouts:
                 raise Exception(f'Unknown report = {v["report"]}')
@@ -175,7 +172,7 @@ class DagStandardBuilder:
 
             self.provider.commit()
         else:
-            task.additional_info = yaml_dump(self.additional_info)
+            task.additional_info = yaml_dump(info)
             self.provider.add(task)
 
         return task.id
@@ -256,8 +253,7 @@ def dag_standard(
         upload_files: bool = True,
         copy_files_from: int = None,
         config_path: str = None,
-        control_reqs: bool = True,
-        additional_info: dict = None
+        control_reqs: bool = True
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -267,8 +263,7 @@ def dag_standard(
         upload_files=upload_files,
         copy_files_from=copy_files_from,
         config_path=config_path,
-        control_reqs=control_reqs,
-        additional_info=additional_info
+        control_reqs=control_reqs
     )
     return builder.build()
 

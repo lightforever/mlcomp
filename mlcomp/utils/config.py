@@ -104,4 +104,5 @@ def parse_albu_short(config, always_apply=False):
     return parse_albu([config])
 
 
-__all__ = ['Config', 'merge_dicts_smart', 'parse_albu', 'parse_albu_short']
+__all__ = ['Config', 'merge_dicts_smart', 'parse_albu', 'parse_albu_short',
+           'dict_from_list_str']

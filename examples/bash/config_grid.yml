@@ -1,0 +1,10 @@
+info:
+  name: bash
+  project: examples
+  expdir: .
+executors:
+  bash:
+    type: bash
+    command: echo $variable
+    grid:
+      - variable: 0-10
