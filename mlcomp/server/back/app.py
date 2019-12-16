@@ -479,7 +479,13 @@ def dag_stop():
     id = int(data['id'])
     dag = provider.by_id(id, joined_load=['tasks'])
     for t in dag.tasks:
+        info = yaml_load(t.additional_info)
+        info['stopped'] = True
+        t.additional_info = yaml_dump(info)
+
+    for t in dag.tasks:
         celery_tasks.stop(logger, _write_session, t, dag)
+
     return {'dag': provider.get({'id': id})['data'][0]}
 
 
@@ -533,6 +539,10 @@ def dag_start():
 
         if t.parent:
             continue
+
+        info = yaml_load(t.additional_info)
+        info['stopped'] = False
+        t.additional_info = yaml_dump(info)
 
         info = yaml_load(t.additional_info)
         info['resume'] = find_resume(t)

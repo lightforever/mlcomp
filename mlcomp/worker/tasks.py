@@ -357,6 +357,10 @@ def stop(logger, session: Session, task: Task, dag: Dag):
             queue = f'{task.computer_assigned}_' \
                 f'{dag.docker_img or "default"}_supervisor'
             kill.apply_async((task.pid,), queue=queue, retry=False)
+
+            additional_info = yaml_load(task.additional_info)
+            for p in additional_info.get('child_processes', []):
+                kill.apply_async((p,), queue=queue, retry=False)
         provider.change_status(task, status)
 
     return task.status

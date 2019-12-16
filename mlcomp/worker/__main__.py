@@ -10,6 +10,7 @@ import GPUtil
 import psutil
 import numpy as np
 import torch
+from mlcomp.utils.io import yaml_load
 
 from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
     DOCKER_IMG, DOCKER_MAIN, IP, PORT, WORKER_USAGE_INTERVAL, \
@@ -86,6 +87,11 @@ def stop_processes_not_exist(session: Session, logger):
             )
 
             provider.commit()
+
+            additional_info = yaml_load(t.additional_info)
+            for p in additional_info.get('child_processes', []):
+                logger.info(f'killing child process = {p}')
+                os.system(f'kill -9 {p}')
 
 
 @error_handler

@@ -14,25 +14,33 @@ class Bash(Executor):
         self.command = command
 
     def work(self):
-        process = subprocess.Popen(self.command,
+        self.info('Opening Process')
+        process = subprocess.Popen('exec ' + self.command,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    shell=True
                                    )
-        while True:
-            line = process.stdout.readline()
-            if not line:
-                break
-            self.info(line.decode().strip())
+        try:
+            self.add_child_process(process.pid)
+            self.info('Opening Process. Finished')
 
-        error = []
-        while True:
-            line = process.stderr.readline()
-            if not line:
-                break
-            error.append(line.decode().strip())
-        if len(error) > 0:
-            raise Exception('\n'.join(error))
+            while True:
+                line = process.stdout.readline()
+                if not line:
+                    break
+                self.info(line.decode().strip())
+
+            error = []
+            while True:
+                line = process.stderr.readline()
+                if not line:
+                    break
+                line = line.decode().strip()
+                error.append(line)
+            if len(error) > 0 and any(['Exception' in e for e in error]):
+                raise Exception('\n'.join(error))
+        finally:
+            process.kill()
 
     @classmethod
     def _from_config(

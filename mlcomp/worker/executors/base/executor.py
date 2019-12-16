@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import time
 
+from mlcomp.utils.io import yaml_load, yaml_dump
+
 from mlcomp import FILE_SYNC_INTERVAL
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
@@ -32,6 +34,13 @@ class Executor(ABC):
 
     def error(self, message: str):
         self.step.error(message)
+
+    def add_child_process(self, pid: int):
+        additional_info = yaml_load(self.task.additional_info)
+        additional_info['child_processes'] = additional_info.get(
+            'child_processes', []) + [pid]
+        self.task.additional_info = yaml_dump(additional_info)
+        self.task_provider.update()
 
     def __call__(
         self, *, task: Task, task_provider: TaskProvider, dag: Dag

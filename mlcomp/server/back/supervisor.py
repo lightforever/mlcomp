@@ -320,6 +320,10 @@ class SupervisorBuilder:
         self.auxiliary['process_tasks'] = []
 
         for task in self.not_ran_tasks:
+            info = yaml_load(task.additional_info)
+            if info.get('stopped'):
+                continue
+
             auxiliary = {'id': task.id, 'name': task.name}
             self.auxiliary['process_tasks'].append(auxiliary)
 
