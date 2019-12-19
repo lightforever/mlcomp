@@ -22,6 +22,7 @@ class Computer(Base):
     root_folder = sa.Column(sa.String)
     can_process_tasks = sa.Column(sa.Boolean)
     sync_with_this_computer = sa.Column(sa.Boolean)
+    meta = sa.Column(sa.String)
 
 
 class ComputerUsage(Base):

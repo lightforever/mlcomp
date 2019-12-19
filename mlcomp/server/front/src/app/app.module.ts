@@ -22,10 +22,10 @@ import {ProjectAddDialogComponent} from "./project/project-add-dialog";
 import {ReportAddDialogComponent} from "./report/reports/report-add-dialog";
 import {LayoutAddDialogComponent} from "./report/layouts/layout-add-dialog";
 import {AuxiliaryComponent} from "./auxiliary/auxiliary.component";
-import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.component";
 import {TaskInfoDialogComponent} from "./task/task-table/task-info-dialog.component";
 import {ReportUpdateDialogComponent} from "./report/report-detail/report-update-dialog.component";
-
+import {SyncDialogComponent} from "./computer/sync-dialog";
+import {AuxiliarySupervisorComponent} from "./auxiliary/supervisor/supervisor.component";
 
 @NgModule({
     imports: [
@@ -49,6 +49,7 @@ import {ReportUpdateDialogComponent} from "./report/report-detail/report-update-
         ModelComponent,
         LoginComponent,
         AuxiliaryComponent,
+        SyncDialogComponent,
         AuxiliarySupervisorComponent
     ],
     entryComponents: [
@@ -58,7 +59,8 @@ import {ReportUpdateDialogComponent} from "./report/report-detail/report-update-
         ReportAddDialogComponent,
         LayoutAddDialogComponent,
         TaskInfoDialogComponent,
-        ReportUpdateDialogComponent
+        ReportUpdateDialogComponent,
+        SyncDialogComponent
     ],
     providers: [
         {

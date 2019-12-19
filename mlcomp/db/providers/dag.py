@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import func, or_, case
 
 from mlcomp.db.core import PaginatorOptions
@@ -78,14 +80,14 @@ class DagProvider(BaseDataProvider):
         total = query.count()
         paginator = self.paginator(query, options) if options else query
         res = []
-        rules = ('-tasks.dag_rel', )
+        rules = ('-tasks.dag_rel',)
         for dag, \
-                project_name, \
-                task_count, \
-                last_activity, \
-                started, \
-                finished, \
-                *(task_status) in paginator.all():
+            project_name, \
+            task_count, \
+            last_activity, \
+            started, \
+            finished, \
+            *(task_status) in paginator.all():
 
             items = self.to_dict(dag, rules=rules).items()
             # noinspection PyDictCreation
@@ -117,7 +119,7 @@ class DagProvider(BaseDataProvider):
             if task_status[TaskStatus.InProgress.value] > 0:
                 delta = (now() - started).total_seconds()
             elif sum(
-                task_status[TaskStatus.InProgress.value:]
+                    task_status[TaskStatus.InProgress.value:]
             ) == 0 or not started or not last_activity:
                 delta = 0
             else:
@@ -204,6 +206,14 @@ class DagProvider(BaseDataProvider):
             } for d in dep
         ]
         return {'nodes': nodes, 'edges': edges}
+
+    def by_project(self, id: int):
+        return self.query(Dag).filter(Dag.project == id).all()
+
+    def remove_all(self, ids: List[int]):
+        self.query(Dag).filter(Dag.id.in_(ids)).delete(
+            synchronize_session=False)
+        self.commit()
 
 
 __all__ = ['DagProvider']

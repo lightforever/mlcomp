@@ -3,7 +3,11 @@
         <mat-card>
             <mat-card-content>
                 <section class="checkbox-section">
-                    <label class="checkbox-margin">Level:</label>
+
+                    <label class="checkbox-margin">
+                        Level:
+                    </label>
+
                     <mat-checkbox
                             class="checkbox-margin"
                             [(ngModel)]="debug"
@@ -72,6 +76,7 @@
     <td>
         <mat-card>
             <mat-card-content>
+
                 <mat-form-field>
                     <input
                             matInput
@@ -84,6 +89,21 @@
                            (keyup)="apply_step_name($event.target.value)"
                            placeholder="Step name">
                 </mat-form-field>
+
+            </mat-card-content>
+        </mat-card>
+    </td>
+
+    <td>
+                <mat-card>
+            <mat-card-content>
+
+                <mat-form-field>
+                    <input matInput
+                           (keyup)="apply_message($event.target.value)"
+                           placeholder="Message">
+                </mat-form-field>
+
             </mat-card-content>
         </mat-card>
     </td>

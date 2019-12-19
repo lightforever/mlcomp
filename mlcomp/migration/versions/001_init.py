@@ -25,7 +25,8 @@ computer = Table(
     Column('syncing_computer', String(100)),
     Column('root_folder', String(100), nullable=False),
     Column('can_process_tasks', Boolean),
-    Column('sync_with_this_computer', Boolean)
+    Column('sync_with_this_computer', Boolean),
+    Column('meta', String(10000)),
 )
 
 computer_usage = Table(
@@ -363,6 +364,7 @@ def upgrade(migrate_engine):
             [task.c.docker_assigned, task.c.computer_assigned],
             [docker.c.name, docker.c.computer], ondelete='CASCADE').create()
 
+        Index('log_message_idx', log.c.message).create()
         Index('task_status_idx', task.c.status).create()
         Index('task_dag_idx', task.c.dag.desc()).create()
         Index('task_finished_idx', task.c.finished.desc()).create()

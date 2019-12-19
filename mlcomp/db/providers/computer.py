@@ -2,12 +2,13 @@ import json
 import datetime
 from collections import defaultdict
 
+from mlcomp.utils.io import yaml_load
 from sqlalchemy import func, case
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import TaskStatus
 from mlcomp.db.providers.base import BaseDataProvider
-from mlcomp.db.models import Computer, ComputerUsage, Task, Docker
+from mlcomp.db.models import Computer, ComputerUsage, Task, Docker, Project
 from mlcomp.utils.misc import now, parse_time
 
 
@@ -17,8 +18,8 @@ class ComputerProvider(BaseDataProvider):
     def computers(self):
         return {
             c.name:
-            {k: v
-             for k, v in c.__dict__.items() if not k.startswith('_')}
+                {k: v
+                 for k, v in c.__dict__.items() if not k.startswith('_')}
             for c in self.query(Computer).all()
         }
 
@@ -149,6 +150,22 @@ class ComputerProvider(BaseDataProvider):
             c.last_activity = a
             res.append(c)
         return res
+
+    def gpu_available(self):
+        computers = self.all_with_last_activtiy()
+        return sum([c.gpu for c in computers if
+                    (now() - c.last_activity).total_seconds() <= 30])
+
+    def sync_start(self):
+        projects = self.query(Project).order_by(Project.id.desc()).all()
+        res = []
+        for p in projects:
+            res.append({
+                'id': p.id,
+                'name': p.name,
+                'ignore_folders': p.ignore_folders
+            })
+        return {'projects': res}
 
 
 __all__ = ['ComputerProvider']

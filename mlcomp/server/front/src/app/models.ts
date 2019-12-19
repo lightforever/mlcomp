@@ -1,3 +1,8 @@
+export class BaseResult {
+    success: boolean;
+    error: string;
+}
+
 export class Project {
   id: number;
   name: string;
@@ -86,6 +91,18 @@ export class Computer {
     sync_date: Date;
 }
 
+export class SyncProject {
+    id: number;
+    name: string;
+    ignore_folders: string;
+}
+
+export class SyncStart extends BaseResult {
+    projects: SyncProject[];
+    project: SyncProject;
+}
+
+
 export class Step {
   id: number;
   task: Task;
@@ -137,6 +154,7 @@ export class LogFilter{
     task_name: string;
     step_name: string;
     computer: string;
+    message: string;
 
     paginator: PaginatorFilter;
 
@@ -184,11 +202,6 @@ export class ReportsFilter {
     paginator: PaginatorFilter;
     task: number;
     dag: number;
-}
-
-export class BaseResult {
-    success: boolean;
-    error: string;
 }
 
 export class ToogleReportResult extends BaseResult{

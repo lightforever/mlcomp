@@ -1,0 +1,27 @@
+<mat-form-field style="width: 150px">
+    <mat-label>Project</mat-label>
+    <mat-select
+            (ngModelChange)="data.project=$event;"
+            [(ngModel)]="data.project">
+        <mat-option *ngFor="let project of data.projects" [value]="project">
+            {{project.name}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<div mat-dialog-content *ngIf="data.project">
+  <mat-form-field style="width: 450px">
+    <mat-label>Ignore folders</mat-label>
+      <textarea
+              matInput
+              [(ngModel)]="data.project.ignore_folders"
+              style="height:120px">
+
+      </textarea>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="data.project" cdkFocusInitial>Ok</button>
+</div>

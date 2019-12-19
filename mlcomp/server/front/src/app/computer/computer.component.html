@@ -4,6 +4,15 @@
         <ng-container matColumnDef="main">
             <th mat-header-cell *matHeaderCellDef class="name">
                 Current stats
+
+                <button mat-raised-button
+                        style="height: 25px;
+                        margin-left: 10px;
+                        vertical-align: middle"
+                        (click)="sync()">
+                    Sync
+                </button>
+
             </th>
             <td mat-cell *matCellDef="let element" class="name"
                 style="vertical-align: top">
@@ -217,7 +226,9 @@
 
                             </span>
                         </td>
+
                         <td>{{long_date_format(docker.last_activity)}}</td>
+
                         <td style="width: 70px;min-width: 70px">
                             <span style="vertical-align: middle">{{docker.in_progress}}
                                 &nbsp;</span>
@@ -227,6 +238,7 @@
 
                             </span>
                         </td>
+
                         <td style="width: 70px;min-width: 70px">
                             <span style="vertical-align: middle">{{docker.free}}
                                 &nbsp;</span>
@@ -240,6 +252,15 @@
                         <td>
                             {{element.sync_status}}
                             {{element.sync_date |  date:"MM.dd H:mm:ss"}}
+
+                            <button mat-raised-button
+                                    style="height: 25px;
+                        margin-left: 10px;
+                        vertical-align: middle"
+                                    (click)="sync(element.name)">
+                                Sync
+                            </button>
+
                         </td>
                     </tr>
                 </table>

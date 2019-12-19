@@ -25,7 +25,10 @@ export class ProjectComponent extends Paginator<Project> {
         'last_activity',
         'img_size',
         'file_size',
-        'links'];
+        'stop_all_dags',
+        'remove_all_dags',
+        'remove'
+    ];
     name: string;
     selected: Project;
 
@@ -39,6 +42,9 @@ export class ProjectComponent extends Paginator<Project> {
         iconRegistry.addSvgIcon('remove',
             sanitizer.bypassSecurityTrustResourceUrl(
                 'assets/img/trash.svg'));
+        iconRegistry.addSvgIcon('stop',
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/stop.svg'));
     }
 
     get_filter() {
@@ -57,8 +63,10 @@ export class ProjectComponent extends Paginator<Project> {
     remove(element: Project) {
         const dialogRef = this.dialog.open(DialogComponent, {
             width: '550px', height: '200px',
-            data: {'message': 'The all content will be deleted. ' +
-                    'Do you want to continue?'}
+            data: {
+                'message': 'The all content will be deleted. ' +
+                    'Do you want to continue?'
+            }
         });
 
         dialogRef.afterClosed().subscribe(result => {
@@ -84,6 +92,42 @@ export class ProjectComponent extends Paginator<Project> {
     remove_files(element) {
         this.service.remove_files(element.id).subscribe(data => {
             element.file_size = 0
+        });
+    }
+
+    stop_all_dags(element) {
+        const dialogRef = this.dialog.open(DialogComponent, {
+            width: '550px', height: '200px',
+            data: {
+                'message': 'The all content will be stopped. ' +
+                    'Do you want to continue?'
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.stop_all_dags(element.id).subscribe(data => {
+
+                });
+            }
+        });
+    }
+
+    remove_all_dags(element) {
+        const dialogRef = this.dialog.open(DialogComponent, {
+            width: '550px', height: '200px',
+            data: {
+                'message': 'The all content will be removed. ' +
+                    'Do you want to continue?'
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.service.remove_all_dags(element.id).subscribe(data => {
+
+                });
+            }
         });
     }
 

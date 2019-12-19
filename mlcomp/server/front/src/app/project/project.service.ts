@@ -51,4 +51,20 @@ export class ProjectService extends BaseService {
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
+
+    stop_all_dags(id: number) {
+        let message = `${this.constructor.name}.stop_all_dags`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/stop_all_dags';
+        return this.http.post<BaseResult>(url, {'project': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    remove_all_dags(id: number) {
+        let message = `${this.constructor.name}.remove_all_dags`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/remove_all_dags';
+        return this.http.post<BaseResult>(url, {'project': id}).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
 }

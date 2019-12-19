@@ -1,6 +1,12 @@
+import {environment} from "../environments/environment";
+
 export class AppSettings {
     public static get API_ENDPOINT(): string {
-        return `http://${window.location.hostname}:${window.location.port}/api/`
+        let port = parseInt(window.location.port);
+        if(!environment.production){
+            port += 1;
+        }
+        return `http://${window.location.hostname}:${port}/api/`
     }
 
     public static status_colors = {

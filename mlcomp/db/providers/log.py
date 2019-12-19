@@ -13,8 +13,12 @@ class LogProvider(BaseDataProvider):
             join(Step, Step.id == Log.step, isouter=True). \
             join(Task, Task.id == Log.task, isouter=True)
 
+        if filter.get('message'):
+            query = query.filter(Log.message.contains(filter['message']))
+
         if filter.get('dag'):
             query = query.filter(Task.dag == filter['dag'])
+
         if filter.get('task'):
             child_tasks = self.query(Task.id
                                      ).filter(Task.parent == filter['task']

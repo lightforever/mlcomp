@@ -177,7 +177,8 @@ class TaskProvider(BaseDataProvider):
         *statuses: TaskStatus,
         task_docker_assigned: str = None,
         worker_index: int = None,
-        computer_assigned: str = None
+        computer_assigned: str = None,
+        project: int = None
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
@@ -189,6 +190,8 @@ class TaskProvider(BaseDataProvider):
             query = query.filter(Task.worker_index == worker_index)
         if computer_assigned is not None:
             query = query.filter(Task.computer_assigned == computer_assigned)
+        if project:
+            query = query.filter(Dag.project == project)
         return query.all()
 
     def dependency_status(self, tasks: List[Task]):

@@ -1,10 +1,12 @@
-import {AfterViewInit, Component, OnChanges, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ViewChild} from '@angular/core';
 import {Paginator} from "../paginator";
 import {Computer, ComputerFilter} from "../models";
 import {Location} from "@angular/common";
 import {DynamicresourceService} from "../dynamicresource.service";
 import {Helpers} from "../helpers";
 import {ComputerService} from "./computer.service";
+import {SyncDialogComponent} from "./sync-dialog";
+import {MatDialog} from "@angular/material/dialog";
 
 @Component({
     selector: 'app-computer',
@@ -34,7 +36,7 @@ export class ComputerComponent extends Paginator<Computer>
     pressed_changed(event) {
         this.last_time = {};
         this.pressed = event.value;
-        for(let c of this.dataSource.data){
+        for (let c of this.dataSource.data) {
             let id = 'usage_history_' + c.name;
             window['Plotly'].purge(id);
         }
@@ -43,7 +45,8 @@ export class ComputerComponent extends Paginator<Computer>
 
     constructor(protected service: ComputerService,
                 protected location: Location,
-                protected resource_service: DynamicresourceService
+                protected resource_service: DynamicresourceService,
+                public sync_dialog: MatDialog,
     ) {
         super(service, location);
         this.id_column = 'name';
@@ -66,12 +69,11 @@ export class ComputerComponent extends Paginator<Computer>
     ngAfterViewInit() {
         let self = this;
         this.data_updated.subscribe((res) => {
-                if(!res || !res.data){
+                if (!res || !res.data) {
                     return;
                 }
                 let data = res.data;
-                this.resource_service.load('plotly').
-                then(() => {
+                this.resource_service.load('plotly').then(() => {
                     setTimeout(() => {
                         let rendered = true;
                         for (let computer of data) {
@@ -83,8 +85,7 @@ export class ComputerComponent extends Paginator<Computer>
                             }
                             let series = [];
                             for (let item of computer.usage_history.mean) {
-                                let x = computer.usage_history.time.
-                                    map(x => new Date(Date.parse(x)));
+                                let x = computer.usage_history.time.map(x => new Date(Date.parse(x)));
 
 
                                 let last = self.last_time[computer.name];
@@ -96,8 +97,8 @@ export class ComputerComponent extends Paginator<Computer>
                                     y: item.value,
                                     type: 'scatter',
                                     name: item.name,
-                                    visible: item.name=='disk'?
-                                        'legendonly': true
+                                    visible: item.name == 'disk' ?
+                                        'legendonly' : true
                                 });
 
                             }
@@ -110,8 +111,8 @@ export class ComputerComponent extends Paginator<Computer>
                                 );
                             }
 
-                            if (series.length > 0){
-                                if (element.childNodes.length>0) {
+                            if (series.length > 0) {
+                                if (element.childNodes.length > 0) {
                                     let keys = Array(series.length).keys();
                                     let indices = Array.from(keys);
                                     let y = {'y': [], 'x': []};
@@ -156,16 +157,16 @@ export class ComputerComponent extends Paginator<Computer>
 
     docker_status(docker) {
         // @ts-ignore
-        if(Helpers.parse_time(docker.last_activity)>=new Date(
-            Date.now()-15000)){
+        if (Helpers.parse_time(docker.last_activity) >= new Date(
+            Date.now() - 15000)) {
             return 'circle-green';
         }
         return 'circle-red';
     }
 
-    docker_status_tip(docker){
-        if(Helpers.parse_time(docker.last_activity)>=new Date(
-            Date.now()-15000)){
+    docker_status_tip(docker) {
+        if (Helpers.parse_time(docker.last_activity) >= new Date(
+            Date.now() - 15000)) {
             return 'online';
         }
 
@@ -174,5 +175,19 @@ export class ComputerComponent extends Paginator<Computer>
 
     long_date_format(time: string) {
         return Helpers.format_date_time(Helpers.parse_time(time));
+    }
+
+    sync(name: string) {
+        this.service.sync_start().subscribe(x => {
+            let dialog = this.sync_dialog.open(SyncDialogComponent,
+                {
+                    width: '500px', height: '500px',
+                    data: x
+                });
+            dialog.afterClosed().subscribe(res => {
+                res['computer'] = name;
+                this.service.sync_end(res).subscribe(x=>{});
+            });
+        });
     }
 }

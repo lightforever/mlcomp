@@ -22,13 +22,13 @@ jobs:
         - pip install -U pytest pytest-xdist
       script:
         # stop the build if there are any unexpected flake8 issues
-        - flake8 . --count \
-          --max-complexity=16 \
-          --inline-quotes "single" \
-          --multiline-quotes "single" \
-          --docstring-quotes "double" \
-          --show-source \
-          --statistics
+#        - flake8 . --count \
+#          --max-complexity=16 \
+#          --inline-quotes "single" \
+#          --multiline-quotes "single" \
+#          --docstring-quotes "double" \
+#          --show-source \
+#          --statistics
         # test to make sure the code is yapf compliant
         #- ./yapf.sh --all
         - pytest -v --forked --numprocesses=auto

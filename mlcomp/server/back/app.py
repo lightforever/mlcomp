@@ -143,6 +143,32 @@ def computers():
     return provider.get(data, options)
 
 
+@app.route('/api/computer_sync_start', methods=['POST'])
+@requires_auth
+@error_handler
+def computer_sync_start():
+    provider = ComputerProvider(_read_session)
+    return provider.sync_start()
+
+
+@app.route('/api/computer_sync_end', methods=['POST'])
+@requires_auth
+@error_handler
+def computer_sync_end():
+    data = request_data()
+    provider = ComputerProvider(_write_session)
+    for computer in provider.all():
+        if data.get('computer') and data['computer'] != computer.name:
+            continue
+        meta = yaml_load(computer.meta)
+        meta['manual_sync'] = {
+            'project': data['id'],
+            'ignore_folders': yaml_load(data['ignore_folders'])
+        }
+        computer.meta = yaml_dump(meta)
+    provider.update()
+
+
 @app.route('/api/projects', methods=['POST'])
 @requires_auth
 @error_handler
@@ -166,6 +192,41 @@ def project_add():
         data['name'], yaml_load(data['class_names']),
         yaml_load(data['ignore_folders'])
     )
+
+
+@app.route('/api/project/stop_all_dags', methods=['POST'])
+@requires_auth
+@error_handler
+def stop_all_dags():
+    data = request_data()
+    provider = TaskProvider(_write_session)
+    tasks = provider.by_status(TaskStatus.InProgress,
+                               TaskStatus.Queued,
+                               TaskStatus.NotRan,
+                               project=data['project']
+                               )
+
+    for t in tasks:
+        info = yaml_load(t.additional_info)
+        info['stopped'] = True
+        t.additional_info = yaml_dump(info)
+
+    provider.update()
+
+    dag_provider = DagProvider(_write_session)
+    for t in tasks:
+        dag = dag_provider.by_id(t.dag)
+        celery_tasks.stop(logger, _write_session, t, dag)
+
+
+@app.route('/api/project/remove_all_dags', methods=['POST'])
+@requires_auth
+@error_handler
+def remove_all_dags():
+    data = request_data()
+    provider = DagProvider(_write_session)
+    dags = provider.by_project(data['project'])
+    provider.remove_all([d.id for d in dags])
 
 
 @app.route('/api/project/edit', methods=['POST'])
