@@ -34,7 +34,6 @@ export class TaskTableComponent implements OnInit {
         'dag',
         'id',
         'name',
-        'executor',
         'status',
         'created',
         'started',
@@ -43,6 +42,7 @@ export class TaskTableComponent implements OnInit {
         'computer',
         'requirements',
         'steps',
+        'progress',
         'score',
         'links'
     ];
@@ -156,4 +156,26 @@ export class TaskTableComponent implements OnInit {
         this.paginator.ngOnInit();
     }
 
+    pad(num, size) {
+        let s = num + "";
+        while (s.length < size) s = "0" + s;
+        return s;
+    }
+
+    get_progress(element) {
+        if(!element.loader_name){
+            return ''
+        }
+        let duration_minutes = this.pad(Math.floor(element.epoch_duration / 60).toString(), 2);
+        let duration_seconds = this.pad(Math.floor(element.epoch_duration % 60).toString(), 2);
+
+        let epoch_time_remaining_minutes = this.pad(Math.floor(element.epoch_time_remaining / 60).toString(), 2);
+        let epoch_time_remaining_seconds = this.pad(Math.floor(element.epoch_time_remaining % 60).toString(), 2);
+
+
+        return `${element.loader_name}: 
+        ${element.batch_index}/${element.batch_total} 
+        ${duration_minutes}:${duration_seconds}/
+        ${epoch_time_remaining_minutes}:${epoch_time_remaining_seconds}`;
+    }
 }

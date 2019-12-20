@@ -208,6 +208,12 @@ task = Table(
     Column('gpu_assigned', String(200)),
     Column('parent', Integer),
     Column('result', String(16000)),
+
+    Column('batch_index', Integer),
+    Column('batch_total', Integer),
+    Column('loader_name', String),
+    Column('epoch_duration', Integer),
+    Column('epoch_time_remaining', Integer),
 )
 
 task_dependency = Table(

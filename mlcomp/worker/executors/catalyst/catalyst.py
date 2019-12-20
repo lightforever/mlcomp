@@ -77,6 +77,8 @@ class Catalyst(Executor, Callback):
         self.checkpoint_stage_epoch = 0
         self.trace = trace
         self.params = params
+        self.last_batch_logged = None
+        self.loader_started_time = None
 
     def callbacks(self):
         result = OrderedDict()
@@ -84,6 +86,9 @@ class Catalyst(Executor, Callback):
             result['catalyst'] = self
 
         return result
+
+    def on_loader_start(self, state: RunnerState):
+        self.loader_started_time = now()
 
     def on_epoch_start(self, state: RunnerState):
         if self.checkpoint_resume and state.stage_epoch == 0:
@@ -99,17 +104,36 @@ class Catalyst(Executor, Callback):
                 2, name=f'epoch {state.stage_epoch}', index=state.stage_epoch
             )
 
+    def on_batch_start(self, state: RunnerState):
+        if self.last_batch_logged and \
+                state.step != state.batch_size * state.loader_len:
+            if (now() - self.last_batch_logged).total_seconds() < 10:
+                return
+
+        task = self.task
+        task.batch_index = int(state.step / state.batch_size)
+        task.batch_total = state.loader_len
+        task.loader_name = state.loader_name
+
+        duration = int((now() - self.loader_started_time).total_seconds())
+        task.epoch_duration = duration
+        task.epoch_time_remaining = int(duration * (
+                task.batch_total / task.batch_index)) - task.epoch_duration
+
+        self.task_provider.update()
+        self.last_batch_logged = now()
+
     def on_epoch_end(self, state: RunnerState):
         self.step.end(2)
 
-        for s in self.report.series:
-            train = state.metrics.epoch_values['train'][s.key]
-            val = state.metrics.epoch_values['valid'][s.key]
+        for s in state.metrics.epoch_values['valid']:
+            train = state.metrics.epoch_values['train'][s]
+            val = state.metrics.epoch_values['valid'][s]
 
             task_id = self.task.parent or self.task.id
             train = ReportSeries(
                 part='train',
-                name=s.key,
+                name=s,
                 epoch=state.epoch,
                 task=task_id,
                 value=train,
@@ -119,7 +143,7 @@ class Catalyst(Executor, Callback):
 
             val = ReportSeries(
                 part='valid',
-                name=s.key,
+                name=s,
                 epoch=state.epoch,
                 task=task_id,
                 value=val,
@@ -130,7 +154,7 @@ class Catalyst(Executor, Callback):
             self.series_provider.add(train)
             self.series_provider.add(val)
 
-            if s.key == self.report.metric.name:
+            if s == self.report.metric.name:
                 best = False
                 task = self.task
                 if task.parent:
@@ -323,8 +347,6 @@ class Catalyst(Executor, Callback):
         experiment = Experiment(config)
         runner: Runner = R(**runner_params)
 
-        register()
-
         self.experiment = experiment
         self.runner = runner
 
@@ -370,6 +392,8 @@ class Catalyst(Executor, Callback):
             }
 
         runner.run_experiment(experiment, check=args.check)
+        if runner.state.exception:
+            raise runner.state.exception
 
         if self.master and self.trace:
             traced = trace_model_from_checkpoint(self.experiment.logdir, self)

@@ -41,6 +41,12 @@ class Task(Base):
     parent = sa.Column(sa.Integer, ForeignKey('task.id'))
     parent_rel = relationship('Task', lazy='noload')
 
+    batch_index = sa.Column(sa.Integer)
+    batch_total = sa.Column(sa.Integer)
+    loader_name = sa.Column(sa.String)
+    epoch_duration = sa.Column(sa.Integer)
+    epoch_time_remaining = sa.Column(sa.Integer)
+
     result = deferred(sa.Column(sa.String))
     additional_info = deferred(sa.Column(sa.String))
 

@@ -184,6 +184,17 @@
             </td>
         </ng-container>
 
+        <ng-container matColumnDef="progress">
+
+            <th mat-header-cell *matHeaderCellDef style="width: 220px">
+                Progress
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+               {{get_progress(element)}}
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="score">
             <th mat-header-cell *matHeaderCellDef>
                 Score
