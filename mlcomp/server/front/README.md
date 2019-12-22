@@ -55,6 +55,6 @@ The app will automatically reload if you change any of the source files.
 
 If you are ready to replace mlcomp UI, 
 
-Run `npm run ng build --prod` to build the project. 
+Run `npm run ng -- build --prod` to build the project. 
 
 The build artifacts will be stored in the `dist/` directory.

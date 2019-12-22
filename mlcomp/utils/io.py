@@ -25,8 +25,11 @@ def yaml_load(text: str = None, file: str = None):
     return res
 
 
-def yaml_dump(data):
-    return yaml.dump(data, default_flow_style=False, sort_keys=False)
+def yaml_dump(data, file: str = None):
+    res = yaml.dump(data, default_flow_style=False, sort_keys=False)
+    if file:
+        open(file, 'w').write(res)
+    return res
 
 
 def zip_folder(folder: str, dst: str = None):
@@ -44,4 +47,5 @@ def zip_folder(folder: str, dst: str = None):
     return dst
 
 
-__all__ = ['read_lines', 'from_module_path', 'yaml_load', 'yaml_dump']
+__all__ = ['read_lines', 'from_module_path', 'yaml_load', 'yaml_dump',
+           'zip_folder']

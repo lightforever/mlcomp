@@ -79,6 +79,13 @@ class Catalyst(Executor, Callback):
         self.params = params
         self.last_batch_logged = None
         self.loader_started_time = None
+        self.parent = None
+        self.loader_step_start = 0
+
+    def get_parent_task(self):
+        if self.parent:
+            return self.parent
+        return self.task
 
     def callbacks(self):
         result = OrderedDict()
@@ -89,6 +96,7 @@ class Catalyst(Executor, Callback):
 
     def on_loader_start(self, state: RunnerState):
         self.loader_started_time = now()
+        self.loader_step_start = state.step
 
     def on_epoch_start(self, state: RunnerState):
         if self.checkpoint_resume and state.stage_epoch == 0:
@@ -105,13 +113,14 @@ class Catalyst(Executor, Callback):
             )
 
     def on_batch_start(self, state: RunnerState):
+        step = state.step - self.loader_step_start
         if self.last_batch_logged and \
-                state.step != state.batch_size * state.loader_len:
+                step != state.batch_size * state.loader_len:
             if (now() - self.last_batch_logged).total_seconds() < 10:
                 return
 
-        task = self.task
-        task.batch_index = int(state.step / state.batch_size)
+        task = self.get_parent_task()
+        task.batch_index = int(step / state.batch_size)
         task.batch_total = state.loader_len
         task.loader_name = state.loader_name
 
@@ -335,6 +344,7 @@ class Catalyst(Executor, Callback):
             if not self.master:
                 c.on_epoch_end = mock
                 c.on_stage_end = mock
+                c.on_batch_start = mock
 
     def work(self):
         args, config = self.parse_args_uargs()
@@ -352,9 +362,11 @@ class Catalyst(Executor, Callback):
 
         stages = experiment.stages[:]
 
+        if self.task.parent:
+            self.parent = self.task_provider.by_id(self.task.parent)
+
         if self.master:
-            task = self.task if not self.task.parent \
-                else self.task_provider.by_id(self.task.parent)
+            task = self.get_parent_task()
             task.steps = len(stages)
             self.task_provider.commit()
 

@@ -118,6 +118,9 @@ class ImageDataset(Dataset):
 
     @staticmethod
     def read_image_file(path: str, gray_scale=False):
+        if not os.path.exists(path):
+            raise Exception(f'Image at path {path} does not exist')
+
         if path.endswith('.tiff') and not gray_scale:
             return tifffile.imread(path)
         elif path.endswith('.npy'):
@@ -126,10 +129,10 @@ class ImageDataset(Dataset):
             if gray_scale:
                 img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
                 assert img is not None, \
-                    f'Image at path {path} does not exist'
+                    f'Image at path {path} is empty'
                 return img.astype(np.uint8)
             else:
                 img = cv2.imread(path)
                 assert img is not None, \
-                    f'Image at path {path} does not exist'
+                    f'Image at path {path} is empty'
                 return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
