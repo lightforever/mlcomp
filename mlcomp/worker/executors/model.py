@@ -44,8 +44,29 @@ def trace_model_from_checkpoint(logdir, logger, method_name='forward'):
     checkpoint = utils.load_checkpoint(checkpoint_path)
     utils.unpack_checkpoint(checkpoint, model=model)
 
+    device = 'cpu'
+    stage = list(experiment.stages)[0]
+    loader = 0
+    mode = 'eval'
+    requires_grad = False
+    opt_level = None
+
+    runner: RunnerType = RunnerType()
+    runner.model, runner.device = model, device
+
+    batch = experiment.get_native_batch(stage, loader)
+
     logger.info('Tracing')
-    traced = trace_model(model, experiment, RunnerType, method_name)
+    traced = trace_model(
+        model,
+        runner,
+        batch,
+        method_name=method_name,
+        mode=mode,
+        requires_grad=requires_grad,
+        opt_level=opt_level,
+        device=device,
+    )
 
     logger.info('Done')
     return traced
@@ -57,15 +78,20 @@ class ModelAdd(Executor):
         self,
         name: str,
         project: int,
+        fold: int,
         train_task: int = None,
         child_task: int = None,
-        file: str = None
+        file: str = None,
+        **kwargs
     ):
+        super().__init__(**kwargs)
+
         self.train_task = train_task
         self.name = name
         self.child_task = child_task
         self.project = project
         self.file = file
+        self.fold = fold
 
     def work(self):
         project = ProjectProvider(self.session).by_id(self.project)
@@ -76,7 +102,8 @@ class ModelAdd(Executor):
             created=now(),
             name=self.name,
             project=self.project,
-            equations=''
+            equations='',
+            fold=self.fold
         )
 
         provider = ModelProvider(self.session)
@@ -111,7 +138,8 @@ class ModelAdd(Executor):
             name=executor['name'],
             project=executor['project'],
             train_task=executor['task'],
-            child_task=executor['child_task']
+            child_task=executor['child_task'],
+            fold=executor['fold']
         )
 
 

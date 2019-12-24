@@ -16,6 +16,7 @@ class Model(Base):
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'))
     created = sa.Column(sa.DateTime)
     equations = sa.Column(sa.String)
+    fold = sa.Column(sa.Integer)
 
     dag_rel = relationship('Dag', lazy='noload')
     project_rel = relationship('Project', lazy='noload')

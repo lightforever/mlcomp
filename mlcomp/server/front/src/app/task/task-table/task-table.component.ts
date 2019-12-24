@@ -128,7 +128,8 @@ export class TaskTableComponent implements OnInit {
                 'project': element.dag_rel.project.id,
                 'projects': this.projects,
                 'task': element.id,
-                'file': 'best_full'
+                'file': 'best_full',
+                'fold': 0
             }
         });
     }

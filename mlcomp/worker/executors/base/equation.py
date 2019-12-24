@@ -38,6 +38,8 @@ class Equation(Executor, ast.NodeVisitor):
             cache_names: List[str] = (),
             **kwargs
     ):
+        super().__init__(**kwargs)
+
         self.__dict__.update(kwargs)
         self.model_id = model_id
         self.suffix = suffix

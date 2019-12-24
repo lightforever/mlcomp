@@ -6,6 +6,8 @@ import time
 
 import socket
 
+from kaggle.models import DatasetNewRequest
+
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
 from mlcomp.db.providers import ModelProvider
@@ -33,12 +35,12 @@ class DownloadType(Enum):
 @Executor.register
 class Download(Executor):
     def __init__(
-        self,
-        output: str,
-        type=DownloadType.Kaggle,
-        competition: str = None,
-        link: str = None,
-        **kwargs
+            self,
+            output: str,
+            type=DownloadType.Kaggle,
+            competition: str = None,
+            link: str = None,
+            **kwargs
     ):
         super().__init__(**kwargs)
 
@@ -54,7 +56,7 @@ class Download(Executor):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         output = os.path.join(config.data_folder, config.get('output', '.'))
         return cls(output=output, competition=executor['competition'])
@@ -63,14 +65,15 @@ class Download(Executor):
 @Executor.register
 class Submit(Equation):
     def __init__(
-        self,
-        competition: str,
-        submit_type: str = 'file',
-        predict_column: str = None,
-        kernel_suffix: str = 'api',
-        message: str = '',
-        wait_seconds=60 * 20,
-        **kwargs
+            self,
+            competition: str,
+            submit_type: str = 'file',
+            predict_column: str = None,
+            kernel_suffix: str = 'api',
+            message: str = '',
+            wait_seconds: int = 60 * 20,
+            file: str = None,
+            **kwargs
     ):
         super().__init__(**kwargs)
 
@@ -80,7 +83,9 @@ class Submit(Equation):
         self.kernel_suffix = kernel_suffix
         self.predict_column = predict_column
         self.message = message or f'model_id = {self.model_id}'
-        self.file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
+
+        default_file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
+        self.file = file or default_file
         self.file_name = os.path.basename(self.file)
 
         assert self.submit_type in ['file', 'kernel']
@@ -104,10 +109,10 @@ class Submit(Equation):
 
         config = api.read_config_file()
         username = config['username']
+        title = f'{self.competition}-{self.kernel_suffix}-dataset'
         dataset_meta = {
             'title': f'{self.competition}-{self.kernel_suffix}-dataset',
-            'id': f'{username}/'
-            f'{self.competition}-{self.kernel_suffix}-dataset',
+            'id': f'{username}/{title}',
             'licenses': [{
                 'name': 'CC0-1.0'
             }]
@@ -115,14 +120,17 @@ class Submit(Equation):
         with open(f'{folder}/dataset-metadata.json', 'w') as f:
             json.dump(dataset_meta, f)
 
-        try:
-            api.dataset_status(dataset_meta['id'])
-            api.dataset_create_version(folder, 'Updated')
-            self.info('dataset updated')
-        except Exception:
-            self.info(f'no dataset on Kaggle. creating new')
-            api.dataset_create_new(folder)
-            self.info('dataset created on Kaggle')
+        res = api.dataset_status(dataset_meta['id'])
+        if res != 'ready':
+            res = api.dataset_create_new(folder=folder)
+            if res.status == 'error':
+                raise Exception('dataset_create_new Error: ' + res.error)
+
+        res = api.dataset_create_version(folder, 'Updated')
+        if res.status == 'error':
+            raise Exception('dataset_create_version Error: ' + res.error)
+
+        self.info('dataset updated')
 
         seconds_to_sleep = 20
         self.info(f'sleeping {seconds_to_sleep} seconds')

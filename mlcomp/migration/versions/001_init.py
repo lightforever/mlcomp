@@ -245,7 +245,8 @@ model = Table(
     Column('dag', Integer),
     Column('project', Integer, nullable=False),
     Column('created', TIMESTAMP, nullable=False),
-    Column('equations', String(2000000), nullable=False)
+    Column('equations', String(2000000), nullable=False),
+    Column('fold', Integer, nullable=False)
 )
 
 

@@ -88,11 +88,20 @@ class Storage:
     def upload(self, folder: str, dag: Dag, control_reqs: bool = True):
         hashs = self.file_provider.hashs(dag.project)
 
-        files = []
         all_files = []
         spec = self._build_spec(folder)
 
-        for o in glob(os.path.join(folder, '**'), recursive=True):
+        files = glob(os.path.join(folder, '**'))
+        for file in files[:]:
+            path = os.path.relpath(file, folder)
+            if spec.match_file(path) or path == '.':
+                continue
+            if os.path.isdir(file):
+                child_files = glob(os.path.join(folder, file, '**'),
+                                   recursive=True)
+                files.extend(child_files)
+
+        for o in files:
             path = os.path.relpath(o, folder)
             if spec.match_file(path) or path == '.':
                 continue
@@ -120,7 +129,6 @@ class Storage:
                 self.file_provider.add(file)
                 file_id = file.id
                 hashs[md5] = file.id
-                files.append(o)
 
             self.provider.add(
                 DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False)
@@ -183,11 +191,11 @@ class Storage:
         return folder
 
     def import_executor(
-        self,
-        folder: str,
-        base_folder: str,
-        executor: str,
-        libraries: List[Tuple] = None
+            self,
+            folder: str,
+            base_folder: str,
+            executor: str,
+            libraries: List[Tuple] = None
     ):
 
         sys.path.insert(0, base_folder)
@@ -216,8 +224,8 @@ class Storage:
 
         def is_valid_class(cls: pyclbr.Class):
             return cls.name == executor or \
-                cls.name.lower() == executor or \
-                to_snake(cls.name) == executor
+                   cls.name.lower() == executor or \
+                   to_snake(cls.name) == executor
 
         def relative_name(path: str):
             rel = os.path.relpath(path, base_folder)

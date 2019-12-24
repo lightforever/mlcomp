@@ -343,6 +343,7 @@ export interface ModelAddData {
     name: string;
     task: number;
     file: string;
+    fold: number;
 }
 
 export class ModelStartData extends BaseResult{

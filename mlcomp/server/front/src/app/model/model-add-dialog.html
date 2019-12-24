@@ -1,15 +1,15 @@
 <div mat-dialog-content>
-  <mat-form-field>
-    <mat-label>Name</mat-label>
-    <input matInput [(ngModel)]="data.name">
-  </mat-form-field>
+    <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput [(ngModel)]="data.name">
+    </mat-form-field>
 </div>
 
 <div mat-dialog-content>
-  <mat-form-field>
-    <mat-label>File</mat-label>
-    <input matInput [(ngModel)]="data.file">
-  </mat-form-field>
+    <mat-form-field>
+        <mat-label>File</mat-label>
+        <input matInput [(ngModel)]="data.file">
+    </mat-form-field>
 </div>
 
 <mat-form-field style="width: 150px">
@@ -23,6 +23,14 @@
     </mat-select>
 </mat-form-field>
 
+<div mat-dialog-content>
+    <mat-form-field>
+        <mat-label>Fold</mat-label>
+        <input matInput [(ngModel)]="data.fold">
+    </mat-form-field>
+</div>
+
+
 <pre style="color: red" *ngIf="error">
     Error:
 
@@ -30,10 +38,10 @@
 </pre>
 
 <div mat-dialog-actions>
-  <button mat-button (click)="on_cancel_click()">Cancel</button>
-  <button mat-button
-          (click)="on_ok_click()"
-          cdkFocusInitial>
-      Ok
-  </button>
+    <button mat-button (click)="on_cancel_click()">Cancel</button>
+    <button mat-button
+            (click)="on_ok_click()"
+            cdkFocusInitial>
+        Ok
+    </button>
 </div>

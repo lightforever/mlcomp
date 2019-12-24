@@ -24,16 +24,28 @@ class Executor(ABC):
         pass
 
     def debug(self, message: str):
-        self.step.debug(message)
+        if self.step:
+            self.step.debug(message)
+        else:
+            print(message)
 
     def info(self, message: str):
-        self.step.info(message)
+        if self.step:
+            self.step.info(message)
+        else:
+            print(message)
 
     def warning(self, message: str):
-        self.step.warning(message)
+        if self.step:
+            self.step.warning(message)
+        else:
+            print(message)
 
     def error(self, message: str):
-        self.step.error(message)
+        if self.step:
+            self.step.error(message)
+        else:
+            print(message)
 
     def add_child_process(self, pid: int):
         additional_info = yaml_load(self.task.additional_info)

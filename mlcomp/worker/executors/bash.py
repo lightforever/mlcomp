@@ -37,7 +37,10 @@ class Bash(Executor):
                     break
                 line = line.decode().strip()
                 error.append(line)
-            if len(error) > 0 and any(['Exception' in e for e in error]):
+
+            process.communicate()
+
+            if process.returncode != 0:
                 raise Exception('\n'.join(error))
         finally:
             process.kill()
