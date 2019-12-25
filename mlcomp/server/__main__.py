@@ -102,5 +102,28 @@ def stop():
         kill_child_processes(pid)
 
 
+@main.command()
+def status():
+    """
+    Shows if mlcomp server is already running
+    """
+    lines = os.popen("ps ef | grep mlcomp").readlines()
+    pids = {}
+    for line in lines:
+        if "mlcomp/configs/supervisord.conf" in line:
+            pids["server"] = line
+        elif "mlcomp-server start-site" in line:
+            pids["site"] = line
+        elif "redis-server" in line:
+            pids["redis"] = line
+    if not pids:
+        print("There are no mlcomp services started")
+        return
+    text = "Current MLComp services status:\n"
+    for k, v in pids.items():
+        text += f"  (✔) {k} is started on pid {v.split()[0]}\n"
+    print(text)
+
+
 if __name__ == '__main__':
     main()
