@@ -7,6 +7,7 @@ from multiprocessing import cpu_count
 
 import torch
 
+from mlcomp.migration.manage import migrate as _migrate
 from mlcomp import ROOT_FOLDER, IP, PORT, \
     WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
 from mlcomp.db.core import Session
@@ -74,6 +75,11 @@ def _create_computer():
 @click.group()
 def main():
     pass
+
+
+@main.command()
+def migrate():
+    _migrate()
 
 
 @main.command()

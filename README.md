@@ -85,6 +85,7 @@ Graph
     ```bash
     pip install mlcomp
     mlcomp init
+    mlcomp migrate
     ```
 
 2. Setup your environment. Please consider [Environment variables](#environment-variables) section

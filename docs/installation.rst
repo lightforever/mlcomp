@@ -9,6 +9,8 @@ Installation
     ::
 
         pip install mlcomp
+        mlcomp init
+        mlcomp migrate
 
 2. Setup your environment
 
