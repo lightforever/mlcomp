@@ -110,6 +110,12 @@ def worker_usage(session: Session, logger):
         # noinspection PyProtectedMember
         memory = dict(psutil.virtual_memory()._asdict())
 
+        try:
+            gpus = GPUtil.getGPUs()
+        except ValueError as err:
+            logger.info(f"Active GPUs not found: {err}")
+            gpus = []
+
         usage = {
             'cpu': psutil.cpu_percent(),
             'disk': disk(ROOT_FOLDER)[1],
@@ -118,7 +124,7 @@ def worker_usage(session: Session, logger):
                 {
                     'memory': g.memoryUtil * 100,
                     'load': g.load * 100
-                } for g in GPUtil.getGPUs()
+                } for g in gpus
             ]
         }
 
