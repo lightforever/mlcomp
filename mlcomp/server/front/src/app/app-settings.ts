@@ -6,6 +6,9 @@ export class AppSettings {
         if(!environment.production){
             port += 1;
         }
+        if(Number.isNaN(port)){
+            port = 80
+        }
         return `http://${window.location.hostname}:${port}/api/`
     }
 
