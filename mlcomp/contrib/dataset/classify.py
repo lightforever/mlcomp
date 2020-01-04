@@ -19,7 +19,7 @@ class ImageDataset(Dataset):
             *,
             img_folder: str,
             fold_csv: str = None,
-            fold_number: int = None,
+            fold: int = None,
             is_test: bool = False,
             gray_scale: bool = False,
             num_classes=2,
@@ -33,11 +33,11 @@ class ImageDataset(Dataset):
 
         if fold_csv:
             df = pd.read_csv(fold_csv)
-            if fold_number is not None:
+            if fold is not None:
                 if is_test:
-                    self.data = df[df['fold'] == fold_number]
+                    self.data = df[df['fold'] == fold]
                 else:
-                    self.data = df[df['fold'] != fold_number]
+                    self.data = df[df['fold'] != fold]
             else:
                 self.data = df
         else:

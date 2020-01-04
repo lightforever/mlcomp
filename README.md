@@ -83,6 +83,10 @@ Graph
 1. Install MLComp package
 
     ```bash
+   sudo apt-get install -y \
+   libavformat-dev libavcodec-dev libavdevice-dev \
+   libavutil-dev libswscale-dev libavresample-dev libavfilter-dev
+
     pip install mlcomp
     mlcomp init
     mlcomp migrate

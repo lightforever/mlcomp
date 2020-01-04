@@ -23,6 +23,11 @@ albumentations>=0.2.3
 sqlalchemy-migrate>=0.12.0
 cython
 supervisor>=4.0.4
+av>=6.2.0
+torchvision>=0.4.2
+torch>=1.0.0
+numpy>=1.18.0
+pandas>=0.25.3
 
 # For describing
 jupyter

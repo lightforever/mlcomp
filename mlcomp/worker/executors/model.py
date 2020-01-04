@@ -20,9 +20,10 @@ from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 
 
-def trace_model_from_checkpoint(logdir, logger, method_name='forward'):
+def trace_model_from_checkpoint(logdir, logger, method_name='forward',
+                                file='best'):
     config_path = f'{logdir}/configs/_config.json'
-    checkpoint_path = f'{logdir}/checkpoints/best.pth'
+    checkpoint_path = f'{logdir}/checkpoints/{file}.pth'
     logger.info('Load config')
     config = safitty.load(config_path)
     if 'distributed_params' in config:
@@ -39,7 +40,7 @@ def trace_model_from_checkpoint(logdir, logger, method_name='forward'):
         import_experiment_and_runner(Path(expdir_from_logs))
     experiment: Experiment = ExperimentType(config)
 
-    logger.info('Load model state from checkpoints/best.pth')
+    logger.info(f'Load model state from checkpoints/{file}.pth')
     model = experiment.get_model(next(iter(experiment.stages)))
     checkpoint = utils.load_checkpoint(checkpoint_path)
     utils.unpack_checkpoint(checkpoint, model=model)
@@ -75,14 +76,14 @@ def trace_model_from_checkpoint(logdir, logger, method_name='forward'):
 @Executor.register
 class ModelAdd(Executor):
     def __init__(
-        self,
-        name: str,
-        project: int,
-        fold: int,
-        train_task: int = None,
-        child_task: int = None,
-        file: str = None,
-        **kwargs
+            self,
+            name: str,
+            project: int,
+            fold: int,
+            train_task: int = None,
+            child_task: int = None,
+            file: str = None,
+            **kwargs
     ):
         super().__init__(**kwargs)
 
@@ -118,7 +119,7 @@ class ModelAdd(Executor):
             os.makedirs(models_dir, exist_ok=True)
 
             model_path_tmp = f'{src_log}/traced.pth'
-            traced = trace_model_from_checkpoint(src_log, self)
+            traced = trace_model_from_checkpoint(src_log, self, file=self.file)
 
             model_path = f'{models_dir}/{model.name}.pth'
             model_weight_path = f'{models_dir}/{model.name}_weight.pth'
@@ -132,14 +133,15 @@ class ModelAdd(Executor):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         return ModelAdd(
             name=executor['name'],
             project=executor['project'],
             train_task=executor['task'],
             child_task=executor['child_task'],
-            fold=executor['fold']
+            fold=executor['fold'],
+            file=executor['file']
         )
 
 

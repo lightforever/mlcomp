@@ -157,6 +157,8 @@ class ExecuteBuilder:
         libraries = self.library_provider.dag(self.task.dag)
         executor_type = self.executor_type
 
+        self.info('download. folder changed')
+
         mlcomp_executors_folder = join(dirname(abspath(__file__)), 'executors')
         mlcomp_base_folder = os.path.abspath(join(mlcomp_executors_folder,
                                                   '../../../'))
@@ -176,13 +178,17 @@ class ExecuteBuilder:
             if not imported:
                 raise Exception(f'Executor = {executor_type} not found')
 
+        self.info('download. executor imported')
+
         if was_installation and not self.task.debug:
             if self.repeat_count > 0:
-                try:
-                    self.warning(traceback.format_exc())
-                    self.task.status = TaskStatus.Queued.value
-                    self.provider.commit()
+                self.info('was installation. '
+                          'set task status to Queued. '
+                          'And resending the task to a queue')
+                self.task.status = TaskStatus.Queued.value
+                self.provider.commit()
 
+                try:
                     execute.apply_async(
                         (self.id, self.repeat_count - 1),
                         queue=self.queue_personal,
