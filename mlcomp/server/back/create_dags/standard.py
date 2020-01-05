@@ -3,7 +3,7 @@ import os
 
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.core import Session
-from mlcomp.db.enums import TaskType, DagType
+from mlcomp.db.enums import TaskType, DagType, ComponentType
 from mlcomp.db.models import Report, Task, Dag, ReportTasks
 from mlcomp.db.providers import TaskProvider, \
     ReportProvider, \
@@ -27,7 +27,9 @@ class DagStandardBuilder:
             upload_files: bool = True,
             copy_files_from: int = None,
             config_path: str = None,
-            control_reqs: bool = True
+            control_reqs: bool = True,
+            logger=None,
+            component: ComponentType = None
     ):
         self.session = session
         self.config = config
@@ -47,6 +49,8 @@ class DagStandardBuilder:
         self.report_layout_provider = None
         self.storage = None
         self.dag_provider = None
+        self.logger = logger
+        self.component = component
 
         self.project = None
         self.layouts = None
@@ -55,17 +59,26 @@ class DagStandardBuilder:
         self.created = None
         self.project_provider = None
 
+    def log_info(self, message: str):
+        if self.logger:
+            self.logger.info(message, self.component)
+
     def create_providers(self):
+        self.log_info('create_providers')
+
         self.provider = TaskProvider(self.session)
         self.report_provider = ReportProvider(self.session)
         self.report_tasks_provider = ReportTasksProvider(self.session)
         self.report_layout_provider = ReportLayoutProvider(self.session)
         self.project_provider = ProjectProvider(self.session)
 
-        self.storage = Storage(self.session)
+        self.storage = Storage(self.session, logger=self.logger,
+                               component=self.component)
         self.dag_provider = DagProvider(self.session)
 
     def load_base(self):
+        self.log_info('load_base')
+
         project = self.project_provider.by_name(self.info['project'])
         if project is None:
             project = self.project_provider.add_project(self.info['project'])
@@ -74,6 +87,8 @@ class DagStandardBuilder:
         self.layouts = self.report_layout_provider.all()
 
     def create_report(self):
+        self.log_info('create_report')
+
         self.dag_report_id = None
         layout_name = self.layout_name
         if layout_name:
@@ -90,6 +105,8 @@ class DagStandardBuilder:
             self.dag_report_id = report.id
 
     def create_dag(self):
+        self.log_info('create_dag')
+
         dag = Dag(
             config=self.config_text or yaml_dump(self.config),
             project=self.project,
@@ -103,6 +120,8 @@ class DagStandardBuilder:
         self.dag = self.dag_provider.add(dag)
 
     def upload(self):
+        self.log_info('upload')
+
         if self.upload_files:
             folder = os.path.dirname(os.path.abspath(self.config_path))
             if 'expdir' in self.config['info']:
@@ -116,6 +135,8 @@ class DagStandardBuilder:
             self.storage.copy_from(self.copy_files_from, self.dag)
 
     def create_task(self, k: str, v: dict, name: str, info: dict):
+        self.log_info('create_task')
+
         task_type = TaskType.User.value
         if v.get('task_type') == 'train' or \
                 Executor.is_trainable(v['type']):
@@ -178,6 +199,8 @@ class DagStandardBuilder:
         return task.id
 
     def create_tasks(self):
+        self.log_info('create_tasks')
+
         created = OrderedDict()
         executors = self.config['executors']
 
@@ -191,7 +214,7 @@ class DagStandardBuilder:
 
                     for d in depends:
                         if d == k:
-                            raise Exception(f'Executor {k} depends ot itself')
+                            raise Exception(f'Executor {k} depends on itself')
 
                         if d not in executors:
                             raise Exception(
@@ -253,7 +276,9 @@ def dag_standard(
         upload_files: bool = True,
         copy_files_from: int = None,
         config_path: str = None,
-        control_reqs: bool = True
+        control_reqs: bool = True,
+        logger=None,
+        component: ComponentType = None
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -263,7 +288,9 @@ def dag_standard(
         upload_files=upload_files,
         copy_files_from=copy_files_from,
         config_path=config_path,
-        control_reqs=control_reqs
+        control_reqs=control_reqs,
+        logger=logger,
+        component=component
     )
     return builder.build()
 

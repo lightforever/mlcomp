@@ -31,11 +31,16 @@ _session = Session.create_session(key=__name__)
 
 def _dag(config: str, debug: bool = False, control_reqs=True,
          params: Tuple[str] = ()):
+    logger = create_logger(_session, name='_dag')
+    logger.info('started', ComponentType.Client)
+
     config_text = open(config, 'r').read()
     config_parsed = yaml_load(config_text)
     params = dict_from_list_str(params)
     config_parsed = merge_dicts_smart(config_parsed, params)
     config_text = yaml_dump(config_parsed)
+
+    logger.info('config parsed', ComponentType.Client)
 
     type_name = config_parsed['info'].get('type', 'standard')
     if type_name == DagType.Standard.name.lower():
@@ -45,7 +50,9 @@ def _dag(config: str, debug: bool = False, control_reqs=True,
             debug=debug,
             config_text=config_text,
             config_path=config,
-            control_reqs=control_reqs
+            control_reqs=control_reqs,
+            logger=logger,
+            component=ComponentType.Client
         )
 
     return dag_pipe(

@@ -86,11 +86,6 @@ export class TaskTableComponent implements OnInit {
     }
 
 
-    not_a_model(element) {
-        return element.type != 'train';
-    }
-
-
     is_report_transparent(element: any) {
         if (this.report) {
             return false;
@@ -174,9 +169,13 @@ export class TaskTableComponent implements OnInit {
         let epoch_time_remaining_seconds = this.pad(Math.floor(element.epoch_time_remaining % 60).toString(), 2);
 
 
-        return `${element.loader_name}: 
+        let res = `${element.loader_name}: 
         ${element.batch_index}/${element.batch_total} 
         ${duration_minutes}:${duration_seconds}/
         ${epoch_time_remaining_minutes}:${epoch_time_remaining_seconds}`;
+        if(element.loss != null){
+            res += `, loss=${element.loss}`
+        }
+        return res;
     }
 }

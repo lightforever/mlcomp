@@ -40,6 +40,7 @@ class Task(Base):
     gpu_assigned = sa.Column(sa.String)
     parent = sa.Column(sa.Integer, ForeignKey('task.id'))
     parent_rel = relationship('Task', lazy='noload')
+    loss = sa.Column(sa.Float)
 
     batch_index = sa.Column(sa.Integer)
     batch_total = sa.Column(sa.Integer)

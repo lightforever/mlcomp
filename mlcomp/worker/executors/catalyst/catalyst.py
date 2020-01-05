@@ -128,6 +128,9 @@ class Catalyst(Executor, Callback):
         task.epoch_duration = duration
         task.epoch_time_remaining = int(duration * (
                 task.batch_total / task.batch_index)) - task.epoch_duration
+        if state.loss is not None:
+            # noinspection PyUnresolvedReferences
+            task.loss = float(state.loss['loss'])
 
         self.task_provider.update()
         self.last_batch_logged = now()

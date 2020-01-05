@@ -766,7 +766,16 @@ def remove_files():
 def dag_remove():
     id = request_data()['id']
     celery_tasks.remove_dag(_write_session, id)
-    DagProvider(_write_session).remove(id)
+
+    dag_provider = DagProvider(_write_session)
+    dag = dag_provider.by_id(id)
+
+    project_provider = ProjectProvider(_write_session)
+    project = project_provider.by_id(dag.project)
+    project.file_size -= dag.file_size
+    project_provider.commit()
+
+    dag_provider.remove(id)
 
 
 @app.route('/api/models', methods=['POST'])

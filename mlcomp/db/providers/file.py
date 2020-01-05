@@ -1,4 +1,4 @@
-from mlcomp.db.models import File, Dag
+from mlcomp.db.models import File, Dag, Project
 from mlcomp.db.providers.base import BaseDataProvider
 
 
@@ -26,10 +26,15 @@ class FileProvider(BaseDataProvider):
             query.filter(Dag.id == filter['dag']).update({'file_size': 0})
 
         if filter.get('project'):
-            query.filter(Dag.project == filter['project']).\
+            query.filter(Dag.project == filter['project']). \
                 update({'file_size': 0})
 
         self.session.commit()
+
+        if filter.get('project'):
+            query = self.query(Project).filter(
+                Project.id == filter['project']).update({'file_size': 0})
+            self.session.commit()
 
 
 __all__ = ['FileProvider']

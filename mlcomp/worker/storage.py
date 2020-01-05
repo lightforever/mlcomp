@@ -14,12 +14,13 @@ from sqlalchemy.orm import joinedload
 
 from mlcomp import TASK_FOLDER, DATA_FOLDER, MODEL_FOLDER, INSTALL_DEPENDENCIES
 from mlcomp.db.core import Session
+from mlcomp.db.enums import ComponentType
 from mlcomp.db.models import DagStorage, Dag, DagLibrary, File, Task
 from mlcomp.utils.misc import now, to_snake
 from mlcomp.db.providers import FileProvider, \
     DagStorageProvider, \
     TaskProvider, \
-    DagLibraryProvider
+    DagLibraryProvider, DagProvider, ProjectProvider
 
 from mlcomp.utils.config import Config
 from mlcomp.utils.req import control_requirements, read_lines
@@ -43,11 +44,24 @@ def get_super_names(cls: pyclbr.Class):
 
 
 class Storage:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, logger=None,
+                 component: ComponentType = None,
+                 max_file_size: int = 10 ** 5, max_count=10 ** 3):
         self.file_provider = FileProvider(session)
         self.provider = DagStorageProvider(session)
         self.task_provider = TaskProvider(session)
         self.library_provider = DagLibraryProvider(session)
+        self.dag_provider = DagProvider(session)
+        self.project_provider = ProjectProvider(session)
+
+        self.logger = logger
+        self.component = component
+        self.max_file_size = max_file_size
+        self.max_count = max_count
+
+    def log_info(self, message: str):
+        if self.logger:
+            self.logger.info(message, self.component)
 
     def copy_from(self, src: int, dag: Dag):
         storages = self.provider.query(DagStorage). \
@@ -79,14 +93,17 @@ class Storage:
             ignore_patterns = []
         else:
             ignore_patterns = read_lines(ignore_file)
-        ignore_patterns.extend(['log', 'data', 'models', '__pycache__'])
+        ignore_patterns.extend(
+            ['log', 'data', 'models', '__pycache__', '*.ipynb'])
 
         return pathspec.PathSpec.from_lines(
             pathspec.patterns.GitWildMatchPattern, ignore_patterns
         )
 
     def upload(self, folder: str, dag: Dag, control_reqs: bool = True):
+        self.log_info('upload started')
         hashs = self.file_provider.hashs(dag.project)
+        self.log_info('hashes are retrieved')
 
         all_files = []
         spec = self._build_spec(folder)
@@ -101,24 +118,38 @@ class Storage:
                                    recursive=True)
                 files.extend(child_files)
 
+        if self.max_count and len(files) > self.max_count:
+            raise Exception(f'files count = {len(files)} '
+                            f'But max count = {self.max_count}')
+
+        self.log_info('list of files formed')
+
+        folders_to_add = []
+        files_to_add = []
+        files_storage_to_add = []
+
+        total_size_added = 0
+
         for o in files:
             path = os.path.relpath(o, folder)
             if spec.match_file(path) or path == '.':
                 continue
 
             if isdir(o):
-                self.provider.add(
-                    DagStorage(dag=dag.id, path=path, is_dir=True)
-                )
+                folder_to_add = DagStorage(dag=dag.id, path=path, is_dir=True)
+                folders_to_add.append(folder_to_add)
                 continue
             content = open(o, 'rb').read()
+            size = sys.getsizeof(content)
+            if self.max_file_size and size > self.max_file_size:
+                raise Exception(
+                    f'file = {o} has size {size}.'
+                    f' But max size is set to {self.max_file_size}')
             md5 = hashlib.md5(content).hexdigest()
 
             all_files.append(o)
 
-            if md5 in hashs:
-                file_id = hashs[md5]
-            else:
+            if md5 not in hashs:
                 file = File(
                     md5=md5,
                     content=content,
@@ -126,13 +157,43 @@ class Storage:
                     dag=dag.id,
                     created=now()
                 )
-                self.file_provider.add(file)
-                file_id = file.id
-                hashs[md5] = file.id
+                hashs[md5] = file
+                files_to_add.append(file)
+                total_size_added += size
 
-            self.provider.add(
-                DagStorage(dag=dag.id, path=path, file=file_id, is_dir=False)
-            )
+            file_storage = DagStorage(
+                dag=dag.id, path=path, file=hashs[md5],
+                is_dir=False)
+            files_storage_to_add.append(file_storage)
+
+        self.log_info('inserting DagStorage folders')
+
+        if len(folders_to_add) > 0:
+            self.provider.bulk_save_objects(folders_to_add)
+
+        self.log_info('inserting Files')
+
+        if len(files_to_add) > 0:
+            self.file_provider.bulk_save_objects(files_to_add,
+                                                 return_defaults=True)
+
+        self.log_info('inserting DagStorage Files')
+
+        if len(files_storage_to_add) > 0:
+            for file_storage in files_storage_to_add:
+                if isinstance(file_storage.file, File):
+                    # noinspection PyUnresolvedReferences
+                    file_storage.file = file_storage.file.id
+
+            self.provider.bulk_save_objects(files_storage_to_add)
+
+        dag.file_size += total_size_added
+
+        project = self.project_provider.by_id(dag.project)
+        project.file_size += dag.file_size
+
+        self.dag_provider.update()
+        self.project_provider.update()
 
         if INSTALL_DEPENDENCIES and control_reqs:
             reqs = control_requirements(folder, files=all_files)

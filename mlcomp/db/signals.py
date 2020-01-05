@@ -68,17 +68,7 @@ def dag_before_create(mapper, connection, target):
     provider.commit()
 
 
-@event.listens_for(File, 'before_insert')
-@error_handler
-def file_before_create(mapper, connection, target):
-    provider = DagProvider(_session)
-
-    dag = provider.by_id(target.dag)
-    dag.file_size += target.size
-    provider.commit()
-
-
 __all__ = [
     'task_before_update', 'step_before_insert_update', 'log_before_insert',
-    'dag_before_create', 'file_before_create'
+    'dag_before_create'
 ]

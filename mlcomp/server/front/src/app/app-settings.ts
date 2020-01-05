@@ -3,11 +3,11 @@ import {environment} from "../environments/environment";
 export class AppSettings {
     public static get API_ENDPOINT(): string {
         let port = parseInt(window.location.port);
-        if(!environment.production){
-            port += 1;
-        }
         if(Number.isNaN(port)){
             port = 80
+        }
+        if(!environment.production){
+            port += 1;
         }
         return `http://${window.location.hostname}:${port}/api/`
     }

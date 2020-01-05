@@ -19,10 +19,8 @@ class FullyConvolutionalLinear(nn.Module):
         self.projection = nn.Linear(dim_in, num_classes, bias=True)
 
     def forward(self, x):
-        # (N, C, T, H, W) -> (N, T, H, W, C).
-        x = x.permute((0, 2, 3, 4, 1))
-        x = self.projection(x)
         x = x.view(x.shape[0], -1)
+        x = self.projection(x)
         return x
 
 
@@ -56,7 +54,6 @@ class ResNeXt3D(torch.nn.Module):
             num_groups: int = 1,
             width_per_group: int = 64,
             zero_init_residual_transform: bool = False,
-            pool_size: list = (1, 7, 7),
             in_plane: int = 512,
             num_classes: int = 2
     ):
@@ -144,7 +141,7 @@ class ResNeXt3D(torch.nn.Module):
         self.stages = nn.Sequential(*stages)
         self._init_parameter(zero_init_residual_transform)
 
-        self.final_avgpool = nn.AvgPool3d(pool_size, stride=1)
+        self.final_avgpool = nn.AdaptiveAvgPool1d(in_plane)
         self.head_fcl = FullyConvolutionalLinear(
             in_plane, num_classes
         )
@@ -182,12 +179,11 @@ class ResNeXt3D(torch.nn.Module):
     def forward(self, x):
         """
         Args:
-            x: Tensor(B, C, T, W, H)
+            x: Tensor(B, T, W, H, C)
         """
-        x = x.permute((0, 4, 1, 2, 3))
-
         out = self.stem([x])
         out = self.stages(out)[0]
+        out = out.view((out.shape[0], 1, -1))
         out = self.final_avgpool(out)
         out = self.head_fcl(out)
 

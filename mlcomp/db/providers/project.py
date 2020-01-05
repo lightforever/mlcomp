@@ -52,8 +52,7 @@ class ProjectProvider(BaseDataProvider):
         query = self.query(Project,
                            func.count(Dag.id),
                            func.max(Task.last_activity),
-                           func.sum(Dag.img_size),
-                           func.sum(Dag.file_size)). \
+                           func.sum(Dag.img_size)). \
             join(Dag, Dag.project == Project.id, isouter=True). \
             join(Task, isouter=True). \
             group_by(Project.id)
@@ -67,9 +66,7 @@ class ProjectProvider(BaseDataProvider):
         for p, \
             dag_count, \
             last_activity, \
-            img_size, \
-            file_size \
-                in paginator.all():
+            img_size in paginator.all():
             last_activity = self.serializer.serialize_datetime(last_activity) \
                 if last_activity else None
 
@@ -78,7 +75,7 @@ class ProjectProvider(BaseDataProvider):
                     'dag_count': dag_count,
                     'last_activity': last_activity,
                     'img_size': int(img_size or 0),
-                    'file_size': int(file_size or 0),
+                    'file_size': int(p.file_size or 0),
                     'id': p.id,
                     'name': p.name,
                     'ignore_folders': p.ignore_folders,

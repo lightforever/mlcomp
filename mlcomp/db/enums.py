@@ -64,6 +64,7 @@ class ComponentType(OrderedEnum):
     Supervisor = 1
     Worker = 2
     WorkerSupervisor = 3
+    Client = 4
 
 
 class LogStatus(OrderedEnum):

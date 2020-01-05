@@ -28,17 +28,19 @@ class VideoClipsFolder:
         self.metadata = _precomputed_metadata
         self.compute_clips()
 
+    # noinspection PyTypeChecker
     def compute_clips(self):
         if self.metadata is not None:
             self.clips = self.metadata['clips']
             self.cumulative_sizes = self.metadata[
                 'cumulative_sizes']
+            self.video_paths = self.metadata['video_paths']
             return
 
         clips_size = 0
         for video_index, folder in enumerate(self.video_paths):
             files = sorted(os.listdir(folder))
-            assert len(files) >= self.clip_length_in_frames,\
+            assert len(files) >= self.clip_length_in_frames, \
                 f'folder = {folder} has only {len(files)} files'
 
             for i in range(0, len(files) - self.clip_length_in_frames,
@@ -46,8 +48,8 @@ class VideoClipsFolder:
                 clips_size += 1
                 self.clips.append({
                     'video_index': video_index,
-                    'files': [os.path.join(folder, f) for f in
-                              files[i: i + self.clip_length_in_frames]]
+                    'min_index': i,
+                    'max_index': i + self.clip_length_in_frames
                 })
 
             self.cumulative_sizes.append(clips_size)
@@ -60,9 +62,12 @@ class VideoClipsFolder:
 
     def get_clip(self, index: int):
         clip = self.clips[index]
+        files = sorted(os.listdir(self.video_paths[clip['video_index']]))
         imgs = []
-        for file in clip['files']:
+        for index in range(clip['min_index'], clip['max_index']):
+            file = join(self.video_paths[clip['video_index']], files[index])
             img = cv2.imread(file)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             imgs.append(img)
         return imgs, None, None, clip['video_index']
 
@@ -99,6 +104,7 @@ class VideoDataset(Dataset):
             self.data = pd.DataFrame(
                 {'video': os.listdir(video_folder)}).sort_values(by='video')
 
+        self.data = self.data.sample(frac=1)
         self.data = self.data.to_dict(orient='row')
         if max_count is not None:
             self.apply_max_count(max_count)
@@ -181,8 +187,8 @@ class VideoDataset(Dataset):
             video_index - 1] if video_index > 0 else 0
 
         clip_index = np.random.randint(min_clip_index, max_clip_index)
-        video, audio, info, video_idx = self.clips.get_clip(clip_index)
-        row = self.data[video_idx]
+        video, audio, info, _ = self.clips.get_clip(clip_index)
+        row = self.data[video_index]
 
         if self.transforms:
             seed = random.randint(0, 10 ** 6)
