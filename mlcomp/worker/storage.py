@@ -20,7 +20,7 @@ from mlcomp.utils.misc import now, to_snake
 from mlcomp.db.providers import FileProvider, \
     DagStorageProvider, \
     TaskProvider, \
-    DagLibraryProvider, DagProvider, ProjectProvider
+    DagLibraryProvider, DagProvider
 
 from mlcomp.utils.config import Config
 from mlcomp.utils.req import control_requirements, read_lines
@@ -52,7 +52,6 @@ class Storage:
         self.task_provider = TaskProvider(session)
         self.library_provider = DagLibraryProvider(session)
         self.dag_provider = DagProvider(session)
-        self.project_provider = ProjectProvider(session)
 
         self.logger = logger
         self.component = component
@@ -189,11 +188,7 @@ class Storage:
 
         dag.file_size += total_size_added
 
-        project = self.project_provider.by_id(dag.project)
-        project.file_size += dag.file_size
-
         self.dag_provider.update()
-        self.project_provider.update()
 
         if INSTALL_DEPENDENCIES and control_reqs:
             reqs = control_requirements(folder, files=all_files)

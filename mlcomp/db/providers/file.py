@@ -31,10 +31,5 @@ class FileProvider(BaseDataProvider):
 
         self.session.commit()
 
-        if filter.get('project'):
-            query = self.query(Project).filter(
-                Project.id == filter['project']).update({'file_size': 0})
-            self.session.commit()
-
 
 __all__ = ['FileProvider']
