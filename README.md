@@ -19,9 +19,10 @@
 </div>
 
 The goal of MLComp is to provide tools for training, inferencing, creating complex pipelines
-(especially for computer vision) in a rapid, well manageable way.
+(especially for computer vision) in a rapid, well manageable way. <br/>
+MLComp is compatible with: Python 3.6+, Unix operation system. 
 
-MLComp is compatible with: Python 3.6+, Unix operation system.
+Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXzjo9K_-IS5vSHLPIUxp1PEkFGnpRcNCNU/edit?usp=sharing).
 
 **Features**
 
