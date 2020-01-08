@@ -294,7 +294,10 @@ class Storage:
             rel_path = os.path.relpath(
                 os.path.splitext(module.path)[0], base_folder
             ).replace('/', '.')
-            classes = pyclbr.readmodule(rel_path, path=[base_folder])
+            try:
+                classes = pyclbr.readmodule(rel_path, path=[base_folder])
+            except Exception:
+                continue
             for k, v in classes.items():
                 if is_valid_class(v):
                     importlib.import_module(relative_name(module.path))

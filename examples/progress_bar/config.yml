@@ -1,0 +1,7 @@
+info:
+  name: progress_bar
+  project: examples
+  expdir: .
+executors:
+  bash:
+    type: progress

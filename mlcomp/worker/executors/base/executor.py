@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import time
 
+from tqdm import tqdm
+
 from mlcomp.utils.io import yaml_load, yaml_dump
 
 from mlcomp import FILE_SYNC_INTERVAL
@@ -55,7 +57,7 @@ class Executor(ABC):
         self.task_provider.update()
 
     def __call__(
-        self, *, task: Task, task_provider: TaskProvider, dag: Dag
+            self, *, task: Task, task_provider: TaskProvider, dag: Dag
     ) -> dict:
         assert dag is not None, 'You must fetch task with dag_rel'
 
@@ -77,14 +79,14 @@ class Executor(ABC):
 
     @classmethod
     def _from_config(
-        cls, executor: dict, config: Config, additional_info: dict
+            cls, executor: dict, config: Config, additional_info: dict
     ):
         return cls(**executor)
 
     @staticmethod
     def from_config(
-        *, executor: str, config: Config, additional_info: dict,
-        session: Session, logger
+            *, executor: str, config: Config, additional_info: dict,
+            session: Session, logger
     ) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(
@@ -120,7 +122,7 @@ class Executor(ABC):
 
             wait = False
             for computer, project, tasks in provider.for_computer(
-                self.task.computer_assigned
+                    self.task.computer_assigned
             ):
                 if project.id == self.dag.project:
                     wait = True
@@ -136,6 +138,42 @@ class Executor(ABC):
     def is_trainable(type: str):
         variants = ['Catalyst']
         return type in (variants + [v.lower() for v in variants])
+
+    def tqdm(self, iterable=None, name: str = 'progress', interval: int = 10,
+             **kwargs):
+        """
+        tqdm wrapper. writes progress to Database
+        Args:
+            iterable: iterable for tqdm
+            name: name of the progress bar
+            interval: interval of writing to Database
+            **kwargs: tqdm additional arguments
+
+        Returns:
+
+        """
+        t = tqdm(iterable=iterable, **kwargs)
+
+        def write():
+            self.task.loader_name = name
+            self.task.batch_index = t.n
+            self.task.batch_total = t.total
+            self.task.epoch_duration = time.time() - t.start_t
+            if t.n > 0:
+                self.task.epoch_time_remaining = self.task.epoch_duration * (
+                            t.total - t.n) / t.n
+
+            self.task_provider.update()
+            return time.time()
+
+        last_written = write()
+
+        for item in t:
+            elapsed = time.time() - last_written
+            if elapsed > interval:
+                last_written = write()
+            yield item
+        write()
 
 
 __all__ = ['Executor']
