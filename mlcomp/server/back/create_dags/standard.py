@@ -4,7 +4,7 @@ import os
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.core import Session
 from mlcomp.db.enums import TaskType, DagType, ComponentType
-from mlcomp.db.models import Report, Task, Dag, ReportTasks
+from mlcomp.db.models import Report, Task, Dag, ReportTasks, TaskDependence
 from mlcomp.db.providers import TaskProvider, \
     ReportProvider, \
     ReportTasksProvider, \
@@ -135,8 +135,6 @@ class DagStandardBuilder:
             self.storage.copy_from(self.copy_files_from, self.dag)
 
     def create_task(self, k: str, v: dict, name: str, info: dict):
-        self.log_info('create_task')
-
         task_type = TaskType.User.value
         if v.get('task_type') == 'train' or \
                 Executor.is_trainable(v['type']):
@@ -165,6 +163,8 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
+        task.additional_info = yaml_dump(info)
+        report = None
         if self.layout_name and task_type == TaskType.Train.value:
             if self.layout_name not in self.layouts:
                 raise Exception(f'Unknown report = {v["report"]}')
@@ -173,36 +173,24 @@ class DagStandardBuilder:
             info['report_config'] = report_config
 
             task.additional_info = yaml_dump(info)
-            self.provider.add(task, commit=False)
             report = Report(
                 config=yaml_dump(report_config),
                 name=task.name,
                 project=self.project,
                 layout=self.layout_name
             )
-            self.report_provider.add(report)
-            task.report = report.id
 
-            self.report_tasks_provider.add(
-                ReportTasks(report=report.id, task=task.id)
-            )
-
-            self.report_tasks_provider.add(
-                ReportTasks(report=self.dag_report_id, task=task.id)
-            )
-
-            self.provider.commit()
-        else:
-            task.additional_info = yaml_dump(info)
-            self.provider.add(task)
-
-        return task.id
+        return task, report
 
     def create_tasks(self):
         self.log_info('create_tasks')
 
         created = OrderedDict()
         executors = self.config['executors']
+
+        tasks = []
+        dependencies = []
+        reports = []
 
         while len(created) < len(executors):
             for k, v in executors.items():
@@ -236,10 +224,14 @@ class DagStandardBuilder:
                         names.append(v.get('name', k))
                         infos.append({})
 
-                    ids = []
+                    k_tasks = []
                     for name, info in zip(names, infos):
-                        id = self.create_task(k, v, name=name, info=info)
-                        ids.append(id)
+                        task, report = self.create_task(k, v, name=name,
+                                                        info=info)
+                        tasks.append(task)
+                        k_tasks.append(task)
+                        reports.append(report)
+
                         if 'depends' in v:
                             depends = v['depends']
                             if not isinstance(depends, list):
@@ -247,9 +239,36 @@ class DagStandardBuilder:
 
                             for d in depends:
                                 for dd in created[d]:
-                                    self.provider.add_dependency(id, dd)
-                    created[k] = ids
+                                    dependencies.append((task, dd))
+                    created[k] = k_tasks
 
+        not_empty_reports = [r for r in reports if r is not None]
+        if len(not_empty_reports) > 0:
+            self.provider.bulk_save_objects(not_empty_reports,
+                                            return_defaults=True)
+            for report, task in zip(reports, tasks):
+                if report is not None:
+                    task.report = report.id
+
+        self.provider.bulk_save_objects(tasks,
+                                        return_defaults=True)
+
+        if len(not_empty_reports) > 0:
+            report_tasks = []
+            for report, task in zip(reports, tasks):
+                if report is not None:
+                    report_tasks.append(
+                        ReportTasks(report=report.id, task=task.id))
+            self.report_tasks_provider.bulk_save_objects(report_tasks)
+
+        dependencies = [
+            TaskDependence(task_id=task.id, depend_id=dd.id) for task, dd in
+            dependencies
+        ]
+        self.provider.bulk_save_objects(dependencies)
+
+        for k, v in created.items():
+            created[k] = [vv.id for vv in v]
         self.created = created
 
     def build(self):
@@ -264,6 +283,8 @@ class DagStandardBuilder:
         self.upload()
 
         self.create_tasks()
+
+        self.log_info('Done')
 
         return self.created
 
