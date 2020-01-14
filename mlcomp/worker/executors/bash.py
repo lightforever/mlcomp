@@ -15,35 +15,39 @@ class Bash(Executor):
 
     def work(self):
         self.info('Opening Process')
-        process = subprocess.Popen('exec ' + self.command,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   shell=True
-                                   )
-        try:
-            self.add_child_process(process.pid)
-            self.info('Opening Process. Finished')
+        sub_commands = self.command.split('&&')
+        for sub in sub_commands:
+            self.info('executing '+sub)
 
-            while True:
-                line = process.stdout.readline()
-                if not line:
-                    break
-                self.info(line.decode().strip())
+            process = subprocess.Popen('exec ' + sub,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       shell=True
+                                       )
+            try:
+                self.add_child_process(process.pid)
+                self.info('Opening Process. Finished')
 
-            error = []
-            while True:
-                line = process.stderr.readline()
-                if not line:
-                    break
-                line = line.decode().strip()
-                error.append(line)
+                while True:
+                    line = process.stdout.readline()
+                    if not line:
+                        break
+                    self.info(line.decode().strip())
 
-            process.communicate()
+                error = []
+                while True:
+                    line = process.stderr.readline()
+                    if not line:
+                        break
+                    line = line.decode().strip()
+                    error.append(line)
 
-            if process.returncode != 0:
-                raise Exception('\n'.join(error))
-        finally:
-            process.kill()
+                process.communicate()
+
+                if process.returncode != 0:
+                    raise Exception('\n'.join(error))
+            finally:
+                process.kill()
 
     @classmethod
     def _from_config(
