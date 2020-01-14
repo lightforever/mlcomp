@@ -38,12 +38,12 @@ def sync_directed(
             command = f'rsync -vhru -e ' \
                       f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \
                       f'{source_folder}/ ' \
-                      f'{target.user}@{target.ip}:{target_folder} {end}'
+                      f'{target.user}@{target.ip}:{target_folder}/ {end}'
         elif current_computer == target.name:
             command = f'rsync -vhru -e ' \
                       f'"ssh -p {source.port} -o StrictHostKeyChecking=no" ' \
                       f'{source.user}@{source.ip}:{source_folder}/ ' \
-                      f'{target_folder} {end}'
+                      f'{target_folder}/ {end}'
         else:
             command = f'rsync -vhru -e ' \
                       f'"ssh -p {target.port} -o StrictHostKeyChecking=no" ' \

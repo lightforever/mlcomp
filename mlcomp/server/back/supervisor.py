@@ -69,7 +69,7 @@ class SupervisorBuilder:
                     TaskStatus(s).name
                     for s in self.dep_status.get(t.id, set())
                 ]
-            } for t in not_ran_tasks
+            } for t in not_ran_tasks[:10]
         ]
 
     def load_computers(self):
@@ -274,7 +274,7 @@ class SupervisorBuilder:
             return
 
         to_send = self._process_task_to_send(executor, task, computers)
-        auxiliary['to_send'] = to_send
+        auxiliary['to_send'] = to_send[:10]
         additional_info = yaml_load(task.additional_info)
 
         rank = 0
@@ -343,6 +343,8 @@ class SupervisorBuilder:
                 continue
             self.process_task(task)
 
+        self.auxiliary['process_tasks'] = self.auxiliary['process_tasks'][:10]
+
     def _stop_child_tasks(self, task: Task):
         self.provider.commit()
 
@@ -394,7 +396,7 @@ class SupervisorBuilder:
                         'count': v
                     } for k, v in statuses.items()
                 ],
-            } for task, started, finished, statuses in tasks
+            } for task, started, finished, statuses in tasks[:10]
         ]
 
     def write_auxiliary(self):
