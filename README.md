@@ -10,7 +10,7 @@
 [![Github contributors](https://img.shields.io/github/contributors/catalyst-team/mlcomp.svg?logo=github&logoColor=white)](https://github.com/catalyst-team/mlcomp/graphs/contributors)
 [![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
 
-[![Build Status](https://travis-ci.com/catalyst-team/mlcomp.svg?branch=master)](https://travis-ci.com/catalyst-team/mlcomp) 
+[![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
 [![Telegram](./docs/imgs/telegram.svg)](https://t.me/catalyst_team)
 [![Gitter](https://badges.gitter.im/catalyst-team/community.svg)](https://gitter.im/catalyst-team/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Slack](./docs/imgs/slack.svg)](https://opendatascience.slack.com/messages/CGK4KQBHD)

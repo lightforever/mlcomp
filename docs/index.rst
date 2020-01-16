@@ -1,8 +1,8 @@
 MLComp
 ======================================
 
-.. image:: https://travis-ci.org/lightforever/mlcomp.svg?branch=master
-    :target: https://travis-ci.org/lightforever/mlcomp
+.. image:: http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon
+    :target: http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1
     :alt: Build Status
 
 .. image:: https://img.shields.io/github/license/catalyst-team/mlcomp.svg
