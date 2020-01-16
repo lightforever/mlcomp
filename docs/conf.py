@@ -80,8 +80,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "sphinx.ext.napoleon",
-    "releases",
+    "sphinx.ext.napoleon"
 ]
 
 autodoc_inherit_docstrings = False

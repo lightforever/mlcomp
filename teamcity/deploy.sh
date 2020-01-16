@@ -1,3 +1,5 @@
+set -eo
+
 echo "install requirements"
 pip install sphinx sphinx-autobuild
 
