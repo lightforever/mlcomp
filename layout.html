@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Layout &#8212; MLComp 20.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Grid search" href="grid_search.html" />
+    <link rel="prev" title="Usage" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="layout">
+<h1>Layout<a class="headerlink" href="#layout" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Layout is a mechanism in MLComp to customize your reports.</p>
+<p>MLComp already includes some layouts.</p>
+<p>You can find them at <a class="reference external" href="http://localhost:4201/reports/layouts">http://localhost:4201/reports/layouts</a></p>
+<p>The structure is the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">extend</span><span class="p">:</span> <span class="n">base</span> <span class="c1"># an optional field</span>
+
+<span class="c1"># To choose the best epoch</span>
+<span class="n">metric</span><span class="p">:</span>
+  <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+  <span class="n">minimize</span><span class="p">:</span> <span class="kc">True</span><span class="o">/</span><span class="kc">False</span>
+
+<span class="n">items</span><span class="p">:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">metrics</span> <span class="n">to</span> <span class="n">log</span> <span class="n">during</span> <span class="n">training</span>
+<span class="n">layout</span><span class="p">:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">layout</span> <span class="n">components</span>
+</pre></div>
+</div>
+<p><strong>extend</strong></p>
+<p>Name of an existing layout. Items and Layouts will be merged</p>
+<p><strong>items</strong></p>
+<blockquote>
+<div><p>Each item is a dictionary with a required key <em>type</em>.</p>
+<p>By key each item is available in layout components ( key field )</p>
+<dl class="simple">
+<dt>Possible types:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>series</dt><dd><ul>
+<li><dl class="simple">
+<dt>key: str [required]</dt><dd><p>source of a metric</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>layout</strong></p>
+<blockquote>
+<div><p>Customizes appearance in the UI.</p>
+<p><strong>type</strong> is required to choose a component</p>
+<dl class="simple">
+<dt>Possible components:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>panel</dt><dd><ul>
+<li><p>title: str [required]</p></li>
+<li><p>expanded: True/False</p></li>
+<li><p>parent_cols: int</p></li>
+<li><p>cols: int</p></li>
+<li><p>row_height: int</p></li>
+<li><p>items: list of other components</p></li>
+<li><dl class="simple">
+<dt>table: True/False</dt><dd><p>Use a table structure instead of Grid List. In this case child items are not put on new rows, but child components get more vertical space.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>blank</dt><dd><ul>
+<li><p>cols</p></li>
+<li><p>rows</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>series</dt><dd><ul>
+<li><p>source: str [required]</p></li>
+<li><dl class="simple">
+<dt>multi: True/False</dt><dd><p>Either plot many series on a single plot or divide them into individual plots.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>group: train/valid</dt><dd><p>if you want to see only specific group</p>
+</dd>
+</dl>
+</li>
+<li><p>rows: int</p></li>
+<li><p>cols: int</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>table</dt><dd><ul>
+<li><dl class="simple">
+<dt>source: list[str]</dt><dd><p>list of metrics to compare</p>
+</dd>
+</dl>
+</li>
+<li><p>rows: int</p></li>
+<li><p>cols: int</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>img</dt><dd><ul>
+<li><p>source: str [required]</p></li>
+<li><p>rows: int</p></li>
+<li><p>cols: int</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MLComp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Overview:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">MLComp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid_search.html">Grid search</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="usage.html" title="previous chapter">Usage</a></li>
+      <li>Next: <a href="grid_search.html" title="next chapter">Grid search</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Evgeny Semyonov.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/layout.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
