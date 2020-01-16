@@ -27,7 +27,6 @@ Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXz
 **Features**
 
 
-
 - Amazing UI
 - [Catalyst](https://github.com/catalyst-team/catalyst) support
 - Distributed training
