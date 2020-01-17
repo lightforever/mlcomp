@@ -30,4 +30,4 @@ git config --global user.email "teamcity@catalyst.github"
 git config --global user.name "Teamcity"
 git add .
 git commit -m "$COMMENT"
-git push
+git push || true
