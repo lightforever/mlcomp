@@ -39,7 +39,7 @@ Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXz
 - Hierarchical logging
 - Grid search
 - Experiments comparison
-- Customizing layouts
+- Customizing layout system
 
 **Contents**
 
