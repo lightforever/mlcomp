@@ -2,7 +2,7 @@
 
 ![MLComp logo](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/MLcomp.png)
 
-**MLComp is a distributed DAG (Directed acyclic graph) framework for machine learning with UI**
+**Distributed directed acyclic graph framework for machine learning with UI**
  
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
@@ -13,6 +13,7 @@
 [![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon.svg)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
 [![Telegram](./docs/imgs/telegram.svg)](https://t.me/catalyst_team)
 [![Gitter](https://badges.gitter.im/catalyst-team/community.svg)](https://gitter.im/catalyst-team/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Spectrum](https://img.shields.io/badge/chat-on%20spectrum-blueviolet)](https://spectrum.chat/catalyst)
 [![Slack](./docs/imgs/slack.svg)](https://opendatascience.slack.com/messages/CGK4KQBHD)
 [![Donate](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/third_party_pics/patreon.png)](https://www.patreon.com/catalyst_team)
 
@@ -22,7 +23,10 @@ The goal of MLComp is to provide tools for training, inferencing, creating compl
 (especially for computer vision) in a rapid, well manageable way. <br/>
 MLComp is compatible with: Python 3.6+, Unix operation system. 
 
-Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXzjo9K_-IS5vSHLPIUxp1PEkFGnpRcNCNU/edit?usp=sharing).
+Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXzjo9K_-IS5vSHLPIUxp1PEkFGnpRcNCNU/edit?usp=sharing). Project [manifest](https://github.com/catalyst-team/catalyst/blob/master/MANIFEST.md).
+
+---
+
 
 **Features**
 
@@ -55,7 +59,7 @@ Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXz
 
 - [Environment variables](#environment-variables)
 
-# Screenshots
+## Screenshots
 
 Dags
 
@@ -79,7 +83,7 @@ Graph
 
 [More screenshots](docs/screenshots.md)
 
-# Installation
+## Installation
 
 1. Install MLComp package
 
@@ -147,7 +151,7 @@ Graph
     mlcomp-worker start
     ```
     
- # UI
+## UI
  
 Web site is available at http://{WEB_HOST}:{WEB_PORT}
 
@@ -157,7 +161,7 @@ The front is built with AngularJS.
 
 In case you desire to change it, please consider [front's Readme page](mlcomp/server/front/README.md)
  
- # Usage
+## Usage
  
 Run
  ```bash
@@ -170,14 +174,14 @@ Then, the server schedules the DAG considering free resources.
 
 For more information, please consider [Docs](https://catalyst-team.github.io/mlcomp/usage.html)
  
-# Docs and examples
+## Docs and examples
  
 API documentation and an overview of the library can be
  found here [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
 
 You can find advanced tutorials and MLComp best practices in the [examples](examples/) folder of the repository.
 
-# Environment variables
+## Environment variables
 
 The single file to setup your computer environment is located at ~/mlcomp/configs/.env
 
