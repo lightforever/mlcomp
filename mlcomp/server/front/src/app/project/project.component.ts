@@ -11,6 +11,7 @@ import {DialogComponent} from "../dialog/dialog.component";
 import {Helpers} from "../helpers";
 import {ProjectService} from "./project.service";
 import {ProjectAddDialogComponent} from "./project-add-dialog";
+import {AppSettings} from "../app-settings";
 
 @Component({
     selector: 'app-project',
@@ -151,7 +152,7 @@ export class ProjectComponent extends Paginator<Project> {
     edit() {
         const dialogRef = this.dialog.open(ProjectAddDialogComponent, {
             width: '600px', height: '500px',
-            data: this.selected
+            data: Helpers.clone(this.selected)
         });
 
         dialogRef.afterClosed().subscribe(result => {

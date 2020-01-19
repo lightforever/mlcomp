@@ -80,7 +80,7 @@ class TaskProvider(BaseDataProvider):
             if p.dag_rel is None:
                 continue
 
-            item = {**self.to_dict(p, rules=('-additional_info', ))}
+            item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
             item['dag_rel']['project'] = {
@@ -161,6 +161,12 @@ class TaskProvider(BaseDataProvider):
             query = query.options(options)
         return query.one_or_none()
 
+    def by_ids(self, ids, options=None) -> Task:
+        query = self.query(Task).filter(Task.id.in_(ids))
+        if options:
+            query = query.options(options)
+        return query.all()
+
     def change_status(self, task, status: TaskStatus):
         if status == TaskStatus.InProgress:
             task.started = now()
@@ -172,13 +178,28 @@ class TaskProvider(BaseDataProvider):
         task.status = status.value
         self.update()
 
+    def change_status_all(self, tasks: List[int], status: TaskStatus):
+        updates = {'status': status.value}
+        if status == TaskStatus.InProgress:
+            updates['started'] = now()
+        elif status in [
+            TaskStatus.Failed, TaskStatus.Stopped, TaskStatus.Success
+        ]:
+            updates['finished'] = now()
+
+        self.query(Task). \
+            filter(Task.id.in_(tasks)). \
+            update(updates,
+                   synchronize_session=False)
+        self.commit()
+
     def by_status(
-        self,
-        *statuses: TaskStatus,
-        task_docker_assigned: str = None,
-        worker_index: int = None,
-        computer_assigned: str = None,
-        project: int = None
+            self,
+            *statuses: TaskStatus,
+            task_docker_assigned: str = None,
+            worker_index: int = None,
+            computer_assigned: str = None,
+            project: int = None
     ):
         statuses = [s.value for s in statuses]
         query = self.query(Task).filter(Task.status.in_(statuses)). \
@@ -210,9 +231,13 @@ class TaskProvider(BaseDataProvider):
                                 ).update({'last_activity': now()})
         self.session.commit()
 
-    def stop(self, id: int):
-        task = self.by_id(id)
-        self.change_status(task, TaskStatus.Stopped)
+    def stop(self, id: int = None, tasks: List[Task] = None):
+        if id is not None:
+            task = self.by_id(id)
+            self.change_status(task, TaskStatus.Stopped)
+        if tasks is not None:
+            self.change_status_all(tasks=[t.id for t in tasks],
+                                   status=TaskStatus.Stopped)
 
     def last_succeed_time(self):
         res = self.query(Task.finished). \

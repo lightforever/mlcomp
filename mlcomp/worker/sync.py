@@ -99,9 +99,7 @@ class FileSync:
                 continue
 
             source = provider.by_name(docker.computer)
-            excluded = manual_sync['ignore_folders']
             ignore_folders = [
-                [join('data', project.name), excluded],
                 [join('models', project.name), []]
             ]
             sync_directed(self.session, target=computer, source=source,
@@ -145,10 +143,7 @@ class FileSync:
                         if c.syncing_computer:
                             continue
 
-                        excluded = list(map(str,
-                                            yaml_load(project.ignore_folders)))
                         ignore_folders = [
-                            [join('data', project.name), excluded],
                             [join('models', project.name), []]
                         ]
 

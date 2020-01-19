@@ -170,8 +170,12 @@ export class DagsComponent extends Paginator<Dag> {
         if (!this.has_unfinished(element)) {
             return;
         }
-        this.service.stop(element.id).subscribe(data =>
-            element.task_statuses = data.dag.task_statuses);
+        this.service.stop(element.id).subscribe(data => {
+            if (data.dag) {
+                element.task_statuses = data.dag.task_statuses;
+            }
+        });
+
     }
 
 

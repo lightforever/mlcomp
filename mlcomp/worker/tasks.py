@@ -5,6 +5,7 @@ import time
 import traceback
 import sys
 from os.path import join, dirname, abspath
+from typing import List
 
 from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
@@ -309,6 +310,11 @@ def execute(id: int, repeat_count: int = 1):
 @app.task
 def kill(pid: int):
     os.system(f'kill -9 {pid}')
+
+
+@app.task
+def kill_all(pids: List[int]):
+    os.system(f'kill -9 {" ".join(map(str, pids))}')
 
 
 @app.task

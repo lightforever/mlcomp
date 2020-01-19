@@ -35,6 +35,7 @@ _read_session = Session.create_session(key='server.read')
 _write_session = Session.create_session(key='server.write')
 
 logger = create_logger(_write_session, __name__)
+supervisor = None
 
 
 @app.route('/', defaults={'path': ''}, methods=['GET'])
@@ -212,11 +213,7 @@ def stop_all_dags():
         t.additional_info = yaml_dump(info)
 
     provider.update()
-
-    dag_provider = DagProvider(_write_session)
-    for t in tasks:
-        dag = dag_provider.by_id(t.dag)
-        celery_tasks.stop(logger, _write_session, t, dag)
+    supervisor.stop_tasks(tasks)
 
 
 @app.route('/api/project/remove_all_dags', methods=['POST'])
@@ -536,18 +533,14 @@ def task_info():
 @error_handler
 def dag_stop():
     data = request_data()
-    provider = DagProvider(_write_session)
+    provider = TaskProvider(_write_session)
     id = int(data['id'])
-    dag = provider.by_id(id, joined_load=['tasks'])
-    for t in dag.tasks:
-        info = yaml_load(t.additional_info)
-        info['stopped'] = True
-        t.additional_info = yaml_dump(info)
+    tasks = provider.by_dag(id)
 
-    for t in dag.tasks:
-        celery_tasks.stop(logger, _write_session, t, dag)
+    supervisor.stop_tasks(tasks)
 
-    return {'dag': provider.get({'id': id})['data'][0]}
+    dag_provider = DagProvider(_write_session)
+    return {'dag': dag_provider.get({'id': id})['data'][0]}
 
 
 @app.route('/api/dag/start', methods=['POST'])
@@ -805,9 +798,10 @@ def shutdown():
 
 
 def start_server():
+    global supervisor
     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
         logger.info(f'Server TOKEN = {TOKEN}', ComponentType.API)
-        register_supervisor()
+        supervisor = register_supervisor()
 
     app.run(debug=FLASK_ENV == 'development', port=WEB_PORT, host=WEB_HOST)
 

@@ -34,6 +34,7 @@ class SupervisorBuilder:
         self.dep_status = None
         self.computers = None
         self.auxiliary = {}
+        self.tasks_stop = []
 
     def create_base(self):
         self.session.commit()
@@ -116,9 +117,10 @@ class SupervisorBuilder:
         task.computer_assigned = computer['name']
         task.celery_id = r.id
 
-        if task.gpu_assigned is not None:
-            for g in map(int, task.gpu_assigned.split(',')):
-                computer['gpu'][g] = task.id
+        if task.computer_assigned is not None:
+            if task.gpu_assigned:
+                for g in map(int, task.gpu_assigned.split(',')):
+                    computer['gpu'][g] = task.id
             computer['cpu'] -= task.cpu
             computer['memory'] -= task.memory * 1024
 
@@ -320,10 +322,6 @@ class SupervisorBuilder:
         self.auxiliary['process_tasks'] = []
 
         for task in self.not_ran_tasks:
-            info = yaml_load(task.additional_info)
-            if info.get('stopped'):
-                continue
-
             auxiliary = {'id': task.id, 'name': task.name}
             self.auxiliary['process_tasks'].append(auxiliary)
 
@@ -408,11 +406,53 @@ class SupervisorBuilder:
         )
         self.auxiliary_provider.create_or_update(auxiliary, 'name')
 
+    def stop_tasks(self, tasks: List[Task]):
+        self.tasks_stop.extend([t.id for t in tasks])
+
+    def process_stop_tasks(self):
+        # Stop not running tasks
+        if len(self.tasks_stop) == 0:
+            return
+
+        tasks = self.provider.by_ids(self.tasks_stop)
+        tasks_not_ran = [t.id for t in tasks if
+                         t.status in [TaskStatus.NotRan.value,
+                                      TaskStatus.Queued.value]]
+        tasks_started = [t for t in tasks if
+                         t.status in [TaskStatus.InProgress.value]]
+        tasks_started_ids = [t.id for t in tasks_started]
+
+        self.provider.change_status_all(tasks=tasks_not_ran,
+                                        status=TaskStatus.Skipped)
+
+        pids = []
+        for task in tasks_started:
+            if task.pid:
+                pids.append((task.computer_assigned, task.pid))
+
+            additional_info = yaml_load(task.additional_info)
+            for p in additional_info.get('child_processes', []):
+                pids.append((task.computer_assigned, p))
+
+        for computer, queue in self.docker_provider.queues_online():
+            pids_computer = [p for c, p in pids if c == computer]
+            if len(pids_computer) > 0:
+                celery_tasks.kill_all.apply_async((pids_computer,),
+                                                  queue=queue,
+                                                  retry=False)
+
+        self.provider.change_status_all(tasks=tasks_started_ids,
+                                        status=TaskStatus.Stopped)
+
+        self.tasks_stop = []
+
     def build(self):
         try:
             self.auxiliary = {'time': now()}
 
             self.create_base()
+
+            self.process_stop_tasks()
 
             self.process_parent_tasks()
 
@@ -438,3 +478,4 @@ class SupervisorBuilder:
 def register_supervisor():
     builder = SupervisorBuilder()
     start_schedule([(builder.build, 1)])
+    return builder

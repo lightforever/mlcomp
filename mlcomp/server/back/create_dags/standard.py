@@ -153,7 +153,7 @@ class DagStandardBuilder:
         task = Task(
             name=name,
             executor=k,
-            computer=self.info.get('computer'),
+            computer=self.info.get('computer') or v.get('computer'),
             gpu=gpu,
             gpu_max=gpu_max,
             cpu=v.get('cpu', 1),
