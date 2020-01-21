@@ -548,73 +548,13 @@ def dag_stop():
 @error_handler
 def dag_start():
     data = request_data()
-    provider = DagProvider(_write_session)
-    task_provider = TaskProvider(_write_session)
-
     id = int(data['id'])
-    dag = provider.by_id(id, joined_load=['tasks'])
-    can_start_statuses = [
-        TaskStatus.Failed.value, TaskStatus.Skipped.value,
-        TaskStatus.Stopped.value
-    ]
-
-    tasks = list(dag.tasks)
-
-    def find_resume(task):
-        children = task_provider.children(task.id)
-        children = sorted(children, key=lambda x: x.id, reverse=True)
-
-        if len(children) > 0:
-            for c in children:
-                if c.parent != task.id:
-                    continue
-
-                info = yaml_load(c.additional_info)
-                if 'distr_info' not in info:
-                    continue
-
-                if info['distr_info']['rank'] == 0:
-                    return {
-                        'master_computer': c.computer_assigned,
-                        'master_task_id': c.id,
-                        'load_last': True
-                    }
-            raise Exception('Master task not found')
-        else:
-            return {
-                'master_computer': task.computer_assigned,
-                'master_task_id': task.id,
-                'load_last': True
-            }
-
-    for t in tasks:
-        if t.status not in can_start_statuses:
-            continue
-
-        if t.parent:
-            continue
-
-        info = yaml_load(t.additional_info)
-        info['stopped'] = False
-        t.additional_info = yaml_dump(info)
-
-        info = yaml_load(t.additional_info)
-        info['resume'] = find_resume(t)
-        t.additional_info = yaml_dump(info)
-
-        t.status = TaskStatus.NotRan.value
-        t.pid = None
-        t.started = None
-        t.finished = None
-        t.computer_assigned = None
-        t.celery_id = None
-        t.worker_index = None
-        t.docker_assigned = None
-
-    provider.commit()
+    supervisor.start_dag(id)
 
 
 @app.route('/api/auxiliary', methods=['POST'])
+@requires_auth
+@error_handler
 def auxiliary():
     provider = AuxiliaryProvider(_read_session)
     return provider.get()

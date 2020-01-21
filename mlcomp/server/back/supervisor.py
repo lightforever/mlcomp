@@ -34,7 +34,11 @@ class SupervisorBuilder:
         self.dep_status = None
         self.computers = None
         self.auxiliary = {}
+
+        self.tasks = []
         self.tasks_stop = []
+        self.dags_start = []
+        self.sent_tasks = 0
 
     def create_base(self):
         self.session.commit()
@@ -53,8 +57,18 @@ class SupervisorBuilder:
         self.auxiliary['queues'] = self.queues
 
     def load_tasks(self):
-        not_ran_tasks = self.provider.by_status(TaskStatus.NotRan)
+        self.tasks = self.provider.by_status(TaskStatus.NotRan,
+                                             TaskStatus.InProgress,
+                                             TaskStatus.Queued)
+
+        not_ran_tasks = [t for t in self.tasks if
+                         t.status == TaskStatus.NotRan.value]
+
         self.not_ran_tasks = [task for task in not_ran_tasks if not task.debug]
+        self.not_ran_tasks = sorted(
+            self.not_ran_tasks, key=lambda x: x.gpu or 0,
+            reverse=True)
+
         self.logger.debug(
             f'Found {len(not_ran_tasks)} not ran tasks',
             ComponentType.Supervisor
@@ -70,7 +84,7 @@ class SupervisorBuilder:
                     TaskStatus(s).name
                     for s in self.dep_status.get(t.id, set())
                 ]
-            } for t in not_ran_tasks[:10]
+            } for t in not_ran_tasks[:5]
         ]
 
     def load_computers(self):
@@ -83,9 +97,13 @@ class SupervisorBuilder:
             computer['gpu_total'] = len(computer['gpu'])
             computer['can_process_tasks'] = computer['can_process_tasks']
 
-        for task in self.provider.by_status(
-                TaskStatus.Queued, TaskStatus.InProgress
-        ):
+        tasks = [
+            t for t in self.tasks if
+            t.status in [TaskStatus.InProgress.value,
+                         TaskStatus.Queued.value]
+        ]
+
+        for task in tasks:
             if task.computer_assigned is None:
                 continue
             assigned = task.computer_assigned
@@ -276,7 +294,7 @@ class SupervisorBuilder:
             return
 
         to_send = self._process_task_to_send(executor, task, computers)
-        auxiliary['to_send'] = to_send[:10]
+        auxiliary['to_send'] = to_send[:5]
         additional_info = yaml_load(task.additional_info)
 
         rank = 0
@@ -316,7 +334,7 @@ class SupervisorBuilder:
 
         if len(to_send) > 0:
             task.status = TaskStatus.Queued.value
-            self.provider.commit()
+            self.sent_tasks += len(to_send)
 
     def process_tasks(self):
         self.auxiliary['process_tasks'] = []
@@ -341,7 +359,7 @@ class SupervisorBuilder:
                 continue
             self.process_task(task)
 
-        self.auxiliary['process_tasks'] = self.auxiliary['process_tasks'][:10]
+        self.auxiliary['process_tasks'] = self.auxiliary['process_tasks'][:5]
 
     def _stop_child_tasks(self, task: Task):
         self.provider.commit()
@@ -394,7 +412,7 @@ class SupervisorBuilder:
                         'count': v
                     } for k, v in statuses.items()
                 ],
-            } for task, started, finished, statuses in tasks[:10]
+            } for task, started, finished, statuses in tasks[:5]
         ]
 
     def write_auxiliary(self):
@@ -404,6 +422,9 @@ class SupervisorBuilder:
         auxiliary = Auxiliary(
             name='supervisor', data=yaml_dump(self.auxiliary)
         )
+        if len(auxiliary.data) > 16000:
+            return
+
         self.auxiliary_provider.create_or_update(auxiliary, 'name')
 
     def stop_tasks(self, tasks: List[Task]):
@@ -446,13 +467,141 @@ class SupervisorBuilder:
 
         self.tasks_stop = []
 
+    def fast_check(self):
+        if self.provider is None or self.computer_provider is None:
+            return False
+
+        if self.not_ran_tasks is None or self.queues is None:
+            return False
+
+        if len(self.tasks_stop) > 0:
+            return False
+
+        if len(self.dags_start) > 0:
+            return False
+
+        if len(self.auxiliary.get('to_send', [])) > 0:
+            return False
+
+        queues = set([
+            f'{d.computer}_{d.name}' for d in self.docker_provider.all()
+            if d.last_activity >= now() - datetime.timedelta(seconds=15)
+        ])
+
+        queues_set = set(queues)
+        queues_set2 = set(self.queues)
+
+        if queues_set != queues_set2:
+            return False
+
+        tasks = self.provider.by_status(TaskStatus.NotRan,
+                                        TaskStatus.Queued,
+                                        TaskStatus.InProgress)
+        tasks_set = {t.id for t in tasks if
+                     t.status == TaskStatus.NotRan.value and not t.debug}
+        tasks_set2 = {t.id for t in self.tasks if
+                      t.status == TaskStatus.NotRan.value}
+
+        if tasks_set != tasks_set2:
+            return False
+
+        tasks_set = {t.id for t in tasks if
+                     t.status == TaskStatus.InProgress.value}
+        tasks_set2 = {t.id for t in self.tasks if
+                      t.status == TaskStatus.InProgress.value}
+
+        if tasks_set != tasks_set2:
+            return False
+
+        tasks_set = {t.id for t in tasks if
+                     t.status == TaskStatus.Queued.value}
+        tasks_set2 = {t.id for t in self.tasks if
+                      t.status == TaskStatus.Queued.value}
+
+        if tasks_set != tasks_set2:
+            return False
+
+        return True
+
+    def start_dag(self, id: int):
+        self.dags_start.append(id)
+
+    def process_start_dags(self):
+        if len(self.dags_start) == 0:
+            return
+
+        for id in self.dags_start:
+            can_start_statuses = [
+                TaskStatus.Failed.value, TaskStatus.Skipped.value,
+                TaskStatus.Stopped.value
+            ]
+
+            tasks = self.provider.by_dag(id)
+            children_all = self.provider.children([t.id for t in tasks])
+
+            def find_resume(task):
+                children = [c for c in children_all if c.parent == task.id]
+                children = sorted(children, key=lambda x: x.id, reverse=True)
+
+                if len(children) > 0:
+                    for c in children:
+                        if c.parent != task.id:
+                            continue
+
+                        info = yaml_load(c.additional_info)
+                        if 'distr_info' not in info:
+                            continue
+
+                        if info['distr_info']['rank'] == 0:
+                            return {
+                                'master_computer': c.computer_assigned,
+                                'master_task_id': c.id,
+                                'load_last': True
+                            }
+                    raise Exception('Master task not found')
+                else:
+                    return {
+                        'master_computer': task.computer_assigned,
+                        'master_task_id': task.id,
+                        'load_last': True
+                    }
+
+            for t in tasks:
+                if t.status not in can_start_statuses:
+                    continue
+
+                if t.parent:
+                    continue
+
+                if t.type == TaskType.Train.value:
+                    info = yaml_load(t.additional_info)
+                    info['resume'] = find_resume(t)
+                    t.additional_info = yaml_dump(info)
+
+                t.status = TaskStatus.NotRan.value
+                t.pid = None
+                t.started = None
+                t.finished = None
+                t.computer_assigned = None
+                t.celery_id = None
+                t.worker_index = None
+                t.docker_assigned = None
+
+        self.provider.commit()
+        self.dags_start = []
+
     def build(self):
         try:
+            if self.fast_check():
+                return
+
             self.auxiliary = {'time': now()}
 
             self.create_base()
 
             self.process_stop_tasks()
+
+            self.process_start_dags()
 
             self.process_parent_tasks()
 
@@ -479,3 +628,6 @@ def register_supervisor():
     builder = SupervisorBuilder()
     start_schedule([(builder.build, 1)])
     return builder
+
+
+__all__ = ['SupervisorBuilder']

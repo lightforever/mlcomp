@@ -1,0 +1,9 @@
+info:
+  name: click
+  project: examples
+  expdir: .
+executors:
+  bash:
+    type: click
+    module: main
+    command: work

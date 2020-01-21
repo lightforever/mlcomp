@@ -14,6 +14,59 @@ from mlcomp.utils.misc import to_snake
 from mlcomp.worker.executors.base.step import StepWrap
 
 
+class TqdmWrapper:
+    def __init__(
+            self, executor: 'Executor', iterable=None,
+            desc: str = 'progress', interval: int = 10,
+            **kwargs
+    ):
+        self.desc = desc
+        self.iterable = iterable
+        self.interval = interval
+        self.executor = executor
+        self.tqdm = tqdm(iterable=iterable, **kwargs)
+
+    def refresh(self):
+        executor = self.executor
+        tqdm = self.tqdm
+
+        executor.task.loader_name = self.desc
+        executor.task.batch_index = tqdm.n
+        executor.task.batch_total = tqdm.total
+        executor.task.epoch_duration = time.time() - tqdm.start_t
+        if tqdm.n > 0:
+            frac = (tqdm.total - tqdm.n) / tqdm.n
+            executor.task.epoch_time_remaining = \
+                executor.task.epoch_duration * frac
+
+        executor.task_provider.update()
+        return time.time()
+
+    def set_description(self, desc=None, refresh=True):
+        """
+        Set/modify description of the progress bar.
+
+        Parameters
+        ----------
+        desc  : str, optional
+        refresh  : bool, optional
+            Forces refresh [default: True].
+        """
+        self.desc = desc or ''
+        if refresh:
+            self.refresh()
+
+    def __iter__(self):
+        last_written = self.refresh()
+
+        for item in self.tqdm:
+            elapsed = time.time() - last_written
+            if elapsed > self.interval:
+                last_written = self.refresh()
+            yield item
+        self.refresh()
+
+
 class Executor(ABC):
     _child = dict()
 
@@ -23,7 +76,7 @@ class Executor(ABC):
     step = None
 
     def __init__(self, **kwargs):
-        pass
+        self.kwargs = kwargs
 
     def debug(self, message: str):
         if self.step:
@@ -48,6 +101,13 @@ class Executor(ABC):
             self.step.error(message)
         else:
             print(message)
+
+    def write(self, message: str):
+        if message.strip() != '':
+            self.info(message)
+
+    def flush(self):
+        pass
 
     def add_child_process(self, pid: int):
         additional_info = yaml_load(self.task.additional_info)
@@ -139,41 +199,22 @@ class Executor(ABC):
         variants = ['Catalyst']
         return type in (variants + [v.lower() for v in variants])
 
-    def tqdm(self, iterable=None, name: str = 'progress', interval: int = 10,
+    def tqdm(self, iterable=None, desc: str = 'progress', interval: int = 10,
              **kwargs):
         """
         tqdm wrapper. writes progress to Database
         Args:
             iterable: iterable for tqdm
-            name: name of the progress bar
+            desc: name of the progress bar
             interval: interval of writing to Database
             **kwargs: tqdm additional arguments
 
-        Returns:
-
+        Returns: tqdm wrapper
         """
-        t = tqdm(iterable=iterable, **kwargs)
-
-        def write():
-            self.task.loader_name = name
-            self.task.batch_index = t.n
-            self.task.batch_total = t.total
-            self.task.epoch_duration = time.time() - t.start_t
-            if t.n > 0:
-                self.task.epoch_time_remaining = self.task.epoch_duration * (
-                            t.total - t.n) / t.n
-
-            self.task_provider.update()
-            return time.time()
-
-        last_written = write()
-
-        for item in t:
-            elapsed = time.time() - last_written
-            if elapsed > interval:
-                last_written = write()
-            yield item
-        write()
+        return TqdmWrapper(
+            executor=self, iterable=iterable,
+            desc=desc, interval=interval,
+            **kwargs)
 
 
 __all__ = ['Executor']

@@ -194,7 +194,7 @@ def worker_supervisor():
 
 
 @main.command()
-@click.option('--daemon', type=bool, default=True,
+@click.option('--daemon', type=bool, default=False,
               help='start supervisord in a daemon mode')
 @click.option('--debug', type=bool, default=False,
               help='use source files instead the installed library')

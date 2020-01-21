@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Union
 
 from sqlalchemy import func, case
 from sqlalchemy.orm import joinedload, aliased
@@ -288,8 +288,11 @@ class TaskProvider(BaseDataProvider):
     def has_id(self, id: int):
         return self.query(Task).filter(Task.id == id).count() > 0
 
-    def children(self, id: int, joined_load=None):
-        res = self.query(Task).filter(Task.parent == id)
+    def children(self, ids: Union[int, List[int]], joined_load=None):
+        if isinstance(ids, int):
+            ids = [ids]
+
+        res = self.query(Task).filter(Task.parent.in_(ids))
         res = res.order_by(Task.id)
         if joined_load is not None:
             for n in joined_load:

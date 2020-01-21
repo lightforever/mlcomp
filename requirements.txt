@@ -1,6 +1,6 @@
 catalyst==20.1
-redis
 
+redis
 PyYAML>=5.1
 setuptools>=41.0.1
 click>=7.0
@@ -27,6 +27,7 @@ torchvision>=0.4.2
 torch>=1.0.0
 numpy>=1.18.0
 pandas>=0.25.3
+tqdm>=4.39.0
 
 # For describing
 jupyter

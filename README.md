@@ -106,7 +106,7 @@ Graph
     Run all necessary (mlcomp-server, mlcomp-workers, redis-server), it uses SQLITE:
     
     ```bash
-    mlcomp-server start
+    mlcomp-server start --daemon=True
     ```
    
     **Variant 2: full**
@@ -148,7 +148,7 @@ Graph
     e. Run on each worker-computer:
     
     ```bash
-    mlcomp-worker start
+    mlcomp-worker start --daemon=True
     ```
     
 ## UI

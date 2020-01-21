@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Installation &#8212; MLComp 20.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="MLComp" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<ol class="arabic">
+<li><p>Install mlcomp package</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">mlcomp</span>
+<span class="n">mlcomp</span> <span class="n">init</span>
+<span class="n">mlcomp</span> <span class="n">migrate</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Setup your environment</p>
+<blockquote>
+<div><p>A Configuration file automatically created at ~/mlcomp/configs/.env</p>
+<p>Environment variables:</p>
+<ul class="simple">
+<li><p>ROOT_FOLDER - folder to save mlcomp files: configs, db, tasks, etc</p></li>
+<li><p>TOKEN - site security token. Please change it to any string</p></li>
+<li><p>DB_TYPE. Either SQLITE or POSTGRESQL</p></li>
+<li><p>POSTGRES_DB. PostgreSql db name</p></li>
+<li><p>POSTGRES_USER. PostgreSql user</p></li>
+<li><p>POSTGRES_PASSWORD. PostgreSql password</p></li>
+<li><p>POSTGRES_HOST. PostgreSql host</p></li>
+<li><p>PGDATA. PostgreSql db files location</p></li>
+<li><p>REDIS_HOST. Redis host</p></li>
+<li><p>REDIS_PORT. Redis port</p></li>
+<li><p>REDIS_PASSWORD. Redis password</p></li>
+<li><p>WEB_HOST. mlcomp site host. 0.0.0.0 means it is available from everywhere</p></li>
+<li><p>WEB_PORT. mlcomp site port</p></li>
+<li><p>CONSOLE_LOG_LEVEL. log level for output to the console</p></li>
+<li><p>DB_LOG_LEVEL. log level for output to the database</p></li>
+<li><p>IP. Ip of a worker. The worker must be accessible from other workers by these IP/PORT</p></li>
+<li><p>PORT. Port of a worker. The worker must be accessible from other workers by these IP/PORT (SSH protocol)</p></li>
+<li><p>MASTER_PORT_RANGE. distributed port range for a worker. 29500-29510 means that if this worker will be a master in a distributed learning, it will use the first free port from this range. Ranges of different workers must be not overlapping.</p></li>
+<li><p>NCCL_SOCKET_IFNAME. NCCL network interface.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Run db, redis, mlcomp-server, mlcomp-workers:</p>
+<blockquote>
+<div><p><strong>Variant 1: minimal(if you have 1 computer)</strong></p>
+<p>Run all necessary(mlcomp-server, mlcomp-workers, redis-server), it uses SQLITE:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlcomp</span><span class="o">-</span><span class="n">server</span> <span class="n">start</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><strong>Variant 2: full</strong></p>
+<ol class="loweralpha simple">
+<li><p>Change your Environment variables to use PostgreSql</p></li>
+<li><p>Install rsync on each worker computer</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">rsync</span>
+</pre></div>
+</div>
+<p>Ensure every computer is available by SSH protocol with IP/PORT you specified in the .env file.</p>
+<p>rsync will perform the following commands:</p>
+<blockquote>
+<div><p>to upload</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">vhru</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;ssh -p </span><span class="si">{target.port}</span><span class="s2"> -o StrictHostKeyChecking=no&quot;</span> \
+<span class="p">{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="p">{</span><span class="n">target</span><span class="o">.</span><span class="n">user</span><span class="p">}</span><span class="o">@</span><span class="p">{</span><span class="n">target</span><span class="o">.</span><span class="n">ip</span><span class="p">}:{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="o">--</span><span class="n">perms</span>  <span class="o">--</span><span class="n">chmod</span><span class="o">=</span><span class="mi">777</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>to download</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">vhru</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;ssh -p </span><span class="si">{source.port}</span><span class="s2"> -o StrictHostKeyChecking=no&quot;</span> \
+<span class="p">{</span><span class="n">source</span><span class="o">.</span><span class="n">user</span><span class="p">}</span><span class="o">@</span><span class="p">{</span><span class="n">source</span><span class="o">.</span><span class="n">ip</span><span class="p">}:{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="p">{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="o">--</span><span class="n">perms</span>  <span class="o">--</span><span class="n">chmod</span><span class="o">=</span><span class="mi">777</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<ol class="loweralpha simple" start="3">
+<li><p>Install <a class="reference external" href="https://github.com/NVIDIA/apex#quick-start">apex</a> for distributed learning</p></li>
+<li><p>To Run postgresql, redis-server, mlcomp-server, execute on your server-computer:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">mlcomp</span><span class="o">/</span><span class="n">configs</span><span class="o">/</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="o">-</span><span class="n">f</span> <span class="n">server</span><span class="o">-</span><span class="n">compose</span><span class="o">.</span><span class="n">yml</span> <span class="n">up</span> <span class="o">-</span><span class="n">d</span>
+</pre></div>
+</div>
+<ol class="loweralpha simple" start="5">
+<li><p>Run on each worker computer:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlcomp</span><span class="o">-</span><span class="n">worker</span> <span class="n">start</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MLComp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Overview:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">MLComp</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid_search.html">Grid search</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">MLComp</a></li>
+      <li>Next: <a href="usage.html" title="next chapter">Usage</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Evgeny Semyonov.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

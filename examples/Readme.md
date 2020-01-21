@@ -11,4 +11,7 @@
     
     -all pipeline within the single command!
     
-- [hierarchical_logging](hierarchical_logging/Readme.md) Hierarchical logging
+- [hierarchical_logging](hierarchical_logging/Readme.md) Hierarchical logging.
+- [bash](bash/Readme.md) You can run any bash command.
+- [click](click/Readme.md) Click is a Python package for creating beautiful command line interfaces. 
+You can debug the code as usual, then run it in MLComp's cluster. 
