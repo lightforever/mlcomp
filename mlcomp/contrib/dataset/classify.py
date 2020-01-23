@@ -136,3 +136,6 @@ class ImageDataset(Dataset):
                 assert img is not None, \
                     f'Image at path {path} is empty'
                 return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+
+__all__ = ['ImageDataset']
