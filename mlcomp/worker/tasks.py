@@ -33,6 +33,8 @@ class ExecuteBuilder:
         self.id = id
         self.repeat_count = repeat_count
         self.logger = create_logger(self.session, 'ExecuteBuilder')
+        self.logger_db = create_logger(self.session, 'ExecuteBuilder.db',
+                                       console=False)
         self.exit = exit
 
         self.provider = None
@@ -105,11 +107,12 @@ class ExecuteBuilder:
                   f'CUDA_VISIBLE_DEVICES={cuda_visible_devices}')
 
         if cuda_visible_devices.strip() != '':
+            gpu_assigned = self.task.gpu_assigned or ''
+
             cuda_visible_devices = cuda_visible_devices.split(',')
-            self.task.gpu_assigned = ','.join(
+            cuda_visible_devices = ','.join(
                 [cuda_visible_devices[int(g)] for g in
-                 (self.task.gpu_assigned or '').split(',')])
-            cuda_visible_devices = self.task.gpu_assigned
+                 gpu_assigned.split(',') if g.strip() != ''])
         else:
             cuda_visible_devices = self.task.gpu_assigned
 
@@ -214,7 +217,7 @@ class ExecuteBuilder:
         self.executor = Executor.from_config(
             executor=self.task.executor, config=self.config,
             additional_info=additional_info,
-            session=self.session, logger=self.logger
+            session=self.session, logger=self.logger, logger_db=self.logger_db
         )
 
     def execute(self):

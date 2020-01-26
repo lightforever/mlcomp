@@ -15,12 +15,12 @@ items:
 layout:
   - type: panel
     title: main
-    parent_cols: 3
-    row_height: 400
+    parent_cols: 2
+    row_height: 300
     items:
       - type: table
         source: [accuracy01, loss]
-        cols: 1
+        cols: 2
       - type: series
         source: accuracy01
         multi: True

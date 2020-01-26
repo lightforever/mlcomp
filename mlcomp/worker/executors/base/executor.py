@@ -73,38 +73,31 @@ class Executor(ABC):
     session = None
     task_provider = None
     logger = None
+    logger_db = None
     step = None
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
-    def debug(self, message: str):
+    def debug(self, message: str, db: bool = False):
         if self.step:
-            self.step.debug(message)
-        else:
-            print(message)
+            self.step.debug(message, db=db)
 
-    def info(self, message: str):
+    def info(self, message: str, db: bool = False):
         if self.step:
-            self.step.info(message)
-        else:
-            print(message)
+            self.step.info(message, db=db)
 
-    def warning(self, message: str):
+    def warning(self, message: str, db: bool = False):
         if self.step:
-            self.step.warning(message)
-        else:
-            print(message)
+            self.step.warning(message, db=db)
 
-    def error(self, message: str):
+    def error(self, message: str, db: bool = False):
         if self.step:
-            self.step.error(message)
-        else:
-            print(message)
+            self.step.error(message, db=db)
 
     def write(self, message: str):
         if message.strip() != '':
-            self.info(message)
+            self.info(message, db=True)
 
     def flush(self):
         pass
@@ -124,7 +117,8 @@ class Executor(ABC):
         self.task_provider = task_provider
         self.task = task
         self.dag = dag
-        self.step = StepWrap(self.session, self.logger, task, task_provider)
+        self.step = StepWrap(self.session, self.logger, self.logger_db, task,
+                             task_provider)
         self.step.enter()
 
         if not task.debug and FILE_SYNC_INTERVAL:
@@ -146,7 +140,7 @@ class Executor(ABC):
     @staticmethod
     def from_config(
             *, executor: str, config: Config, additional_info: dict,
-            session: Session, logger
+            session: Session, logger, logger_db
     ) -> 'Executor':
         if executor not in config['executors']:
             raise ModuleNotFoundError(
@@ -160,6 +154,7 @@ class Executor(ABC):
         res = child_class._from_config(executor, config, additional_info)
         res.session = session
         res.logger = logger
+        res.logger_db = logger_db
         return res
 
     @staticmethod

@@ -7,7 +7,7 @@ from mlcomp.utils.misc import now
 
 class StepWrap:
     def __init__(
-            self, session: Session, logger, task: Task,
+            self, session: Session, logger, logger_db, task: Task,
             task_provider: TaskProvider
     ):
         self.log_provider = LogProvider(session)
@@ -17,6 +17,7 @@ class StepWrap:
         self.children = []
         self.step = None
         self.logger = logger
+        self.logger_db = logger_db
 
     @property
     def id(self):
@@ -98,26 +99,30 @@ class StepWrap:
         for i in range(abs(diff) + 1):
             self._finish()
 
-    def debug(self, message: str):
-        self.logger.debug(
+    def debug(self, message: str, db: bool = False):
+        logger = self.logger_db if db else self.logger
+        logger.debug(
             message, ComponentType.Worker, self.task.computer_assigned,
             self.task.id, self.step.id
         )
 
-    def info(self, message: str):
-        self.logger.info(
+    def info(self, message: str, db: bool = False):
+        logger = self.logger_db if db else self.logger
+        logger.info(
             message, ComponentType.Worker, self.task.computer_assigned,
             self.task.id, self.step.id
         )
 
-    def warning(self, message: str):
-        self.logger.warning(
+    def warning(self, message: str, db: bool = False):
+        logger = self.logger_db if db else self.logger
+        logger.warning(
             message, ComponentType.Worker, self.task.computer_assigned,
             self.task.id, self.step.id
         )
 
-    def error(self, message: str):
-        self.logger.error(
+    def error(self, message: str, db: bool = False):
+        logger = self.logger_db if db else self.logger
+        logger.error(
             message, ComponentType.Worker, self.task.computer_assigned,
             self.task.id, self.step.id
         )

@@ -2,8 +2,8 @@ import json
 import datetime
 from collections import defaultdict
 
-from mlcomp.utils.io import yaml_load
 from sqlalchemy import func, case
+import numpy as np
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import TaskStatus
@@ -25,6 +25,8 @@ class ComputerProvider(BaseDataProvider):
 
     def get(self, filter: dict, options: PaginatorOptions = None):
         query = self.query(Computer)
+        query = query.filter(
+            Computer.last_synced >= now() - datetime.timedelta(days=1))
         total = query.count()
         if options:
             query = self.paginator(query, options)
@@ -62,8 +64,9 @@ class ComputerProvider(BaseDataProvider):
             item['usage']['cpu'] = int(item['usage']['cpu'])
             item['usage']['memory'] = int(item['usage']['memory'])
             for gpu in item['usage']['gpu']:
-                gpu['memory'] = int(gpu['memory'])
-                gpu['load'] = int(gpu['load'])
+                gpu['memory'] = 0 if np.isnan(gpu['memory']) else int(
+                    gpu['memory'])
+                gpu['load'] = 0 if np.isnan(gpu['load']) else int(gpu['load'])
 
             min_time = parse_time(filter.get('usage_min_time'))
 

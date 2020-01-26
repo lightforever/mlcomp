@@ -139,47 +139,36 @@ class Catalyst(Executor, Callback):
         self.step.end(2)
 
         for s in state.metrics.epoch_values['valid']:
-            train = state.metrics.epoch_values['train'][s]
-            val = state.metrics.epoch_values['valid'][s]
+            for k in state.metrics.epoch_values:
+                value = state.metrics.epoch_values[k][s]
 
-            task_id = self.task.parent or self.task.id
-            train = ReportSeries(
-                part='train',
-                name=s,
-                epoch=state.epoch,
-                task=task_id,
-                value=train,
-                time=now(),
-                stage=state.stage
-            )
-
-            val = ReportSeries(
-                part='valid',
-                name=s,
-                epoch=state.epoch,
-                task=task_id,
-                value=val,
-                time=now(),
-                stage=state.stage
-            )
-
-            self.series_provider.add(train)
-            self.series_provider.add(val)
+                task_id = self.task.parent or self.task.id
+                series = ReportSeries(
+                    part=k,
+                    name=s,
+                    epoch=state.epoch,
+                    task=task_id,
+                    value=value,
+                    time=now(),
+                    stage=state.stage
+                )
+                self.series_provider.add(series)
 
             if s == self.report.metric.name:
+                value = state.metrics.epoch_values['valid'][s]
                 best = False
                 task = self.task
                 if task.parent:
                     task = self.task_provider.by_id(task.parent)
 
                 if self.report.metric.minimize:
-                    if task.score is None or val.value < task.score:
+                    if task.score is None or value < task.score:
                         best = True
                 else:
-                    if task.score is None or val.value > task.score:
+                    if task.score is None or value > task.score:
                         best = True
                 if best:
-                    task.score = val.value
+                    task.score = value
                     self.task_provider.update()
 
     def on_stage_start(self, state: RunnerState):

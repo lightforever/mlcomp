@@ -2,6 +2,7 @@ import os
 from os.path import join
 import shutil
 from pathlib import Path
+import sys
 
 import safitty
 import torch
@@ -32,10 +33,16 @@ def trace_model_from_checkpoint(logdir, logger, method_name='forward',
     # Get expdir name
     # noinspection SpellCheckingInspection,PyTypeChecker
     # We will use copy of expdir from logs for reproducibility
-    expdir_name = os.path.basename(config['args']['expdir'])
+    expdir_name = config['args']['expdir']
+    logger.info(f'expdir_name from args: {expdir_name}')
+
+    sys.path.insert(0, os.path.abspath(join(logdir, '../')))
+
     expdir_from_logs = os.path.abspath(join(logdir, '../', expdir_name))
 
+    logger.info(f'expdir_from_logs: {expdir_from_logs}')
     logger.info('Import experiment and runner from logdir')
+
     ExperimentType, RunnerType = \
         import_experiment_and_runner(Path(expdir_from_logs))
     experiment: Experiment = ExperimentType(config)

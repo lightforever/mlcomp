@@ -105,21 +105,24 @@ class DbHandler(logging.Handler):
             self.handleError(record)
 
 
-def create_logger(session: Session, name: str, db=True):
+def create_logger(session: Session, name: str, db=True, file=True,
+                  console=True):
     logger = logging.Logger(name)
     logger.handlers = []
 
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(CONSOLE_LOG_LEVEL)
-    console_handler.stream = sys.stdout
-    logger.handlers.append(console_handler)
+    if console:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(CONSOLE_LOG_LEVEL)
+        console_handler.stream = sys.stdout
+        logger.handlers.append(console_handler)
 
-    file_path = os.path.join(LOG_FOLDER, f'{LOG_NAME}.txt')
-    file_handler = RotatingFileHandler(file_path)
-    file_handler.setLevel(FILE_LOG_LEVEL)
-    file_handler.maxBytes = 10485760
-    file_handler.backupCount = 1
-    logger.handlers.append(file_handler)
+    if file:
+        file_path = os.path.join(LOG_FOLDER, f'{LOG_NAME}.txt')
+        file_handler = RotatingFileHandler(file_path)
+        file_handler.setLevel(FILE_LOG_LEVEL)
+        file_handler.maxBytes = 10485760
+        file_handler.backupCount = 1
+        logger.handlers.append(file_handler)
 
     if db:
         handler = DbHandler(session)

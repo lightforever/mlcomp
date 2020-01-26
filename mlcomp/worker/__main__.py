@@ -103,7 +103,7 @@ def worker_usage(session: Session, logger):
     docker = docker_provider.get(computer, DOCKER_IMG)
     usages = []
 
-    count = int(10/WORKER_USAGE_INTERVAL)
+    count = int(10 / WORKER_USAGE_INTERVAL)
     count = max(1, count)
 
     for _ in range(count):
@@ -122,8 +122,9 @@ def worker_usage(session: Session, logger):
             'memory': memory['percent'],
             'gpu': [
                 {
-                    'memory': g.memoryUtil * 100,
-                    'load': g.load * 100
+                    'memory': 0 if np.isnan(
+                        g.memoryUtil) else g.memoryUtil * 100,
+                    'load': 0 if np.isnan(g.load) else g.load * 100
                 } for g in gpus
             ]
         }
