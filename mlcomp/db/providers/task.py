@@ -304,5 +304,12 @@ class TaskProvider(BaseDataProvider):
             Task.id == task_id
         ).one()
 
+    def find_dependents(self, task_id: int):
+        res = self.query(Task). \
+            join(TaskDependence, Task.id == TaskDependence.depend_id). \
+            filter(TaskDependence.task_id == task_id).\
+            all()
+        return res
+
 
 __all__ = ['TaskProvider']

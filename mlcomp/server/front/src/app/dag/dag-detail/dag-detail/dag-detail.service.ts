@@ -2,7 +2,13 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {catchError, tap} from 'rxjs/operators';
 import {AppSettings} from '../../../app-settings'
-import {CodeResult, Data, Graph} from "../../../models";
+import {
+    BaseResult,
+    CodeResult,
+    Data,
+    Graph,
+    UpdateCodeResult
+} from "../../../models";
 import {BaseService} from "../../../base.service";
 import {HttpHeaders, HttpParams, HttpResponse} from "@angular/common/http";
 
@@ -45,10 +51,25 @@ export class DagDetailService extends BaseService {
         return this.http.get<any>(
             url, {params: params, responseType: 'blob' as 'json'}
         )
-         .pipe(
-           tap(_ => this.log('fetched archive')),
-           catchError(this.handleError<any>())
-         );
+            .pipe(
+                tap(_ => this.log('fetched archive')),
+                catchError(this.handleError<any>())
+            );
 
+    }
+
+    update_code(
+        file_id: number, content: string, dag: number, storage: number
+    ): Observable<UpdateCodeResult> {
+        return this.http.post<UpdateCodeResult>(`${this.url}update_code`, {
+            'file_id': file_id,
+            'content': content,
+            'dag': dag,
+            'storage': storage
+        })
+            .pipe(
+                tap(_ => this.log('fetched update_code')),
+                catchError(this.handleError<UpdateCodeResult>())
+            );
     }
 }

@@ -93,7 +93,7 @@ class Storage:
         else:
             ignore_patterns = read_lines(ignore_file)
         ignore_patterns.extend(
-            ['log', 'data', 'models', '__pycache__', '*.ipynb'])
+            ['log', '/data', '/models', '__pycache__', '*.ipynb'])
 
         return pathspec.PathSpec.from_lines(
             pathspec.patterns.GitWildMatchPattern, ignore_patterns

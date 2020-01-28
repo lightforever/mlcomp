@@ -26,7 +26,7 @@ class Click(Executor):
         spec.loader.exec_module(m)
         self.info('click. module created')
 
-        # sys.stdout = self
+        sys.stdout = self
         self.info('click. stdout set')
 
         command = getattr(m, self.command)
@@ -44,7 +44,9 @@ class Click(Executor):
 
         self.info('click. setup finished. executing command')
 
-        command()
+        command(standalone_mode=False)
+
+        self.info('click. command finished')
 
     @classmethod
     def _from_config(

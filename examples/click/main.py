@@ -9,7 +9,7 @@ def base():
 
 
 @base.command()
-@click.option('--count', type=int, default=1000)
+@click.option('--count', type=int, default=100)
 def work(count: int):
     print('start')
     items = list(range(count))

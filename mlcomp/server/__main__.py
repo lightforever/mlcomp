@@ -38,7 +38,7 @@ def stop_site():
               help='use source files instead the installed library')
 @click.option('--workers', type=int, default=cpu_count(),
               help='count of workers')
-@click.option('--log_level', type=str, default='INFO',
+@click.option('--log_level', type=str, default='DEBUG',
               help='log level of supervisord')
 def start(daemon: bool, debug: bool, workers: int, log_level: str):
     """

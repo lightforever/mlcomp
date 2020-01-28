@@ -3,6 +3,10 @@ export class BaseResult {
     error: string;
 }
 
+export class UpdateCodeResult extends BaseResult{
+    file: number;
+}
+
 export class Project {
   id: number;
   name: string;
@@ -52,12 +56,18 @@ export interface FlatNode {
   name: string;
   level: number;
   content: any;
+  id: number;
+  dag: number;
+  storage: number;
 }
 
 export class CodeNode {
     name: string;
     content: string;
+    id: number;
     children?: CodeNode[];
+    dag: number;
+    storage: number;
 }
 
 export class CodeResult {

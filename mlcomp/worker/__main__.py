@@ -158,7 +158,9 @@ def worker(number):
 
 
 @main.command()
-def worker_supervisor():
+@click.option('--workers', type=int, default=cpu_count(),
+              help='count of workers')
+def worker_supervisor(workers: int):
     """
     Start worker supervisor.
     This program controls workers ran on the same machine.
@@ -171,7 +173,7 @@ def worker_supervisor():
                 ComponentType.WorkerSupervisor,
                 host)
 
-    _create_computer()
+    _create_computer(workers)
     _create_docker()
 
     start_schedule([(stop_processes_not_exist, 10)])
@@ -201,13 +203,12 @@ def worker_supervisor():
               help='use source files instead the installed library')
 @click.option('--workers', type=int, default=cpu_count(),
               help='count of workers')
-@click.option('--log_level', type=str, default='INFO',
+@click.option('--log_level', type=str, default='DEBUG',
               help='log level of supervisord')
 def start(daemon: bool, debug: bool, workers: int, log_level: str):
     """
        Start worker_supervisor and workers
     """
-
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -219,8 +220,13 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
 
     daemon_text = 'false' if daemon else 'true'
     text = [
-        '[supervisord]', f'nodaemon={daemon_text}', '', '[program:supervisor]',
-        f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
+        '[supervisord]',
+        f'nodaemon={daemon_text}',
+        '',
+        '[program:supervisor]',
+        f'command={supervisor_command} --workers {workers}',
+        'autostart=true',
+        'autorestart=true',
         ''
     ]
     for p in range(workers):
@@ -260,13 +266,13 @@ def _create_docker():
     DockerProvider(_session).create_or_update(docker, 'name', 'computer')
 
 
-def _create_computer():
+def _create_computer(workers: int):
     tot_m, used_m, free_m = memory()
     tot_d, used_d, free_d = disk(ROOT_FOLDER)
     computer = Computer(
         name=socket.gethostname(),
         gpu=torch.cuda.device_count(),
-        cpu=cpu_count(),
+        cpu=workers,
         memory=tot_m,
         ip=IP,
         port=PORT,

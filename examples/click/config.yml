@@ -3,7 +3,7 @@ info:
   project: examples
   expdir: .
 executors:
-  bash:
+  click:
     type: click
     module: main
     command: work

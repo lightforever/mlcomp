@@ -17,6 +17,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class CodeComponent implements AfterViewInit {
 
     public dag: number;
+    private current_node: FlatNode;
 
     private transformer = (node: CodeNode, level: number) => {
         return {
@@ -24,6 +25,9 @@ export class CodeComponent implements AfterViewInit {
             name: node.name,
             level: level,
             content: node.content,
+            id: node.id,
+            dag: node.dag,
+            storage: node.storage
         };
     };
 
@@ -83,6 +87,7 @@ export class CodeComponent implements AfterViewInit {
         code_holder.appendChild(pre);
 
         window['PR'].prettyPrint();
+        this.current_node = node;
     }
 
     hasChild = (_: number, node: FlatNode) => node.expandable;
@@ -100,5 +105,49 @@ export class CodeComponent implements AfterViewInit {
 
             document.body.removeChild(link);
         });
+    }
+
+    code_double_click() {
+        if (!this.current_node) {
+            return;
+        }
+
+        let node = this.current_node;
+        let code_holder = document.getElementById('codeholder');
+        let pre = document.createElement('textarea');
+        let height = code_holder.clientHeight;
+
+        pre.setAttribute('style',
+            `width:100%; height:${height}px;display:block`);
+
+        pre.textContent = node.content;
+        code_holder.innerHTML = '';
+        code_holder.appendChild(pre);
+    }
+
+    code_td_click(event) {
+        if (!this.current_node) {
+            return;
+        }
+        if (event.target.type == 'textarea') {
+            return;
+        }
+        let code_holder = document.getElementById('codeholder');
+        if (code_holder && code_holder.children.length > 0) {
+            if (code_holder.children[0].tagName == 'TEXTAREA') {
+                // @ts-ignore
+                this.current_node.content = code_holder.children[0].value;
+                this.service.update_code(
+                    this.current_node.id,
+                    this.current_node.content,
+                    this.current_node.dag,
+                    this.current_node.storage
+                ).subscribe(x=>{
+                    this.current_node.id = x.file
+                });
+                this.node_click(this.current_node);
+                return;
+            }
+        }
     }
 }

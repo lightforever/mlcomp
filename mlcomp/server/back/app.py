@@ -1,3 +1,4 @@
+import hashlib
 import shutil
 import traceback
 import requests
@@ -24,7 +25,7 @@ from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import from_module_path, zip_folder
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import to_snake, now
-from mlcomp.db.models import Model, Report, ReportLayout, Task
+from mlcomp.db.models import Model, Report, ReportLayout, Task, File
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.worker.storage import Storage
 
@@ -418,7 +419,8 @@ def code():
             continue
 
         if s.is_dir:
-            node = {'name': name, 'children': []}
+            node = {'name': name, 'children': [], 'id': s.id, 'dag': id,
+                    'storage': s.id}
             if not parent:
                 res[name] = node
                 parents[s.path] = node
@@ -427,7 +429,8 @@ def code():
                 parents[parent]['children'].append(node)
                 parents[os.path.join(parent, name)] = node
         else:
-            node = {'name': name}
+            node = {'name': name, 'id': f.id, 'dag': id, 'storage': s.id}
+
             try:
                 node['content'] = f.content.decode('utf-8')
             except UnicodeDecodeError:
@@ -456,6 +459,35 @@ def code():
         sort(r)
 
     return {'items': res}
+
+
+@app.route('/api/update_code', methods=['POST'])
+@requires_auth
+@error_handler
+def update_code():
+    data = request_data()
+    provider = FileProvider(_write_session)
+    file = provider.by_id(data['file_id'])
+    content = data['content'].encode('utf-8')
+    md5 = hashlib.md5(content).hexdigest()
+
+    if md5 == file.md5:
+        return
+
+    if file.dag != data['dag']:
+        new_file = File(md5=md5, content=content, project=file.project,
+                        dag=data['dag'])
+        provider.add(new_file)
+
+        storage = DagStorageProvider(_write_session).by_id(data['storage'])
+        storage.file = new_file.id
+        provider.commit()
+        return {'file': new_file.id}
+    else:
+        file.content = content
+        file.md5 = md5
+        provider.commit()
+        return {'file': file.id}
 
 
 @app.route('/api/code_download', methods=['GET'])

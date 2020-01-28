@@ -343,7 +343,10 @@ def remove_from_all(session: Session, path: str):
 
 def remove_model(session: Session, project_name: str, model_name: str):
     path = join(MODEL_FOLDER, project_name, model_name + '.pth')
+    path_weight = join(MODEL_FOLDER, project_name, model_name + '_weight.pth')
+
     remove_from_all(session, path)
+    remove_from_all(session, path_weight)
 
 
 def remove_task(session: Session, id: int):

@@ -592,8 +592,8 @@ class SupervisorBuilder:
 
     def build(self):
         try:
-            if self.fast_check():
-                return
+            # if self.fast_check():
+            #     return
 
             self.auxiliary = {'time': now()}
 

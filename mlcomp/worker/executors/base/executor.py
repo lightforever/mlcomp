@@ -3,6 +3,7 @@ import time
 
 from tqdm import tqdm
 
+from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.utils.io import yaml_load, yaml_dump
 
 from mlcomp import FILE_SYNC_INTERVAL
@@ -135,7 +136,11 @@ class Executor(ABC):
     def _from_config(
             cls, executor: dict, config: Config, additional_info: dict
     ):
-        return cls(**executor)
+        grid_cell = additional_info.get('grid_cell')
+        grid_config = {}
+        if grid_cell is not None:
+            grid_config = grid_cells(executor['grid'])[grid_cell][0]
+        return cls(**executor, **grid_config)
 
     @staticmethod
     def from_config(
@@ -210,6 +215,13 @@ class Executor(ABC):
             executor=self, iterable=iterable,
             desc=desc, interval=interval,
             **kwargs)
+
+    def dependent_results(self):
+        tasks = self.task_provider.find_dependents(self.task.id)
+        res = dict()
+        for t in tasks:
+            res[t.id] = yaml_load(t.result)
+        return res
 
 
 __all__ = ['Executor']
