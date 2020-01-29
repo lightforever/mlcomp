@@ -1,0 +1,14 @@
+info:
+  name: dag_grid
+  project: examples
+  expdir: .
+executors:
+  bash:
+    type: bash
+    command: echo $variable
+  bash2:
+    type: bash
+    command: echo $variable
+    depends: bash
+grid:
+  - variable: 0-2

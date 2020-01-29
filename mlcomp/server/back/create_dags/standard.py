@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import os
+from copy import deepcopy
 
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.core import Session
@@ -29,7 +30,8 @@ class DagStandardBuilder:
             config_path: str = None,
             control_reqs: bool = True,
             logger=None,
-            component: ComponentType = None
+            component: ComponentType = None,
+            grid_cell: dict = None
     ):
         self.session = session
         self.config = config
@@ -51,6 +53,7 @@ class DagStandardBuilder:
         self.dag_provider = None
         self.logger = logger
         self.component = component
+        self.grid_cell = grid_cell
 
         self.project = None
         self.layouts = None
@@ -107,10 +110,14 @@ class DagStandardBuilder:
     def create_dag(self):
         self.log_info('create_dag')
 
+        name = self.info['name']
+        if self.grid_cell:
+            name = f'{name} {self.grid_cell[1]}'
+
         dag = Dag(
             config=self.config_text or yaml_dump(self.config),
             project=self.project,
-            name=self.info['name'],
+            name=name,
             docker_img=self.info.get('docker_img'),
             type=DagType.Standard.value,
             created=now(),
@@ -134,8 +141,10 @@ class DagStandardBuilder:
         elif self.copy_files_from:
             self.storage.copy_from(self.copy_files_from, self.dag)
 
-    def create_task(self, k: str, v: dict, name: str, info: dict):
+    def create_task(self, k: str, v: dict, name: str, info: dict,
+                    cell: dict = None):
         task_type = TaskType.User.value
+        v = deepcopy(v)
         if v.get('task_type') == 'train' or \
                 Executor.is_trainable(v['type']):
             task_type = TaskType.Train.value
@@ -163,8 +172,14 @@ class DagStandardBuilder:
             steps=int(v.get('steps', '1')),
             type=task_type
         )
+
+        if cell is not None:
+            v.update(cell)
+
+        info['executor'] = v
         task.additional_info = yaml_dump(info)
         report = None
+
         if self.layout_name and task_type == TaskType.Train.value:
             if self.layout_name not in self.layouts:
                 raise Exception(f'Unknown report = {v["report"]}')
@@ -194,6 +209,9 @@ class DagStandardBuilder:
 
         while len(created) < len(executors):
             for k, v in executors.items():
+                if self.grid_cell:
+                    v.update(**self.grid_cell[0])
+
                 valid = True
                 if 'depends' in v:
                     depends = v['depends']
@@ -214,20 +232,25 @@ class DagStandardBuilder:
                 if valid:
                     names = []
                     infos = []
+                    task_cells = []
                     if 'grid' in v:
                         grid = v['grid']
+                        del v['grid']
+
                         cells = grid_cells(grid)
                         for i, (cell, cell_name) in enumerate(cells):
                             names.append(cell_name)
                             infos.append({'grid_cell': i})
+                            task_cells.append(cell)
                     else:
                         names.append(v.get('name', k))
                         infos.append({})
+                        task_cells.append({})
 
                     k_tasks = []
-                    for name, info in zip(names, infos):
+                    for name, cell, info in zip(names, task_cells, infos):
                         task, report = self.create_task(k, v, name=name,
-                                                        info=info)
+                                                        info=info, cell=cell)
                         tasks.append(task)
                         k_tasks.append(task)
                         reports.append(report)
@@ -299,7 +322,8 @@ def dag_standard(
         config_path: str = None,
         control_reqs: bool = True,
         logger=None,
-        component: ComponentType = None
+        component: ComponentType = None,
+        grid_cell: dict = None
 ):
     builder = DagStandardBuilder(
         session=session,
@@ -311,7 +335,8 @@ def dag_standard(
         config_path=config_path,
         control_reqs=control_reqs,
         logger=logger,
-        component=component
+        component=component,
+        grid_cell=grid_cell
     )
     return builder.build()
 

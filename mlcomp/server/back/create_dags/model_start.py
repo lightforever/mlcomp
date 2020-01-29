@@ -31,10 +31,8 @@ def dag_model_start(session: Session, data: dict):
 
         found_version['used'] = now()
 
-        if len(pipe) == 1:
-            pipe[list(pipe)[0]].update(pipe_equations)
-        else:
-            pipe.update(pipe_equations)
+        for v in pipe.values():
+            v.update(pipe_equations)
 
     equations[data['pipe']['name']] = versions
     model.equations = yaml_dump(equations)

@@ -6,14 +6,13 @@ from os.path import join
 
 import torch
 
-from catalyst.utils import set_global_seed, load_checkpoint
-from catalyst.dl import RunnerState, Callback, Runner, CheckpointCallback
+from catalyst.utils import set_global_seed, load_checkpoint, \
+    import_experiment_and_runner
+from catalyst.dl import State, Callback, Runner, CheckpointCallback
 from catalyst.dl.callbacks import VerboseLogger
-from catalyst.dl.utils.scripts import import_experiment_and_runner
 from catalyst.utils.config import parse_args_uargs, dump_environment
 
 from mlcomp import TASK_FOLDER
-from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.utils.io import yaml_load, yaml_dump
@@ -21,7 +20,6 @@ from mlcomp.utils.misc import now
 from mlcomp.db.models import ReportSeries
 from mlcomp.utils.config import Config, merge_dicts_smart
 from mlcomp.worker.executors.base import Executor
-from mlcomp.contrib.catalyst.register import register
 from mlcomp.worker.executors.model import trace_model_from_checkpoint
 from mlcomp.worker.sync import copy_remote
 
@@ -94,11 +92,11 @@ class Catalyst(Executor, Callback):
 
         return result
 
-    def on_loader_start(self, state: RunnerState):
+    def on_loader_start(self, state: State):
         self.loader_started_time = now()
         self.loader_step_start = state.step
 
-    def on_epoch_start(self, state: RunnerState):
+    def on_epoch_start(self, state: State):
         if self.checkpoint_resume and state.stage_epoch == 0:
             state.epoch += 1
 
@@ -112,7 +110,7 @@ class Catalyst(Executor, Callback):
                 2, name=f'epoch {state.stage_epoch}', index=state.stage_epoch
             )
 
-    def on_batch_start(self, state: RunnerState):
+    def on_batch_start(self, state: State):
         step = state.step - self.loader_step_start
         if self.last_batch_logged and \
                 step != state.batch_size * state.loader_len:
@@ -135,12 +133,12 @@ class Catalyst(Executor, Callback):
         self.task_provider.update()
         self.last_batch_logged = now()
 
-    def on_epoch_end(self, state: RunnerState):
+    def on_epoch_end(self, state: State):
         self.step.end(2)
-
-        for s in state.metrics.epoch_values['valid']:
-            for k in state.metrics.epoch_values:
-                value = state.metrics.epoch_values[k][s]
+        values = state.metric_manager.epoch_values
+        for s in values['valid']:
+            for k in values:
+                value = values[k][s]
 
                 task_id = self.task.parent or self.task.id
                 series = ReportSeries(
@@ -155,7 +153,7 @@ class Catalyst(Executor, Callback):
                 self.series_provider.add(series)
 
             if s == self.report.metric.name:
-                value = state.metrics.epoch_values['valid'][s]
+                value = values['valid'][s]
                 best = False
                 task = self.task
                 if task.parent:
@@ -171,10 +169,10 @@ class Catalyst(Executor, Callback):
                     task.score = value
                     self.task_provider.update()
 
-    def on_stage_start(self, state: RunnerState):
+    def on_stage_start(self, state: State):
         state.loggers = {'console': VerboseLogger()}
 
-    def on_stage_end(self, state: RunnerState):
+    def on_stage_end(self, state: State):
         self.checkpoint_resume = False
         self.checkpoint_stage_epoch = 0
         self.step.end(1)
@@ -195,19 +193,17 @@ class Catalyst(Executor, Callback):
 
         assert 'report_config' in additional_info, 'layout was not filled'
         report_config = additional_info['report_config']
-        grid_cell = additional_info.get('grid_cell')
         report = ReportLayoutInfo(report_config)
         if len(args.configs) == 0:
             args.configs = [args.config]
-
-        grid_config = {}
-        if grid_cell is not None:
-            grid_config = grid_cells(executor['grid'])[grid_cell][0]
 
         distr_info = additional_info.get('distr_info', {})
         resume = additional_info.get('resume')
         params = executor.get('params', {})
         params.update(additional_info.get('params', {}))
+
+        grid_config = executor.copy()
+        grid_config.pop('args', '')
 
         return cls(
             args=args,
@@ -245,6 +241,8 @@ class Catalyst(Executor, Callback):
     def _checkpoint_fix_config(self, experiment):
         resume = self.resume
         if not resume:
+            return
+        if experiment.logdir is None:
             return
 
         checkpoint_dir = join(experiment.logdir, 'checkpoints')

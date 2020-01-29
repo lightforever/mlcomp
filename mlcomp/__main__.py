@@ -7,6 +7,7 @@ from multiprocessing import cpu_count
 
 import torch
 
+from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.migration.manage import migrate as _migrate
 from mlcomp import ROOT_FOLDER, IP, PORT, \
     WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
@@ -44,20 +45,30 @@ def _dag(config: str, debug: bool = False, control_reqs=True,
 
     type_name = config_parsed['info'].get('type', 'standard')
     if type_name == DagType.Standard.name.lower():
-        return dag_standard(
-            session=_session,
-            config=config_parsed,
-            debug=debug,
-            config_text=config_text,
-            config_path=config,
-            control_reqs=control_reqs,
-            logger=logger,
-            component=ComponentType.Client
-        )
+        cells = grid_cells(
+            config_parsed['grid']) if 'grid' in config_parsed else [None]
+        dags = []
+        for cell in cells:
+            dag = dag_standard(
+                session=_session,
+                config=config_parsed,
+                debug=debug,
+                config_text=config_text,
+                config_path=config,
+                control_reqs=control_reqs,
+                logger=logger,
+                component=ComponentType.Client,
+                grid_cell=cell
+            )
+            dags.append(dag)
 
-    return dag_pipe(
-        session=_session, config=config_parsed, config_text=config_text
-    )
+        return dags
+
+    return [
+        dag_pipe(
+            session=_session, config=config_parsed, config_text=config_text
+        )
+    ]
 
 
 def _create_computer():
@@ -121,16 +132,17 @@ def execute(config: str, debug: bool, params):
         )
         provider.change_status(t, TaskStatus.Failed)
 
-    # Create dag
-    created_dag = _dag(config, debug, params=params)
-    for ids in created_dag.values():
-        for id in ids:
-            task = provider.by_id(id)
-            task.gpu_assigned = ','.join(
-                [str(i) for i in range(torch.cuda.device_count())])
+    # Create dags
+    dags = _dag(config, debug, params=params)
+    for dag in dags:
+        for ids in dag.values():
+            for id in ids:
+                task = provider.by_id(id)
+                task.gpu_assigned = ','.join(
+                    [str(i) for i in range(torch.cuda.device_count())])
 
-            provider.commit()
-            execute_by_id(id, exit=False)
+                provider.commit()
+                execute_by_id(id, exit=False)
 
 
 @main.command()

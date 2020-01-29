@@ -26,6 +26,7 @@ torch>=1.0.0
 numpy>=1.18.0
 pandas>=0.25.3
 tqdm>=4.39.0
+simplejson>=3.13.2
 
 # For describing
 jupyter
@@ -38,4 +39,4 @@ pytest-xdist>=1.29.0
 # Application level
 pretrainedmodels>=0.7.4
 
-catalyst==20.1
+catalyst==20.1.3

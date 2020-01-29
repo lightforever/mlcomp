@@ -212,7 +212,6 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
-
     if debug:
         supervisor_command = 'python mlcomp/worker/__main__.py ' \
                              'worker-supervisor'

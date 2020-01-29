@@ -3,9 +3,7 @@ import time
 
 from tqdm import tqdm
 
-from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.utils.io import yaml_load, yaml_dump
-
 from mlcomp import FILE_SYNC_INTERVAL
 from mlcomp.db.core import Session
 from mlcomp.db.models import Task, Dag
@@ -136,11 +134,7 @@ class Executor(ABC):
     def _from_config(
             cls, executor: dict, config: Config, additional_info: dict
     ):
-        grid_cell = additional_info.get('grid_cell')
-        grid_config = {}
-        if grid_cell is not None:
-            grid_config = grid_cells(executor['grid'])[grid_cell][0]
-        return cls(**executor, **grid_config)
+        return cls(**executor)
 
     @staticmethod
     def from_config(
@@ -153,8 +147,9 @@ class Executor(ABC):
                 f'has not been found'
             )
 
-        executor = config['executors'][executor]
+        executor = additional_info['executor']
         child_class = Executor._child[executor['type']]
+
         # noinspection PyProtectedMember
         res = child_class._from_config(executor, config, additional_info)
         res.session = session

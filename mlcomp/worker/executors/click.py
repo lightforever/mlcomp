@@ -3,8 +3,6 @@ import sys
 from os import getcwd
 from os.path import join
 
-from mlcomp.contrib.search.grid import grid_cells
-from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
 
 
@@ -26,9 +24,6 @@ class Click(Executor):
         spec.loader.exec_module(m)
         self.info('click. module created')
 
-        sys.stdout = self
-        self.info('click. stdout set')
-
         command = getattr(m, self.command)
         self.info('click. command get')
 
@@ -44,19 +39,15 @@ class Click(Executor):
 
         self.info('click. setup finished. executing command')
 
+        stdout = sys.stdout
+        sys.stdout = self
+        self.info('click. stdout set')
+
         command(standalone_mode=False)
 
-        self.info('click. command finished')
+        sys.stdout = stdout
 
-    @classmethod
-    def _from_config(
-            cls, executor: dict, config: Config, additional_info: dict
-    ):
-        grid_cell = additional_info.get('grid_cell')
-        grid_config = {}
-        if grid_cell is not None:
-            grid_config = grid_cells(executor['grid'])[grid_cell][0]
-        return cls(**executor, **grid_config)
+        self.info('click. command finished')
 
 
 __all__ = ['Click']

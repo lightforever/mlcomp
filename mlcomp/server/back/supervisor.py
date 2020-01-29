@@ -630,4 +630,4 @@ def register_supervisor():
     return builder
 
 
-__all__ = ['SupervisorBuilder']
+__all__ = ['SupervisorBuilder', 'register_supervisor']

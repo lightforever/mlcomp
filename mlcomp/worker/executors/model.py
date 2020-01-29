@@ -10,7 +10,7 @@ import torch
 from catalyst.dl.core import Experiment
 from catalyst import utils
 from catalyst.dl.utils.trace import trace_model
-from catalyst.dl.utils.scripts import import_experiment_and_runner
+from catalyst.utils import import_experiment_and_runner
 
 from mlcomp import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model

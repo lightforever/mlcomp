@@ -3,7 +3,7 @@ import shutil
 import traceback
 import requests
 import os
-import json
+import simplejson as json
 from collections import OrderedDict
 from functools import wraps
 
@@ -128,7 +128,7 @@ def error_handler(f):
         res['success'] = success
         res['error'] = error
 
-        return Response(json.dumps(res), status=status)
+        return Response(json.dumps(res, ignore_nan=True), status=status)
 
     return decorated
 

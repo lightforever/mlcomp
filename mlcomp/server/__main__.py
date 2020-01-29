@@ -4,7 +4,6 @@ from multiprocessing import cpu_count
 import click
 
 from mlcomp import CONFIG_FOLDER, REDIS_PORT, REDIS_PASSWORD
-from mlcomp.migration.manage import migrate
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
 from mlcomp.utils.misc import kill_child_processes

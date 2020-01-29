@@ -65,10 +65,9 @@ class TaskProvider(BaseDataProvider):
         return query
 
     def get(self, filter: dict, options: PaginatorOptions):
-        query = self.query(Task, Project.name). \
+        query = self.query(Task, Dag, Project.name). \
             join(Dag, Dag.id == Task.dag). \
-            join(Project, Project.id == Dag.project). \
-            options(joinedload(Task.dag_rel, innerjoin=True))
+            join(Project, Project.id == Dag.project)
 
         query = self._get_filter(query, filter)
 
@@ -76,13 +75,12 @@ class TaskProvider(BaseDataProvider):
         paginator = self.paginator(query, options)
         res = []
 
-        for p, project_name in paginator.all():
-            if p.dag_rel is None:
-                continue
-
+        for p, d, project_name in paginator.all():
+            # noinspection PyDictCreation
             item = {**self.to_dict(p, rules=('-additional_info',))}
             item['status'] = to_snake(TaskStatus(item['status']).name)
             item['type'] = to_snake(TaskType(item['type']).name)
+            item['dag_rel'] = self.to_dict(d)
             item['dag_rel']['project'] = {
                 'id': item['dag_rel']['project'],
                 'name': project_name
@@ -95,8 +93,7 @@ class TaskProvider(BaseDataProvider):
                 finish = (p.finished or p.last_activity)
                 delta = (finish - p.started).total_seconds()
             item['duration'] = duration_format(delta)
-            if p.dag_rel is not None:
-                res.append(item)
+            res.append(item)
 
         if filter.get('report'):
             tasks_within_report = self.query(
@@ -110,10 +107,12 @@ class TaskProvider(BaseDataProvider):
             order_by(Project.id.desc()). \
             limit(20). \
             all()
+
         dags = self.query(Dag.name, Dag.id). \
             order_by(Dag.id.desc()). \
             limit(20). \
             all()
+
         projects = [{'name': name, 'id': id} for name, id in projects]
         dags = [{'name': name, 'id': id} for name, id in dags]
 
