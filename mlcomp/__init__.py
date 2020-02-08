@@ -49,12 +49,17 @@ with open(env_file) as f:
         os.environ[k] = v
 
 # extra env
-extra_env = os.getenv('EXTRA_ENV', '')
-for p in extra_env.split(';'):
-    if '=' not in p:
-        continue
-    k, v = p.strip().split('=')
-    os.environ[k] = v
+if os.getenv('ENV'):
+    extra_env_file = join(CONFIG_FOLDER, os.getenv('ENV', '')+'.env')
+    extra_env = open(extra_env_file).readlines()
+    for p in extra_env:
+        if '=' not in p:
+            continue
+        k, v = p.strip().split('=')
+        os.environ[k] = v
+
+# contour env file
+CONTOUR_FILE = join(CONFIG_FOLDER, 'contour.yml')
 
 # for debugging
 os.environ['PYTHONPATH'] = '.'
@@ -113,5 +118,5 @@ __all__ = [
     'FILE_LOG_LEVEL', 'DB_TYPE', 'SA_CONNECTION_STRING', 'FLASK_ENV',
     'DOCKER_MAIN', 'IP', 'PORT', 'LOG_NAME', 'WORKER_USAGE_INTERVAL',
     'FILE_SYNC_INTERVAL', 'INSTALL_DEPENDENCIES', 'SYNC_WITH_THIS_COMPUTER',
-    'CAN_PROCESS_TASKS', 'TMP_FOLDER'
+    'CAN_PROCESS_TASKS', 'TMP_FOLDER', 'CONTOUR_FILE'
 ]
