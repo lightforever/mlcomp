@@ -133,6 +133,7 @@ class SupervisorBuilder:
         r = execute.apply_async((task.id,), queue=queue, retry=False)
         task.status = TaskStatus.Queued.value
         task.computer_assigned = computer['name']
+        task.docker_assigned = queue
         task.celery_id = r.id
 
         if task.computer_assigned is not None:
@@ -369,11 +370,30 @@ class SupervisorBuilder:
         for c, d in zip(children, dags):
             celery_tasks.stop(self.logger, self.session, c, d)
 
+    def _correct_catalyst_hangs(self, task, statuses):
+        if task.type != TaskType.Train.value:
+            return
+        success = sum(s == TaskStatus.Success.value for s in statuses)
+        in_progress = sum(s == TaskStatus.InProgress.value for s in statuses)
+
+        if success + in_progress == len(statuses) and in_progress > 0:
+            child_tasks = self.provider.children(task.id)
+            for t in child_tasks:
+                if t.status == TaskStatus.InProgress.value:
+                    celery_tasks.kill.apply_async(
+                        (t.pid,),
+                        queue=t.docker_assigned,
+                        retry=False)
+                    t.status = TaskStatus.Success.value
+            self.provider.commit()
+
     def process_parent_tasks(self):
         tasks = self.provider.parent_tasks_stats()
 
         was_change = False
         for task, started, finished, statuses in tasks:
+            self._correct_catalyst_hangs(task, statuses)
+
             status = task.status
             if statuses[TaskStatus.Failed] > 0:
                 status = TaskStatus.Failed.value
