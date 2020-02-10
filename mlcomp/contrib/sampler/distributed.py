@@ -14,7 +14,7 @@ class DatasetDummy(Dataset):
 
 class DistributedSamplerIndices(DistributedSampler):
     def get_indices(self):
-        return list(range(len(self.dataset)))
+        return list(self.__iter__())
 
     def __iter__(self):
         # deterministically shuffle based on epoch
@@ -91,4 +91,4 @@ class BalancedClassSamplerDistributed(DistributedSamplerIndices):
         return list(iter(indices))
 
 
-__all__ = ['BalancedClassSamplerDistributed']
+__all__ = ['BalancedClassSamplerDistributed', 'DistributedSamplerIndices']

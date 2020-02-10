@@ -4,6 +4,15 @@ import torch
 import pretrainedmodels
 
 
+class LambdaLayer(nn.Module):
+    def __init__(self, lambd):
+        super(LambdaLayer, self).__init__()
+        self.lambd = lambd
+
+    def forward(self, x):
+        return self.lambd(x)
+
+
 class Pretrained(nn.Module):
     def __init__(self, variant, num_classes, pretrained=True, activation=None):
         super().__init__()
@@ -28,6 +37,7 @@ class Pretrained(nn.Module):
                     model.last_linear.in_features,
                     num_classes
                 )
+                self.model.last_linear.in_channels = linear.in_features
             elif isinstance(linear, nn.Conv2d):
                 self.model.last_linear = nn.Conv2d(
                     linear.in_channels,
@@ -35,6 +45,14 @@ class Pretrained(nn.Module):
                     kernel_size=linear.kernel_size,
                     bias=True
                 )
+                self.model.last_linear.in_features = linear.in_channels
+
+        self.model.last_linear = nn.Sequential(
+            LambdaLayer(lambda x: x.unsqueeze_(0)),
+            nn.AdaptiveAvgPool1d(self.model.last_linear.in_channels),
+            LambdaLayer(lambda x: x.squeeze_(0).view(x.size(0), -1)),
+            self.model.last_linear
+        )
 
         if callable(activation) or activation is None:
             self.activation = activation
