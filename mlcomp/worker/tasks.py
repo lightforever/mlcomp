@@ -7,6 +7,7 @@ import sys
 from os.path import join, dirname, abspath
 from typing import List
 
+import psutil
 from sqlalchemy.orm import joinedload
 from celery.signals import celeryd_after_setup
 from celery import states
@@ -149,7 +150,7 @@ class ExecuteBuilder:
         self.task.pid = os.getpid()
         self.task.worker_index = self.worker_index
         self.task.docker_assigned = self.docker_img
-        self.provider.change_status(self.task, TaskStatus.InProgress)
+        self.task.status = TaskStatus.InProgress.value
         self.provider.commit()
 
     def download(self):
@@ -317,11 +318,14 @@ def execute(id: int, repeat_count: int = 1):
 @app.task
 def kill(pid: int):
     os.system(f'kill -9 {pid}')
+    print('KILLED', pid)
+    return not psutil.pid_exists(pid)
 
 
 @app.task
 def kill_all(pids: List[int]):
     os.system(f'kill -9 {" ".join(map(str, pids))}')
+    return all(not psutil.pid_exists(pid) for pid in pids)
 
 
 @app.task

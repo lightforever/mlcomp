@@ -400,7 +400,6 @@ class Catalyst(Executor, Callback):
         if self.master and self.trace:
             traced = trace_model_from_checkpoint(self.experiment.logdir, self)
             torch.jit.save(traced, self.trace)
-
         return {'stage': experiment.stages[-1], 'stages': stages}
 
 

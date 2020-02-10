@@ -1,4 +1,5 @@
 import datetime
+import time
 import traceback
 from typing import List
 
@@ -375,18 +376,23 @@ class SupervisorBuilder:
     def _correct_catalyst_hangs(self, task, statuses):
         if task.type != TaskType.Train.value:
             return
-        success = sum(s == TaskStatus.Success.value for s in statuses)
-        in_progress = sum(s == TaskStatus.InProgress.value for s in statuses)
+        success = statuses[TaskStatus.Success]
+        in_progress = statuses[TaskStatus.InProgress]
 
-        if success + in_progress == len(statuses) and in_progress > 0:
+        sum_statuses = sum(statuses.values())
+        if (success + in_progress == sum_statuses) \
+                and in_progress > 0 and success > 0:
             child_tasks = self.provider.children(task.id)
             for t in child_tasks:
                 if t.status == TaskStatus.InProgress.value:
-                    celery_tasks.kill.apply_async(
+                    response = celery_tasks.kill.apply_async(
                         (t.pid,),
-                        queue=t.docker_assigned,
+                        queue=f'{t.computer_assigned}_{t.docker_assigned}',
                         retry=False)
-                    t.status = TaskStatus.Success.value
+
+                    result = response.get()
+                    if result:
+                        t.status = TaskStatus.Success.value
             self.provider.commit()
 
     def process_parent_tasks(self):
