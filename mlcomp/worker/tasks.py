@@ -150,6 +150,7 @@ class ExecuteBuilder:
         self.task.worker_index = self.worker_index
         self.task.docker_assigned = self.docker_img
         self.provider.change_status(self.task, TaskStatus.InProgress)
+        self.provider.commit()
 
     def download(self):
         self.info('download')

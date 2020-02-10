@@ -133,7 +133,7 @@ class SupervisorBuilder:
         r = execute.apply_async((task.id,), queue=queue, retry=False)
         task.status = TaskStatus.Queued.value
         task.computer_assigned = computer['name']
-        task.docker_assigned = queue
+        task.docker_assigned = queue.split('_')[1]
         task.celery_id = r.id
 
         if task.computer_assigned is not None:
@@ -277,6 +277,8 @@ class SupervisorBuilder:
                         break
 
                 task.gpu_assigned = ','.join(map(str, cuda_devices))
+                self.provider.commit()
+
                 self.process_to_celery(task, queue, computer)
             else:
                 self.process_to_celery(task, queue, computer)
@@ -591,6 +593,7 @@ class SupervisorBuilder:
                     continue
 
                 if t.parent:
+                    t.status = TaskStatus.Success.value
                     continue
 
                 if t.type == TaskType.Train.value:

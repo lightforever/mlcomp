@@ -176,6 +176,7 @@ class TaskProvider(BaseDataProvider):
 
         task.status = status.value
         self.update()
+        self.commit()
 
     def change_status_all(self, tasks: List[int], status: TaskStatus):
         updates = {'status': status.value}
