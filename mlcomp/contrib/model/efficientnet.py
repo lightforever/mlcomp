@@ -1,6 +1,6 @@
-import torch.nn as nn
+from efficientnet_pytorch import EfficientNet as _EfficientNet
 
-import pretrainedmodels
+import torch.nn as nn
 
 
 class LambdaLayer(nn.Module):
@@ -12,37 +12,26 @@ class LambdaLayer(nn.Module):
         return self.lambd(x)
 
 
-class Pretrained(nn.Module):
+class EfficientNet(nn.Module):
     def __init__(self, variant, num_classes, pretrained=True, activation=None):
         super().__init__()
-        params = {'num_classes': 1000}
-        if not pretrained:
-            params['pretrained'] = None
+        if 'efficientnet' not in variant:
+            variant = f'efficientnet-{variant}'
 
-        model = pretrainedmodels.__dict__[variant](**params)
+        if pretrained:
+            model = _EfficientNet.from_pretrained(variant,
+                                                  num_classes=num_classes)
+        else:
+            model = _EfficientNet.from_name(variant, {
+                'num_classes': num_classes
+            })
         self.model = model
-        linear = self.model.last_linear
 
-        if isinstance(linear, nn.Linear):
-            self.model.last_linear = nn.Linear(
-                model.last_linear.in_features,
-                num_classes
-            )
-            self.model.last_linear.in_channels = linear.in_features
-        elif isinstance(linear, nn.Conv2d):
-            self.model.last_linear = nn.Conv2d(
-                linear.in_channels,
-                num_classes,
-                kernel_size=linear.kernel_size,
-                bias=True
-            )
-            self.model.last_linear.in_features = linear.in_channels
-
-        self.model.last_linear = nn.Sequential(
+        self.model._fc = nn.Sequential(
             LambdaLayer(lambda x: x.unsqueeze_(0)),
-            nn.AdaptiveAvgPool1d(self.model.last_linear.in_channels),
+            nn.AdaptiveAvgPool1d(self.model._fc.in_features),
             LambdaLayer(lambda x: x.squeeze_(0).view(x.size(0), -1)),
-            self.model.last_linear
+            self.model._fc
         )
 
         if callable(activation) or activation is None:
@@ -64,4 +53,4 @@ class Pretrained(nn.Module):
         return res
 
 
-__all__ = ['Pretrained']
+__all__ = ['EfficientNet']

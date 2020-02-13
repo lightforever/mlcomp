@@ -117,7 +117,7 @@ class DagProvider(BaseDataProvider):
             ) if r['finished'] else None
 
             if task_status[TaskStatus.InProgress.value] > 0:
-                delta = (now() - started).total_seconds()
+                delta = (now() - started).total_seconds() if started else 0
             elif sum(
                     task_status[TaskStatus.InProgress.value:]
             ) == 0 or not started or not last_activity:

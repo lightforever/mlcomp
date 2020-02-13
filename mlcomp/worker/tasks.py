@@ -21,7 +21,7 @@ from mlcomp.db.providers import TaskProvider, \
     DockerProvider
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import yaml_load, yaml_dump
-from mlcomp.utils.misc import set_global_seed
+from mlcomp.utils.misc import set_global_seed, now
 from mlcomp.worker.app import app
 from mlcomp.worker.executors import Executor
 from mlcomp.worker.storage import Storage
@@ -151,6 +151,7 @@ class ExecuteBuilder:
         self.task.worker_index = self.worker_index
         self.task.docker_assigned = self.docker_img
         self.task.status = TaskStatus.InProgress.value
+        self.task.started = now()
         self.provider.commit()
 
     def download(self):
