@@ -42,6 +42,8 @@ class Task(Base):
     parent_rel = relationship('Task', lazy='noload')
     loss = sa.Column(sa.Float)
 
+    continued = sa.Column(sa.Boolean, default=False)
+
     batch_index = sa.Column(sa.Integer)
     batch_total = sa.Column(sa.Integer)
     loader_name = sa.Column(sa.String)

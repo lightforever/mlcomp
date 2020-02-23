@@ -74,7 +74,6 @@ export class TaskTableComponent implements OnInit {
 
     stop(task) {
         this.service.stop(task.id).subscribe(data => {
-            task.status = data.status;
         });
     }
 

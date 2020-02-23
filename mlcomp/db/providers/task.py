@@ -270,7 +270,9 @@ class TaskProvider(BaseDataProvider):
 
         query = self.query(task_parent, *times, *task_status). \
             filter(task_parent.status.in_(parent_statuses)). \
-            join(task_child, task_parent.id == task_child.parent). \
+            filter(task_child.continued.__eq__(False)). \
+            join(task_child, task_parent.id == task_child.parent,
+                 isouter=True). \
             group_by(task_parent.id)
 
         res = []
@@ -292,7 +294,9 @@ class TaskProvider(BaseDataProvider):
         if isinstance(ids, int):
             ids = [ids]
 
-        res = self.query(Task).filter(Task.parent.in_(ids))
+        res = self.query(Task).filter(Task.parent.in_(ids)).filter(
+            Task.continued.__eq__(False))
+
         res = res.order_by(Task.id)
         if joined_load is not None:
             for n in joined_load:
@@ -307,7 +311,7 @@ class TaskProvider(BaseDataProvider):
     def find_dependents(self, task_id: int):
         res = self.query(Task). \
             join(TaskDependence, Task.id == TaskDependence.depend_id). \
-            filter(TaskDependence.task_id == task_id).\
+            filter(TaskDependence.task_id == task_id). \
             all()
         return res
 

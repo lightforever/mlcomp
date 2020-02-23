@@ -2,15 +2,6 @@ import timm
 import torch.nn as nn
 
 
-class LambdaLayer(nn.Module):
-    def __init__(self, lambd):
-        super(LambdaLayer, self).__init__()
-        self.lambd = lambd
-
-    def forward(self, x):
-        return self.lambd(x)
-
-
 class Timm(nn.Module):
     def __init__(self, variant, num_classes, pretrained=True, activation=None):
         super().__init__()

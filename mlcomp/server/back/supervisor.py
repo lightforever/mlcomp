@@ -595,11 +595,11 @@ class SupervisorBuilder:
                     }
 
             for t in tasks:
-                if t.status not in can_start_statuses:
+                if t.parent:
+                    t.continued = True
                     continue
 
-                if t.parent:
-                    t.status = TaskStatus.Success.value
+                if t.status not in can_start_statuses:
                     continue
 
                 if t.type == TaskType.Train.value:

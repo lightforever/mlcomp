@@ -531,14 +531,8 @@ def task_stop():
     provider = TaskProvider(_write_session)
     task = provider.by_id(data['id'], joinedload(Task.dag_rel, innerjoin=True))
 
-    dag = task.dag_rel
-    status = celery_tasks.stop(logger, _write_session, task, dag)
-
-    child_tasks = provider.children(task.id)
-    for t in child_tasks:
-        celery_tasks.stop(logger, _write_session, t, dag)
-
-    return {'status': to_snake(TaskStatus(status).name)}
+    tasks = [task] + provider.children(task.id)
+    supervisor.stop_tasks(tasks)
 
 
 @app.route('/api/task/info', methods=['POST'])
