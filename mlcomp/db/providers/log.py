@@ -66,10 +66,12 @@ class LogProvider(BaseDataProvider):
 
         return {'total': total, 'data': data}
 
-    def last(self, count: int, dag: int = None):
+    def last(self, count: int, dag: int = None, task: int = None):
         query = self.query(Log, Task.id).outerjoin(Task)
-        if dag:
+        if dag is not None:
             query = query.filter(Task.dag == dag)
+        if task is not None:
+            query = query.filter(Task.id == task)
         return query.order_by(Log.id.desc()).limit(count).all()
 
 

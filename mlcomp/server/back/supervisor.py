@@ -12,7 +12,7 @@ from mlcomp.db.providers import \
     ComputerProvider, \
     TaskProvider, \
     DockerProvider, \
-    AuxiliaryProvider, DagProvider
+    AuxiliaryProvider, DagProvider, LogProvider
 from mlcomp.utils.io import yaml_dump, yaml_load
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.misc import now
@@ -30,6 +30,7 @@ class SupervisorBuilder:
         self.docker_provider = None
         self.auxiliary_provider = None
         self.dag_provider = None
+        self.log_provider = None
         self.queues = None
         self.not_ran_tasks = None
         self.dep_status = None
@@ -49,6 +50,7 @@ class SupervisorBuilder:
         self.docker_provider = DockerProvider(self.session)
         self.auxiliary_provider = AuxiliaryProvider(self.session)
         self.dag_provider = DagProvider(self.session)
+        self.log_provider = LogProvider(self.session)
 
         self.queues = [
             f'{d.computer}_{d.name}' for d in self.docker_provider.all()
@@ -395,6 +397,33 @@ class SupervisorBuilder:
                         t.status = TaskStatus.Success.value
             self.provider.commit()
 
+    def _correct_catalyst_fails(self, task):
+        if task.type != TaskType.Train.value:
+            return
+
+        messages = [
+            'CUDA error: an illegal memory access was encountered',
+            'CUDA error: device-side assert triggered',
+            'CUDNN_STATUS_INTERNAL_ERROR'
+        ]
+        children = self.provider.children(task.id, [Task.dag_rel])
+        children = sorted(children, key=lambda x: x.id, reverse=True)
+        for c in children:
+            if c.status == TaskStatus.Failed.value:
+                logs = self.log_provider.last(task=c.id, count=1)
+                if len(logs) > 0:
+                    message = logs[0][0].message
+                    for m in messages:
+                        if m in message:
+                            self.logger.info(
+                                'Restart DAG: correct_catalyst_fails',
+                                ComponentType.Supervisor,
+                                None,
+                                task.id
+                            )
+                            self.start_dag(task.dag)
+                            return
+
     def process_parent_tasks(self):
         tasks = self.provider.parent_tasks_stats()
 
@@ -420,7 +449,9 @@ class SupervisorBuilder:
                 elif status >= TaskStatus.Failed.value:
                     task.started = started
                     task.finished = finished
+
                     self._stop_child_tasks(task)
+                    self._correct_catalyst_fails(task)
 
                 was_change = True
                 task.status = status
