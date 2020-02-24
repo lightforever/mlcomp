@@ -8,10 +8,10 @@ def upgrade(migrate_engine):
     trans = conn.begin()
 
     try:
-        meta.bind = migrate_engine
+        meta.bind = conn
 
         task = Table('task', meta, autoload=True)
-        col = Column('continued', Boolean,  default=False)
+        col = Column('continued', Boolean)
         col.create(task)
     except Exception:
         trans.rollback()
