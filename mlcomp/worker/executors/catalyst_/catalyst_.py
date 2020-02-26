@@ -120,6 +120,9 @@ class Catalyst(Executor, Callback):
         task = self.get_parent_task()
         task.batch_index = int(step / state.batch_size)
         task.batch_total = state.loader_len
+        if task.batch_index > task.batch_total:
+            state.step = state.batch_size
+            task.batch_index = 1
         task.loader_name = state.loader_name
 
         duration = int((now() - self.loader_started_time).total_seconds())
