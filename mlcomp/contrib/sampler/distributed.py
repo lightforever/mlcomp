@@ -1,19 +1,15 @@
 import numpy as np
 
-from torch.utils.data import DistributedSampler, Dataset
-
-
-class DatasetDummy(Dataset):
-    def __init__(self, count: int):
-        self.count = count
-
-    def __len__(self):
-        return self.count
+from torch.utils.data import DistributedSampler
 
 
 class DistributedSamplerIndices(DistributedSampler):
+    def __init__(self, sampler, *args, **kwargs):
+        super().__init__(sampler, *args, **kwargs)
+        self.sampler = sampler
+
     def get_indices(self):
-        return list(self.__iter__())
+        return list(self.sampler.__iter__())
 
     def __iter__(self):
         # deterministically shuffle based on epoch
@@ -35,4 +31,4 @@ class DistributedSamplerIndices(DistributedSampler):
         return iter(indices)
 
 
-__all__ = ['DistributedSamplerIndices', 'DatasetDummy']
+__all__ = ['DistributedSamplerIndices']

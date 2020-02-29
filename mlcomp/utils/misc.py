@@ -11,6 +11,7 @@ import dateutil
 import numpy as np
 import signal
 import psutil
+from subprocess import check_output
 
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
@@ -51,6 +52,14 @@ def dict_func(objcts: List, func=np.mean):
                       range(len(first[k]))]
         else:
             res[k] = func(k_objcts)
+    return res
+
+
+def get_pid(name):
+    res = []
+    for line in check_output(["pgrep", '-la', name]).decode().split('\n'):
+        parts = line.split()
+        res.append((int(parts[0]), parts[1:]))
     return res
 
 

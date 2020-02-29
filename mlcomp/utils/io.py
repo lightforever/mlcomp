@@ -2,9 +2,20 @@ import os
 from io import BytesIO
 from zipfile import ZipFile
 
+import pandas as pd
 import yaml
 
 yaml.warnings({'YAMLLoadWarning': False})
+
+
+def read_pandas(file):
+    if file.endswith('.csv'):
+        df = pd.read_csv(file)
+    elif file.endswith('.parquet'):
+        df = pd.read_parquet(file)
+    else:
+        raise Exception('Unknown file type')
+    return df
 
 
 def read_lines(file: str):

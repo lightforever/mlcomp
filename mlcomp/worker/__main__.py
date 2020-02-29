@@ -71,6 +71,7 @@ def stop_processes_not_exist(session: Session, logger):
         task_docker_assigned=DOCKER_IMG,
         computer_assigned=hostname
     )
+    # Kill processes which does not exist
     hostname = socket.gethostname()
     for t in tasks:
         if not psutil.pid_exists(t.pid):
@@ -92,6 +93,9 @@ def stop_processes_not_exist(session: Session, logger):
             for p in additional_info.get('child_processes', []):
                 logger.info(f'killing child process = {p}')
                 os.system(f'kill -9 {p}')
+
+    # Kill which exist but should not
+
 
 
 @error_handler
