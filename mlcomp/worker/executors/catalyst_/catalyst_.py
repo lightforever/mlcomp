@@ -103,8 +103,7 @@ class Catalyst(Executor, Callback):
         state.stage_epoch = state.stage_epoch + self.checkpoint_stage_epoch
         state.checkpoint_data = {'stage_epoch': state.stage_epoch}
         if self.master:
-            if state.stage_epoch == 0:
-                self.step.start(1, name=state.stage)
+            self.step.start(1, name=state.stage)
 
             self.step.start(
                 2, name=f'epoch {state.stage_epoch}', index=state.stage_epoch

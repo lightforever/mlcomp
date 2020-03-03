@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Iterator
 import numpy as np
 from torch.utils.data import Sampler
@@ -11,9 +12,9 @@ class BalanceClassSampler(Sampler):
 
     def __init__(
             self,
-            labels: List[int],
+            labels: List,
             mode: str = 'downsampling',
-            count_per_class: List[int] = None,
+            count_per_class: dict = None,
             max_count: int = None
     ):
         """
@@ -23,16 +24,15 @@ class BalanceClassSampler(Sampler):
             mode (str): Strategy to balance classes.
                 Must be one of [downsampling, upsampling]
         """
-        labels = np.array(labels)
-        samples_per_class = {
-            label: (labels == label).sum()
-            for label in set(labels)
-        }
+        samples_per_class = defaultdict(int)
+        for l in labels:
+            samples_per_class[l] += 1
 
-        self.lbl2idx = {
-            label: np.arange(len(labels))[labels == label].tolist()
-            for label in set(labels)
-        }
+        self.lbl2idx = dict()
+        for i, l in enumerate(labels):
+            if l not in self.lbl2idx:
+                self.lbl2idx[l] = []
+            self.lbl2idx[l].append(i)
 
         if mode == 'upsampling' or max_count is not None:
             samples_per_class = max_count \
@@ -44,9 +44,9 @@ class BalanceClassSampler(Sampler):
         if count_per_class is not None:
             self.count_per_class = count_per_class
         else:
-            self.count_per_class = [samples_per_class] * len(self.lbl2idx)
+            self.count_per_class = {l: samples_per_class for l in self.lbl2idx}
         self.labels = labels
-        self.length = sum(self.count_per_class)
+        self.length = sum(self.count_per_class.values())
 
         super().__init__(labels)
 

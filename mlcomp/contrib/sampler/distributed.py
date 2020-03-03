@@ -5,7 +5,7 @@ from torch.utils.data import DistributedSampler
 
 class DistributedSamplerIndices(DistributedSampler):
     def __init__(self, sampler, *args, **kwargs):
-        super().__init__(sampler, *args, **kwargs)
+        super().__init__(sampler, num_replicas=None, rank=None, shuffle=True)
         self.sampler = sampler
 
     def get_indices(self):
