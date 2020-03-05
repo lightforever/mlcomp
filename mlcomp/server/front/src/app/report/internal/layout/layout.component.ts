@@ -52,6 +52,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     form_items_joined() {
         this.items_joined = [];
+        this.items_joined_data = [];
+
         if (!this.item || !this.item.items) {
             return;
         }

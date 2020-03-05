@@ -177,7 +177,7 @@ export class ComputerComponent extends Paginator<Computer>
         return Helpers.format_date_time(Helpers.parse_time(time));
     }
 
-    sync(name: string) {
+    sync(name: string = null) {
         this.service.sync_start().subscribe(x => {
             let dialog = this.sync_dialog.open(SyncDialogComponent,
                 {
