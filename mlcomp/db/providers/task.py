@@ -160,7 +160,7 @@ class TaskProvider(BaseDataProvider):
             query = query.options(options)
         return query.one_or_none()
 
-    def by_ids(self, ids, options=None) -> Task:
+    def by_ids(self, ids, options=None) -> List[Task]:
         query = self.query(Task).filter(Task.id.in_(ids))
         if options:
             query = query.options(options)

@@ -57,9 +57,26 @@ def dict_func(objcts: List, func=np.mean):
 
 def get_pid(name):
     res = []
-    for line in check_output(["pgrep", '-la', name]).decode().split('\n'):
+    lines = check_output(["ps", '-ef']).decode().split('\n')
+    header = lines[0].split()
+    for line in lines[1:]:
+        if line.strip() == '':
+            continue
+
         parts = line.split()
-        res.append((int(parts[0]), parts[1:]))
+        parts = parts[:7] + [' '.join(parts[7:])]
+
+        item = {}
+        for p, h in zip(parts, header):
+            if h == 'CMD:':
+                h = 'CMD'
+
+            if h in ['PID', 'PPID']:
+                p = int(p)
+
+            item[h] = p
+        if 'CMD' in item and name in item['CMD']:
+            res.append(item)
     return res
 
 

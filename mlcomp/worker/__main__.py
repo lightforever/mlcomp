@@ -21,7 +21,7 @@ from mlcomp.utils.logging import create_logger
 from mlcomp.db.providers import DockerProvider, TaskProvider
 from mlcomp.utils.schedule import start_schedule
 from mlcomp.utils.misc import dict_func, now, disk, get_username, \
-    kill_child_processes
+    kill_child_processes, get_pid
 from mlcomp.worker.app import app
 from mlcomp.db.providers import ComputerProvider
 from mlcomp.db.models import ComputerUsage, Computer, Docker
@@ -94,8 +94,23 @@ def stop_processes_not_exist(session: Session, logger):
                 logger.info(f'killing child process = {p}')
                 os.system(f'kill -9 {p}')
 
-    # Kill which exist but should not
+    # Kill processes which exist but should not
+    processes = get_pid('worker ')
+    ids = [p['PID'] for p in processes]
+    tasks = provider.by_ids(ids)
+    tasks = {t.pid: t for t in tasks}
 
+    for p in processes:
+        pid = p['PID']
+        if pid in tasks:
+            task = tasks[pid]
+            if task.status in [TaskStatus.Stopped.value,
+                               TaskStatus.Failed.value,
+                               TaskStatus.Skipped.value]:
+
+                logger.info(f'Kill processes which exist but should not. '
+                            f'Pid = {pid}')
+                os.system(f'kill -9 {pid}')
 
 
 @error_handler
