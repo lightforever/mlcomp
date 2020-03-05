@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from collections import defaultdict
-from catalyst.dl import RunnerState
+from catalyst.dl import State as RunnerState
 from catalyst.dl.core import Callback
 
 
