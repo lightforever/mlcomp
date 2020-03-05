@@ -232,7 +232,7 @@ class ModelAdd(Executor):
             model.score_local = task.score
 
             task_dir = join(TASK_FOLDER, str(self.child_task or task.id))
-            src_log = f'{task_dir}/log'
+            src_log = f'{task_dir}/logs'
             models_dir = join(MODEL_FOLDER, project.name)
             os.makedirs(models_dir, exist_ok=True)
 
