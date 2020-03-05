@@ -1,5 +1,5 @@
 from catalyst.dl import registry
-from catalyst.contrib.models.segmentation import (
+from catalyst.contrib.models.cv.segmentation import (
     Unet, ResnetLinknet, MobileUnet, ResnetUnet, ResnetFPNUnet, ResnetPSPnet,
     FPNUnet, Linknet, PSPnet,
     ResNetLinknet)
