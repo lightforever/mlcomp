@@ -6,6 +6,8 @@ import sys
 
 import safitty
 import torch
+from mlcomp.utils.io import yaml_load
+
 from catalyst.dl import Runner
 from torch.jit import ScriptModule
 import torch.nn as nn
@@ -17,7 +19,7 @@ from catalyst.utils import import_experiment_and_runner
 from mlcomp import TASK_FOLDER, MODEL_FOLDER
 from mlcomp.db.models import Model
 from mlcomp.db.providers import TaskProvider, ModelProvider, \
-    ProjectProvider
+    ProjectProvider, DagProvider
 from mlcomp.utils.misc import now
 from mlcomp.utils.config import Config
 from mlcomp.worker.executors import Executor
@@ -228,11 +230,23 @@ class ModelAdd(Executor):
         provider = ModelProvider(self.session)
         if self.train_task:
             task_provider = TaskProvider(self.session)
+            dag_provider = DagProvider(self.session)
             task = task_provider.by_id(self.train_task)
-            model.score_local = task.score
+            dag = dag_provider.by_id(task.dag)
 
             task_dir = join(TASK_FOLDER, str(self.child_task or task.id))
-            src_log = f'{task_dir}/log'
+
+            # get log directory
+            config = yaml_load(dag.config)
+            executor_config = config['executors'][task.executor]
+            catalyst_config_file = executor_config['args']['config']
+            catalyst_config_file = join(task_dir, catalyst_config_file)
+            catalyst_config = yaml_load(file=catalyst_config_file)
+            catalyst_logdir = catalyst_config['args']['logdir']
+
+            model.score_local = task.score
+
+            src_log = f'{task_dir}/{catalyst_logdir}'
             models_dir = join(MODEL_FOLDER, project.name)
             os.makedirs(models_dir, exist_ok=True)
 

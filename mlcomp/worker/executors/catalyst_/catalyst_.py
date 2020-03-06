@@ -259,7 +259,7 @@ class Catalyst(Executor, Callback):
                 resume['master_computer'])
             path_from = join(
                 master_computer.root_folder, str(resume['master_task_id']),
-                'log',
+                experiment.logdir,
                 'checkpoints', file
             )
             self.info(
@@ -286,7 +286,7 @@ class Catalyst(Executor, Callback):
 
         elif self.task.id != resume['master_task_id']:
             path = join(
-                TASK_FOLDER, str(resume['master_task_id']), 'log',
+                TASK_FOLDER, str(resume['master_task_id']), experiment.logdir,
                 'checkpoints', file
             )
             self.info(
