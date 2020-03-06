@@ -4,6 +4,7 @@ from multiprocessing import cpu_count
 import click
 
 from mlcomp import CONFIG_FOLDER, REDIS_PORT, REDIS_PASSWORD
+from mlcomp.report import check_statuses
 from mlcomp.server.back.app import start_server as _start_server
 from mlcomp.server.back.app import stop_server as _stop_server
 from mlcomp.utils.misc import kill_child_processes
@@ -19,6 +20,7 @@ def start_site():
     """
     Start only site
     """
+    check_statuses()
     _start_server()
 
 
@@ -27,6 +29,7 @@ def stop_site():
     """
     Stop site
     """
+    check_statuses()
     _stop_server()
 
 
@@ -45,6 +48,8 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
 
     It starts: redis-server, site, worker_supervisor, workers
     """
+    check_statuses()
+
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -93,6 +98,8 @@ def stop():
     """
     Stop supervisord started by start command
     """
+    check_statuses()
+
     lines = os.popen('ps -ef | grep supervisord').readlines()
     for line in lines:
         if 'mlcomp/configs/supervisord.conf' not in line:

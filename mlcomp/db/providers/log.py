@@ -59,19 +59,24 @@ class LogProvider(BaseDataProvider):
                 'component': to_snake(ComponentType(log.component).name),
                 'computer': log.computer,
                 'step': self.to_dict(step) if step else None,
-                'task': self.to_dict(task, rules=('-additional_info', ))
+                'task': self.to_dict(task, rules=('-additional_info',))
                 if task else None
             }
             data.append(item)
 
         return {'total': total, 'data': data}
 
-    def last(self, count: int, dag: int = None, task: int = None):
+    def last(self, count: int, dag: int = None, task: int = None,
+             levels=None, components=None):
         query = self.query(Log, Task.id).outerjoin(Task)
         if dag is not None:
             query = query.filter(Task.dag == dag)
         if task is not None:
             query = query.filter(Task.id == task)
+        if levels is not None:
+            query = query.filter(Log.level.in_(levels))
+        if components is not None:
+            query = query.filter(Log.component.in_(components))
         return query.order_by(Log.id.desc()).limit(count).all()
 
 

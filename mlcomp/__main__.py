@@ -7,10 +7,11 @@ from multiprocessing import cpu_count
 
 import torch
 
+from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.migration.manage import migrate as _migrate
 from mlcomp import ROOT_FOLDER, IP, PORT, \
-    WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS
+    WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS, CONFIG_FOLDER
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
 from mlcomp.db.models import Computer
@@ -19,12 +20,13 @@ from mlcomp.db.providers import \
     TaskProvider, \
     StepProvider, \
     ProjectProvider
+from mlcomp.report import create_report, check_statuses
 from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
-from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.logging import create_logger
 from mlcomp.worker.sync import sync_directed
 from mlcomp.worker.tasks import execute_by_id
-from mlcomp.utils.misc import memory, disk, get_username
+from mlcomp.utils.misc import memory, disk, get_username, \
+    get_default_network_interface
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 _session = Session.create_session(key=__name__)
@@ -105,12 +107,13 @@ def migrate():
 @click.option('--control_reqs', type=bool, default=True)
 @click.option('--params', multiple=True)
 def dag(config: str, control_reqs: bool, params):
+    check_statuses()
     _dag(config, control_reqs=control_reqs, params=params)
 
 
 @main.command()
-def analyze():
-    pass
+def report():
+    create_report()
 
 
 @main.command()
@@ -118,6 +121,7 @@ def analyze():
 @click.option('--debug', type=bool, default=True)
 @click.option('--params', multiple=True)
 def execute(config: str, debug: bool, params):
+    check_statuses()
     _create_computer()
 
     # Fail all InProgress Tasks
@@ -164,6 +168,7 @@ def execute(config: str, debug: bool, params):
     help='only copy files from all the others to the computer'
 )
 def sync(project: str, computer: str, only_from: bool, only_to: bool):
+    check_statuses()
     _create_computer()
 
     computer = computer or socket.gethostname()
@@ -193,9 +198,14 @@ def sync(project: str, computer: str, only_from: bool, only_to: bool):
 
 @main.command()
 def init():
-    # already done by importing mlcomp
-    # that is needed to import it
-    pass
+    env_path = join(CONFIG_FOLDER, '.env')
+    lines = open(env_path).readlines()
+    for i in range(len(lines)):
+        if 'NCCL_SOCKET_IFNAME' in lines[i]:
+            interface = get_default_network_interface()
+            if interface:
+                lines[i] = f'NCCL_SOCKET_IFNAME={interface}\n'
+    open(env_path, 'w').writelines(lines)
 
 
 if __name__ == '__main__':

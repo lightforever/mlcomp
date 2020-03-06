@@ -18,6 +18,7 @@ TASK_FOLDER = join(ROOT_FOLDER, 'tasks')
 LOG_FOLDER = join(ROOT_FOLDER, 'logs')
 CONFIG_FOLDER = join(ROOT_FOLDER, 'configs')
 DB_FOLDER = join(ROOT_FOLDER, 'db')
+REPORT_FOLDER = join(ROOT_FOLDER, 'report')
 TMP_FOLDER = join(ROOT_FOLDER, 'tmp')
 
 os.makedirs(ROOT_FOLDER, exist_ok=True)
@@ -27,6 +28,7 @@ os.makedirs(TASK_FOLDER, exist_ok=True)
 os.makedirs(LOG_FOLDER, exist_ok=True)
 os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(DB_FOLDER, exist_ok=True)
+os.makedirs(REPORT_FOLDER, exist_ok=True)
 os.makedirs(TMP_FOLDER, exist_ok=True)
 
 # copy conf files if they do not exist
@@ -118,5 +120,5 @@ __all__ = [
     'FILE_LOG_LEVEL', 'DB_TYPE', 'SA_CONNECTION_STRING', 'FLASK_ENV',
     'DOCKER_MAIN', 'IP', 'PORT', 'LOG_NAME', 'WORKER_USAGE_INTERVAL',
     'FILE_SYNC_INTERVAL', 'INSTALL_DEPENDENCIES', 'SYNC_WITH_THIS_COMPUTER',
-    'CAN_PROCESS_TASKS', 'TMP_FOLDER', 'CONTOUR_FILE'
+    'CAN_PROCESS_TASKS', 'TMP_FOLDER', 'CONTOUR_FILE', 'REPORT_FOLDER'
 ]

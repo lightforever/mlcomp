@@ -61,10 +61,23 @@ def files(directory):
 def get_data_files():
     res = []
 
+    front_folder = 'mlcomp/server/front/dist'
+    front_readme = 'https://github.com/catalyst-team/' \
+                   'mlcomp/blob/master/mlcomp/server/front/README.md'
+
+    if not os.path.exists(front_folder):
+        raise Exception(f'There is no {front_folder}. '
+                        f'You should compile front-end files first'
+                        f' Please check {front_readme}')
+    if len(os.listdir(front_folder)) == 0:
+        raise Exception(f'There are no files in {front_folder}. '
+                        f'You should compile front-end files first'
+                        f' Please check {front_readme}')
+
     res.extend(files('mlcomp/utils'))
     res.extend(files('mlcomp/bin'))
     res.extend(files('mlcomp/docker'))
-    res.extend(files('mlcomp/server/front/dist'))
+    res.extend(files(front_folder))
     res.extend(files('mlcomp/migration'))
     return res
 

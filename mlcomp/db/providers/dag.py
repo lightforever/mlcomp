@@ -215,5 +215,8 @@ class DagProvider(BaseDataProvider):
             synchronize_session=False)
         self.commit()
 
+    def count(self):
+        return self.query(Dag).count()
+
 
 __all__ = ['DagProvider']

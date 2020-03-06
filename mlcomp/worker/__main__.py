@@ -10,6 +10,8 @@ import GPUtil
 import psutil
 import numpy as np
 import torch
+
+from mlcomp.report import check_statuses
 from mlcomp.utils.io import yaml_load
 
 from mlcomp import ROOT_FOLDER, MASTER_PORT_RANGE, CONFIG_FOLDER, \
@@ -185,6 +187,8 @@ def worker_supervisor(workers: int):
     This program controls workers ran on the same machine.
     Also, it writes metric of resources consumption.
     """
+    check_statuses()
+
     host = socket.gethostname()
 
     logger = create_logger(_session, 'worker_supervisor')
@@ -228,6 +232,8 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
     """
        Start worker_supervisor and workers
     """
+    check_statuses()
+
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -266,6 +272,8 @@ def stop():
     """
     Stop supervisord started by start command
     """
+    check_statuses()
+
     lines = os.popen('ps -ef | grep supervisord').readlines()
     for line in lines:
         if 'mlcomp/configs/supervisord.conf' not in line:

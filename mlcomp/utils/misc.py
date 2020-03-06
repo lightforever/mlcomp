@@ -57,7 +57,7 @@ def dict_func(objcts: List, func=np.mean):
 
 def get_pid(name):
     res = []
-    lines = check_output(["ps", '-ef']).decode().split('\n')
+    lines = check_output(['ps', '-ef']).decode().split('\n')
     header = lines[0].split()
     for line in lines[1:]:
         if line.strip() == '':
@@ -78,6 +78,20 @@ def get_pid(name):
         if 'CMD' in item and name in item['CMD']:
             res.append(item)
     return res
+
+
+def get_default_network_interface():
+    lines = check_output(['route']).decode().split('\n')
+    header = lines[1].split()
+
+    for line in lines[2:]:
+        parts = line.split()
+        item = dict()
+        for h, p in zip(header, parts):
+            item[h] = p
+        if item['Destination'] == 'default' and 'Iface' in item:
+            return item['Iface']
+    return None
 
 
 def now():
