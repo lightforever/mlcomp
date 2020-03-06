@@ -109,6 +109,11 @@ def dag(config: str, control_reqs: bool, params):
 
 
 @main.command()
+def analyze():
+    pass
+
+
+@main.command()
 @click.argument('config')
 @click.option('--debug', type=bool, default=True)
 @click.option('--params', multiple=True)
