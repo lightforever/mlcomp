@@ -18,6 +18,7 @@ export class CodeComponent implements AfterViewInit {
 
     public dag: number;
     private current_node: FlatNode;
+    private edit_mode: boolean;
 
     private transformer = (node: CodeNode, level: number) => {
         return {
@@ -107,7 +108,7 @@ export class CodeComponent implements AfterViewInit {
         });
     }
 
-    code_double_click() {
+    code_edit_click() {
         if (!this.current_node) {
             return;
         }
@@ -123,6 +124,7 @@ export class CodeComponent implements AfterViewInit {
         pre.textContent = node.content;
         code_holder.innerHTML = '';
         code_holder.appendChild(pre);
+        this.edit_mode = true;
     }
 
     code_td_click(event) {
@@ -142,12 +144,28 @@ export class CodeComponent implements AfterViewInit {
                     this.current_node.content,
                     this.current_node.dag,
                     this.current_node.storage
-                ).subscribe(x=>{
+                ).subscribe(x => {
                     this.current_node.id = x.file
                 });
                 this.node_click(this.current_node);
+                this.edit_mode = false;
                 return;
             }
+        }
+    }
+
+    has_parent_id(element, id) {
+        return element.id == id ||
+            (element.parentNode && this.has_parent_id(element.parentNode, id))
+    }
+
+    code_click(event) {
+        if (this.has_parent_id(event.target, 'codeholder')) {
+            if (!this.edit_mode && !window.getSelection().toString()) {
+                this.code_edit_click();
+            }
+        } else {
+            this.code_td_click(event);
         }
     }
 }
