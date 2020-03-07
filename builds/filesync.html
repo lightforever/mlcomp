@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>FileSync &#8212; MLComp 20.2.4c documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Grid search" href="grid_search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="filesync">
+<h1>FileSync<a class="headerlink" href="#filesync" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<ol class="arabic">
+<li><p>Basic concepts</p>
+<blockquote>
+<div><p>File synchronization works via rsync.</p>
+<p>Rsync commands are being running to sync every computer.</p>
+<p>Install rsync on each work computer.</p>
+<p>In your ~/mlcomp/config/.env file there are the settings:</p>
+<ul class="simple">
+<li><p>IP</p></li>
+<li><p>PORT</p></li>
+</ul>
+<p>They must be unique for each computer.</p>
+<p>They must be able to connect each other using these settings.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">rsync</span>
+<span class="c1"># Ensure that every computer is available by SSH protocol with IP/PORT you specified</span>
+<span class="c1"># in the [Environment variables](#environment-variables) file.</span>
+<span class="c1"># rsync will perform the following commands:</span>
+
+<span class="c1"># to upload:</span>
+ <span class="n">rsync</span> <span class="o">-</span><span class="n">vhru</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;ssh -p </span><span class="si">{target.port}</span><span class="s2"> -o StrictHostKeyChecking=no&quot;</span> \
+ <span class="p">{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="p">{</span><span class="n">target</span><span class="o">.</span><span class="n">user</span><span class="p">}</span><span class="o">@</span><span class="p">{</span><span class="n">target</span><span class="o">.</span><span class="n">ip</span><span class="p">}:{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="o">--</span><span class="n">perms</span>  <span class="o">--</span><span class="n">chmod</span><span class="o">=</span><span class="mi">777</span>
+
+<span class="c1"># to download:</span>
+ <span class="n">rsync</span> <span class="o">-</span><span class="n">vhru</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;ssh -p </span><span class="si">{source.port}</span><span class="s2"> -o StrictHostKeyChecking=no&quot;</span> \
+ <span class="p">{</span><span class="n">source</span><span class="o">.</span><span class="n">user</span><span class="p">}</span><span class="o">@</span><span class="p">{</span><span class="n">source</span><span class="o">.</span><span class="n">ip</span><span class="p">}:{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="p">{</span><span class="n">folder</span><span class="p">}</span><span class="o">/</span> <span class="o">--</span><span class="n">perms</span>  <span class="o">--</span><span class="n">chmod</span><span class="o">=</span><span class="mi">777</span>
+
+<span class="c1"># Please check first, the commands above work. (change parameters to yours).</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Project settings</p>
+<blockquote>
+<div><p>Ok, you are able to sync your computers manually.</p>
+<p>Let’s do that automatically!</p>
+<p>When you add/edit your project, you can set:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>‘Sync folders’. These are the folders for synchronization.</dt><dd><p>The paths are relative to ROOT_FOLDER (~/mlcomp). You can omit your project name. For example if your project name is <cite>example</cite>, you can write <cite>data</cite> or <cite>data/example</cite>. By default <cite>data</cite> and <cite>models</cite> folders are being sync.
+An example of Sync folders:</p>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+     <span class="n">data</span><span class="o">/</span><span class="n">folder1</span><span class="p">,</span>
+     <span class="n">data</span><span class="o">/</span><span class="n">folder2</span><span class="p">,</span>
+     <span class="n">models</span>
+ <span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><dl class="simple">
+<dt>‘Ignore folders’. If you desire to ignore some folders or files,</dt><dd><p>you can specify them here. The grammar is the same as for Sync folders.
+Example:</p>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="n">data</span><span class="o">/</span><span class="n">folder1</span><span class="o">/</span><span class="n">tmp</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<img alt="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/project_settings.png?raw=true" src="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/project_settings.png?raw=true" />
+</div></blockquote>
+</li>
+<li><p>Automatic synchronization</p>
+<blockquote>
+<div><p>After you performed steps 1-2, that should work in the following way:</p>
+<ul class="simple">
+<li><p>each task is being executed on a worker-computer</p></li>
+<li><p>if the task is completed successfully, this worker-computer will perform rsync commands to send that’s content to others. You can observe these commands in Log panel.</p></li>
+</ul>
+<img alt="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/logs_rsync.png?raw=true" src="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/logs_rsync.png?raw=true" />
+</div></blockquote>
+</li>
+<li><p>Manual sync via Computers tab</p>
+<blockquote>
+<div><p>You can sync manually via Computers tab.</p>
+<p>Sync button on the top of the window syncs all the computers.</p>
+<p>Moreover, each computer has its own Sync button. The computer will download all the files from other computers.</p>
+<img alt="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/computers_rsync.png?raw=true" src="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/computers_rsync.png?raw=true" />
+</div></blockquote>
+</li>
+<li><p>Manual sync via Console command</p>
+<blockquote>
+<div><img alt="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/console_rsync.png?raw=true" src="https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/console_rsync.png?raw=true" />
+</div></blockquote>
+</li>
+</ol>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MLComp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Overview:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">MLComp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid_search.html">Grid search</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FileSync</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="grid_search.html" title="previous chapter">Grid search</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Evgeny Semyonov.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/filesync.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
