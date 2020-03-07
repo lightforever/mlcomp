@@ -54,3 +54,4 @@ MLComp is compatible with: Python 3.6+, Unix operation system.
    usage
    layout
    grid_search
+   filesync
