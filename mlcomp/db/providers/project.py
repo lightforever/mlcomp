@@ -13,9 +13,13 @@ from mlcomp.utils.io import yaml_dump
 class ProjectProvider(BaseDataProvider):
     model = Project
 
-    def add_project(self, name: str,
-                    class_names: dict = None,
-                    ignore_folders: List[str] = None):
+    def add_project(
+            self,
+            name: str,
+            class_names: dict = None,
+            sync_folders: List[str] = None,
+            ignore_folders: List[str] = None
+    ):
         class_names = class_names or {}
         ignore_folders = ignore_folders or []
 
@@ -23,10 +27,12 @@ class ProjectProvider(BaseDataProvider):
         assert isinstance(ignore_folders, list), \
             'ignore_folders type must be list'
 
-        project = Project(name=name,
-                          class_names=yaml_dump(class_names),
-                          ignore_folders=yaml_dump(ignore_folders)
-                          )
+        project = Project(
+            name=name,
+            class_names=yaml_dump(class_names),
+            sync_folders=yaml_dump(sync_folders),
+            ignore_folders=yaml_dump(ignore_folders),
+        )
         project = self.session.add(project)
 
         os.makedirs(os.path.join(DATA_FOLDER, name), exist_ok=True)
@@ -34,15 +40,20 @@ class ProjectProvider(BaseDataProvider):
 
         return project
 
-    def edit_project(self, name: str,
-                     class_names: dict,
-                     ignore_folders: List[str]):
+    def edit_project(
+            self,
+            name: str,
+            class_names: dict,
+            sync_folders: List[str],
+            ignore_folders: List[str]
+    ):
         assert type(class_names) == dict, 'class_names type must be dict'
         assert isinstance(ignore_folders, list), \
             'ignore_folders type must be list'
 
         project = self.by_name(name)
         project.class_names = yaml_dump(class_names)
+        project.sync_folders = yaml_dump(sync_folders)
         project.ignore_folders = yaml_dump(ignore_folders)
         self.commit()
 
@@ -78,6 +89,7 @@ class ProjectProvider(BaseDataProvider):
                     'file_size': int(file_size or 0),
                     'id': p.id,
                     'name': p.name,
+                    'sync_folders': p.sync_folders,
                     'ignore_folders': p.ignore_folders,
                     'class_names': p.class_names
                 })

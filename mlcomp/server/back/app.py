@@ -165,7 +165,8 @@ def computer_sync_end():
         meta = yaml_load(computer.meta)
         meta['manual_sync'] = {
             'project': data['id'],
-            'ignore_folders': yaml_load(data['ignore_folders'])
+            'sync_folders': yaml_load(data['sync_folders']),
+            'ignore_folders': yaml_load(data['ignore_folders']),
         }
         computer.meta = yaml_dump(meta)
     provider.update()
@@ -191,8 +192,10 @@ def project_add():
 
     provider = ProjectProvider(_write_session)
     provider.add_project(
-        data['name'], yaml_load(data['class_names']),
-        yaml_load(data['ignore_folders'])
+        data['name'],
+        yaml_load(data['class_names']),
+        yaml_load(data['sync_folders']),
+        yaml_load(data['ignore_folders']),
     )
 
 
@@ -235,8 +238,10 @@ def project_edit():
 
     provider = ProjectProvider(_write_session)
     provider.edit_project(
-        data['name'], yaml_load(data['class_names']),
-        yaml_load(data['ignore_folders'])
+        data['name'],
+        yaml_load(data['class_names']),
+        yaml_load(data['sync_folders']),
+        yaml_load(data['ignore_folders']),
     )
 
 

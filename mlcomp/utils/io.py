@@ -27,7 +27,7 @@ def from_module_path(file: str, path: str):
 
 
 def yaml_load(text: str = None, file: str = None):
-    stream = text
+    stream = text or ''
     if file is not None:
         stream = open(file).read()
     res = yaml.load(stream, Loader=yaml.FullLoader)

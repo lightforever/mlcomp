@@ -166,7 +166,8 @@ class ComputerProvider(BaseDataProvider):
             res.append({
                 'id': p.id,
                 'name': p.name,
-                'ignore_folders': p.ignore_folders
+                'sync_folders': p.sync_folders,
+                'ignore_folders': p.ignore_folders,
             })
         return {'projects': res}
 

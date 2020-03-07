@@ -63,25 +63,25 @@ Part of [Catalyst Ecosystem](https://docs.google.com/presentation/d/1D-yhVOg6OXz
 
 Dags
 
-![dags](docs/imgs/dags.png)
+![dags](https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/dags.png?raw=true)
 
 Computers
 
-![computers](docs/imgs/computers.png)
+![computers](https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/computers.png?raw=true)
 
 Reports
 
-![reports](docs/imgs/reports.png)
+![reports](https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/reports.png?raw=true)
 
 Code
 
-![code](docs/imgs/code.png)
+![code](https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/code.png?raw=true)
 
 Graph
 
-![graph](docs/imgs/graph.png)
+![graph](https://github.com/catalyst-team/mlcomp/blob/master/docs/imgs/graph.png?raw=true)
 
-[More screenshots](docs/screenshots.md)
+[More screenshots](https://github.com/catalyst-team/mlcomp/blob/master/docs/screenshots.md)
 
 ## Installation
 
@@ -148,7 +148,7 @@ Graph
     e. Run on each worker-computer:
     
     ```bash
-    mlcomp-worker start --daemon=True
+    mlcomp-worker start
     ```
     
 ## UI
@@ -159,7 +159,7 @@ By default, it is http://localhost:4201
 
 The front is built with AngularJS.
 
-In case you desire to change it, please consider [front's Readme page](mlcomp/server/front/README.md)
+In case you desire to change it, please consider [front's Readme page](https://github.com/catalyst-team/mlcomp/tree/master/mlcomp/server/front)
  
 ## Usage
  
@@ -179,7 +179,9 @@ For more information, please consider [Docs](https://catalyst-team.github.io/mlc
 API documentation and an overview of the library can be
  found here [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
 
-You can find advanced tutorials and MLComp best practices in the [examples](examples/) folder of the repository.
+You can find advanced tutorials and MLComp best practices in the [examples](https://github.com/catalyst-team/mlcomp/tree/master/examples) folder of the repository.
+
+[FileSync tutorial](https://catalyst-team.github.io/mlcomp/filesync.html) describes data synchronization mechanism
 
 ## Environment variables
 

@@ -19,6 +19,18 @@
 
 <div mat-dialog-content>
   <mat-form-field style="width: 450px">
+    <mat-label>Sync folders</mat-label>
+      <textarea
+              matInput
+              [(ngModel)]="data.sync_folders"
+              style="height:120px">
+
+      </textarea>
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field style="width: 450px">
     <mat-label>Ignore folders</mat-label>
       <textarea
               matInput

@@ -18,18 +18,34 @@ from mlcomp.utils.io import yaml_load, yaml_dump
 
 
 def sync_directed(
-        session: Session, source: Computer, target: Computer,
-        ignore_folders: List
+        session: Session,
+        source: Computer,
+        target: Computer,
+        folders: List
 ):
     current_computer = socket.gethostname()
-    end = ' --perms  --chmod=777 --size-only'
     logger = create_logger(session, __name__)
-    for folder, excluded in ignore_folders:
+    for folder, excluded in folders:
+        end = ' --perms  --chmod=777 --size-only'
         if len(excluded) > 0:
-            excluded = excluded[:]
+            parts = []
+            folder_excluded = False
             for i in range(len(excluded)):
-                excluded[i] = f'--exclude {excluded[i]}'
-            end += ' ' + ' '.join(excluded)
+                if excluded[i] == folder:
+                    folder_excluded = True
+                    break
+                if not excluded[i].startswith(folder):
+                    continue
+
+                part = os.path.relpath(excluded[i], folder)
+                part = f'--exclude {part}'
+                parts.append(part)
+
+            if folder_excluded:
+                continue
+
+            if len(parts) > 0:
+                end += ' ' + ' '.join(parts)
 
         source_folder = join(source.root_folder, folder)
         target_folder = join(target.root_folder, folder)
@@ -54,7 +70,12 @@ def sync_directed(
                       f'{source.user}@{source.ip} "{command}"'
 
         logger.info(command, ComponentType.WorkerSupervisor, current_computer)
-        subprocess.check_output(command, shell=True)
+        try:
+            subprocess.check_output(command, shell=True,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
+        except subprocess.CalledProcessError as exc:
+            raise Exception(exc.output)
 
 
 def copy_remote(
@@ -71,9 +92,32 @@ def copy_remote(
     return os.path.exists(path_to)
 
 
+def correct_folders(sync_folders: List[str], project_name: str):
+    for i in range(len(sync_folders)):
+        s = sync_folders[i]
+        parts = s.split('/')
+        if parts[0] in ['data', 'models']:
+            if len(parts) == 1 or parts[1] != project_name:
+                parts[0] = join(parts[0], project_name)
+        sync_folders[i] = '/'.join(parts)
+    return sync_folders
+
+
 class FileSync:
     session = Session.create_session(key='FileSync')
     logger = create_logger(session, 'FileSync')
+
+    def process_error(self, e: Exception):
+        if Session.sqlalchemy_error(e):
+            Session.cleanup('FileSync')
+            self.session = Session.create_session(key='FileSync')
+            self.logger = create_logger(self.session, 'FileSync')
+
+        hostname = socket.gethostname()
+        self.logger.error(
+            traceback.format_exc(), ComponentType.WorkerSupervisor,
+            hostname
+        )
 
     def sync_manual(self, computer: Computer, provider: ComputerProvider):
         """
@@ -93,18 +137,36 @@ class FileSync:
 
         dockers = docker_provider.get_online()
         project = project_provider.by_id(manual_sync['project'])
+        sync_folders = manual_sync['sync_folders']
+        ignore_folders = manual_sync['ignore_folders']
+
+        sync_folders = correct_folders(sync_folders, project.name)
+        ignore_folders = correct_folders(ignore_folders, project.name)
+
+        if not isinstance(sync_folders, list):
+            sync_folders = []
+        if not isinstance(ignore_folders, list):
+            ignore_folders = []
 
         for docker in dockers:
             if docker.computer == computer.name:
                 continue
 
             source = provider.by_name(docker.computer)
-            ignore_folders = [
-                [join('models', project.name), []]
-            ]
-            sync_directed(self.session, target=computer, source=source,
-                          ignore_folders=ignore_folders)
+            folders = [[s, ignore_folders] for s in sync_folders]
 
+            computer.syncing_computer = source.name
+            provider.update()
+
+            try:
+                sync_directed(
+                    self.session,
+                    target=computer,
+                    source=source,
+                    folders=folders
+                )
+            except Exception as e:
+                self.process_error(e)
         del meta['manual_sync']
         computer.meta = yaml_dump(meta)
         provider.update()
@@ -143,15 +205,25 @@ class FileSync:
                         if c.syncing_computer:
                             continue
 
-                        ignore_folders = [
-                            [join('models', project.name), []]
-                        ]
+                        sync_folders = yaml_load(project.sync_folders)
+                        ignore_folders = yaml_load(project.ignore_folders)
+
+                        sync_folders = correct_folders(sync_folders,
+                                                       project.name)
+                        ignore_folders = correct_folders(ignore_folders,
+                                                         project.name)
+
+                        if not isinstance(sync_folders, list):
+                            sync_folders = []
+                        if not isinstance(ignore_folders, list):
+                            ignore_folders = []
+
+                        folders = [[s, ignore_folders] for s in sync_folders]
 
                         computer.syncing_computer = c.name
                         provider.update()
 
-                        sync_directed(self.session, c, computer,
-                                      ignore_folders)
+                        sync_directed(self.session, c, computer, folders)
 
                     for t in tasks:
                         task_synced_provider.add(
@@ -164,12 +236,4 @@ class FileSync:
             computer.syncing_computer = None
             provider.update()
         except Exception as e:
-            if Session.sqlalchemy_error(e):
-                Session.cleanup('FileSync')
-                self.session = Session.create_session(key='FileSync')
-                self.logger = create_logger(self.session, 'FileSync')
-
-            self.logger.error(
-                traceback.format_exc(), ComponentType.WorkerSupervisor,
-                hostname
-            )
+            self.process_error(e)

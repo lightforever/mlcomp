@@ -23,10 +23,10 @@ from mlcomp.db.providers import \
 from mlcomp.report import create_report, check_statuses
 from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
 from mlcomp.utils.logging import create_logger
-from mlcomp.worker.sync import sync_directed
+from mlcomp.worker.sync import sync_directed, correct_folders
 from mlcomp.worker.tasks import execute_by_id
 from mlcomp.utils.misc import memory, disk, get_username, \
-    get_default_network_interface
+    get_default_network_interface, now
 from mlcomp.server.back.create_dags import dag_standard, dag_pipe
 
 _session = Session.create_session(key=__name__)
@@ -167,7 +167,16 @@ def execute(config: str, debug: bool, params):
     is_flag=True,
     help='only copy files from all the others to the computer'
 )
-def sync(project: str, computer: str, only_from: bool, only_to: bool):
+@click.option(
+    '--online',
+    is_flag=True,
+    help='sync with only online computers'
+)
+def sync(project: str, computer: str, only_from: bool, only_to: bool,
+         online: bool):
+    """
+    Syncs specified project on this computer with other computers
+    """
     check_statuses()
     _create_computer()
 
@@ -175,25 +184,32 @@ def sync(project: str, computer: str, only_from: bool, only_to: bool):
     provider = ComputerProvider(_session)
     project_provider = ProjectProvider(_session)
     computer = provider.by_name(computer)
-    computers = provider.all()
-    folders_excluded = []
+    computers = provider.all_with_last_activtiy()
     p = project_provider.by_name(project)
     assert p, f'Project={project} is not found'
 
-    ignore = yaml_load(p.ignore_folders)
-    excluded = []
-    for f in ignore:
-        excluded.append(str(f))
+    sync_folders = yaml_load(p.sync_folders)
+    ignore_folders = yaml_load(p.ignore_folders)
 
-    folders_excluded.append([join('data', p.name), excluded])
-    folders_excluded.append([join('models', p.name), []])
+    sync_folders = correct_folders(sync_folders, p.name)
+    ignore_folders = correct_folders(ignore_folders, p.name)
+
+    if not isinstance(sync_folders, list):
+        sync_folders = []
+    if not isinstance(ignore_folders, list):
+        ignore_folders = []
+
+    folders = [[s, ignore_folders] for s in sync_folders]
 
     for c in computers:
         if c.name != computer.name:
+            if online and (now() - c.last_activity).total_seconds() > 100:
+                continue
+
             if not only_from:
-                sync_directed(_session, computer, c, folders_excluded)
+                sync_directed(_session, computer, c, folders)
             if not only_to:
-                sync_directed(_session, c, computer, folders_excluded)
+                sync_directed(_session, c, computer, folders)
 
 
 @main.command()

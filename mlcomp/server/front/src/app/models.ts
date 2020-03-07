@@ -104,6 +104,7 @@ export class Computer {
 export class SyncProject {
     id: number;
     name: string;
+    sync_folders: string;
     ignore_folders: string;
 }
 
@@ -329,6 +330,7 @@ export class ModelFilter {
 export interface ProjectAddData {
     name: string;
     class_names: string;
+    sync_folders: string;
     ignore_folders: string;
 }
 

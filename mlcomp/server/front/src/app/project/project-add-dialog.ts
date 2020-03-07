@@ -15,6 +15,9 @@ export class ProjectAddDialogComponent {
         {
             data.class_names = 'default: [\n\n]';
         }
+        if(!data.sync_folders){
+            data.sync_folders = '[\ndata,\nmodels\n]'
+        }
         if(!data.ignore_folders){
             data.ignore_folders = '[\n\n]'
         }

@@ -23,7 +23,7 @@ layout:
 
   - type: panel
     title: main
-    parent_cols: 3
+    parent_cols: 1
     row_height: 400
     items:
       - type: series
