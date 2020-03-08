@@ -47,7 +47,20 @@ class StepWrap:
         while len(self.children) > 0:
             self._finish()
 
+    def update_task_step(self, task):
+        task.current_step = '.'.join(
+            [
+                str(c.index + 1)
+                for c in self.children[1:]
+            ]
+        )
+        self.task_provider.commit()
+
     def start(self, level: int, name: str = None, index: int = None):
+        if any(c.level == level and c.index == index and c.name == name for c
+               in self.children):
+            return
+
         task = self.task if not self.task.parent else self.task_provider.by_id(
             self.task.parent
         )
@@ -56,9 +69,6 @@ class StepWrap:
             parts = task.current_step.split('.')
             if len(parts) >= level:
                 index = int(parts[level - 1])
-
-        if self.step and index == self.step.index and self.step.level == level:
-            return
 
         if self.step is not None:
             diff = level - self.step.level
@@ -81,13 +91,7 @@ class StepWrap:
         self.children.append(step)
         self.step = step
 
-        task.current_step = '.'.join(
-            [
-                str(c.index + 1)
-                for c in self.children[1:]
-            ]
-        )
-        self.task_provider.commit()
+        self.update_task_step(task)
 
         self.debug('Begin of the step')
 

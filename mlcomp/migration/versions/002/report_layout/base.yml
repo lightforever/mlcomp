@@ -3,24 +3,18 @@ metric:
   minimize: True
 
 items:
-  _timers/_fps:
+  _timer/_fps:
     type: series
-    key: _timers/_fps
-  _timers/data_time:
+    key: _timer/_fps
+  _timer/data_time:
     type: series
-    key: _timers/data_time
-  _timers/model_time:
+    key: _timer/data_time
+  _timer/model_time:
     type: series
-    key: _timers/model_time
-  _timers/batch_time:
+    key: _timer/model_time
+  _timer/batch_time:
     type: series
-    key: _timers/batch_time
-  _base/lr:
-    type: series
-    key: _base/lr
-  _base/momentum:
-    type: series
-    key: _base/momentum
+    key: _timer/batch_time
 
 layout:
   - type: panel
@@ -30,14 +24,10 @@ layout:
     row_height: 400
     items:
       - type: series
-        source: _timers/_fps
+        source: _timer/_fps
       - type: series
-        source: _timers/data_time
+        source: _timer/data_time
       - type: series
-        source: _timers/model_time
+        source: _timer/model_time
       - type: series
-        source: _timers/batch_time
-      - type: series
-        source: _base/lr
-      - type: series
-        source: _base/momentum
+        source: _timer/batch_time

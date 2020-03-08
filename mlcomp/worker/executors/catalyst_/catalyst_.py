@@ -6,11 +6,10 @@ from os.path import join
 
 import torch
 
-from catalyst.utils import set_global_seed, load_checkpoint, \
-    import_experiment_and_runner
+from catalyst.utils import set_global_seed, \
+    import_experiment_and_runner, parse_args_uargs, dump_environment, \
+    load_checkpoint
 from catalyst.dl import State, Callback, Runner, CheckpointCallback
-from catalyst.dl.callbacks import VerboseLogger
-from catalyst.utils.config import parse_args_uargs, dump_environment
 
 from mlcomp import TASK_FOLDER
 from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider
@@ -60,6 +59,9 @@ class Catalyst(Executor, Callback):
     ):
         super().__init__(**kwargs)
 
+        self.series_provider = ReportSeriesProvider(self.session)
+        self.computer_provider = ComputerProvider(self.session)
+
         self.order = 0
         self.resume = resume
         self.distr_info = distr_info
@@ -67,18 +69,13 @@ class Catalyst(Executor, Callback):
         self.report = report
         self.experiment = None
         self.runner = None
-        self.series_provider = ReportSeriesProvider(self.session)
-        self.computer_provider = ComputerProvider(self.session)
         self.grid_config = grid_config
         self.master = True
-        self.checkpoint_resume = False
-        self.checkpoint_stage_epoch = 0
         self.trace = trace
         self.params = params
         self.last_batch_logged = None
         self.loader_started_time = None
         self.parent = None
-        self.loader_step_start = 0
 
     def get_parent_task(self):
         if self.parent:
@@ -94,89 +91,80 @@ class Catalyst(Executor, Callback):
 
     def on_loader_start(self, state: State):
         self.loader_started_time = now()
-        self.loader_step_start = state.step
 
     def on_epoch_start(self, state: State):
-        if self.checkpoint_resume and state.stage_epoch == 0:
-            state.epoch += 1
+        stage_index = self.experiment.stages.index(state.stage_name)
+        self.step.start(1, name=state.stage_name, index=stage_index)
 
-        state.stage_epoch = state.stage_epoch + self.checkpoint_stage_epoch
-        state.checkpoint_data = {'stage_epoch': state.stage_epoch}
-        if self.master:
-            self.step.start(1, name=state.stage)
-
-            self.step.start(
-                2, name=f'epoch {state.stage_epoch}', index=state.stage_epoch
-            )
+        self.step.start(
+            2, name=f'epoch {state.epoch}', index=state.epoch - 1
+        )
 
     def on_batch_start(self, state: State):
-        step = state.step - self.loader_step_start
-        if self.last_batch_logged and \
-                step != state.batch_size * state.loader_len:
+        if self.last_batch_logged and state.loader_step != state.loader_len:
             if (now() - self.last_batch_logged).total_seconds() < 10:
                 return
 
         task = self.get_parent_task()
-        task.batch_index = int(step / state.batch_size)
+        task.batch_index = state.loader_step
         task.batch_total = state.loader_len
-        if task.batch_index > task.batch_total:
-            state.step = state.batch_size
-            task.batch_index = 1
         task.loader_name = state.loader_name
 
         duration = int((now() - self.loader_started_time).total_seconds())
         task.epoch_duration = duration
         task.epoch_time_remaining = int(duration * (
                 task.batch_total / task.batch_index)) - task.epoch_duration
-        if state.loss is not None:
-            # noinspection PyUnresolvedReferences
-            task.loss = float(state.loss['loss'])
+        if state.loader_metrics.get('loss') is not None:
+            task.loss = float(state.loader_metrics['loss'])
 
         self.task_provider.update()
         self.last_batch_logged = now()
 
     def on_epoch_end(self, state: State):
         self.step.end(2)
-        values = state.metric_manager.epoch_values
-        for s in values['valid']:
-            for k in values:
-                value = values[k][s]
 
-                task_id = self.task.parent or self.task.id
-                series = ReportSeries(
-                    part=k,
-                    name=s,
-                    epoch=state.epoch,
-                    task=task_id,
-                    value=value,
-                    time=now(),
-                    stage=state.stage
-                )
-                self.series_provider.add(series)
+        values = state.epoch_metrics
 
-            if s == self.report.metric.name:
-                value = values['valid'][s]
+        for k, v in values.items():
+            part = ''
+            name = k
+
+            for loader in state.loaders:
+                if k.startswith(loader):
+                    part = loader
+                    name = k.replace(loader, '')
+                    if name.startswith('_'):
+                        name = name[1:]
+
+            task_id = self.task.parent or self.task.id
+            series = ReportSeries(
+                part=part,
+                name=name,
+                epoch=state.epoch - 1,
+                task=task_id,
+                value=v,
+                time=now(),
+                stage=state.stage_name
+            )
+            self.series_provider.add(series)
+
+            if name == self.report.metric.name:
                 best = False
                 task = self.task
                 if task.parent:
                     task = self.task_provider.by_id(task.parent)
 
                 if self.report.metric.minimize:
-                    if task.score is None or value < task.score:
+                    if task.score is None or v < task.score:
                         best = True
                 else:
-                    if task.score is None or value > task.score:
+                    if task.score is None or v > task.score:
                         best = True
                 if best:
-                    task.score = value
+                    task.score = v
                     self.task_provider.update()
 
-    def on_stage_start(self, state: State):
-        state.loggers = {'console': VerboseLogger()}
-
     def on_stage_end(self, state: State):
-        self.checkpoint_resume = False
-        self.checkpoint_stage_epoch = 0
         self.step.end(1)
 
     @classmethod
@@ -225,7 +213,7 @@ class Catalyst(Executor, Callback):
 
         os.environ['RANK'] = str(info['rank'])
         distributed_params = config.get('distributed_params', {})
-        distributed_params['rank'] = 0
+        distributed_params['rank'] = info['rank']
         config['distributed_params'] = distributed_params
 
         if info['rank'] > 0:
@@ -302,10 +290,10 @@ class Catalyst(Executor, Callback):
         stages_config = experiment.stages_config
         for k, v in list(stages_config.items()):
             if k == ckpt['stage']:
-                stage_epoch = ckpt['checkpoint_data']['stage_epoch'] + 1
+                stage_epoch = ckpt['checkpoint_data']['epoch'] + 1
 
                 # if it is the last epoch in the stage
-                if stage_epoch == v['state_params']['num_epochs'] \
+                if stage_epoch >= v['state_params']['num_epochs'] \
                         or resume.get('load_best'):
                     del stages_config[k]
                     break
@@ -395,7 +383,7 @@ class Catalyst(Executor, Callback):
                 if k == experiment.stages[0]
             }
 
-        runner.run_experiment(experiment, check=args.check)
+        runner.run_experiment(experiment)
         if runner.state.exception:
             raise runner.state.exception
 
