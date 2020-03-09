@@ -32,3 +32,5 @@ layout:
       - type: series
         source: dice
         multi: True
+      - type: series
+        source: _other

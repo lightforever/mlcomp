@@ -81,18 +81,26 @@ class Executor(ABC):
     def debug(self, message: str, db: bool = False):
         if self.step:
             self.step.debug(message, db=db)
+        else:
+            print(message)
 
     def info(self, message: str, db: bool = False):
         if self.step:
             self.step.info(message, db=db)
+        else:
+            print(message)
 
     def warning(self, message: str, db: bool = False):
         if self.step:
             self.step.warning(message, db=db)
+        else:
+            print(message)
 
     def error(self, message: str, db: bool = False):
         if self.step:
             self.step.error(message, db=db)
+        else:
+            print(message)
 
     def write(self, message: str):
         if message.strip() != '':

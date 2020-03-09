@@ -60,8 +60,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
         if (!this.data) {
             return;
         }
+        let mapped_series = [];
         for (let child of this.item.items) {
             if (child.type == 'series') {
+                if (child.source == '_other') {
+                    continue;
+                }
                 let subchildren = SeriesComponent.create(child,
                     this.data[child.source]);
 
@@ -69,6 +73,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
                     this.items_joined.push(s[0]);
                     this.items_joined_data.push(s[1]);
                 }
+
+                mapped_series.push(child.source)
             } else {
                 let single_elements = ['img_classify', 'img', 'img_segment'];
                 if (single_elements.indexOf(child.type) != -1) {
@@ -90,6 +96,24 @@ export class LayoutComponent implements OnInit, OnDestroy {
                     this.items_joined.push(child);
                     this.items_joined_data.push(this.data);
                 }
+            }
+        }
+
+        for (let child of this.item.items) {
+            if (child.type == 'series' && child.source == '_other') {
+                for (let name of Object.getOwnPropertyNames(this.data)) {
+                    if(mapped_series.indexOf(name) != -1){
+                        continue;
+                    }
+                    let value = this.data[name];
+                    let subchildren = SeriesComponent.create(child, value);
+
+                    for (let s of subchildren) {
+                        this.items_joined.push(s[0]);
+                        this.items_joined_data.push(s[1]);
+                    }
+                }
+
             }
         }
     }

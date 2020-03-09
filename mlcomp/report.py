@@ -117,7 +117,15 @@ def check_statuses():
                         'Please check them above')
 
 
-def logs(folder: str = None):
+def logs(statuses, folder: str = None):
+    if folder is not None:
+        for file in glob(join(LOG_FOLDER, '*')):
+            shutil.copy(file, join(folder, basename(file)))
+        print('logs formed')
+
+    if statuses.query('status == "ERROR"').shape[0] > 0:
+        return
+
     log_provider = LogProvider()
     errors = log_provider.last(count=1000, levels=[LogStatus.Error.value])
     service_components = [ComponentType.Supervisor.value,
@@ -136,11 +144,6 @@ def logs(folder: str = None):
         })
     df = pd.DataFrame(rows)
     df.to_csv(join(folder, 'logs_db.csv'), index=False)
-
-    if folder is not None:
-        for file in glob(join(LOG_FOLDER, '*')):
-            shutil.copy(file, join(folder, basename(file)))
-        print('logs formed')
     return df
 
 
@@ -151,11 +154,11 @@ def create_report():
     folder = join(REPORT_FOLDER, f'{now()}'.split('.')[0])
     makedirs(folder, exist_ok=True)
 
-    statuses(folder)
+    statuses_res = statuses(folder)
 
     print()
 
-    logs(folder)
+    logs(statuses_res, folder)
 
     print()
 

@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, exists
 from typing import Tuple
 
 import click
@@ -23,6 +23,7 @@ from mlcomp.db.providers import \
 from mlcomp.report import create_report, check_statuses
 from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
 from mlcomp.utils.logging import create_logger
+from mlcomp.worker.executors.kaggle import Submit
 from mlcomp.worker.sync import sync_directed, correct_folders
 from mlcomp.worker.tasks import execute_by_id
 from mlcomp.utils.misc import memory, disk, get_username, \
@@ -222,6 +223,20 @@ def init():
             if interface:
                 lines[i] = f'NCCL_SOCKET_IFNAME={interface}\n'
     open(env_path, 'w').writelines(lines)
+
+
+@main.command()
+def submit():
+    assert exists('submit.yml'), 'no file submit.yml'
+
+    data = yaml_load(file='submit.yml')
+    submit = Submit(
+        competition=data['competition'],
+        submit_type='kernel',
+        max_size=data['max_size'],
+        folders=data['folders']
+    )
+    submit.work()
 
 
 if __name__ == '__main__':

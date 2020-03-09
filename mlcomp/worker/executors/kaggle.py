@@ -1,4 +1,8 @@
 import json
+
+from mlcomp.utils.io import zip_folder
+from typing import List
+
 import shutil
 from enum import Enum
 import os
@@ -6,12 +10,9 @@ import time
 
 import socket
 
-from kaggle.models import DatasetNewRequest
-
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType
-from mlcomp.db.providers import ModelProvider
-from mlcomp.worker.executors.base.equation import Equation
+from mlcomp.utils.misc import du
 from mlcomp.worker.executors.base.executor import Executor
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.config import Config
@@ -63,34 +64,37 @@ class Download(Executor):
 
 
 @Executor.register
-class Submit(Equation):
+class Submit(Executor):
     def __init__(
             self,
             competition: str,
-            submit_type: str = 'file',
-            predict_column: str = None,
+            submit_type: str = 'kernel',
             kernel_suffix: str = 'api',
             message: str = '',
             wait_seconds: int = 60 * 20,
             file: str = None,
+            max_size: int = None,
+            folders: List[str] = (),
             **kwargs
     ):
         super().__init__(**kwargs)
 
+        if not message and hasattr(self, 'model_id'):
+            message = f'model_id = {self.model_id}'
+
+        self.max_size = max_size
         self.competition = competition
         self.wait_seconds = wait_seconds
         self.submit_type = submit_type
         self.kernel_suffix = kernel_suffix
-        self.predict_column = predict_column
-        self.message = message or f'model_id = {self.model_id}'
+        self.message = message
+        self.folders = folders
 
-        default_file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
-        self.file = file or default_file
-        self.file_name = os.path.basename(self.file)
+        if not file and hasattr(self, 'model_name'):
+            file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
+        self.file = file
 
         assert self.submit_type in ['file', 'kernel']
-        if self.submit_type == 'kernel':
-            assert self.predict_column, 'predict_column must be specified'
 
     def file_submit(self):
         self.info(f'file_submit. file = {self.file} start')
@@ -100,171 +104,115 @@ class Submit(Equation):
         self.info(f'file_submit. file = {self.file} end')
 
     def kernel_submit(self):
-        self.info('kernel_submit updating dataset')
+        self.info('kernel_submit creating dataset')
 
-        folder = 'submit'
+        folder = os.path.expanduser(
+            f'~/.kaggle/competitions/{self.competition}'
+        )
+        shutil.rmtree(folder, ignore_errors=True)
         os.makedirs(folder, exist_ok=True)
 
-        shutil.copy(self.file, os.path.join(folder, self.file_name))
+        total_size = sum([du(f) for f in self.folders])
+        if self.max_size:
+            assert total_size < self.max_size, \
+                f'max_size = {self.max_size} Gb. Current size = {total_size}'
 
         config = api.read_config_file()
         username = config['username']
-        title = f'{self.competition}-{self.kernel_suffix}-dataset'
+        competition = f'deepfake-detection-challenge'
         dataset_meta = {
-            'title': f'{self.competition}-{self.kernel_suffix}-dataset',
-            'id': f'{username}/{title}',
+            'competition': f'{competition}',
+            'id': f'{username}/{competition}-api-dataset',
             'licenses': [{
                 'name': 'CC0-1.0'
-            }]
+            }],
+            'title': 'API auto'
         }
         with open(f'{folder}/dataset-metadata.json', 'w') as f:
             json.dump(dataset_meta, f)
 
-        res = api.dataset_status(dataset_meta['id'])
-        if res != 'ready':
-            res = api.dataset_create_new(folder=folder)
+        self.info('\tzipping folders')
+
+        dst = os.path.join(folder, 'dataset.zip')
+        zip_folder(folders=self.folders, dst=dst)
+
+        self.info('\tfolders are zipped. uploading dataset')
+        if not any(d.ref == dataset_meta['id'] for d in
+                   api.dataset_list(user=username)):
+            api.dataset_create_new(folder)
+        else:
+            res = api.dataset_create_version(folder, 'Updated')
             if res.status == 'error':
-                raise Exception('dataset_create_new Error: ' + res.error)
+                raise Exception('dataset_create_version Error: ' + res.error)
 
-        res = api.dataset_create_version(folder, 'Updated')
-        if res.status == 'error':
-            raise Exception('dataset_create_version Error: ' + res.error)
+        self.info('dataset uploaded. starting kernel')
 
-        self.info('dataset updated')
+        # dataset update time
+        time.sleep(10)
 
-        seconds_to_sleep = 20
-        self.info(f'sleeping {seconds_to_sleep} seconds')
-        time.sleep(seconds_to_sleep)
+        slug = 'predict'
 
-        slug = f'{self.competition}-{self.kernel_suffix}'
-        kernel_meta = {
-            'id': f'{username}/{slug}',
-            'title': f'{self.competition}-{self.kernel_suffix}',
-            'code_file': 'code.py',
-            'language': 'python',
-            'kernel_type': 'script',
-            'is_private': 'true',
-            'enable_gpu': 'false',
-            'enable_internet': 'false',
-            'dataset_sources': [dataset_meta['id']],
-            'competition_sources': [self.competition],
-            'name': f'{self.competition}-{self.kernel_suffix}'
-        }
-        with open(f'{folder}/kernel-metadata.json', 'w') as f:
-            json.dump(kernel_meta, f)
+        def push_notebook(file: str, slug: str):
+            shutil.copy(file, os.path.join(folder, 'predict.ipynb'))
 
-        code = """
-import pandas as pd
+            kernel_meta = {
+                'id': f'{username}/{slug}',
+                'code_file': 'predict.ipynb',
+                'language': 'python',
+                'kernel_type': 'notebook',
+                'is_private': 'true',
+                'enable_gpu': 'true',
+                'enable_internet': 'false',
+                'dataset_sources': [dataset_meta['id']],
+                'competition_sources': [competition],
+                'title': f'{slug}',
+                'kernel_sources': []
+            }
+            with open(f'{folder}/kernel-metadata.json', 'w') as f:
+                json.dump(kernel_meta, f)
 
-DATA_DIR = '../input/{self.competition}'
-CSV_FILE = '../input/{self.competition}-' + \
-           '{self.kernel_suffix}-dataset/{self.file_name}'
+            api.kernels_push(folder)
 
-df = pd.read_csv(DATA_DIR + '/sample_submission.csv')
-df_predict = pd.read_csv(CSV_FILE)
+        push_notebook('predict.ipynb', 'predict')
 
-keys = [c for c in df.columns if c!='{self.predict_column}']
-predict_values = dict()
-for index, row in df_predict.iterrows():
-    key = tuple([row[k] for k in keys])
-    predict_values[key] = row
-
-res = []
-for index, row in df.iterrows():
-    key = tuple([row[k] for k in keys])
-    if key in predict_values:
-        res.append(predict_values[key])
-    else:
-        res.append(row)
-
-res = pd.DataFrame(res)
-res.to_csv('submission.csv', index=False)
-        """.replace('{self.competition}', self.competition).replace(
-            '{self.kernel_suffix}', self.kernel_suffix
-        ).replace('{self.file_name}', self.file_name
-                  ).replace('{self.predict_column}', self.predict_column)
-
-        with open(f'{folder}/code.py', 'w') as f:
-            f.write(code)
-
-        self.info('kernel data created')
-        api.kernels_push(folder)
         self.info('kernel is pushed. waiting for the end of the commit')
+
         self.info(f'kernel address: https://www.kaggle.com/{username}/{slug}')
 
-        seconds = self.wait_seconds
-        for i in range(seconds):
+        for i in range(10 ** 6):
             response = api.kernel_status(username, slug)
             if response['status'] == 'complete':
                 self.info(f'kernel has completed successfully. '
-                          f'Please go to '
-                          f'https://www.kaggle.com/{username}/{slug} '
+                          f'Pushing predict-full notebook')
+
+                path = '/tmp/predict.ipynb'
+                data = json.load(open('predict.ipynb'))
+                for cell in data['cells']:
+                    if cell['cell_type'] == 'code' \
+                            and 'source' in cell \
+                            and len(cell['source']) == 1 \
+                            and any('max_count' in s for s in cell['source']):
+                        cell['source'] = ['max_count = None']
+
+                open(path, 'w').write(json.dumps(data))
+                push_notebook(path, 'predict-full')
+
+                self.info(f'Please go to '
+                          f'https://www.kaggle.com/{username}/{slug}-full '
                           f'and push the button "Submit to the competition"')
                 return
+
             if response['status'] == 'error':
                 raise Exception(
                     f'Kernel is failed. Msg = {response["failureMessage"]}'
                 )
             time.sleep(1)
-            self.wait_seconds -= 1
-
-        self.info(f'kernel is not finished after {seconds}')
 
     def work(self):
-        submissions = api.competition_submissions(self.competition)
-        submission_refs = {s.ref for s in submissions}
-
         if self.submit_type == 'file':
             self.file_submit()
         else:
             self.kernel_submit()
 
-        self.info('waiting for the submission on Kaggle')
-
-        step = 10
-        for i in range(int(self.wait_seconds // step)):
-            try:
-                submissions = api.competition_submissions(self.competition)
-                for s in submissions:
-                    if s.ref not in submission_refs:
-                        if s.status == 'complete':
-                            if s.publicScore is None:
-                                raise Exception(
-                                    'Submission is complete, '
-                                    'but publicScore is None'
-                                )
-                            score = float(s.publicScore)
-                            if self.model_id:
-                                provider = ModelProvider(self.session)
-                                model = provider.by_id(self.model_id)
-                                model.score_public = score
-                                provider.commit()
-
-                            return {'res': score}
-                        elif s.status == 'error':
-                            raise Exception(
-                                f'Submission error '
-                                f'on Kaggle: {s.errorDescription}'
-                            )
-
-                        break
-            except TypeError:
-                pass
-
-            time.sleep(step)
-        raise Exception(
-            f'Submission is not '
-            f'complete after {self.wait_seconds}'
-        )
-
 
 __all__ = ['Download', 'Submit']
-
-if __name__ == '__main__':
-    submit = Submit(
-        competition='severstal-steel-defect-detection',
-        name='resnetunet',
-        submit_type='kernel',
-        predict_column='EncodedPixels'
-    )
-    submit.work()

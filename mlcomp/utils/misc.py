@@ -1,5 +1,7 @@
 import collections
 import copy
+import subprocess
+
 from datetime import datetime
 import re
 from typing import List
@@ -53,6 +55,19 @@ def dict_func(objcts: List, func=np.mean):
         else:
             res[k] = func(k_objcts)
     return res
+
+
+def du(path):
+    """disk usage in human readable format (e.g. '2,1GB')"""
+    res = subprocess.check_output(['du', '-sh', '-L', path]).split()[0].decode(
+        'utf-8')
+    if 'G' in res:
+        return float(res[:-1].replace(',', '.'))
+    if 'M' in res:
+        return float(res[:-1].replace(',', '.')) / 1000
+    if 'K' in res:
+        return float(res[:-1].replace(',', '.')) / 10 ** 6
+    raise Exception('unknown files size' + res)
 
 
 def get_pid(name):

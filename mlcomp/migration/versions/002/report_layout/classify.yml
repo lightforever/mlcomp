@@ -27,3 +27,5 @@ layout:
       - type: series
         source: loss
         multi: True
+      - type: series
+        source: _other

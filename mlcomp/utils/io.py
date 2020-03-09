@@ -1,4 +1,8 @@
 import os
+from os.path import join
+
+from typing import List
+
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -43,18 +47,31 @@ def yaml_dump(data, file: str = None):
     return res
 
 
-def zip_folder(folder: str, dst: str = None):
+def zip_folder(
+        folder: str = None,
+        dst: str = None,
+        folders: List[str] = (),
+        root: bool = None
+):
+    if root is None and len(folders) > 0:
+        root = True
     if dst is None:
         dst = BytesIO()
+    if folder:
+        folders = (folder,)
 
     with ZipFile(dst, 'w') as zip_obj:
         # Iterate over all the files in directory
-        for folderName, subfolders, filenames in os.walk(folder):
-            for filename in filenames:
-                # create complete filepath of file in directory
-                filePath = os.path.join(folderName, filename)
-                # Add file to zip
-                zip_obj.write(filePath, os.path.relpath(filePath, folder))
+        for folder in folders:
+            for folderName, subfolders, filenames in os.walk(folder):
+                for filename in filenames:
+                    # create complete filepath of file in directory
+                    filePath = join(folderName, filename)
+                    # Add file to zip
+                    rel_path = os.path.relpath(filePath, folder)
+                    if root:
+                        rel_path = join(os.path.basename(folder), rel_path)
+                    zip_obj.write(filePath, rel_path)
     return dst
 
 
