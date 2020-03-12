@@ -1,0 +1,28 @@
+<app-dags>
+
+</app-dags>
+
+<div mat-dialog-content>
+    <mat-form-field style="width: 300px">
+        <mat-label>File changes</mat-label>
+        <textarea
+                #textarea
+                matInput
+                [(ngModel)]="data.file_changes"
+                style="height:20px;width: 300px">
+
+      </textarea>
+    </mat-form-field>
+</div>
+
+<pre style="color: red" *ngIf="error">
+    Error:
+
+    {{error}}
+</pre>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+    <button mat-button (click)="on_ok_click()" cdkFocusInitial>Ok</button>
+</div>
+

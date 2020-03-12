@@ -40,6 +40,11 @@ const routes: Routes = [
         canActivate: [AuthGuard]
     },
     {
+        path: 'skynet',
+        loadChildren: './skynet/skynet.module#SkynetModule',
+        canActivate: [AuthGuard]
+    },
+    {
         path: 'dags',
         loadChildren: './dag/dag.module#DagModule',
         canActivate: [AuthGuard]

@@ -12,7 +12,8 @@ from catalyst.utils import set_global_seed, \
 from catalyst.dl import State, Callback, Runner, CheckpointCallback
 
 from mlcomp import TASK_FOLDER
-from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider
+from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider, \
+    MemoryProvider
 from mlcomp.db.report_info import ReportLayoutInfo
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.utils.misc import now
@@ -61,6 +62,7 @@ class Catalyst(Executor, Callback):
 
         self.series_provider = ReportSeriesProvider(self.session)
         self.computer_provider = ComputerProvider(self.session)
+        self.memory_provider = MemoryProvider(self.session)
 
         self.order = 0
         self.resume = resume
@@ -228,6 +230,26 @@ class Catalyst(Executor, Callback):
             self.set_dist_env(config)
         return args, config
 
+    def _fix_memory(self, experiment):
+        if not torch.cuda.is_available():
+            return
+        max_memory = torch.cuda.get_device_properties(0).total_memory / (
+                    2 ** 30)
+        stages_config = experiment.stages_config
+        for k, v in list(stages_config.items()):
+            query = {}
+            # noinspection PyProtectedMember
+            for kk, vv in experiment._config['model_params'].items():
+                query[kk] = vv
+            for kk, vv in v['data_params'].items():
+                query[kk] = vv
+            variants = self.memory_provider.find(query)
+            variants = [v for v in variants if v.memory < max_memory]
+            if len(variants) == 0:
+                continue
+            variant = max(variants, key=lambda x: x.memory)
+            v['data_params']['batch_size'] = variant.batch_size
+
     def _checkpoint_fix_config(self, experiment):
         resume = self.resume
         if not resume:
@@ -351,6 +373,7 @@ class Catalyst(Executor, Callback):
             self.task_provider.commit()
 
         self._checkpoint_fix_config(experiment)
+        self._fix_memory(experiment)
 
         _get_callbacks = experiment.get_callbacks
 

@@ -10,10 +10,12 @@ from .report import ReportSeries, ReportImg, ReportTasks, Report, ReportLayout
 from .docker import Docker
 from .model import Model
 from .auxilary import Auxiliary
+from .memory import Memory
+from .space import Space
 
 __all__ = [
     'Project', 'Task', 'TaskDependence', 'File', 'DagStorage', 'DagLibrary',
     'Computer', 'ComputerUsage', 'Log', 'Step', 'Dag', 'ReportSeries',
     'ReportImg', 'ReportTasks', 'Report', 'ReportLayout', 'Docker', 'Model',
-    'Auxiliary', 'TaskSynced'
+    'Auxiliary', 'TaskSynced', 'Memory', 'Space'
 ]

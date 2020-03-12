@@ -102,10 +102,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
         for (let child of this.item.items) {
             if (child.type == 'series' && child.source == '_other') {
                 for (let name of Object.getOwnPropertyNames(this.data)) {
-                    if(mapped_series.indexOf(name) != -1){
+                    if (mapped_series.indexOf(name) != -1) {
                         continue;
                     }
                     let value = this.data[name];
+                    if (!Array.isArray(value) || value.length == 0 || !value[0].source) {
+                        continue
+                    }
                     let subchildren = SeriesComponent.create(child, value);
 
                     for (let s of subchildren) {

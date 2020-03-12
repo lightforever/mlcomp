@@ -1,0 +1,190 @@
+<div class="row">
+
+    <div class="column">
+        <button mat-raised-button style="margin-top: 15px"
+                (click)="filter_hidden=!filter_hidden">
+            Filters {{filter_applied_text}}
+        </button>
+
+        <div [hidden]="filter_hidden">
+            <mat-form-field style="width: 150px">
+                <input matInput (keyup)="name=$event.target.value;onchange()"
+                       placeholder="Name">
+            </mat-form-field>
+
+        </div>
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                (click)="run()">
+            Run
+        </button>
+
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                (click)="add()">
+            Add
+        </button>
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                [disabled]="selected==null"
+                (click)="edit()">
+            Edit
+        </button>
+
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                [disabled]="selected==null"
+                (click)="copy()">
+            Copy
+        </button>
+
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                [disabled]="selected==null"
+                (click)="remove()">
+            Remove
+        </button>
+
+
+        <div class="mat-elevation-z8" style="margin-bottom: 30px">
+            <table mat-table [dataSource]="dataSource" matSort>
+
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Name
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.name}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="created">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Created
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.created| date:"MM.dd H:mm:ss"}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="changed">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Changed
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.changed| date:"MM.dd H:mm:ss"}}
+                    </td>
+                </ng-container>
+
+
+                <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayed_columns;"
+                    (click)="selected=row;onSelected()"
+                    [style.background]="selected==row ? 'lightblue' : ''"></tr>
+            </table>
+
+            <mat-paginator [pageSizeOptions]="[15, 30, 100]"
+                           [length]="total"
+                           [pageSize]="15">
+
+            </mat-paginator>
+
+        </div>
+    </div>
+
+
+    <div class="column">
+        <button mat-raised-button style="margin-top: 15px"
+                (click)="relation_filter_hidden=!relation_filter_hidden">
+            Filters {{relation_filter_applied_text}}
+        </button>
+
+        <div [hidden]="relation_filter_hidden">
+            <mat-form-field style="width: 150px">
+                <input matInput
+                       (keyup)="relation_name=$event.target.value;onchange()"
+                       placeholder="Name">
+            </mat-form-field>
+
+        </div>
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                [disabled]="relation_selected==null || relation_selected.relation==1"
+                (click)="relation_append()">
+            Append
+        </button>
+
+        <button mat-raised-button
+                style="margin-top: 15px"
+                [disabled]="relation_selected==null || !relation_selected.relation"
+                (click)="relation_remove()">
+            Remove
+        </button>
+
+
+        <div class="mat-elevation-z8">
+            <table mat-table [dataSource]="relation_dataSource" matSort
+                   #relation_sort="matSort">
+
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Name
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.name}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="created">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Created
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.created| date:"MM.dd H:mm:ss"}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="changed">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                        Changed
+                    </th>
+
+                    <td mat-cell *matCellDef="let element">
+                        {{element.changed| date:"MM.dd H:mm:ss"}}
+                    </td>
+                </ng-container>
+
+
+                <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayed_columns;"
+                    (click)="relation_selected=row"
+                    [style.background]="relation_selected==row ?
+            'lightblue' : row.relation? '#2ECC71': ''">
+
+                </tr>
+            </table>
+
+            <mat-paginator [pageSizeOptions]="[15, 30, 100]"
+                           [length]="relation_total"
+                           #relation_paginator
+                           [pageSize]="15">
+
+            </mat-paginator>
+
+        </div>
+
+
+    </div>
+
+</div>

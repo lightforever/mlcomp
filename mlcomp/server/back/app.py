@@ -18,14 +18,16 @@ from mlcomp.db.core import PaginatorOptions, Session
 from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
     ReportLayoutProvider, ReportProvider, ModelProvider, ReportImgProvider, \
     DagProvider, DagStorageProvider, TaskProvider, LogProvider, StepProvider, \
-    FileProvider, AuxiliaryProvider
+    FileProvider, AuxiliaryProvider, MemoryProvider, SpaceProvider
 from mlcomp.db.report_info import ReportLayoutInfo
+from mlcomp.server.back.create_dags.copy import dag_copy
 from mlcomp.server.back.supervisor import register_supervisor
 from mlcomp.utils.logging import create_logger
 from mlcomp.utils.io import from_module_path, zip_folder
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
-from mlcomp.utils.misc import to_snake, now
-from mlcomp.db.models import Model, Report, ReportLayout, Task, File
+from mlcomp.utils.misc import now
+from mlcomp.db.models import Model, Report, ReportLayout, Task, File, Memory, \
+    Space
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.worker.storage import Storage
 
@@ -406,6 +408,166 @@ def dags():
     provider = DagProvider(_read_session)
     res = provider.get(data, options)
     return res
+
+
+@app.route('/api/dag/restart', methods=['POST'])
+@requires_auth
+@error_handler
+def dag_restart():
+    data = request_data()
+    dag_copy(_write_session, data['dag'], data['file_changes'])
+
+
+@app.route('/api/spaces', methods=['POST'])
+@requires_auth
+@error_handler
+def spaces():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    if options.sort_column == 'id':
+        options.sort_column = 'name'
+    provider = SpaceProvider(_read_session)
+    res = provider.get(data, options)
+    return res
+
+
+def set_space_fields(space: Space, data: dict):
+    data['content'] = data.get('content', '')
+    yaml_load(data['content'])
+
+    space.name = data['name']
+    space.content = data['content']
+    if not space.created:
+        space.created = now()
+    space.changed = now()
+    return space
+
+
+@app.route('/api/space/relation_append', methods=['POST'])
+@requires_auth
+@error_handler
+def space_relation_append():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    provider.add_relation(data['parent'], data['child'])
+
+
+@app.route('/api/space/relation_remove', methods=['POST'])
+@requires_auth
+@error_handler
+def space_relation_remove():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    provider.remove_relation(data['parent'], data['child'])
+
+
+@app.route('/api/space/run', methods=['POST'])
+@requires_auth
+@error_handler
+def space_run():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    dag_provider = DagProvider(_write_session)
+
+    space = provider.by_id(data['space'], key_column='name')
+    dag = dag_provider.by_id(data['dag'])
+
+
+@app.route('/api/space/add', methods=['POST'])
+@requires_auth
+@error_handler
+def space_add():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    space = Space()
+    set_space_fields(space, data)
+    provider.add(space)
+
+
+@app.route('/api/space/copy', methods=['POST'])
+@requires_auth
+@error_handler
+def space_copy():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    space = Space()
+    set_space_fields(space, data['space'])
+    provider.add(space)
+
+    old_children = provider.related(data['old_space'])
+    for c in old_children:
+        provider.add_relation(space.name, c.name)
+
+
+@app.route('/api/space/edit', methods=['POST'])
+@requires_auth
+@error_handler
+def space_edit():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    space = provider.by_id(data['name'], key_column='name')
+    set_space_fields(space, data)
+    provider.update()
+
+
+@app.route('/api/space/remove', methods=['POST'])
+@requires_auth
+@error_handler
+def space_remove():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    provider.remove(data['name'], key_column='name')
+
+
+@app.route('/api/memories', methods=['POST'])
+@requires_auth
+@error_handler
+def memories():
+    data = request_data()
+    options = PaginatorOptions(**data['paginator'])
+    provider = MemoryProvider(_read_session)
+    res = provider.get(data, options)
+    return res
+
+
+def set_memory_fields(memory: Memory, data: dict):
+    memory.model = data['model']
+    memory.memory = float(data['memory'])
+    memory.batch_size = int(data['batch_size'])
+    memory.variant = data.get('variant')
+    if data.get('num_classes'):
+        memory.num_classes = int(data['num_classes'])
+
+
+@app.route('/api/memory/add', methods=['POST'])
+@requires_auth
+@error_handler
+def memory_add():
+    data = request_data()
+    provider = MemoryProvider(_write_session)
+    memory = Memory()
+    set_memory_fields(memory, data)
+    provider.add(memory)
+
+
+@app.route('/api/memory/edit', methods=['POST'])
+@requires_auth
+@error_handler
+def memory_edit():
+    data = request_data()
+    provider = MemoryProvider(_write_session)
+    memory = provider.by_id(data['id'])
+    set_memory_fields(memory, data)
+    provider.update()
+
+
+@app.route('/api/memory/remove', methods=['POST'])
+@requires_auth
+@error_handler
+def memory_remove():
+    data = request_data()
+    provider = MemoryProvider(_write_session)
+    provider.remove(data['id'])
 
 
 @app.route('/api/code', methods=['POST'])

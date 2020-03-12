@@ -431,3 +431,49 @@ export class TaskInfo {
     additional_info: string;
     result: string;
 }
+
+export class Memory {
+    id: number;
+    model: string;
+    memory: number;
+    num_classes: number;
+    variant: string;
+    img_size: number;
+    batch_size: number;
+}
+
+export class MemoryFilter {
+    paginator: PaginatorFilter;
+    model: string;
+    variant: string;
+}
+
+export class Space {
+    name: string;
+    created: Date;
+    changed: Date;
+    content: string;
+    relation: number;
+}
+
+export class SpaceAdd {
+    space: Space;
+    method: string;
+    old_space: string;
+}
+
+export class SpaceFilter {
+    paginator: PaginatorFilter;
+    name: string;
+}
+
+export class SpaceRun {
+    dag: number;
+    space: string;
+    file_changes: string;
+}
+
+export class DagRestart {
+    dag: number;
+    file_changes: string;
+}

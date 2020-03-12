@@ -1,0 +1,125 @@
+<button mat-raised-button style="margin-top: 15px"
+        (click)="filter_hidden=!filter_hidden">
+    Filters {{filter_applied_text}}
+</button>
+
+<div [hidden]="filter_hidden">
+    <mat-form-field style="width: 150px">
+        <input matInput (keyup)="model=$event.target.value;onchange()"
+               placeholder="Model">
+    </mat-form-field>
+
+    <mat-form-field style="width: 150px">
+        <input matInput (keyup)="variant=$event.target.value;onchange()"
+               placeholder="Variant">
+    </mat-form-field>
+</div>
+
+
+<button mat-raised-button
+        style="margin-top: 15px"
+        (click)="add()">
+    Add
+</button>
+
+<button mat-raised-button
+        style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="edit()">
+    Edit
+</button>
+
+
+<button mat-raised-button
+        style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="copy()">
+    Copy
+</button>
+
+
+<button mat-raised-button
+        style="margin-top: 15px"
+        [disabled]="selected==null"
+        (click)="remove()">
+    Remove
+</button>
+
+
+<div class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" matSort>
+
+        <ng-container matColumnDef="model">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Model
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.model}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="variant">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Variant
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.variant}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="num_classes">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Num classes
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.num_classes}}
+            </td>
+        </ng-container>
+        l
+        <ng-container matColumnDef="img_size">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Image size
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.img_size}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="batch_size">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Batch size
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.batch_size}}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="memory">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                Memory
+            </th>
+
+            <td mat-cell *matCellDef="let element">
+                {{element.memory}}
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed_columns;"
+            (click)="selected=row"
+            [style.background]="selected==row ? 'lightblue' : ''"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[15, 30, 100]"
+                   [length]="total"
+                   [pageSize]="15">
+
+    </mat-paginator>
+
+</div>
+

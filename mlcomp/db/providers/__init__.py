@@ -16,6 +16,8 @@ from .docker import DockerProvider
 from .model import ModelProvider
 from .auxiliary import AuxiliaryProvider
 from .task_synced import TaskSyncedProvider
+from .memory import MemoryProvider
+from .space import SpaceProvider
 
 __all__ = [
     'ProjectProvider', 'TaskProvider', 'FileProvider', 'DagStorageProvider',
@@ -23,5 +25,5 @@ __all__ = [
     'DagProvider', 'ReportImgProvider', 'ReportProvider',
     'ReportLayoutProvider', 'ReportSeriesProvider', 'ReportTasksProvider',
     'DockerProvider', 'ModelProvider', 'AuxiliaryProvider',
-    'TaskSyncedProvider'
+    'TaskSyncedProvider', 'MemoryProvider', 'SpaceProvider'
 ]

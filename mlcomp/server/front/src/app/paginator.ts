@@ -46,15 +46,22 @@ export class Paginator<T> implements OnInit, OnDestroy {
 
     }
 
-    get_filter(): any {
+    get_filter(paginator: MatPaginator=null, sort: MatSort=null): any {
+        if(!paginator){
+            paginator = this.paginator;
+        }
+        if(!sort){
+            sort = this.sort;
+        }
+        
         let res = new PaginatorFilter();
-        res.page_number = this.paginator ? this.paginator.pageIndex : 0;
-        res.page_size = this.paginator ?
-            this.paginator.pageSize || this.default_page_size : 15;
-        if (this.sort) {
-            res.sort_column = this.sort.active ? this.sort.active : '';
-            res.sort_descending = this.sort.direction ?
-                this.sort.direction == 'desc' : true;
+        res.page_number = paginator ? paginator.pageIndex : 0;
+        res.page_size = paginator ?
+            paginator.pageSize || this.default_page_size : 15;
+        if (sort) {
+            res.sort_column = sort.active ? sort.active : '';
+            res.sort_descending = sort.direction ?
+                sort.direction == 'desc' : true;
         }
 
         if (this.filter_key) {
@@ -144,7 +151,6 @@ export class Paginator<T> implements OnInit, OnDestroy {
                 this.dataSource.data,
                 res.data,
                 [this.id_column]);
-
             this.total = res.total;
             this.data_updated.emit(res);
         });

@@ -267,6 +267,11 @@
                           [class.transparent]="!has_unfinished(element)">
                 </mat-icon>
 
+                <mat-icon svgIcon="restart"
+                          matTooltip="Restart"
+                          (click)="restart(element)">
+                </mat-icon>
+
                 <mat-icon
                         svgIcon="remove"
                         matTooltip="Remove"
@@ -277,7 +282,11 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
+        <tr mat-row
+            *matRowDef="let row; columns: displayed_columns;"
+            [style.background]="selected==row ?
+            'lightblue' : ''"
+            (click)="selected=row"></tr>
     </table>
 
     <mat-paginator [pageSizeOptions]="[15, 30, 100]"

@@ -315,5 +315,13 @@ class TaskProvider(BaseDataProvider):
             all()
         return res
 
+    def get_dependencies(self, dag: int):
+        res = self.query(TaskDependence).join(
+            Task, Task.id == TaskDependence.task_id).\
+            filter(Task.dag == dag).\
+            all()
+
+        return res
+
 
 __all__ = ['TaskProvider']

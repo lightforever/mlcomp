@@ -2,7 +2,12 @@ import {Injectable} from '@angular/core';
 import {BaseService} from "../base.service";
 import {AppSettings} from "../app-settings";
 import {catchError} from "rxjs/operators";
-import {BaseResult, DagStopResult, ToogleReportResult} from "../models";
+import {
+    BaseResult,
+    DagRestart,
+    DagStopResult,
+    ToogleReportResult
+} from "../models";
 
 @Injectable({
     providedIn: 'root'
@@ -65,6 +70,15 @@ export class DagService extends BaseService {
         let url = AppSettings.API_ENDPOINT + this.single_part + '/start';
         return this.http.post<DagStopResult>(url, {'id': id}).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    restart(data: DagRestart) {
+        let message = `${this.constructor.name}.restart`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/restart';
+        return this.http.post<BaseResult>(url, data).pipe(
+            catchError(this.handleError<BaseResult>(message,
+                new BaseResult()))
         );
     }
 }

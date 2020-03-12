@@ -1,0 +1,47 @@
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Model</mat-label>
+    <input matInput [(ngModel)]="data.model">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Variant</mat-label>
+    <input matInput [(ngModel)]="data.variant">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Num classes</mat-label>
+    <input matInput [(ngModel)]="data.num_classes">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Image size</mat-label>
+    <input matInput [(ngModel)]="data.img_size">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Batch size</mat-label>
+    <input matInput [(ngModel)]="data.batch_size">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Memory</mat-label>
+    <input matInput [(ngModel)]="data.memory">
+  </mat-form-field>
+</div>
+
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+</div>

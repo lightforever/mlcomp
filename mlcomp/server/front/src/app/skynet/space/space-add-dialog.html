@@ -1,0 +1,32 @@
+<div mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="data.space.name">
+  </mat-form-field>
+</div>
+
+
+<div mat-dialog-content>
+    <mat-form-field style="width: 400px">
+        <mat-label>Content</mat-label>
+        <textarea
+                #textarea
+                matInput
+                [(ngModel)]="data.space.content"
+                style="height:300px;width: 300px">
+
+      </textarea>
+    </mat-form-field>
+</div>
+
+<pre style="color: red" *ngIf="error">
+    Error:
+
+    {{error}}
+</pre>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+    <button mat-button (click)="on_ok_click()" cdkFocusInitial>Ok</button>
+</div>
+

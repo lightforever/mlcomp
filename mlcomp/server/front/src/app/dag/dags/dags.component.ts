@@ -9,6 +9,7 @@ import {AppSettings} from "../../app-settings";
 import {Paginator} from "../../paginator";
 import {Helpers} from "../../helpers";
 import {DialogComponent} from "../../dialog/dialog.component";
+import {DagRestartDialogComponent} from "./dag-restart-dialog";
 
 @Component({
     selector: 'app-dags',
@@ -57,6 +58,8 @@ export class DagsComponent extends Paginator<Dag> {
     last_activity_min: string;
     last_activity_max: string;
 
+    selected: Dag;
+
     constructor(protected service: DagService,
                 protected location: Location,
                 protected router: Router,
@@ -94,6 +97,9 @@ export class DagsComponent extends Paginator<Dag> {
         iconRegistry.addSvgIcon('start',
             sanitizer.bypassSecurityTrustResourceUrl(
                 'assets/img/play-button.svg'));
+        iconRegistry.addSvgIcon('restart',
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/restart.svg'));
     }
 
     get_filter(): any {
@@ -306,5 +312,15 @@ export class DagsComponent extends Paginator<Dag> {
         }
 
         return `/reports/report-detail/${element.report}`;
+    }
+
+    restart(element: any) {
+        this.dialog.open(DagRestartDialogComponent, {
+            width: '550px', height: '600px',
+            data: {
+                'dag': element.id,
+                'file_changes': ''
+            }
+        });
     }
 }

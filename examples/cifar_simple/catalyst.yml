@@ -35,7 +35,7 @@ stages:
       accuracy_args: [1]
     scheduler:
       callback: SchedulerCallback
-      reduce_metric: *reduce_metric
+      reduced_metric: *reduce_metric
     saver:
       callback: CheckpointCallback
 

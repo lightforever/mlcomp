@@ -51,11 +51,11 @@ class BaseDataProvider:
         return obj
 
     def bulk_save_objects(
-        self,
-        objs,
-        return_defaults=False,
-        update_changed_only=True,
-        preserve_order=True,
+            self,
+            objs,
+            return_defaults=False,
+            update_changed_only=True,
+            preserve_order=True,
     ):
         for obj in objs:
             adapt_db_types(obj)
@@ -68,8 +68,9 @@ class BaseDataProvider:
         )
         self._session.commit()
 
-    def by_id(self, id: int, joined_load=None):
-        res = self.query(self.model).filter(getattr(self.model, 'id') == id)
+    def by_id(self, id: int, joined_load=None, key_column: str = 'id'):
+        res = self.query(self.model).filter(
+            getattr(self.model, key_column) == id)
         if joined_load is not None:
             for n in joined_load:
                 res = res.options(joinedload(n, innerjoin=True))
