@@ -1,8 +1,8 @@
-from sqlalchemy import literal_column
+from sqlalchemy import literal_column, func
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.models import Space
-from mlcomp.db.models.space import SpaceRelation
+from mlcomp.db.models.space import SpaceRelation, SpaceTag
 from mlcomp.db.providers.base import BaseDataProvider
 
 
@@ -30,14 +30,29 @@ class SpaceProvider(BaseDataProvider):
         total = query.count()
         paginator = self.paginator(query, options) if options else query
         data = []
+
         for space, relation in paginator.all():
             item = self.to_dict(space)
             item['relation'] = relation
             data.append(item)
 
+        names = [d['name'] for d in data]
+        tags = self.query(SpaceTag).filter(SpaceTag.space.in_(names))
+        for d in data:
+            d['tags'] = []
+            for t in tags:
+                if d['name'] == t.space:
+                    d['tags'].append(t.tag)
+
+        tag_count = func.count(SpaceTag.tag).label('count')
+        tags = self.query(SpaceTag.tag, tag_count).group_by(
+            SpaceTag.tag).order_by(tag_count.desc()).limit(10)
+        tags = [t for t, c in tags]
+
         return {
             'total': total,
-            'data': data
+            'data': data,
+            'tags': tags
         }
 
     def add_relation(self, parent: str, child: str):
@@ -56,6 +71,12 @@ class SpaceProvider(BaseDataProvider):
             .filter(SpaceRelation.parent == parent) \
             .all()
         return res
+
+    def remove_tag(self, space: str, tag: str):
+        self.query(SpaceTag).filter(SpaceTag.space == space).filter(
+            SpaceTag.tag == tag).delete(synchronize_session=False)
+
+        self.session.commit()
 
 
 __all__ = ['SpaceProvider']

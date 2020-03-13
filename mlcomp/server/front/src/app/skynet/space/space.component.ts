@@ -1,6 +1,6 @@
 import {Component, ViewChild} from '@angular/core';
 import {Paginator} from "../../paginator";
-import {Space, SpaceFilter} from "../../models";
+import {Dag, Space, SpaceFilter} from "../../models";
 import {Location} from "@angular/common";
 import {MatDialog} from "@angular/material/dialog";
 import {SpaceService} from "./space.service";
@@ -10,6 +10,11 @@ import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
 import {MatSort} from "@angular/material/sort";
 import {SpaceRunDialogComponent} from "./space-run-dialog";
+import {COMMA, ENTER} from "@angular/cdk/keycodes";
+import {MatChipInputEvent} from "@angular/material/chips";
+import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
+import {MatIconRegistry} from "@angular/material/icon";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
     selector: 'app-space',
@@ -20,7 +25,8 @@ export class SpaceComponent extends Paginator<Space> {
     displayed_columns: string[] = [
         'name',
         'created',
-        'changed'
+        'changed',
+        'tags'
     ];
 
     filter_hidden: boolean = true;
@@ -38,13 +44,23 @@ export class SpaceComponent extends Paginator<Space> {
     relation_filter_applied_text: string = '';
     relation_name: string;
 
+    separatorKeysCodes: number[] = [ENTER, COMMA];
+    tags: string[] = [];
+
+
     constructor(
         protected service: SpaceService,
         protected location: Location,
-        public dialog: MatDialog
+        public dialog: MatDialog,
+        iconRegistry: MatIconRegistry,
+        sanitizer: DomSanitizer
     ) {
         super(service, location);
         this.id_column = 'name';
+
+        iconRegistry.addSvgIcon('delete',
+            sanitizer.bypassSecurityTrustResourceUrl(
+                'assets/img/delete.svg'));
     }
 
     onchange() {
@@ -68,6 +84,13 @@ export class SpaceComponent extends Paginator<Space> {
         });
         this.relation_sort.sortChange.subscribe(x => {
             this.relation_changed()
+        });
+
+        this.data_updated.subscribe(res => {
+            if (!res) {
+                return;
+            }
+            this.tags = res.tags;
         });
     }
 
@@ -160,5 +183,39 @@ export class SpaceComponent extends Paginator<Space> {
         this.service.relation_remove(this.selected.name, this.relation_selected.name).subscribe(res => {
             this.relation_changed()
         });
+    }
+
+    remove_tag(space: Space, tag: string) {
+        space.tags.splice(space.tags.indexOf(tag, 1));
+        this.service.tag_remove(space.name, tag).subscribe(res => {
+        });
+        this.relation_changed();
+    }
+
+    tag_add(space: Space, event: MatChipInputEvent) {
+        const input = event.input;
+        let value = event.value;
+
+        // Add our fruit
+        if ((value || '').trim()) {
+            value = value.trim();
+            space.tags.push(value);
+            this.service.tag_add(space.name, value).subscribe(res => {
+            });
+        }
+
+        // Reset the input value
+        if (input) {
+            input.value = '';
+        }
+
+        this.relation_changed();
+    }
+
+    tag_selected(space: Space, event: MatAutocompleteSelectedEvent) {
+        this.service.tag_add(space.name, event.option.viewValue).subscribe(res => {
+        });
+        space.tags.push(event.option.viewValue);
+        this.relation_changed();
     }
 }

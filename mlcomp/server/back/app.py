@@ -28,7 +28,7 @@ from mlcomp.utils.io import from_module_path, zip_folder
 from mlcomp.server.back.create_dags import dag_model_add, dag_model_start
 from mlcomp.utils.misc import now
 from mlcomp.db.models import Model, Report, ReportLayout, Task, File, Memory, \
-    Space
+    Space, SpaceTag
 from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.worker.storage import Storage
 
@@ -409,6 +409,25 @@ def dags():
     provider = DagProvider(_read_session)
     res = provider.get(data, options)
     return res
+
+
+@app.route('/api/space/tag_add', methods=['POST'])
+@requires_auth
+@error_handler
+def space_tag_add():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    tag = SpaceTag(space=data['space'], tag=data['tag'])
+    provider.add(tag)
+
+
+@app.route('/api/space/tag_remove', methods=['POST'])
+@requires_auth
+@error_handler
+def space_tag_remove():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    provider.remove_tag(space=data['space'], tag=data['tag'])
 
 
 @app.route('/api/dag/tag_add', methods=['POST'])

@@ -32,6 +32,7 @@ export class Dag {
   img_size: number;
   file_size: number;
   report: number;
+  tags: string[];
 }
 
 export class Task {
@@ -454,6 +455,7 @@ export class Space {
     changed: Date;
     content: string;
     relation: number;
+    tags: string[];
 }
 
 export class SpaceAdd {

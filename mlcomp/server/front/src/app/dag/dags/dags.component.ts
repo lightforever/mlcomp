@@ -10,6 +10,9 @@ import {Paginator} from "../../paginator";
 import {Helpers} from "../../helpers";
 import {DialogComponent} from "../../dialog/dialog.component";
 import {DagRestartDialogComponent} from "./dag-restart-dialog";
+import {COMMA, ENTER} from "@angular/cdk/keycodes";
+import {MatChipInputEvent} from "@angular/material/chips";
+import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 
 @Component({
     selector: 'app-dags',
@@ -29,8 +32,8 @@ export class DagsComponent extends Paginator<Dag> {
         'duration',
         'task_status',
         'links',
-        'img_size',
-        'file_size'];
+        'tags',
+        'img_file'];
     dag: number;
     project: number;
     name: string;
@@ -60,6 +63,10 @@ export class DagsComponent extends Paginator<Dag> {
     last_activity_max: string;
 
     selected: Dag;
+
+    separatorKeysCodes: number[] = [ENTER, COMMA];
+
+    tags: string[] = [];
 
     constructor(protected service: DagService,
                 protected location: Location,
@@ -144,6 +151,7 @@ export class DagsComponent extends Paginator<Dag> {
             if (!res || !res.projects) {
                 return;
             }
+            self.tags = res.tags;
             self.projects = res.projects;
             self.projects.splice(0, 0,
                 {'id': -1, 'name': 'None'}
@@ -326,9 +334,39 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     onSelected(row: any) {
-        if(!this.use_select){
+        if (!this.use_select) {
             return;
         }
         this.selected = row;
+    }
+
+    remove_tag(dag: Dag, tag: string) {
+        dag.tags.splice(dag.tags.indexOf(tag, 1));
+        this.service.tag_remove(dag.id, tag).subscribe(res => {
+        });
+    }
+
+    tag_add(dag: Dag, event: MatChipInputEvent) {
+        const input = event.input;
+        let value = event.value;
+
+        // Add our fruit
+        if ((value || '').trim()) {
+            value = value.trim();
+            dag.tags.push(value);
+            this.service.tag_add(dag.id, value).subscribe(res => {
+            });
+        }
+
+        // Reset the input value
+        if (input) {
+            input.value = '';
+        }
+    }
+
+    tag_selected(dag: Dag, event: MatAutocompleteSelectedEvent) {
+         this.service.tag_add(dag.id, event.option.viewValue).subscribe(res => {
+            });
+        dag.tags.push(event.option.viewValue);
     }
 }

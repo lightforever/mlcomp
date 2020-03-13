@@ -11,6 +11,9 @@ export class Helpers {
     }
 
     public static size(s: number) {
+        if(s == 0){
+            return '0';
+        }
         if (s < Math.pow(2, 10)) {
             return `${s} byte`;
         }

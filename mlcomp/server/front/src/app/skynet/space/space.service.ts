@@ -1,6 +1,6 @@
 import {BaseService} from "../../base.service";
 import {Injectable} from "@angular/core";
-import {BaseResult, Space, SpaceRun} from "../../models";
+import {BaseResult, DagStopResult, Space, SpaceRun} from "../../models";
 import {AppSettings} from "../../app-settings";
 import {catchError} from "rxjs/operators";
 
@@ -73,6 +73,28 @@ export class SpaceService extends BaseService {
         let message = `${this.constructor.name}.run`;
         let url = AppSettings.API_ENDPOINT + this.single_part + '/run';
         return this.http.post<BaseResult>(url, data).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    tag_add(space: string, tag: string) {
+        let message = `${this.constructor.name}.tag_add`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/tag_add';
+        return this.http.post<BaseResult>(url, {
+            'space': space,
+            'tag': tag
+        }).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    tag_remove(space: string, tag: string) {
+        let message = `${this.constructor.name}.tag_remove`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/tag_remove';
+        return this.http.post<BaseResult>(url, {
+            'space': space,
+            'tag': tag
+        }).pipe(
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }

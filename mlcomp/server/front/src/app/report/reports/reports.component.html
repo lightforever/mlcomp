@@ -60,8 +60,8 @@
         <tr mat-row *matRowDef="let row; columns: displayed_columns;"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 100]" [length]="total"
-                   [pageSize]="15"></mat-paginator>
+    <mat-paginator [pageSizeOptions]="[default_page_size, 30, 100]" [length]="total"
+                   [pageSize]="default_page_size"></mat-paginator>
 
 </div>
 

@@ -25,7 +25,7 @@ class Dag(Base):
 
 
 class DagTag(Base):
-    __tablename__ = 'dag'
+    __tablename__ = 'dag_tag'
 
     dag = sa.Column(sa.Integer, ForeignKey('dag.id'), primary_key=True)
     tag = sa.Column(sa.String, primary_key=True)

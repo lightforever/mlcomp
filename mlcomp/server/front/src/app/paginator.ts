@@ -24,7 +24,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
     data_updated: EventEmitter<any> = new EventEmitter();
 
     protected displayed_columns: string[] = [];
-    @Input() default_page_size: number = 15;
+    @Input() default_page_size: number = 10;
     isLoading_results = false;
     total: number;
     private interval: number;

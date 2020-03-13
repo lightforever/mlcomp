@@ -115,9 +115,9 @@
             [style.background]="selected==row ? 'lightblue' : ''"></tr>
     </table>
 
-    <mat-paginator [pageSizeOptions]="[15, 30, 100]"
+    <mat-paginator [pageSizeOptions]="[default_page_size, 30, 100]"
                    [length]="total"
-                   [pageSize]="15">
+                   [pageSize]="default_page_size">
 
     </mat-paginator>
 

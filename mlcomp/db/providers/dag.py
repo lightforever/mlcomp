@@ -82,6 +82,7 @@ class DagProvider(BaseDataProvider):
         paginator = self.paginator(query, options) if options else query
         res = []
         rules = ('-tasks.dag_rel',)
+
         for dag, \
             project_name, \
             task_count, \
@@ -129,8 +130,9 @@ class DagProvider(BaseDataProvider):
             r['duration'] = duration_format(delta)
             res.append(r)
 
+        dag_ids = [r['id'] for r in res]
+
         if filter.get('report'):
-            dag_ids = [r['id'] for r in res]
             tasks_dags = self.query(Task.id, Task.dag). \
                 filter(Task.type <= TaskType.Train.value). \
                 filter(Task.dag.in_(dag_ids)). \
@@ -147,13 +149,27 @@ class DagProvider(BaseDataProvider):
             for r in res:
                 r['report_full'] = r['id'] not in dags_not_full_included
 
+        tags = self.query(DagTag).filter(Dag.id.in_(dag_ids))
+        for r in res:
+            r['tags'] = []
+
+            for t in tags:
+                if r['id'] == t.dag:
+                    r['tags'].append(t.tag)
+
+        tag_count = func.count(DagTag.tag).label('count')
+        tags = self.query(DagTag.tag, tag_count).group_by(
+            DagTag.tag).order_by(tag_count.desc()).limit(10)
+        tags = [t for t, c in tags]
+
         projects = self.query(Project.name, Project.id). \
             order_by(Project.id.desc()). \
             limit(20). \
             all()
 
         projects = [{'name': name, 'id': id} for name, id in projects]
-        return {'total': total, 'data': res, 'projects': projects}
+        return {'total': total, 'data': res, 'projects': projects,
+                'tags': tags}
 
     def config(self, id: int):
         return self.by_id(id).config

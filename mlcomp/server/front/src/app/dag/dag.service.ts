@@ -81,4 +81,26 @@ export class DagService extends BaseService {
                 new BaseResult()))
         );
     }
+
+    tag_add(dag: number, tag: string) {
+        let message = `${this.constructor.name}.tag_add`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/tag_add';
+        return this.http.post<DagStopResult>(url, {
+            'dag': dag,
+            'tag': tag
+        }).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
+
+    tag_remove(dag: number, tag: string) {
+        let message = `${this.constructor.name}.tag_remove`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/tag_remove';
+        return this.http.post<DagStopResult>(url, {
+            'dag': dag,
+            'tag': tag
+        }).pipe(
+            catchError(this.handleError<BaseResult>(message, new BaseResult()))
+        );
+    }
 }
