@@ -2,7 +2,7 @@ import {
     OnInit,
     ViewChild,
     EventEmitter,
-    OnDestroy
+    OnDestroy, Input
 } from '@angular/core';
 import {MatSort, MatTableDataSource, MatPaginator} from '@angular/material';
 import {of as observableOf, merge} from 'rxjs';
@@ -24,7 +24,7 @@ export class Paginator<T> implements OnInit, OnDestroy {
     data_updated: EventEmitter<any> = new EventEmitter();
 
     protected displayed_columns: string[] = [];
-    protected default_page_size: number = 15;
+    @Input() default_page_size: number = 15;
     isLoading_results = false;
     total: number;
     private interval: number;
@@ -46,18 +46,20 @@ export class Paginator<T> implements OnInit, OnDestroy {
 
     }
 
-    get_filter(paginator: MatPaginator=null, sort: MatSort=null): any {
-        if(!paginator){
+    get_filter(paginator: MatPaginator = null, sort: MatSort = null): any {
+        if (!paginator) {
             paginator = this.paginator;
         }
-        if(!sort){
+        if (!sort) {
             sort = this.sort;
         }
-        
+
         let res = new PaginatorFilter();
         res.page_number = paginator ? paginator.pageIndex : 0;
         res.page_size = paginator ?
             paginator.pageSize || this.default_page_size : 15;
+        res.page_size = parseInt(res.page_size.toString());
+
         if (sort) {
             res.sort_column = sort.active ? sort.active : '';
             res.sort_descending = sort.direction ?
@@ -111,8 +113,10 @@ export class Paginator<T> implements OnInit, OnDestroy {
                     return observableOf(new PaginatorRes<T>());
                 }
                 if (this.previous_filter) {
-                    let keys = {...Object.keys(this.previous_filter),
-                        ...Object.keys(filter)};
+                    let keys = {
+                        ...Object.keys(this.previous_filter),
+                        ...Object.keys(filter)
+                    };
 
                     for (let i in keys) {
                         let k = keys[i];

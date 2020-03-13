@@ -1,7 +1,15 @@
+import hashlib
+
+import re
+
+from mlcomp.utils.config import merge_dicts_smart
+from mlcomp.utils.io import yaml_load, yaml_dump
+
 from mlcomp.db.core import Session
 from mlcomp.db.enums import ComponentType, TaskStatus
-from mlcomp.db.models import Dag, Task, TaskDependence, DagStorage
-from mlcomp.db.providers import DagProvider, TaskProvider, DagStorageProvider
+from mlcomp.db.models import Dag, Task, TaskDependence, DagStorage, File
+from mlcomp.db.providers import DagProvider, TaskProvider, DagStorageProvider, \
+    FileProvider
 from mlcomp.utils.misc import now
 
 
@@ -11,6 +19,7 @@ class DagCopyBuilder:
             session: Session,
             dag: int,
             file_changes: str = '',
+            dag_suffix: str = '',
             logger=None,
             component: ComponentType = None
     ):
@@ -19,11 +28,13 @@ class DagCopyBuilder:
         self.session = session
         self.logger = logger
         self.component = component
+        self.dag_suffix = dag_suffix
 
         self.dag_db = None
 
         self.dag_provider = None
         self.task_provider = None
+        self.file_provider = None
         self.dag_storage_provider = None
 
     def log_info(self, message: str):
@@ -35,15 +46,25 @@ class DagCopyBuilder:
 
         self.dag_provider = DagProvider(self.session)
         self.task_provider = TaskProvider(self.session)
+        self.file_provider = FileProvider(self.session)
         self.dag_storage_provider = DagStorageProvider(self.session)
 
     def create_dag(self):
         dag = self.dag_provider.by_id(self.dag)
-        dag_new = Dag(name=dag.name, created=now(), config=dag.config,
+        name = dag.name
+        if self.dag_suffix:
+            name += ' ' + self.dag_suffix
+        dag_new = Dag(name=name, created=now(), config=dag.config,
                       project=dag.project, docker_img=dag.docker_img,
                       img_size=0, file_size=0, type=dag.type)
         self.dag_provider.add(dag_new)
         self.dag_db = dag_new
+
+    def find_replace(self, changes: dict, path: str):
+        for k, v in changes.items():
+            if not re.match(k, path):
+                continue
+            return v
 
     def create_tasks(self):
         tasks = self.task_provider.by_dag(self.dag)
@@ -77,10 +98,33 @@ class DagCopyBuilder:
         self.task_provider.bulk_save_objects(dependencies_new,
                                              return_defaults=False)
 
+        changes = yaml_load(self.file_changes)
         storages = self.dag_storage_provider.by_dag(self.dag)
         storages_new = []
+
         for s, f in storages:
-            s_new = DagStorage(dag=self.dag_db.id, file=s.file, path=s.path,
+            if not isinstance(changes, dict):
+                continue
+
+            replace = self.find_replace(changes, s.path)
+            if replace is not None and f and s.path.endswith('.yml'):
+                content = f.content.decode('utf-8')
+                data = yaml_load(content)
+                data = merge_dicts_smart(data, replace)
+                content = yaml_dump(data).encode('utf-8')
+                md5 = hashlib.md5(content).hexdigest()
+                f = self.file_provider.by_md5(md5)
+                if not f:
+                    f = File(
+                        content=content,
+                        created=now(),
+                        project=f.project,
+                        md5=md5,
+                        dag=self.dag_db.id
+                    )
+                self.file_provider.add(f)
+
+            s_new = DagStorage(dag=self.dag_db.id, file=f.id, path=s.path,
                                is_dir=s.is_dir)
             storages_new.append(s_new)
 
@@ -95,8 +139,10 @@ class DagCopyBuilder:
         self.create_tasks()
 
 
-def dag_copy(session: Session, dag: int, file_changes: str = ''):
-    builder = DagCopyBuilder(session, dag=dag, file_changes=file_changes)
+def dag_copy(session: Session, dag: int, file_changes: str = '',
+             dag_suffix: str = ''):
+    builder = DagCopyBuilder(session, dag=dag, file_changes=file_changes,
+                             dag_suffix=dag_suffix)
     builder.build()
 
 

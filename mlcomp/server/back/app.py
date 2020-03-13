@@ -15,6 +15,7 @@ import mlcomp.worker.tasks as celery_tasks
 from mlcomp import TOKEN, WEB_PORT, WEB_HOST, FLASK_ENV, TMP_FOLDER
 from mlcomp.db.enums import TaskStatus, ComponentType
 from mlcomp.db.core import PaginatorOptions, Session
+from mlcomp.db.models.dag import DagTag
 from mlcomp.db.providers import ComputerProvider, ProjectProvider, \
     ReportLayoutProvider, ReportProvider, ModelProvider, ReportImgProvider, \
     DagProvider, DagStorageProvider, TaskProvider, LogProvider, StepProvider, \
@@ -410,6 +411,25 @@ def dags():
     return res
 
 
+@app.route('/api/dag/tag_add', methods=['POST'])
+@requires_auth
+@error_handler
+def dag_tag_add():
+    data = request_data()
+    provider = DagProvider(_write_session)
+    tag = DagTag(dag=data['dag'], tag=data['tag'])
+    provider.add(tag)
+
+
+@app.route('/api/dag/tag_remove', methods=['POST'])
+@requires_auth
+@error_handler
+def dag_tag_remove():
+    data = request_data()
+    provider = DagProvider(_write_session)
+    provider.remove_tag(dag=data['dag'], tag=data['tag'])
+
+
 @app.route('/api/dag/restart', methods=['POST'])
 @requires_auth
 @error_handler
@@ -467,10 +487,15 @@ def space_relation_remove():
 def space_run():
     data = request_data()
     provider = SpaceProvider(_write_session)
-    dag_provider = DagProvider(_write_session)
 
     space = provider.by_id(data['space'], key_column='name')
-    dag = dag_provider.by_id(data['dag'])
+    space_related = provider.related(space.name)
+    for rel in space_related:
+        content = rel.content
+        if data.get('file_changes'):
+            content += '\n' + data['file_changes']
+        dag_copy(_write_session, data['dag'], file_changes=content,
+                 dag_suffix=rel.name)
 
 
 @app.route('/api/space/add', methods=['POST'])

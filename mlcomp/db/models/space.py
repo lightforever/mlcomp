@@ -22,4 +22,11 @@ class SpaceRelation(Base):
                       primary_key=True)
 
 
-__all__ = ['Space', 'SpaceRelation']
+class SpaceTag(Base):
+    __tablename__ = 'space_tag'
+
+    space = sa.Column(sa.String, ForeignKey('space.name'), primary_key=True)
+    tag = sa.Column(sa.String, primary_key=True)
+
+
+__all__ = ['Space', 'SpaceRelation', 'SpaceTag']

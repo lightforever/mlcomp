@@ -31,5 +31,8 @@ class FileProvider(BaseDataProvider):
 
         self.session.commit()
 
+    def by_md5(self, md5):
+        return self.query(File).filter(File.md5 == md5).first()
+
 
 __all__ = ['FileProvider']

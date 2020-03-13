@@ -38,6 +38,7 @@ export class DagsComponent extends Paginator<Dag> {
     id_max: number;
 
     @Input() report: number;
+    @Input() use_select: boolean;
 
     filter_hidden: boolean = true;
     filter_applied_text: string;
@@ -322,5 +323,12 @@ export class DagsComponent extends Paginator<Dag> {
                 'file_changes': ''
             }
         });
+    }
+
+    onSelected(row: any) {
+        if(!this.use_select){
+            return;
+        }
+        this.selected = row;
     }
 }

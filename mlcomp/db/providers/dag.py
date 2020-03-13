@@ -4,7 +4,8 @@ from sqlalchemy import func, or_, case
 
 from mlcomp.db.core import PaginatorOptions
 from mlcomp.db.enums import TaskStatus, TaskType
-from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence
+from mlcomp.db.models import Project, Dag, Task, ReportTasks, TaskDependence, \
+    DagTag
 from mlcomp.db.providers.base import BaseDataProvider
 from mlcomp.utils.misc import to_snake, duration_format, now, parse_time
 
@@ -217,6 +218,11 @@ class DagProvider(BaseDataProvider):
 
     def count(self):
         return self.query(Dag).count()
+
+    def remove_tag(self, dag: int, tag: str):
+        self.query(DagTag).filter(DagTag.dag == dag).filter(
+            DagTag.tag == tag).delete(synchronize_session=False)
+        self.commit()
 
 
 __all__ = ['DagProvider']

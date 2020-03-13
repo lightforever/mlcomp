@@ -1,14 +1,15 @@
-import {Component, Inject} from "@angular/core";
+import {Component, Inject, ViewChild} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 import {SpaceAdd} from "../../models";
 import {SpaceService} from "./space.service";
+import {Helpers} from "../../helpers";
 
 @Component({
     selector: 'space-add-dialog',
     templateUrl: 'space-add-dialog.html',
 })
 export class SpaceAddDialogComponent {
-
+    @ViewChild('textarea') textarea;
     error: string;
 
     constructor(
@@ -46,5 +47,18 @@ export class SpaceAddDialogComponent {
                 }
             });
         }
+    }
+
+    key_down(event) {
+        let content = Helpers.handle_textarea_down_key(event,
+            this.textarea.nativeElement);
+        if (content) {
+            this.data.space.content = content;
+        }
+
+    }
+
+    key_up(event) {
+        this.data.space.content = event.target.value;
     }
 }

@@ -24,4 +24,11 @@ class Dag(Base):
     report_rel = relationship('Report', lazy='noload')
 
 
-__all__ = ['Dag']
+class DagTag(Base):
+    __tablename__ = 'dag'
+
+    dag = sa.Column(sa.Integer, ForeignKey('dag.id'), primary_key=True)
+    tag = sa.Column(sa.String, primary_key=True)
+
+
+__all__ = ['Dag', 'DagTag']

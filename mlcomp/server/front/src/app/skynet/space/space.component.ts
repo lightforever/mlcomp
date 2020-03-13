@@ -74,7 +74,7 @@ export class SpaceComponent extends Paginator<Space> {
 
     run() {
         this.dialog.open(SpaceRunDialogComponent, {
-            width: '1900px', height: '1050px',
+            width: '2000px', height: '900px',
             data: {'space': this.selected.name}
         });
     }

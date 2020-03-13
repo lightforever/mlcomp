@@ -5,6 +5,8 @@
                 #textarea
                 matInput
                 [(ngModel)]="data.file_changes"
+                (keyup)="key_up($event)"
+                (keydown)="key_down($event)"
                 style="height:400px;width: 500px">
 
       </textarea>

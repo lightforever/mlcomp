@@ -1,4 +1,4 @@
-<app-dags>
+<app-dags use_select="True" default_page_size="5">
 
 </app-dags>
 
@@ -6,10 +6,12 @@
     <mat-form-field style="width: 300px">
         <mat-label>File changes</mat-label>
         <textarea
-                #textarea
-                matInput
-                [(ngModel)]="data.file_changes"
-                style="height:20px;width: 300px">
+            #textarea
+            matInput
+            [(ngModel)]="data.file_changes"
+            (keyup)="key_up($event)"
+            (keydown)="key_down($event)"
+            style="height:300px;width: 600px">
 
       </textarea>
     </mat-form-field>
@@ -22,7 +24,9 @@
 </pre>
 
 <div mat-dialog-actions>
-  <button mat-button (click)="onNoClick()">Cancel</button>
-    <button mat-button (click)="on_ok_click()" cdkFocusInitial>Ok</button>
+    <button mat-button (click)="onNoClick()">Cancel</button>
+    <button mat-button (click)="on_ok_click()" cdkFocusInitial
+            [disabled]="!dags.selected">Ok
+    </button>
 </div>
 
