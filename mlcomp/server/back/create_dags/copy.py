@@ -118,7 +118,7 @@ class DagCopyBuilder:
                     f = File(
                         content=content,
                         created=now(),
-                        project=f.project,
+                        project=self.dag_db.project,
                         md5=md5,
                         dag=self.dag_db.id
                     )

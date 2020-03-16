@@ -68,6 +68,10 @@ export class DagsComponent extends Paginator<Dag> {
 
     tags: string[] = [];
 
+    filter_all_tags: string[] = [];
+
+    filter_tags: string [] = [];
+
     constructor(protected service: DagService,
                 protected location: Location,
                 protected router: Router,
@@ -133,8 +137,31 @@ export class DagsComponent extends Paginator<Dag> {
         res.last_activity_max = Helpers.parse_time(this.last_activity_max);
         res.id_min = this.id_min;
         res.id_max = this.id_max;
+        res.tags = this.filter_tags;
 
         return res;
+    }
+
+    update_tags(event = null) {
+        let name = '';
+        if (event) {
+            name = event.target.value;
+        }
+
+        this.service.tags({'name': name}).subscribe(x => {
+            this.tags = x.tags;
+        })
+    }
+
+    update_filter_all_tags(event = null) {
+        let name = '';
+        if (event) {
+            name = event.target.value;
+        }
+
+        this.service.tags({'name': name}).subscribe(x => {
+            this.filter_all_tags = x.tags;
+        })
     }
 
     protected _ngOnInit() {
@@ -341,8 +368,8 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     remove_tag(dag: Dag, tag: string) {
-        dag.tags.splice(dag.tags.indexOf(tag, 1));
         this.service.tag_remove(dag.id, tag).subscribe(res => {
+            this.change.emit();
         });
     }
 
@@ -353,8 +380,8 @@ export class DagsComponent extends Paginator<Dag> {
         // Add our fruit
         if ((value || '').trim()) {
             value = value.trim();
-            dag.tags.push(value);
             this.service.tag_add(dag.id, value).subscribe(res => {
+                this.change.emit();
             });
         }
 
@@ -365,8 +392,37 @@ export class DagsComponent extends Paginator<Dag> {
     }
 
     tag_selected(dag: Dag, event: MatAutocompleteSelectedEvent) {
-         this.service.tag_add(dag.id, event.option.viewValue).subscribe(res => {
-            });
-        dag.tags.push(event.option.viewValue);
+        this.service.tag_add(dag.id, event.option.viewValue).subscribe(res => {
+            this.change.emit();
+        });
+    }
+
+    filter_remove_tag(tag) {
+        let index = this.filter_tags.indexOf(tag);
+        this.filter_tags.splice(index, 1);
+        this.change.emit();
+    }
+
+
+    filter_tag_add(event: MatChipInputEvent) {
+        const input = event.input;
+        let value = event.value;
+
+        // Add our fruit
+        if ((value || '').trim()) {
+            value = value.trim();
+            this.filter_tags.push(value);
+        }
+
+        // Reset the input value
+        if (input) {
+            input.value = '';
+        }
+        this.change.emit();
+    }
+
+    filter_tag_selected(event: MatAutocompleteSelectedEvent) {
+        this.filter_tags.push(event.option.viewValue);
+        this.change.emit();
     }
 }

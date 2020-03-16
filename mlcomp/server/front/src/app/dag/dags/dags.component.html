@@ -77,6 +77,42 @@
                       (ngModelChange)="onchange()">Finished
         </mat-checkbox>
     </section>
+
+    <mat-form-field
+            class="example-chip-list"
+            (click)="update_filter_all_tags()"
+            (keyup)="update_filter_all_tags($event)">
+        <mat-chip-list #chipFilterRelated>
+            <mat-chip
+                    *ngFor="let tag of filter_tags"
+                    [selectable]="false"
+                    [removable]="true"
+                    (removed)="filter_remove_tag(tag)">
+                {{tag}}
+
+
+                <mat-icon matChipRemove
+                          svgIcon="delete"></mat-icon>
+            </mat-chip>
+
+            <input
+                    placeholder="Tags"
+                    [matAutocomplete]="autoFilterRelated"
+                    [matChipInputFor]="chipFilterRelated"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (matChipInputTokenEnd)="filter_tag_add($event)">
+        </mat-chip-list>
+
+        <mat-autocomplete #autoFilterRelated="matAutocomplete"
+                          (optionSelected)="filter_tag_selected($event)">
+            <mat-option *ngFor="let tag of filter_all_tags"
+                        [value]="tag">
+                {{tag}}
+            </mat-option>
+        </mat-autocomplete>
+
+    </mat-form-field>
+
 </div>
 
 <div class="mat-elevation-z8">
@@ -188,32 +224,37 @@
             </th>
 
             <td mat-cell *matCellDef="let element" style="min-width: 120px">
-                <mat-form-field class="example-chip-list">
-                  <mat-chip-list #chipList>
-                    <mat-chip
-                      *ngFor="let tag of element.tags"
-                      [selectable]="false"
-                      [removable]="true"
-                      (removed)="remove_tag(element, tag)">
-                      {{tag}}
-                      <mat-icon matChipRemove svgIcon="delete"></mat-icon>
-                    </mat-chip>
+                <mat-form-field
+                        (click)="update_tags()"
+                        (keyup)="update_tags($event)"
+                        class="example-chip-list">
+                    <mat-chip-list #chipList>
+                        <mat-chip
+                                *ngFor="let tag of element.tags"
+                                [selectable]="false"
+                                [removable]="true"
+                                (removed)="remove_tag(element, tag)">
+                            {{tag}}
+                            <mat-icon matChipRemove
+                                      svgIcon="delete"></mat-icon>
+                        </mat-chip>
 
-                    <input
-                      placeholder=""
-                      [matAutocomplete]="auto"
-                      [matChipInputFor]="chipList"
-                      [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                      (matChipInputTokenEnd)="tag_add(element, $event)">
-                  </mat-chip-list>
+                        <input
+                                placeholder=""
+                                [matAutocomplete]="auto"
+                                [matChipInputFor]="chipList"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="tag_add(element, $event)">
+                    </mat-chip-list>
 
-              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="tag_selected(element, $event)">
-                <mat-option *ngFor="let tag of tags" [value]="tag">
-                  {{tag}}
-                </mat-option>
-              </mat-autocomplete>
+                    <mat-autocomplete #auto="matAutocomplete"
+                                      (optionSelected)="tag_selected(element, $event)">
+                        <mat-option *ngFor="let tag of tags" [value]="tag">
+                            {{tag}}
+                        </mat-option>
+                    </mat-autocomplete>
 
-            </mat-form-field>
+                </mat-form-field>
 
             </td>
         </ng-container>

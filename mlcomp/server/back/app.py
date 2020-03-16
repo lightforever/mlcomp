@@ -507,14 +507,15 @@ def space_run():
     data = request_data()
     provider = SpaceProvider(_write_session)
 
-    space = provider.by_id(data['space'], key_column='name')
-    space_related = provider.related(space.name)
-    for rel in space_related:
-        content = rel.content
-        if data.get('file_changes'):
-            content += '\n' + data['file_changes']
-        dag_copy(_write_session, data['dag'], file_changes=content,
-                 dag_suffix=rel.name)
+    for space in data['spaces']:
+        space = provider.by_id(space, key_column='name')
+        space_related = provider.related(space.name)
+        for rel in space_related:
+            content = rel.content
+            if data.get('file_changes'):
+                content += '\n' + data['file_changes']
+            dag_copy(_write_session, data['dag'], file_changes=content,
+                     dag_suffix=rel.name)
 
 
 @app.route('/api/space/add', methods=['POST'])
@@ -561,6 +562,24 @@ def space_remove():
     data = request_data()
     provider = SpaceProvider(_write_session)
     provider.remove(data['name'], key_column='name')
+
+
+@app.route('/api/space/tags', methods=['POST'])
+@requires_auth
+@error_handler
+def space_tags():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    return provider.tags(data['name'])
+
+
+@app.route('/api/space/names', methods=['POST'])
+@requires_auth
+@error_handler
+def space_names():
+    data = request_data()
+    provider = SpaceProvider(_write_session)
+    return provider.names(data['name'])
 
 
 @app.route('/api/memories', methods=['POST'])
@@ -763,6 +782,15 @@ def task_info():
         'result': task.result or '',
         'id': task.id
     }
+
+
+@app.route('/api/dag/tags', methods=['POST'])
+@requires_auth
+@error_handler
+def dag_tags():
+    data = request_data()
+    provider = DagProvider(_write_session)
+    return provider.tags(data['name'])
 
 
 @app.route('/api/dag/stop', methods=['POST'])

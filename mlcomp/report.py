@@ -6,16 +6,16 @@ from os.path import dirname, join, basename, exists
 
 import pandas as pd
 import migrate.versioning.api as api
+
+from mlcomp.worker.tasks import kill
 from mlcomp.utils.io import zip_folder
-
 from mlcomp.db.enums import LogStatus, ComponentType
-
 from mlcomp import SA_CONNECTION_STRING, REPORT_FOLDER, LOG_FOLDER, DB_TYPE, \
     CONFIG_FOLDER, ROOT_FOLDER, DATA_FOLDER, MODEL_FOLDER, TASK_FOLDER, \
     DB_FOLDER, TMP_FOLDER
 from mlcomp.utils.misc import now, to_snake
-
 from mlcomp.db.providers import DagProvider, LogProvider
+from mlcomp.worker.app import app as celery
 
 
 def statuses(folder: str = None):
@@ -67,6 +67,20 @@ def statuses(folder: str = None):
         'name': 'Database',
         'status': database_status,
         'comment': database_comment
+    })
+
+    redis_status = 'OK'
+    redis_comment = f''
+    try:
+        celery.backend.client.echo(1)
+    except Exception:
+        redis_status = 'ERROR'
+        redis_comment += ' ' + traceback.format_exc()
+
+    rows.append({
+        'name': 'Redis',
+        'status': redis_status,
+        'comment': redis_comment
     })
 
     if database_status == 'OK':

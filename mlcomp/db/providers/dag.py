@@ -42,6 +42,10 @@ class DagProvider(BaseDataProvider):
             query = query.having(last_activity <= last_activity_max)
         if filter.get('report'):
             query = query.filter(Dag.report is not None)
+
+        tags = filter.get('tags', [])
+        if len(tags) > 0:
+            query = query.join(DagTag).filter(DagTag.tag.in_(tags))
         return query
 
     def get(self, filter: dict, options: PaginatorOptions = None):
@@ -157,19 +161,13 @@ class DagProvider(BaseDataProvider):
                 if r['id'] == t.dag:
                     r['tags'].append(t.tag)
 
-        tag_count = func.count(DagTag.tag).label('count')
-        tags = self.query(DagTag.tag, tag_count).group_by(
-            DagTag.tag).order_by(tag_count.desc()).limit(10)
-        tags = [t for t, c in tags]
-
         projects = self.query(Project.name, Project.id). \
             order_by(Project.id.desc()). \
             limit(20). \
             all()
 
         projects = [{'name': name, 'id': id} for name, id in projects]
-        return {'total': total, 'data': res, 'projects': projects,
-                'tags': tags}
+        return {'total': total, 'data': res, 'projects': projects}
 
     def config(self, id: int):
         return self.by_id(id).config
@@ -239,6 +237,17 @@ class DagProvider(BaseDataProvider):
         self.query(DagTag).filter(DagTag.dag == dag).filter(
             DagTag.tag == tag).delete(synchronize_session=False)
         self.commit()
+
+    def tags(self, name: str):
+        tag_count = func.count(DagTag.tag).label('count')
+        query = self.query(DagTag.tag, tag_count)
+        if name:
+            query = query.filter(DagTag.tag.contains(name))
+
+        tags = query.group_by(
+            DagTag.tag).order_by(tag_count.desc()).limit(10)
+        tags = [t for t, c in tags]
+        return {'tags': tags}
 
 
 __all__ = ['DagProvider']

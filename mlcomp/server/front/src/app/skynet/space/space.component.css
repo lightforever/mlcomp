@@ -5,7 +5,7 @@ table {
 
 .column {
   float: left;
-  width: 50%;
+  width: 45%;
 }
 
 /* Clear floats after the columns */

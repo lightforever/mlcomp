@@ -16,6 +16,11 @@ class SpaceProvider(BaseDataProvider):
 
         if filter.get('name'):
             query = query.filter(Space.name.contains(filter['name']))
+
+        tags = filter.get('tags', [])
+        if len(tags) > 0:
+            query = query.join(SpaceTag).filter(SpaceTag.tag.in_(tags))
+
         if filter.get('parent'):
             relation = literal_column('1').label('relation')
             query2 = self.query(Space, relation). \
@@ -44,16 +49,21 @@ class SpaceProvider(BaseDataProvider):
                 if d['name'] == t.space:
                     d['tags'].append(t.tag)
 
-        tag_count = func.count(SpaceTag.tag).label('count')
-        tags = self.query(SpaceTag.tag, tag_count).group_by(
-            SpaceTag.tag).order_by(tag_count.desc()).limit(10)
-        tags = [t for t, c in tags]
-
         return {
             'total': total,
-            'data': data,
-            'tags': tags
+            'data': data
         }
+
+    def tags(self, name: str):
+        tag_count = func.count(SpaceTag.tag).label('count')
+        query = self.query(SpaceTag.tag, tag_count)
+        if name:
+            query = query.filter(SpaceTag.tag.contains(name))
+
+        tags = query.group_by(
+            SpaceTag.tag).order_by(tag_count.desc()).limit(10)
+        tags = [t for t, c in tags]
+        return {'tags': tags}
 
     def add_relation(self, parent: str, child: str):
         self.add(SpaceRelation(parent=parent, child=child))
@@ -77,6 +87,15 @@ class SpaceProvider(BaseDataProvider):
             SpaceTag.tag == tag).delete(synchronize_session=False)
 
         self.session.commit()
+
+    def names(self, name: str):
+        query = self.query(Space.name)
+        if name:
+            query = query.filter(Space.name.contains(name))
+
+        res = query.group_by(Space.name).order_by(Space.name).limit(10).all()
+        res = [r[0] for r in res]
+        return {'names': res}
 
 
 __all__ = ['SpaceProvider']

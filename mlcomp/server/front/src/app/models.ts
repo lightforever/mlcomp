@@ -190,6 +190,7 @@ export class DagFilter {
     last_activity_max: Date;
     id_min: number;
     id_max: number;
+    tags: string[];
 }
 
 export class TaskFilter {
@@ -467,15 +468,24 @@ export class SpaceAdd {
 export class SpaceFilter {
     paginator: PaginatorFilter;
     name: string;
+    tags: string[];
 }
 
 export class SpaceRun {
     dag: number;
-    space: string;
+    spaces: string[];
     file_changes: string;
 }
 
 export class DagRestart {
     dag: number;
     file_changes: string;
+}
+
+export class TagResult extends BaseResult{
+    tags: string[];
+}
+
+export class NamesResult extends BaseResult{
+    names: string[];
 }

@@ -1,5 +1,8 @@
 import os
 from multiprocessing import cpu_count
+from time import sleep
+
+from subprocess import Popen
 
 import click
 
@@ -48,8 +51,6 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
 
     It starts: redis-server, site, worker_supervisor, workers
     """
-    check_statuses()
-
     # creating supervisord config
     supervisor_command = 'mlcomp-worker worker-supervisor'
     worker_command = 'mlcomp-worker worker'
@@ -67,12 +68,25 @@ def start(daemon: bool, debug: bool, workers: int, log_level: str):
     daemon_text = 'false' if daemon else 'true'
     text = [
         '[supervisord]', f'nodaemon={daemon_text}', '',
+        '[program:redis]', f'command={redis_path} --port {REDIS_PORT}'
+                           f' --requirepass {REDIS_PASSWORD}',
+    ]
+    conf = os.path.join(CONFIG_FOLDER, 'supervisord-redis.conf')
+    with open(conf, 'w') as f:
+        f.writelines('\n'.join(text))
+
+    Popen(
+        ['supervisord', f'--configuration={conf}', f'--loglevel={log_level}'])
+
+    sleep(5)
+    check_statuses()
+
+    daemon_text = 'false' if daemon else 'true'
+    text = [
+        '[supervisord]', f'nodaemon={daemon_text}', '',
         '[program:supervisor]',
         f'command={supervisor_command}', 'autostart=true', 'autorestart=true',
-        '', '[program:redis]', f'command={redis_path} --port {REDIS_PORT}'
-                               f' --requirepass {REDIS_PASSWORD}',
-        'autostart=true',
-        'autorestart=true', '',
+        '',
         '[program:server]',
         f'command={server_command}',
         'autostart=true',

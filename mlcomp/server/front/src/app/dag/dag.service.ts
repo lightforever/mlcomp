@@ -5,7 +5,7 @@ import {catchError} from "rxjs/operators";
 import {
     BaseResult,
     DagRestart,
-    DagStopResult,
+    DagStopResult, TagResult,
     ToogleReportResult
 } from "../models";
 
@@ -103,4 +103,13 @@ export class DagService extends BaseService {
             catchError(this.handleError<BaseResult>(message, new BaseResult()))
         );
     }
+
+    tags(data) {
+        let message = `${this.constructor.name}.tags`;
+        let url = AppSettings.API_ENDPOINT + this.single_part + '/tags';
+        return this.http.post<TagResult>(url, data).pipe(
+            catchError(this.handleError<TagResult>(message, new TagResult()))
+        );
+    }
+
 }
