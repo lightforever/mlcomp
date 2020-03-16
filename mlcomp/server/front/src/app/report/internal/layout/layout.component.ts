@@ -98,26 +98,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
             }
         }
 
-        for (let child of this.item.items) {
-            if (child.type == 'series' && child.source == '_other') {
-                for (let name of Object.getOwnPropertyNames(this.data)) {
-                    let value = this.data[name];
-                    if(value.mapped){
-                        continue
-                    }
-                    if (!Array.isArray(value) || value.length == 0 || !value[0].source) {
-                        continue
-                    }
-                    let subchildren = SeriesComponent.create(child, value);
+        setTimeout(() => {
+            for (let child of this.item.items) {
+                if (child.type == 'series' && child.source == '_other') {
+                    for (let name of Object.getOwnPropertyNames(this.data)) {
+                        let value = this.data[name];
+                        if (value.mapped) {
+                            continue
+                        }
+                        if (!Array.isArray(value) || value.length == 0 || !value[0].source) {
+                            continue
+                        }
+                        let subchildren = SeriesComponent.create(child, value);
 
-                    for (let s of subchildren) {
-                        this.items_joined.push(s[0]);
-                        this.items_joined_data.push(s[1]);
+                        for (let s of subchildren) {
+                            this.items_joined.push(s[0]);
+                            this.items_joined_data.push(s[1]);
+                        }
                     }
+
                 }
-
             }
-        }
+        }, 1000);
     }
 
     td_width(child: ReportItem) {
