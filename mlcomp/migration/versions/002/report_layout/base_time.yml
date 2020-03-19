@@ -1,0 +1,15 @@
+layout:
+  - type: panel
+    title: base
+    expanded: False
+    parent_cols: 2
+    row_height: 400
+    items:
+      - type: series
+        source: _timer/_fps
+      - type: series
+        source: _timer/data_time
+      - type: series
+        source: _timer/model_time
+      - type: series
+        source: _timer/batch_time

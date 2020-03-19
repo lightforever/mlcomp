@@ -17,8 +17,21 @@ def main():
 
 
 @main.command()
+@click.argument('path')
+@click.option('--n_splits', type=int, default=5)
+def split_pandas(path: str, n_splits: int):
+    output = join(current_folder, 'fold.csv')
+    df = pd.read_csv(path)
+    folds = file_group_kfold(n_splits,
+                             image=df[df.columns[0]]
+                             )
+    df['fold'] = folds['fold']
+    df.to_csv(output)
+
+
+@main.command()
 @click.argument('img_path')
-@click.argument('n_splits', type=int)
+@click.option('--n_splits', type=int, default=5)
 @click.option('--group-regex')
 def split_classify(img_path: str,
                    n_splits: int,
@@ -47,7 +60,7 @@ def split_classify(img_path: str,
 @main.command()
 @click.argument('img_path')
 @click.argument('mask_path')
-@click.argument('n_splits', type=int)
+@click.option('--n_splits', type=int, default=5)
 @click.option('--group-regex')
 def split_segment(img_path: str,
                   mask_path: str,

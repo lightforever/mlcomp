@@ -9,7 +9,8 @@ import torch
 from catalyst.utils import set_global_seed, \
     import_experiment_and_runner, parse_args_uargs, dump_environment, \
     load_checkpoint
-from catalyst.dl import State, Callback, Runner, CheckpointCallback
+from catalyst.dl import State, Callback, Runner, CheckpointCallback, \
+    CallbackNode
 
 from mlcomp import TASK_FOLDER
 from mlcomp.db.providers import ReportSeriesProvider, ComputerProvider, \
@@ -78,6 +79,7 @@ class Catalyst(Executor, Callback):
         self.last_batch_logged = None
         self.loader_started_time = None
         self.parent = None
+        self.node = CallbackNode.All
 
     def get_parent_task(self):
         if self.parent:
@@ -116,8 +118,10 @@ class Catalyst(Executor, Callback):
         task.epoch_duration = duration
         task.epoch_time_remaining = int(duration * (
                 task.batch_total / task.batch_index)) - task.epoch_duration
-        if state.loader_metrics.get('loss') is not None:
-            task.loss = float(state.loader_metrics['loss'])
+        if state.epoch_metrics.get('train_loss') is not None:
+            task.loss = float(state.epoch_metrics['train_loss'])
+        if state.epoch_metrics.get('valid_loss') is not None:
+            task.loss = float(state.epoch_metrics['valid_loss'])
 
         self.task_provider.update()
         self.last_batch_logged = now()
@@ -214,12 +218,22 @@ class Catalyst(Executor, Callback):
         os.environ['WORLD_SIZE'] = str(info['world_size'])
 
         os.environ['RANK'] = str(info['rank'])
+        os.environ['LOCAL_RANK'] = "0"
         distributed_params = config.get('distributed_params', {})
         distributed_params['rank'] = info['rank']
         config['distributed_params'] = distributed_params
 
+        torch.cuda.set_device(0)
+
+        torch.distributed.init_process_group(
+            backend="nccl", init_method="env://"
+        )
+
         if info['rank'] > 0:
             self.master = False
+            self.node = CallbackNode.Worker
+        else:
+            self.node = CallbackNode.Master
 
     def parse_args_uargs(self):
         args, config = parse_args_uargs(self.args, [])

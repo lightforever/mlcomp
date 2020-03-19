@@ -156,7 +156,7 @@ export class SeriesComponent implements OnInit {
     private static create_single_task(data) {
         let first = data[0];
         let plot: SeriesItem = {
-            'name': first.source +
+            'name': first.name +
                 ' - ' + first.task_name,
             'series': [],
             'layout': null
@@ -177,7 +177,7 @@ export class SeriesComponent implements OnInit {
             d = Helpers.clone(d);
             if (!(d[key] in by_key)) {
                 by_key[d[key]] = {
-                    'name': d.source + ' - ' +
+                    'name': d.name + ' - ' +
                         (key == 'group' ?
                             d[key] :
                             d['task_name']), 'series': []

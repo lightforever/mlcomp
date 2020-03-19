@@ -6,12 +6,12 @@ from sklearn.model_selection import GroupKFold
 
 
 def file_group_kfold(
-    n_splits: int,
-    output: str,
-    get_group=None,
-    sort=False,
-    must_equal=(),
-    **files
+        n_splits: int,
+        output: str = None,
+        get_group=None,
+        sort=False,
+        must_equal=(),
+        **files
 ):
     assert len(files) > 0, 'at lease 1 type of files is required'
     fold = GroupKFold(n_splits)
@@ -55,4 +55,6 @@ def file_group_kfold(
         df.loc[test_index, 'fold'] = i
 
     df = df.sample(frac=1)
-    df.to_csv(output, index=False)
+    if output:
+        df.to_csv(output, index=False)
+    return df

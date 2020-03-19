@@ -11,9 +11,12 @@ from mlcomp.db.report_info.series import ReportLayoutSeries
 
 class ReportLayoutInfo:
     def __init__(self, data: dict):
-        assert 'items' in data, 'items is required'
-        assert 'metric' in data, 'metric is required'
-        assert 'layout' in data, 'layout is required'
+        data['items'] = data.get('items', {})
+        data['metric'] = data.get('metric', {
+            'minimize': True,
+            'name': 'loss'
+        })
+        data['layout'] = data.get('layout', [])
 
         self.data = data
         self.series = self._get_series()
@@ -22,7 +25,7 @@ class ReportLayoutInfo:
         self.f1 = self._get_f1()
         self.img_classify = self._get_img_classify()
         self.img_segment = self._get_img_segment()
-        self.layout = {'type': 'root', 'items': data.get('layout', [])}
+        self.layout = {'type': 'root', 'items': data['layout']}
         self._check_layout(self.layout)
 
     def _check_layout(self, item):

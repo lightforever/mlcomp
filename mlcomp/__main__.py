@@ -11,15 +11,16 @@ from mlcomp.utils.io import yaml_load, yaml_dump
 from mlcomp.contrib.search.grid import grid_cells
 from mlcomp.migration.manage import migrate as _migrate
 from mlcomp import ROOT_FOLDER, IP, PORT, \
-    WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS, CONFIG_FOLDER
+    WORKER_INDEX, SYNC_WITH_THIS_COMPUTER, CAN_PROCESS_TASKS, CONFIG_FOLDER, \
+    DOCKER_IMG, MASTER_PORT_RANGE
 from mlcomp.db.core import Session
 from mlcomp.db.enums import DagType, ComponentType, TaskStatus
-from mlcomp.db.models import Computer
+from mlcomp.db.models import Computer, Docker
 from mlcomp.db.providers import \
     ComputerProvider, \
     TaskProvider, \
     StepProvider, \
-    ProjectProvider
+    ProjectProvider, DockerProvider
 from mlcomp.report import create_report, check_statuses
 from mlcomp.utils.config import merge_dicts_smart, dict_from_list_str
 from mlcomp.utils.logging import create_logger
@@ -93,6 +94,16 @@ def _create_computer():
     ComputerProvider(_session).create_or_update(computer, 'name')
 
 
+def _create_docker():
+    docker = Docker(
+        name=DOCKER_IMG,
+        computer=socket.gethostname(),
+        ports='-'.join(list(map(str, MASTER_PORT_RANGE))),
+        last_activity=now()
+    )
+    DockerProvider(_session).create_or_update(docker, 'name', 'computer')
+
+
 @click.group()
 def main():
     pass
@@ -123,7 +134,9 @@ def report():
 @click.option('--params', multiple=True)
 def execute(config: str, debug: bool, params):
     check_statuses()
+
     _create_computer()
+    _create_docker()
 
     # Fail all InProgress Tasks
     logger = create_logger(_session, __name__)
@@ -179,7 +192,9 @@ def sync(project: str, computer: str, only_from: bool, only_to: bool,
     Syncs specified project on this computer with other computers
     """
     check_statuses()
+
     _create_computer()
+    _create_docker()
 
     computer = computer or socket.gethostname()
     provider = ComputerProvider(_session)

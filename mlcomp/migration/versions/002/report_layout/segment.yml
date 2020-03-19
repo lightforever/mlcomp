@@ -1,16 +1,8 @@
-extend: base
+extend: base_time
 
 metric:
   name: dice
   minimize: False
-
-items:
-  loss:
-    type: series
-    key: loss
-  dice:
-    type: series
-    key: dice
 
 layout:
   - type: panel

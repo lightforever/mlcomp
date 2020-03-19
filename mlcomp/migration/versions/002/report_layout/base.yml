@@ -1,33 +1,13 @@
-metric:
-  name: loss
-  minimize: True
-
-items:
-  _timer/_fps:
-    type: series
-    key: _timer/_fps
-  _timer/data_time:
-    type: series
-    key: _timer/data_time
-  _timer/model_time:
-    type: series
-    key: _timer/model_time
-  _timer/batch_time:
-    type: series
-    key: _timer/batch_time
+extend: base_time
 
 layout:
   - type: panel
-    title: base
-    expanded: False
-    parent_cols: 2
-    row_height: 400
+    title: main
+    parent_cols: 1
+    row_height: 300
     items:
+      - type: table
+        source: [loss]
+        cols: 1
       - type: series
-        source: _timer/_fps
-      - type: series
-        source: _timer/data_time
-      - type: series
-        source: _timer/model_time
-      - type: series
-        source: _timer/batch_time
+        source: _other

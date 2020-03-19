@@ -1,5 +1,7 @@
 import base64
 import pickle
+from collections import defaultdict
+
 from itertools import groupby
 from typing import List
 
@@ -44,7 +46,7 @@ class ReportProvider(BaseDataProvider):
         total = query.count()
         data = []
         for report, task_count, tasks_not_finished in self.paginator(
-            query, options
+                query, options
         ):
             item = {
                 'id': report.id,
@@ -58,9 +60,9 @@ class ReportProvider(BaseDataProvider):
         return {'total': total, 'data': data}
 
     def _detail_series(
-        self, series: List[ReportSeries], r: ReportLayoutSeries
+            self, series: List[ReportSeries], name: str, result_key: str
     ):
-        series = [s for s in series if s.name == r.name]
+        series = [s for s in series if s.name == name]
         res = []
 
         series = sorted(series, key=lambda x: x.part)
@@ -83,8 +85,8 @@ class ReportProvider(BaseDataProvider):
                         'group': key,
                         'task_name': group_task[0].task_rel.name,
                         'task_id': task_key,
-                        'source': r.key,
-                        'name': r.name
+                        'source': name,
+                        'name': result_key
                     }
                 )
 
@@ -157,8 +159,17 @@ class ReportProvider(BaseDataProvider):
             options(joinedload(ReportSeries.task_rel, innerjoin=True)).all()
 
         items = dict()
+        series_names = set([s.name for s in series])
+        series_map = defaultdict(list)
         for s in report.series:
-            items[s.name] = self._detail_series(series, s)
+            series_map[s.key].append(s)
+
+        for name in series_names:
+            report_series = series_map.get(name, [
+                ReportLayoutSeries(name=name, key=name)])
+
+            for s in report_series:
+                items[s.name] = self._detail_series(series, s.key, s.name)
 
         for element in report.precision_recall + report.f1:
             items[element.name] = self._detail_single_img(id, element)
