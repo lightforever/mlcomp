@@ -112,6 +112,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
                         let subchildren = SeriesComponent.create(child, value);
 
                         for (let s of subchildren) {
+                            s[0].source = name;
+
                             this.items_joined.push(s[0]);
                             this.items_joined_data.push(s[1]);
                         }
@@ -119,7 +121,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
                 }
             }
-        }, 1000);
+        }, 500);
     }
 
     td_width(child: ReportItem) {
