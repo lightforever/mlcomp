@@ -15,8 +15,10 @@ cd mlcomp
 rm -rf *
 cp -a $TEMP/builds/* .
 
-git config --global user.email "teamcity@catalyst.github"
-git config --global user.name "Teamcity"
-git add .
-git commit -m "$COMMENT"
-git push
+if [ $GIT_BRANCH == 'refs/heads/master' ]; then
+  git config --global user.email "teamcity@catalyst.github"
+  git config --global user.name "Teamcity"
+  git add .
+  git commit -m "$COMMENT"
+  git push
+fi

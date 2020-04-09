@@ -5,7 +5,6 @@ import {Location} from "@angular/common";
 import {LayoutsService} from "./layouts.service";
 import {MatDialog} from "@angular/material";
 import {LayoutAddDialogComponent} from "./layout-add-dialog";
-import {el} from "@angular/platform-browser/testing/src/browser_util";
 import {Helpers} from "../../helpers";
 
 @Component({

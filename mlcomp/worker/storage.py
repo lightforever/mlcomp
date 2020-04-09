@@ -87,7 +87,7 @@ class Storage:
         self.library_provider.add_all(l_news)
 
     def _build_spec(self, folder: str):
-        ignore_file = os.path.join(folder, 'file.ignore.txt')
+        ignore_file = os.path.join(folder, '.ignore')
         if not os.path.exists(ignore_file):
             ignore_patterns = []
         else:

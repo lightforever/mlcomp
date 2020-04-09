@@ -77,7 +77,9 @@ class Submit(Executor):
             wait_seconds: int = 60 * 20,
             file: str = None,
             max_size: int = None,
+            datasets: List[str] = (),
             folders: List[str] = (),
+            files: List[str] = (),
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -92,6 +94,8 @@ class Submit(Executor):
         self.kernel_suffix = kernel_suffix
         self.message = message
         self.folders = folders
+        self.datasets = datasets
+        self.files = files
 
         if not file and hasattr(self, 'model_name'):
             file = f'data/submissions/{self.model_name}_{self.suffix}.csv'
@@ -116,13 +120,15 @@ class Submit(Executor):
         os.makedirs(folder, exist_ok=True)
 
         total_size = sum([du(f) for f in self.folders])
+        total_size += sum([du(f) for f in self.files])
+
         if self.max_size:
             assert total_size < self.max_size, \
                 f'max_size = {self.max_size} Gb. Current size = {total_size}'
 
         config = api.read_config_file()
         username = config['username']
-        competition = f'deepfake-detection-challenge'
+        competition = self.competition
         dataset_meta = {
             'competition': f'{competition}',
             'id': f'{username}/{competition}-api-dataset',
@@ -137,7 +143,7 @@ class Submit(Executor):
         self.info('\tzipping folders')
 
         dst = os.path.join(folder, 'dataset.zip')
-        zip_folder(folders=self.folders, dst=dst)
+        zip_folder(folders=self.folders, dst=dst, files=self.files)
 
         self.info('\tfolders are zipped. uploading dataset')
         if not any(d.ref == dataset_meta['id'] for d in
@@ -151,13 +157,14 @@ class Submit(Executor):
         self.info('dataset uploaded. starting kernel')
 
         # dataset update time
-        time.sleep(10)
+        time.sleep(30)
 
         slug = 'predict'
 
         def push_notebook(file: str, slug: str):
             shutil.copy(file, os.path.join(folder, 'predict.ipynb'))
 
+            datasets = [dataset_meta['id']] + list(self.datasets)
             kernel_meta = {
                 'id': f'{username}/{slug}',
                 'code_file': 'predict.ipynb',
@@ -166,7 +173,7 @@ class Submit(Executor):
                 'is_private': 'true',
                 'enable_gpu': 'true',
                 'enable_internet': 'false',
-                'dataset_sources': [dataset_meta['id']],
+                'dataset_sources': datasets,
                 'competition_sources': [competition],
                 'title': f'{slug}',
                 'kernel_sources': []
@@ -181,35 +188,6 @@ class Submit(Executor):
         self.info('kernel is pushed. waiting for the end of the commit')
 
         self.info(f'kernel address: https://www.kaggle.com/{username}/{slug}')
-
-        for i in range(10 ** 6):
-            response = api.kernel_status(username, slug)
-            if response['status'] == 'complete':
-                self.info(f'kernel has completed successfully. '
-                          f'Pushing predict-full notebook')
-
-                path = '/tmp/predict.ipynb'
-                data = json.load(open('predict.ipynb'))
-                for cell in data['cells']:
-                    if cell['cell_type'] == 'code' \
-                            and 'source' in cell \
-                            and len(cell['source']) == 1 \
-                            and any('max_count' in s for s in cell['source']):
-                        cell['source'] = ['max_count = None']
-
-                open(path, 'w').write(json.dumps(data))
-                push_notebook(path, 'predict-full')
-
-                self.info(f'Please go to '
-                          f'https://www.kaggle.com/{username}/{slug}-full '
-                          f'and push the button "Submit to the competition"')
-                return
-
-            if response['status'] == 'error':
-                raise Exception(
-                    f'Kernel is failed. Msg = {response["failureMessage"]}'
-                )
-            time.sleep(1)
 
     def work(self):
         if self.submit_type == 'file':

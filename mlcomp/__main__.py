@@ -248,8 +248,10 @@ def submit():
     submit = Submit(
         competition=data['competition'],
         submit_type='kernel',
-        max_size=data['max_size'],
-        folders=data['folders']
+        max_size=data.get('max_size', 1),
+        folders=data.get('folders', []),
+        datasets=data.get('datasets', []),
+        files=data.get('files', [])
     )
     submit.work()
 

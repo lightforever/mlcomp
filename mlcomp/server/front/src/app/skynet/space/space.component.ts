@@ -238,7 +238,7 @@ export class SpaceComponent extends Paginator<Space> {
 
     add() {
         const dialogRef = this.dialog.open(SpaceAddDialogComponent, {
-            width: '600px', height: '700px',
+            width: '1000px', height: '700px',
             data: {method: 'add', space: {'name': ''}}
         });
 
@@ -249,7 +249,7 @@ export class SpaceComponent extends Paginator<Space> {
 
     edit() {
         const dialogRef = this.dialog.open(SpaceAddDialogComponent, {
-            width: '600px', height: '700px',
+            width: '1000px', height: '700px',
             data: {method: 'edit', space: Helpers.clone(this.selected)}
         });
 
@@ -260,7 +260,7 @@ export class SpaceComponent extends Paginator<Space> {
 
     copy() {
         const dialogRef = this.dialog.open(SpaceAddDialogComponent, {
-            width: '600px', height: '700px',
+            width: '800px', height: '700px',
             data: {
                 method: 'copy',
                 space: Helpers.clone(this.selected),

@@ -51,6 +51,7 @@ def zip_folder(
         folder: str = None,
         dst: str = None,
         folders: List[str] = (),
+        files: List[str] = (),
         root: bool = None
 ):
     if root is None and len(folders) > 0:
@@ -72,6 +73,9 @@ def zip_folder(
                     if root:
                         rel_path = join(os.path.basename(folder), rel_path)
                     zip_obj.write(filePath, rel_path)
+
+        for file in files:
+            zip_obj.write(file, file)
     return dst
 
 

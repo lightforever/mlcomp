@@ -107,11 +107,18 @@ class DagCopyBuilder:
                 continue
 
             replace = self.find_replace(changes, s.path)
-            if replace is not None and f and s.path.endswith('.yml'):
+            if replace is not None and f:
                 content = f.content.decode('utf-8')
-                data = yaml_load(content)
-                data = merge_dicts_smart(data, replace)
-                content = yaml_dump(data).encode('utf-8')
+                if s.path.endswith('.yml'):
+                    data = yaml_load(content)
+                    data = merge_dicts_smart(data, replace)
+                    content = yaml_dump(data)
+                else:
+                    for k, v in replace:
+                        if k not in content:
+                            raise Exception(f'{k} is not in the content')
+                        content = content.replace(k, v)
+                content = content.encode('utf-8')
                 md5 = hashlib.md5(content).hexdigest()
                 f = self.file_provider.by_md5(md5)
                 if not f:
