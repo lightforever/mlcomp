@@ -3,19 +3,16 @@
 ![MLComp logo](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/pics/MLcomp.png)
 
 **Distributed directed acyclic graph framework for machine learning with UI**
- 
+
+[![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon.svg)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
 [![PyPI Status](https://pepy.tech/badge/mlcomp)](https://pepy.tech/project/mlcomp)
-[![Github contributors](https://img.shields.io/github/contributors/catalyst-team/mlcomp.svg?logo=github&logoColor=white)](https://github.com/catalyst-team/mlcomp/graphs/contributors)
-[![License](https://img.shields.io/github/license/catalyst-team/mlcomp.svg)](LICENSE)
 
-[![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon.svg)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
-[![Telegram](./docs/imgs/telegram.svg)](https://t.me/catalyst_team)
-[![Gitter](https://badges.gitter.im/catalyst-team/community.svg)](https://gitter.im/catalyst-team/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Spectrum](https://img.shields.io/badge/chat-on%20spectrum-blueviolet)](https://spectrum.chat/catalyst)
-[![Slack](./docs/imgs/slack.svg)](https://opendatascience.slack.com/messages/CGK4KQBHD)
-[![Donate](https://raw.githubusercontent.com/catalyst-team/catalyst-pics/master/third_party_pics/patreon.png)](https://www.patreon.com/catalyst_team)
+[![Twitter](https://img.shields.io/badge/news-on%20twitter-499feb)](https://twitter.com/catalyst_core)
+[![Telegram](https://img.shields.io/badge/channel-on%20telegram-blue)](https://t.me/catalyst_team)
+[![Slack](https://img.shields.io/badge/Catalyst-slack-success)](https://join.slack.com/t/catalyst-team-core/shared_invite/zt-d9miirnn-z86oKDzFMKlMG4fgFdZafw)
+[![Github contributors](https://img.shields.io/github/contributors/catalyst-team/mlcomp.svg?logo=github&logoColor=white)](https://github.com/catalyst-team/mlcomp/graphs/contributors)
 
 </div>
 
