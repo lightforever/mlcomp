@@ -4,7 +4,7 @@
 
 **Distributed directed acyclic graph framework for machine learning with UI**
 
-[![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Deploy/statusIcon.svg)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
+[![Build Status](http://66.248.205.49:8111/app/rest/builds/buildType:id:MLComp_Tests/statusIcon.svg)](http://66.248.205.49:8111/project.html?projectId=MLComp&tab=projectOverview&guest=1) 
 [![Pipi version](https://img.shields.io/pypi/v/mlcomp.svg)](https://pypi.org/project/mlcomp/)
 [![Docs](https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fmlcomp%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v)](https://catalyst-team.github.io/mlcomp/index.html)
 [![PyPI Status](https://pepy.tech/badge/mlcomp)](https://pepy.tech/project/mlcomp)
