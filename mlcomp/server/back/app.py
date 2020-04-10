@@ -529,16 +529,17 @@ def space_run():
                 res[k] = d2[k]
         return res
 
+    suffix = []
     for space in data['spaces']:
         if space['logic'] == 'and':
             space = provider.by_id(space['value'], key_column='name')
             if space.content:
                 d = yaml_load(space.content)
                 file_changes = merge(file_changes, d)
+                suffix.append(space.name)
 
-    has_or = any(s['logic'] == 'or' for s in data['spaces'])
     for space in data['spaces']:
-        if space['logic'] != 'or' and has_or:
+        if space['logic'] != 'or':
             continue
         space = provider.by_id(space['value'], key_column='name')
         space_related = provider.related(space.name)
@@ -550,9 +551,13 @@ def space_run():
             d = yaml_load(content)
             d = merge(file_changes, d)
 
+            dag_suffix = ' '.join(suffix+rel.name)
             dag_copy(_write_session, data['dag'], file_changes=yaml_dump(d),
-                     dag_suffix=rel.name)
+                     dag_suffix=dag_suffix)
 
+    if not any(s['logic'] == 'or' for s in data['spaces']):
+        dag_copy(_write_session, data['dag'], file_changes=yaml_dump(file_changes),
+                 dag_suffix=' '.join(suffix))
 
 @app.route('/api/space/add', methods=['POST'])
 @requires_auth
