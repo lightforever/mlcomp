@@ -72,6 +72,26 @@ export class SpaceComponent extends Paginator<Space> {
                 'assets/img/pin.svg'));
     }
 
+    get chosen_spaces_or() {
+        let res = [];
+        for (let s of this.chosen_spaces) {
+            if (s.type == 'tmp' || s.logic == 'or') {
+                res.push(s);
+            }
+        }
+        return res;
+    }
+
+    get chosen_spaces_and() {
+        let res = [];
+        for (let s of this.chosen_spaces) {
+            if (s.type == 'tmp' || s.logic == 'and') {
+                res.push(s);
+            }
+        }
+        return res;
+    }
+
     filter_remove_tag(tag) {
         let index = this.filter_tags.indexOf(tag);
         this.filter_tags.splice(index, 1);
@@ -133,21 +153,28 @@ export class SpaceComponent extends Paginator<Space> {
         this.chosen_spaces.splice(index, 1);
     }
 
-    chosen_fix_space(space) {
-        space.type = 'const';
+    chosen_fix_space(logic) {
+        for (let space of this.chosen_spaces) {
+            if (space.type == 'tmp') {
+                space.type = 'const';
+                space.logic = logic;
+            }
+        }
     }
 
     chosen_space_add(event: MatChipInputEvent) {
         const input = event.input;
         let value = event.value;
 
-        // Add our fruit
         if ((value || '').trim()) {
             value = value.trim();
-            this.chosen_spaces.push({'value': value, 'type': 'const'});
+            this.chosen_spaces.push({
+                'value': value,
+                'type': 'const',
+                'logic': 'or'
+            });
         }
 
-        // Reset the input value
         if (input) {
             input.value = '';
         }
@@ -156,7 +183,8 @@ export class SpaceComponent extends Paginator<Space> {
     chosen_space_selected(event: MatAutocompleteSelectedEvent) {
         this.chosen_spaces.push({
             'value': event.option.viewValue,
-            'type': 'const'
+            'type': 'const',
+            'logic': 'or'
         });
     }
 
@@ -232,7 +260,7 @@ export class SpaceComponent extends Paginator<Space> {
     run() {
         this.dialog.open(SpaceRunDialogComponent, {
             width: '2000px', height: '900px',
-            data: {'spaces': this.chosen_spaces.map(x => x.value)}
+            data: {'spaces': this.chosen_spaces}
         });
     }
 
@@ -284,6 +312,11 @@ export class SpaceComponent extends Paginator<Space> {
     }
 
     relation_changed() {
+        if (!this.selected) {
+            this.relation_dataSource.data = [];
+            this.relation_total = 0;
+            return;
+        }
         let filter = {
             'parent': this.selected.name,
             'paginator': {
@@ -302,29 +335,52 @@ export class SpaceComponent extends Paginator<Space> {
         })
     }
 
-    onSelected(row: Space) {
-        if (this.chosen_spaces.length > 0) {
-            let last_index = this.chosen_spaces.length - 1;
-            if (this.chosen_spaces[last_index].type == 'tmp') {
-                this.chosen_spaces.splice(last_index, 1);
+    onSelected(row: Space, event: MouseEvent) {
+        let spaces = [row];
+        if (event.shiftKey && this.selected) {
+            let selected_index = this.dataSource.data.indexOf(this.selected);
+            let row_index = this.dataSource.data.indexOf(row);
+
+            if (selected_index >= 0 && row_index >= 0) {
+                for (let i = selected_index + 1; i < row_index + 1; i++) {
+                    spaces.push(this.dataSource.data[i]);
+                }
             }
+
+            event.stopPropagation();
         }
-        let found = false;
-        for (let s of this.chosen_spaces) {
-            if (s.value == row.name) {
-                found = true;
-                break
+
+        for (let space of spaces) {
+            if (this.chosen_spaces.length > 0 && !event.ctrlKey && !event.shiftKey) {
+                let last_index = this.chosen_spaces.length - 1;
+                if (this.chosen_spaces[last_index].type == 'tmp') {
+                    this.chosen_spaces.splice(last_index, 1);
+                }
             }
+            let found = false;
+            for (let s of this.chosen_spaces) {
+                if (s.value == space.name) {
+                    found = true;
+                    break
+                }
+            }
+
+            if (!found) {
+                this.chosen_spaces.push({
+                    'value': space.name,
+                    'type': 'tmp',
+                    'logic': 'or'
+                });
+            }
+
+            this.selected = space;
+            this.relation_selected = null;
+            this.relation_paginator.pageIndex = 0;
+
         }
-
-        if (!found) {
-            this.chosen_spaces.push({'value': row.name, 'type': 'tmp'});
+        if (event.ctrlKey || event.shiftKey) {
+            this.selected = null;
         }
-
-        this.selected = row;
-        this.relation_selected = null;
-        this.relation_paginator.pageIndex = 0;
-
         this.relation_changed();
     }
 

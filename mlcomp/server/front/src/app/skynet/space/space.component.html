@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row disable-text-selection">
 
     <div class="column">
         <button mat-raised-button style="margin-top: 15px"
@@ -167,7 +167,7 @@
 
                 <tr mat-header-row *matHeaderRowDef="displayed_columns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayed_columns;"
-                    (click)="onSelected(row)"
+                    (click)="onSelected(row, $event)"
                     [style.background]="selected==row ? 'lightblue' : ''"></tr>
             </table>
 
@@ -178,44 +178,103 @@
             </mat-paginator>
 
 
-            <mat-form-field
-                    (click)="update_names()"
-                    (keyup)="update_names($event)"
-                    class="example-chip-list">
-                <mat-chip-list #chipList>
-                    <mat-chip
-                            *ngFor="let space of chosen_spaces"
-                            [selectable]="false"
-                            [removable]="true"
-                            (removed)="space.type=='const'?chosen_remove_space(space):chosen_fix_space(space)">
-                        {{space.value}}
+            <div class="row">
+
+                <div class="column">
+                    <div>
+                        OR
+                    </div>
 
 
-                        <mat-icon matChipRemove
-                                  svgIcon="delete"
-                                  *ngIf="space.type=='const'"></mat-icon>
-                        <mat-icon matChipRemove svgIcon="pin"
-                                  *ngIf="space.type=='tmp'"></mat-icon>
-                    </mat-chip>
+                    <mat-form-field
+                            style="width: 300px;"
+                            (click)="update_names()"
+                            (keyup)="update_names($event)"
+                            class="example-chip-list">
+                        <mat-chip-list #chipList>
+                            <mat-chip
+                                    *ngFor="let space of chosen_spaces_or"
+                                    [selectable]="false"
+                                    [removable]="true"
+                                    (removed)="space.type=='const'?chosen_remove_space(space):chosen_fix_space('or')">
+                                {{space.value}}
 
-                    <input
-                            placeholder=""
-                            [matAutocomplete]="auto"
-                            [matChipInputFor]="chipList"
-                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                            (matChipInputTokenEnd)="chosen_space_add($event)">
-                </mat-chip-list>
 
-                <mat-autocomplete #auto="matAutocomplete"
-                                  (optionSelected)="chosen_space_selected($event)">
-                    <mat-option *ngFor="let name of names"
-                                [value]="name">
-                        {{name}}
-                    </mat-option>
-                </mat-autocomplete>
+                                <mat-icon matChipRemove
+                                          svgIcon="delete"
+                                          *ngIf="space.type=='const'"></mat-icon>
+                                <mat-icon matChipRemove svgIcon="pin"
+                                          *ngIf="space.type=='tmp'"></mat-icon>
+                            </mat-chip>
 
-            </mat-form-field>
+                            <input
+                                    placeholder=""
+                                    [matAutocomplete]="auto"
+                                    [matChipInputFor]="chipList"
+                                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                    (matChipInputTokenEnd)="chosen_space_add($event)">
+                        </mat-chip-list>
 
+                        <mat-autocomplete #auto="matAutocomplete"
+                                          (optionSelected)="chosen_space_selected($event)">
+                            <mat-option *ngFor="let name of names"
+                                        [value]="name">
+                                {{name}}
+                            </mat-option>
+                        </mat-autocomplete>
+
+                    </mat-form-field>
+
+                </div>
+
+                <div class="column">
+                    <div>
+                        AND
+                    </div>
+
+
+                    <mat-form-field
+                            style="width: 300px;"
+                            (click)="update_names()"
+                            (keyup)="update_names($event)"
+                            class="example-chip-list">
+                        <mat-chip-list #chipList>
+                            <mat-chip
+                                    *ngFor="let space of chosen_spaces_and"
+                                    [selectable]="false"
+                                    [removable]="true"
+                                    (removed)="space.type=='const'?chosen_remove_space(space):chosen_fix_space('and')">
+                                {{space.value}}
+
+
+                                <mat-icon matChipRemove
+                                          svgIcon="delete"
+                                          *ngIf="space.type=='const'"></mat-icon>
+                                <mat-icon matChipRemove svgIcon="pin"
+                                          *ngIf="space.type=='tmp'"></mat-icon>
+                            </mat-chip>
+
+                            <input
+                                    placeholder=""
+                                    [matAutocomplete]="auto"
+                                    [matChipInputFor]="chipList"
+                                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                    (matChipInputTokenEnd)="chosen_space_add($event)">
+                        </mat-chip-list>
+
+                        <mat-autocomplete #auto="matAutocomplete"
+                                          (optionSelected)="chosen_space_selected($event)">
+                            <mat-option *ngFor="let name of names"
+                                        [value]="name">
+                                {{name}}
+                            </mat-option>
+                        </mat-autocomplete>
+
+                    </mat-form-field>
+
+                </div>
+
+            </div>
 
         </div>
     </div>

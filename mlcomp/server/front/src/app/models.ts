@@ -473,7 +473,7 @@ export class SpaceFilter {
 
 export class SpaceRun {
     dag: number;
-    spaces: string[];
+    spaces;
     file_changes: string;
 }
 

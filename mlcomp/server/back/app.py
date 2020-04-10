@@ -506,15 +506,51 @@ def space_relation_remove():
 def space_run():
     data = request_data()
     provider = SpaceProvider(_write_session)
+    file_changes = data.get('file_changes', '\n')
+    file_changes = yaml_load(file_changes)
+
+    def merge(d: dict, d2: dict):
+        res = {}
+        for k in set(d) | set(d2):
+            if k in d and k in d2:
+                v = d[k]
+                v2 = d2[k]
+                if isinstance(v, list) and isinstance(v2, list):
+                    res[k] = v[:]
+                    res[k].extend(v2)
+                elif isinstance(v, dict) and isinstance(v2, dict):
+                    res[k] = v.copy()
+                    res[k].update(v2)
+                else:
+                    raise Exception(f'Types are different: {type(v)}, {type(v2)}')
+            elif k in d:
+                res[k] = d[k]
+            elif k in d2:
+                res[k] = d2[k]
+        return res
 
     for space in data['spaces']:
-        space = provider.by_id(space, key_column='name')
+        if space['logic'] == 'and':
+            space = provider.by_id(space['value'], key_column='name')
+            if space.content:
+                d = yaml_load(space.content)
+                file_changes = merge(file_changes, d)
+
+    has_or = any(s['logic'] == 'or' for s in data['spaces'])
+    for space in data['spaces']:
+        if space['logic'] != 'or' and has_or:
+            continue
+        space = provider.by_id(space['value'], key_column='name')
         space_related = provider.related(space.name)
+        if space.content:
+            space_related += [space]
+
         for rel in space_related:
             content = rel.content
-            if data.get('file_changes'):
-                content += '\n' + data['file_changes']
-            dag_copy(_write_session, data['dag'], file_changes=content,
+            d = yaml_load(content)
+            d = merge(file_changes, d)
+
+            dag_copy(_write_session, data['dag'], file_changes=yaml_dump(d),
                      dag_suffix=rel.name)
 
 
